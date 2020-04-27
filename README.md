@@ -24,7 +24,7 @@ An incomplete list of interesting tools to interface:
     - [zfit](https://github.com/zfit/zfit) for a pythonic take on [RooFit](https://root.cern.ch/roofit)
     - [MadMiner](https://github.com/diana-hep/madminer) for likelihood-free inference techniques
 
-The project is a work in progress.
+The project is a work in progress, and the name is a placeholder.
 Configuration fo `pytfc` should happen in a declarative manner, and be easily serializable via JSON/YAML into a configuration file.
 Some of the discussion below needs generalization for [MadMiner](https://github.com/diana-hep/madminer) style applications, see also the [Scope](#scope) section.
 
