@@ -85,3 +85,24 @@ External tools are called to perform inference, configured as specified by the c
 ### Visualization
 
 Some information of relevant kinds of visualization is provided in [as-user-facing/fit-visualization.md](https://github.com/iris-hep/as-user-facing/blob/master/fit-visualization.md) and the links therein.
+
+## Configuration file thoughts
+
+### Grouping of options
+
+The configuration file is how analyzers specify their fit model.
+Experience shows that it can get complex quickly.
+It is desirable to group configuration settings in ways that can make the file easier to read.
+For example, the color with which to draw a sample in figures does not matter for the fit model.
+It should be possible to easily hide such options for easier inspection of the configuration file, and this could be achieved by grouping them together as "cosmetics".
+
+### Validation
+
+As much as possible, automatic checks of the configuration file structure and content should happen before running any computationally expensive steps.
+For example, if input data is declared to be at various different locations, a quick check could verify that indeed data can be found at the paths declared.
+This can quickly flag typos before any histogram production is run.
+
+### Interactions with other existing frameworks
+
+While ambitious, it would be great to be able to translate configurations of other existing frameworks into a `pytfc` configuration, to be able to easily run detailed comparisons.
+Some relevant work for [TRExFitter](https://gitlab.cern.ch/TRExStats/TRExFitter) exists [here](https://github.com/alexander-held/TRExFitter-config-translation).
