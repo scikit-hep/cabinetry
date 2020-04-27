@@ -9,8 +9,9 @@
 
 ## Introduction
 
-`pytfc` is a `py`thonic `t`emplate `f`it `c`aptain, which steers (profile likelihood) template fits with applications in high energy physics in mind.
+`pytfc` is (or rather will be) a `py`thonic `t`emplate `f`it `c`aptain, which steers (profile likelihood) template fits with applications in high energy physics in mind.
 It acts as an interface to many powerful tools to make it easier for an analyzer to run their statistical inference pipeline.
+For the moment, this repository is a collection of things rather than a fully featured product.
 An incomplete list of interesting tools to interface:
 
 - [ServiceX](https://github.com/ssl-hep/ServiceX) for data delivery,
