@@ -1,16 +1,17 @@
 General:
   Label: "My fit"
-  Lumi: 139.0
 
 Samples:
-  - Name: "ttH"
-    Type: "Signal"
-    Path: "samples/ttH.root"
+  - Name: "Data"
+    Path: "ntuples/pseudodata.root"
+    Color: "#000000"
+
+  - Name: "Signal"
+    Path: "ntuples/prediction.root"
     Color: "#FFAA55"
 
-  - Name: "ttbar"
-    Type: "Background"
-    Path: "samples/ttbar.root"
+  - Name: "Background"
+    Path: "ntuples/prediction.root"
     Color: "#F55EE33"
 
 Regions:
@@ -32,7 +33,7 @@ Systematics:
     Samples: all
     Type: OVERALL
 
-NormFactor:
+NormFactors:
   - Name: "Signal strength"
     Nominal: 1
     Min: 0

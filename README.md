@@ -117,6 +117,11 @@ This can quickly flag typos before any histogram production is run.
 While ambitious, it would be great to be able to translate configurations of other existing frameworks into a `pytfc` configuration, to be able to easily run detailed comparisons.
 Some relevant work for [TRExFitter](https://gitlab.cern.ch/TRExStats/TRExFitter) exists [here](https://github.com/alexander-held/TRExFitter-config-translation).
 
+### Where to specify file paths
+
+Events for a given histogram are located at some path that can be specified by the sample name, region name, and systematic variation.
+It is unclear how to support as many structures as possible, while limiting the amount of options needed to specify them.
+
 ## Scope
 
 Traditional binned template fits in [HistFactory](https://cds.cern.ch/record/1456844/) style are substantially easier to support than the open world of binned and unbinned models.
