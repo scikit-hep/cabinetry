@@ -3,27 +3,23 @@ General:
 
 Samples:
   - Name: "Data"
-    Path: "ntuples/pseudodata.root"
+    Tree: "pseudodata"
+    Path: "ntuples/data.root"
     Color: "#000000"
 
   - Name: "Signal"
+    Tree: "signal"
     Path: "ntuples/prediction.root"
     Color: "#FFAA55"
 
   - Name: "Background"
+    Tree: "background"
     Path: "ntuples/prediction.root"
     Color: "#F55EE33"
 
 Regions:
-  - Name: "Signal region"
+  - Name: "Signal Region"
     Variable: "jet_pt"
-    AutoBin:
-      Type: "TransfoD"
-      Param_1: 4
-      Param_2: 4
-
-  - Name: "Control Region"
-    Variable: "el_pt"
     Binning: [0, 150, 300]
 
 Systematics:
