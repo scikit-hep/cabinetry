@@ -1,4 +1,4 @@
-# pytfc
+# cabinetry
 
 ## Table of contents
 
@@ -9,7 +9,7 @@
 
 ## Introduction
 
-`pytfc` is (or rather will be) a `py`thonic `t`emplate `f`it `c`aptain, which steers (profile likelihood) template fits with applications in high energy physics in mind.
+`cabinetry` is (or rather will be) a tool to build and steers (profile likelihood) template fits with applications in high energy physics in mind.
 It acts as an interface to many powerful tools to make it easier for an analyzer to run their statistical inference pipeline.
 For the moment, this repository is a collection of things rather than a fully featured product.
 An incomplete list of interesting tools to interface:
@@ -25,8 +25,8 @@ An incomplete list of interesting tools to interface:
     - [zfit](https://github.com/zfit/zfit) for a pythonic take on [RooFit](https://root.cern.ch/roofit)
     - [MadMiner](https://github.com/diana-hep/madminer) for likelihood-free inference techniques
 
-The project is a work in progress, and the name is a placeholder.
-Configuration fo `pytfc` should happen in a declarative manner, and be easily serializable via JSON/YAML into a configuration file.
+The project is a work in progress.
+Configuration fo `cabinetry` should happen in a declarative manner, and be easily serializable via JSON/YAML into a configuration file.
 Some of the discussion below needs generalization for [MadMiner](https://github.com/diana-hep/madminer) style applications, see also the [Scope](#scope) section.
 
 Interesting related projects:
@@ -69,7 +69,7 @@ An analysis that considers 10 different physics processes (simulated as 10 indep
 ### 2. Histogram adjustments
 
 Histogram post-processing can include re-binning, smoothing, or symmetrization of systematic uncertainties.
-These operations should be handled by tools outside of `pytfc`.
+These operations should be handled by tools outside of `cabinetry`.
 Such tools might either need some additional steering via an additional configuration, or the basic configuration file has to support arbitrary settings to be passed to these tools (depending on what each tool can interpret).
 
 ### 3. Workspace creation from histograms
@@ -114,7 +114,7 @@ This can quickly flag typos before any histogram production is run.
 
 ### Interactions with other existing frameworks
 
-While ambitious, it would be great to be able to translate configurations of other existing frameworks into a `pytfc` configuration, to be able to easily run detailed comparisons.
+While ambitious, it would be great to be able to translate configurations of other existing frameworks into a `cabinetry` configuration, to be able to easily run detailed comparisons.
 Some relevant work for [TRExFitter](https://gitlab.cern.ch/TRExStats/TRExFitter) exists [here](https://github.com/alexander-held/TRExFitter-config-translation).
 
 ### Where to specify file paths
