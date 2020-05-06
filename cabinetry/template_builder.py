@@ -1,16 +1,21 @@
 from . import histogram_wrapper
 
 
-def _get_histogram_uproot(ntuple_path, pos_in_file, selection, bins, range):
+def _get_histogram_uproot(ntuple_path, pos_in_file, selection, weight, bins, range):
     """
     create a single histogram with uproot
     """
     import uproot
+    import numpy as np
 
     with uproot.open(ntuple_path) as f:
         events = f[pos_in_file].array(selection)
+        if weight is not None:
+            weights = f[pos_in_file].array(weight)
+        else:
+            weights = np.ones_like(events)
 
-    histogram = histogram_wrapper.bin_data(events, bins, range)
+    histogram = histogram_wrapper.bin_data(events, weights, bins, range)
     return histogram
 
 
@@ -30,6 +35,14 @@ def _get_selection(sample, region, systematic):
     return axis_variable
 
 
+def _get_weight(sample, region, systematic):
+    """
+    find the weight to be used for the events in the histogram
+    """
+    weight = sample.get("Weight", None)
+    return weight
+
+
 def _get_position_in_file(sample):
     """
     the file might have some substructure, this specifies where in the file
@@ -41,6 +54,8 @@ def _get_position_in_file(sample):
 def _get_binning(region):
     """
     determine the binning to be used in a given region
+    returns either amount of bins and range,
+    or the bins themselves and None
     """
     if "Binning" in region.keys():
         return region["Binning"], None
@@ -72,11 +87,12 @@ def create_histograms(config, output_path, method="uproot", only_nominal=False):
                 ntuple_path = _get_ntuple_path(sample, region, systematic)
                 pos_in_file = _get_position_in_file(sample)
                 selection = _get_selection(sample, region, systematic)
-                bins, range = _get_binning(region)
+                weight = _get_weight(sample, region, systematic)
+                bins, bin_range = _get_binning(region)
 
                 # obtain the histogram
                 if method == "uproot":
-                    histogram = _get_histogram_uproot(ntuple_path, pos_in_file, selection, bins, range)
+                    histogram = _get_histogram_uproot(ntuple_path, pos_in_file, selection, weight, bins, bin_range)
 
                 elif "method" == "ServiceX":
                     raise NotImplementedError

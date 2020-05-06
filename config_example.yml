@@ -11,11 +11,13 @@ Samples:
   - Name: "Background"
     Tree: "background"
     Path: "ntuples/prediction.root"
+    Weight: "weight"
     Color: "#F55EE33"
 
   - Name: "Signal"
     Tree: "signal"
     Path: "ntuples/prediction.root"
+    Weight: "weight"
     Color: "#FFAA55"
 
 Regions:

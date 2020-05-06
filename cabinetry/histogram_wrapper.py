@@ -27,14 +27,14 @@ def load_histogram(path, histogram_name):
     return histogram
 
 
-def bin_data(data, bins, range=None):
+def bin_data(data, weights, bins, bin_range=None):
     """
     create a histogram from unbinned data
     """
-    if range is not None:
-        range_low, range_high = range
+    if bin_range is not None:
+        range_low, range_high = bin_range
         bins = np.linspace(range_low, range_high, bins)
-    binned_data, _ = np.histogram(data, bins, range)
+    binned_data, _ = np.histogram(data, bins, bin_range, weights=weights)
     return binned_data
 
 

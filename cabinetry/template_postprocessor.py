@@ -5,7 +5,7 @@ def _adjust_histogram(histogram):
     """
     create a new modified histogram
     """
-    new_histogram = histogram
+    new_histogram = histogram  # for now, the histogram is unchanged
     return new_histogram
 
 
