@@ -6,8 +6,6 @@ def from_uproot(ntuple_path, pos_in_file, selection, weight, bins, range):
     """
     create a single histogram with uproot
     """
-
-    print("hi from contrib")
     with uproot.open(ntuple_path) as f:
         events = f[pos_in_file].array(selection)
         if weight is not None:
