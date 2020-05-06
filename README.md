@@ -6,6 +6,7 @@
 - [Template fits](#template-fits)
 - [Configuration file thoughts](#configuration-file-thoughts)
 - [Scope](#scope)
+- [Code](#code)
 
 ## Introduction
 
@@ -126,3 +127,10 @@ It is unclear how to support as many structures as possible, while limiting the 
 
 Traditional binned template fits in [HistFactory](https://cds.cern.ch/record/1456844/) style are substantially easier to support than the open world of binned and unbinned models.
 Likelihood-free inference approaches in  the style of [MadMiner](https://github.com/diana-hep/madminer) have a more well-defined scope than the open world of [RooFit](https://root.cern.ch/roofit), and might be easier to integrate.
+
+## Code
+
+Currently experimenting with a functional approach.
+This may or may not change in the future.
+Everything in `cabinetry/contrib` are very basic implementation of tasks that should be done by other tools, and interfaces to those tools should be added.
+The basic implementations that exist there help with API design.

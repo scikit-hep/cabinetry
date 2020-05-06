@@ -1,24 +1,6 @@
 from . import histogram_wrapper
 
 
-def _get_histogram_uproot(ntuple_path, pos_in_file, selection, weight, bins, range):
-    """
-    create a single histogram with uproot
-    """
-    import uproot
-    import numpy as np
-
-    with uproot.open(ntuple_path) as f:
-        events = f[pos_in_file].array(selection)
-        if weight is not None:
-            weights = f[pos_in_file].array(weight)
-        else:
-            weights = np.ones_like(events)
-
-    histogram = histogram_wrapper.bin_data(events, weights, bins, range)
-    return histogram
-
-
 def _get_ntuple_path(sample, region, systematic):
     """
     determine the path to ntuples from which a histogram has to be built
@@ -92,7 +74,8 @@ def create_histograms(config, output_path, method="uproot", only_nominal=False):
 
                 # obtain the histogram
                 if method == "uproot":
-                    histogram = _get_histogram_uproot(ntuple_path, pos_in_file, selection, weight, bins, bin_range)
+                    from cabinetry.contrib import histogram_creation
+                    histogram = histogram_creation.from_uproot(ntuple_path, pos_in_file, selection, weight, bins, bin_range)
 
                 elif "method" == "ServiceX":
                     raise NotImplementedError
