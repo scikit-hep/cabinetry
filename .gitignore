@@ -1,5 +1,7 @@
 __pycache__
+*.pyc
 .vscode
 *.root
 *.png
+*.pdf
 *.npy

@@ -6,21 +6,22 @@ Samples:
     Tree: "pseudodata"
     Path: "ntuples/data.root"
     Color: "#000000"
-
-  - Name: "Signal"
-    Tree: "signal"
-    Path: "ntuples/prediction.root"
-    Color: "#FFAA55"
+    Data: True
 
   - Name: "Background"
     Tree: "background"
     Path: "ntuples/prediction.root"
     Color: "#F55EE33"
 
+  - Name: "Signal"
+    Tree: "signal"
+    Path: "ntuples/prediction.root"
+    Color: "#FFAA55"
+
 Regions:
   - Name: "Signal Region"
     Variable: "jet_pt"
-    Binning: [0, 150, 300]
+    Binning: [0, 100, 200, 300, 400, 500, 600, 700, 800, 900, 1000]
 
 Systematics:
   - Name: Luminosity

@@ -15,11 +15,11 @@ if __name__ == "__main__":
 
     # create template histograms
     input_folder = "util/ntuples"
-    output_folder = "histograms/"
-    cabinetry.template_builder.create_histograms(fit_configuration, output_folder, only_nominal=True)
+    histogram_folder = "histograms/"
+    cabinetry.template_builder.create_histograms(fit_configuration, histogram_folder, only_nominal=True, method="uproot")
 
     # perform histogram post-processing
-    cabinetry.template_postprocessor.run(fit_configuration, output_folder)
+    cabinetry.template_postprocessor.run(fit_configuration, histogram_folder)
 
     # build a workspace
     pass
@@ -28,4 +28,5 @@ if __name__ == "__main__":
     pass
 
     # visualize some results
-    pass
+    figure_folder = "figures/"
+    cabinetry.visualize.data_MC(fit_configuration, histogram_folder, figure_folder, prefit=True, method="matplotlib")
