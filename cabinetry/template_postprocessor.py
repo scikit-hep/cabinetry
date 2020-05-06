@@ -18,7 +18,13 @@ def run(config, histogram_folder):
     for sample in config["Samples"]:
         for region in config["Regions"]:
             for systematic in [{"Name": "nominal"}]:
-                histogram_name = histogram_wrapper._build_histogram_name(sample, region, systematic)
-                histogram = histogram_wrapper.load_histogram(histogram_folder, histogram_name)
+                histogram_name = histogram_wrapper._build_histogram_name(
+                    sample, region, systematic
+                )
+                histogram = histogram_wrapper.load_histogram(
+                    histogram_folder, histogram_name
+                )
                 new_histogram = _adjust_histogram(histogram)
-                histogram_wrapper.save_histogram(new_histogram, histogram_folder, histogram_name + "_modified")
+                histogram_wrapper.save_histogram(
+                    new_histogram, histogram_folder, histogram_name + "_modified"
+                )

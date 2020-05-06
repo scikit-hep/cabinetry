@@ -1,9 +1,6 @@
 import yaml
 
-REQUIRED_CONFIG_KEYS = ["General",
-                        "Samples",
-                        "Regions",
-                        "NormFactors"]
+REQUIRED_CONFIG_KEYS = ["General", "Samples", "Regions", "NormFactors"]
 
 OPTIONAL_CONFIG_KEYS = ["Systematics"]
 

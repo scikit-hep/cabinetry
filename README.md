@@ -1,5 +1,7 @@
 # cabinetry
 
+[![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
+
 ## Table of contents
 
 - [Introduction](#introduction)
@@ -19,12 +21,12 @@ An incomplete list of interesting tools to interface:
 - [coffea](https://github.com/CoffeaTeam/coffea) for histogram processing,
 - [uproot](https://github.com/scikit-hep/uproot) for reading [ROOT](https://root.cern.ch/) files
 - for building likelihood functions (captured in so-called workspaces in [RooFit](https://root.cern.ch/roofit)) and inference:
-    - [RooFit](https://root.cern.ch/roofit) to model probability distributions
-    - [RooStats](http://cds.cern.ch/record/1289965) for statistical tools
-    - [HistFactory](https://cds.cern.ch/record/1456844/) to implement a subset of binned template fits
-    - [pyhf](https://github.com/scikit-hep/pyhf) for a pythonic take on [HistFactory](https://cds.cern.ch/record/1456844/),
-    - [zfit](https://github.com/zfit/zfit) for a pythonic take on [RooFit](https://root.cern.ch/roofit)
-    - [MadMiner](https://github.com/diana-hep/madminer) for likelihood-free inference techniques
+  - [RooFit](https://root.cern.ch/roofit) to model probability distributions
+  - [RooStats](http://cds.cern.ch/record/1289965) for statistical tools
+  - [HistFactory](https://cds.cern.ch/record/1456844/) to implement a subset of binned template fits
+  - [pyhf](https://github.com/scikit-hep/pyhf) for a pythonic take on [HistFactory](https://cds.cern.ch/record/1456844/),
+  - [zfit](https://github.com/zfit/zfit) for a pythonic take on [RooFit](https://root.cern.ch/roofit)
+  - [MadMiner](https://github.com/diana-hep/madminer) for likelihood-free inference techniques
 
 The project is a work in progress.
 Configuration fo `cabinetry` should happen in a declarative manner, and be easily serializable via JSON/YAML into a configuration file.

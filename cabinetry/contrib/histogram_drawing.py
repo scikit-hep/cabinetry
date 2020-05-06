@@ -19,7 +19,9 @@ def data_MC_matplotlib(histogram_dict_list, figure_folder, figure_name):
             mc_labels.append(h["label"])
 
     # get the highest single bin from the sum of MC
-    y_max = np.max(np.sum([h["hist"] for h in histogram_dict_list if not h["isData"]], axis=0))
+    y_max = np.max(
+        np.sum([h["hist"] for h in histogram_dict_list if not h["isData"]], axis=0)
+    )
 
     # if data is higher in any bin, the maximum y axis range should take that into account
     y_max = max(y_max, np.max([h["hist"] for h in histogram_dict_list if h["isData"]]))
@@ -28,14 +30,20 @@ def data_MC_matplotlib(histogram_dict_list, figure_folder, figure_name):
     total_yield = np.zeros_like(mc_histograms[0])
     x_dummy = np.arange(0, len(mc_histograms[0]))
     for i_sample in range(len(mc_histograms)):
-        plt.bar(x_dummy, mc_histograms[i_sample], width=1.0, bottom=total_yield, label=mc_labels[i_sample])
+        plt.bar(
+            x_dummy,
+            mc_histograms[i_sample],
+            width=1.0,
+            bottom=total_yield,
+            label=mc_labels[i_sample],
+        )
         total_yield += mc_histograms[i_sample]
 
     # plot data
     plt.plot(data_histogram, "x", c="k", label=data_label)
 
     plt.legend()
-    plt.ylim([0, y_max*1.1])  # 10% headroom
+    plt.ylim([0, y_max * 1.1])  # 10% headroom
     plt.plot()
 
     if not os.path.exists(figure_folder):

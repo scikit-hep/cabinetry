@@ -57,7 +57,9 @@ def create_histograms(config, output_path, method="uproot", only_nominal=False):
         for region in config["Regions"]:
             # print("- in region", region["Name"])
 
-            for isyst, systematic in enumerate(([{"Name": "nominal"}] + config["Systematics"])):
+            for isyst, systematic in enumerate(
+                ([{"Name": "nominal"}] + config["Systematics"])
+            ):
                 # first do the nominal case, then systematics
                 # optionally skip non-nominal histograms
                 if isyst != 0 and only_nominal:
@@ -75,7 +77,10 @@ def create_histograms(config, output_path, method="uproot", only_nominal=False):
                 # obtain the histogram
                 if method == "uproot":
                     from cabinetry.contrib import histogram_creation
-                    histogram = histogram_creation.from_uproot(ntuple_path, pos_in_file, selection, weight, bins, bin_range)
+
+                    histogram = histogram_creation.from_uproot(
+                        ntuple_path, pos_in_file, selection, weight, bins, bin_range
+                    )
 
                 elif "method" == "ServiceX":
                     raise NotImplementedError
@@ -84,5 +89,7 @@ def create_histograms(config, output_path, method="uproot", only_nominal=False):
                     raise NotImplementedError
 
                 # save the histogram
-                histogram_name = histogram_wrapper._build_histogram_name(sample, region, systematic)
+                histogram_name = histogram_wrapper._build_histogram_name(
+                    sample, region, systematic
+                )
                 histogram_wrapper.save_histogram(histogram, output_path, histogram_name)
