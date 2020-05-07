@@ -1,6 +1,16 @@
 __pycache__
 *.pyc
+
+# packaging
+*.egg-info
+dist
+build
+
+# editors
 .vscode
+*.swp
+
+# files produced by running cabinetry
 *.root
 *.png
 *.pdf
