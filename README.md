@@ -10,6 +10,7 @@
 - [Configuration file thoughts](#configuration-file-thoughts)
 - [Scope](#scope)
 - [Code](#code)
+- [Acknowledgements](#acknowledgements)
 
 ## Introduction
 
@@ -137,3 +138,7 @@ Currently experimenting with a functional approach.
 This may or may not change in the future.
 Everything in `cabinetry/contrib` are very basic implementation of tasks that should be done by other tools, and interfaces to those tools should be added.
 The basic implementations that exist there help with API design.
+
+## Acknowledgements
+
+This work was supported by the U.S. National Science Foundation (NSF) cooperative agreement OAC-1836650 (IRIS-HEP).
