@@ -33,7 +33,7 @@ jobs:
         flake8 cabinetry --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics --exclude=cabinetry/__init__.py
     - name: Lint with Black
       run: |
-        black --check --diff --verbose cabinetry
+        black --check --diff --verbose .
 
     - name: Test example
       run: |
