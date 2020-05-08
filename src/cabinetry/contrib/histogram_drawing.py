@@ -1,6 +1,10 @@
+import logging
 import os
 import matplotlib.pyplot as plt
 import numpy as np
+
+
+log = logging.getLogger(__name__)
 
 
 def data_MC_matplotlib(histogram_dict_list, figure_folder, figure_name):
@@ -48,5 +52,5 @@ def data_MC_matplotlib(histogram_dict_list, figure_folder, figure_name):
 
     if not os.path.exists(figure_folder):
         os.mkdir(figure_folder)
-    print("- saving", figure_name, "to", figure_folder)
+    log.info("saving %s to %s", figure_name, figure_folder)
     plt.savefig(figure_folder + figure_name)

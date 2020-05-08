@@ -2,8 +2,12 @@
 need to save the histogram bins for visualization purposes still,
 as well as cosmetics such as axis labels and region names
 """
+import logging
 
 from . import histogram_wrapper
+
+
+log = logging.getLogger(__name__)
 
 
 def _build_figure_name(region, is_prefit):
@@ -23,7 +27,7 @@ def data_MC(config, histogram_folder, figure_folder, prefit=True, method="matplo
     """
     draw a data/MC histogram, control whether it is pre- or postfit with a flag
     """
-    print("# visualizing histogram")
+    log.info("visualizing histogram")
     for region in config["Regions"]:
         histogram_dict_list = []
         for sample in config["Samples"]:
