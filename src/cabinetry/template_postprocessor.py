@@ -1,4 +1,9 @@
+import logging
+
 from . import histogram_wrapper
+
+
+log = logging.getLogger(__name__)
 
 
 def _adjust_histogram(histogram):
@@ -13,7 +18,7 @@ def run(config, histogram_folder):
     """
     apply post-processing as needed for all histograms
     """
-    print("# applying post-processing to histograms")
+    log.info("applying post-processing to histograms")
     # loop over all histograms
     for sample in config["Samples"]:
         for region in config["Regions"]:

@@ -1,14 +1,19 @@
+import logging
 import yaml
+
 
 REQUIRED_CONFIG_KEYS = ["General", "Samples", "Regions", "NormFactors"]
 
 OPTIONAL_CONFIG_KEYS = ["Systematics"]
+
+log = logging.getLogger(__name__)
 
 
 def read(file_path):
     """
     read a config file from a provided path and return it
     """
+    log.info("opening config file %s", file_path)
     with open(file_path) as f:
         config = yaml.safe_load(f)
     validate(config)
@@ -39,9 +44,9 @@ def print_overview(config):
     """
     output a compact summary of a config file
     """
-    print("# the config contains:")
-    print("-", len(config["Samples"]), "Sample(s)")
-    print("-", len(config["Regions"]), "Region(s)")
-    print("-", len(config["NormFactors"]), "NormFactor(s)")
+    log.info("the config contains:")
+    log.info("  %i Sample(s)", len(config["Samples"]))
+    log.info("  %i Regions(s)", len(config["Regions"]))
+    log.info("  %i NormFactor(s)", len(config["NormFactors"]))
     if "Systematics" in config.keys():
-        print("-", len(config["Systematics"]), "Systematic(s)")
+        log.info("  %i Systematic(s)", len(config["Systematics"]))

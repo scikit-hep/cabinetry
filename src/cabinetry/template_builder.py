@@ -1,4 +1,9 @@
+import logging
+
 from . import histogram_wrapper
+
+
+log = logging.getLogger(__name__)
 
 
 def _get_ntuple_path(sample, region, systematic):
@@ -49,13 +54,13 @@ def create_histograms(config, output_path, method="uproot", only_nominal=False):
     """
     generate all required histograms specified by a configuration file
     """
-    print("# creating histograms")
+    log.info("creating histograms")
 
     for sample in config["Samples"]:
-        # print("- reading sample", sample["Name"])
+        log.debug("  reading sample %s", sample["Name"])
 
         for region in config["Regions"]:
-            # print("- in region", region["Name"])
+            log.debug("  in region %s", region["Name"])
 
             for isyst, systematic in enumerate(
                 ([{"Name": "nominal"}] + config["Systematics"])
@@ -67,7 +72,7 @@ def create_histograms(config, output_path, method="uproot", only_nominal=False):
                 elif isyst > 0:
                     raise NotImplementedError("systematics not yet implemented")
 
-                # print("- variation", systematic["Name"])
+                log.debug("  variation %s", systematic["Name"])
                 ntuple_path = _get_ntuple_path(sample, region, systematic)
                 pos_in_file = _get_position_in_file(sample)
                 selection = _get_selection(sample, region, systematic)

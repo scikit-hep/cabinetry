@@ -2,16 +2,20 @@
 it might make sense to allow serialization of histograms in various
 different formats, so saving and loading should go through this wrapper
 """
+import logging
 import os
 
 import numpy as np
+
+
+log = logging.getLogger(__name__)
 
 
 def save_histogram(histogram, path, histogram_name):
     """
     save a histogram to disk
     """
-    print("- saving", histogram_name, "to", path)
+    log.info("saving %s to %s", histogram_name, path)
 
     # create output directory if it does not exist yet
     if not os.path.exists(path):

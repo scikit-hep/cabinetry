@@ -1,6 +1,14 @@
+import logging
 import os
 
 import cabinetry
+
+
+# set up log formatting and suppress verbose output from matplotlib
+logging.basicConfig(
+    level=logging.DEBUG, format="%(levelname)s - %(name)s - %(message)s"
+)
+logging.getLogger("matplotlib").setLevel(logging.WARNING)
 
 
 if __name__ == "__main__":
