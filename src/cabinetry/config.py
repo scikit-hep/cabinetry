@@ -36,6 +36,10 @@ def validate(config):
         if key not in (REQUIRED_CONFIG_KEYS + OPTIONAL_CONFIG_KEYS):
             raise ValueError("unknown key found:", key)
 
+    # check that there is exactly one data sample
+    if sum([sample.get("Data", False) for sample in config["Samples"]]) != 1:
+        raise NotImplementedError("can only handle cases with exactly one data sample")
+
     # should also check here for conflicting settings
     pass
 
