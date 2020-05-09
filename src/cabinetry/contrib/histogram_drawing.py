@@ -101,3 +101,4 @@ def data_MC_matplotlib(histogram_dict_list, figure_folder, figure_name):
         os.mkdir(figure_folder)
     log.info("saving %s to %s", figure_name, figure_folder)
     plt.savefig(figure_folder + figure_name)
+    plt.clf()
