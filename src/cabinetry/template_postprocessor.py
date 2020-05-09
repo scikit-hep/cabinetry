@@ -1,7 +1,7 @@
 import logging
 import numpy as np
 
-from . import histogram_wrapper
+from . import histo
 
 
 log = logging.getLogger(__name__)
@@ -35,14 +35,10 @@ def run(config, histogram_folder):
     for sample in config["Samples"]:
         for region in config["Regions"]:
             for systematic in [{"Name": "nominal"}]:
-                histogram_name = histogram_wrapper.build_name(
-                    sample, region, systematic
-                )
-                histogram = histogram_wrapper.load(
-                    histogram_folder, histogram_name, modified=False
-                )
+                histogram_name = histo.build_name(sample, region, systematic)
+                histogram = histo.load(histogram_folder, histogram_name, modified=False)
                 new_histogram = adjust_histogram(histogram, histogram_name)
-                histogram_wrapper.validate(histogram, histogram_name)
-                histogram_wrapper.save(
+                histo.validate(histogram, histogram_name)
+                histo.save(
                     new_histogram, histogram_folder, histogram_name + "_modified"
                 )
