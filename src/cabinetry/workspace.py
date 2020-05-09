@@ -17,10 +17,62 @@ def _get_data_sample(config):
     return data_samples[0]
 
 
-def get_channels(config):
+def get_yield_for_sample(
+    sample, region, histogram_folder, systematic={"Name": "nominal"}
+):
     """
+    get the yield for a specific sample, by figuring out its name and then
+    obtaining the yield from the correct histogram
     """
-    return
+    histogram_name = histo.build_name(sample, region, systematic)
+    histogram = histo.load(histogram_folder, histogram_name, modified=True)
+    histo_yield = histogram["yields"].tolist()
+    return histo_yield
+
+
+def get_unc_for_sample(
+    sample, region, histogram_folder, systematic={"Name": "nominal"}
+):
+    """
+    get the uncertainty of a specific sample, by figuring out its name and then
+    obtaining the sumw2 from the correct histogram
+    """
+    histogram_name = histo.build_name(sample, region, systematic)
+    histogram = histo.load(histogram_folder, histogram_name, modified=True)
+    histo_yield = histogram["sumw2"].tolist()
+    return histo_yield
+
+
+def get_channels(config, histogram_folder):
+    """
+    construct the channel information: yields per sample and modifiers
+    """
+    channels = []
+    for region in config["Regions"]:
+        channel = {}
+        channel.update({"name": region["Name"]})
+        samples = []
+        for sample in config["Samples"]:
+            histo_yield = get_yield_for_sample(sample, region, histogram_folder)
+            current_sample = {}
+            current_sample.update({"name": sample["Name"]})
+            current_sample.update({"data": histo_yield})
+
+            # gammas
+            stat_unc = get_unc_for_sample(sample, region, histogram_folder)
+            gammas = {}
+            gammas.update({"name": "staterror_" + region["Name"].replace(" ", "-")})
+            gammas.update({"type": "staterror"})
+            gammas.update({"data": stat_unc})
+
+            # need to add modifiers here
+            modifiers = [{}, gammas, {}]
+
+            current_sample.update({"modifiers": modifiers})
+            samples.append(current_sample)
+        channel.update({"samples": samples})
+        channels.append(channel)
+    return channels
 
 
 def get_measurements(config):
@@ -37,9 +89,7 @@ def get_observations(config, histogram_folder):
     observations = []
     observation = {}
     for region in config["Regions"]:
-        histogram_name = histo.build_name(data_sample, region, {"Name": "nominal"})
-        histogram = histo.load(histogram_folder, histogram_name, modified=True)
-        histo_yield = histogram["yields"].tolist()
+        histo_yield = get_yield_for_sample(data_sample, region, histogram_folder)
         observation.update({"name": region["Name"]})
         observation.update({"data": histo_yield})
         observations.append(observation)
@@ -55,7 +105,7 @@ def build(config, histogram_folder):
     ws = {}  # the workspace
 
     # channels
-    channels = get_channels(config)
+    channels = get_channels(config, histogram_folder)
     ws.update({"channels": channels})
 
     # measurements
