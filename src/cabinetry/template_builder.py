@@ -99,14 +99,12 @@ def create_histograms(config, output_path, method="uproot", only_nominal=False):
                 histogram = histogram_wrapper.to_dict(yields, sumw2, bins)
 
                 # generate a name for the histogram
-                histogram_name = histogram_wrapper._build_name(
+                histogram_name = histogram_wrapper.build_name(
                     sample, region, systematic
                 )
 
-                # check the histogram for common issues, fix them possible
-                histogram = histogram_wrapper._validate_and_fix(
-                    histogram, histogram_name
-                )
+                # check the histogram for common issues
+                histogram_wrapper.validate(histogram, histogram_name)
 
                 # save it
                 histogram_wrapper.save(histogram, output_path, histogram_name)

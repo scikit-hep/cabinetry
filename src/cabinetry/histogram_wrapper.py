@@ -37,18 +37,28 @@ def save(histogram, path, histogram_name):
     )
 
 
-def load(path, histogram_name):
+def load(path, histogram_name, modified=True):
     """
     load a histogram from disk and convert it into dictionary form
+    try to load the "modified" version of the histogram by default
+    (which received post-processing)
     """
-    histogram_npz = np.load(path + histogram_name + ".npz")
+    if modified:
+        histo_path = path + histogram_name + "_modified" + ".npz"
+        if not os.path.exists(histo_path):
+            log.error("the modified histogram %s does not exist", histo_path)
+            log.error("loading the un-modified histogram instead!")
+            histo_path = path + histogram_name + ".npz"
+    else:
+        histo_path = path + histogram_name + ".npz"
+    histogram_npz = np.load(histo_path)
     yields = histogram_npz["yields"]
     sumw2 = histogram_npz["sumw2"]
     bins = histogram_npz["bins"]
     return to_dict(yields, sumw2, bins)
 
 
-def _build_name(sample, region, systematic):
+def build_name(sample, region, systematic):
     """
     construct a unique name for each histogram
     param sample: the sample
@@ -58,10 +68,10 @@ def _build_name(sample, region, systematic):
     return name
 
 
-def _validate_and_fix(histogram, name):
+def validate(histogram, name):
     """
     run consistency checks on a histogram, checking for empty bins
-    and ill-defined statistical uncertainties, fix issues if possible
+    and ill-defined statistical uncertainties
     """
     # check for empty bins
     empty_bins = np.where(histogram["yields"] == 0.0)[0]
@@ -82,8 +92,3 @@ def _validate_and_fix(histogram, name):
             name,
             not_empty_but_nan,
         )
-
-    # fix ill defined stat. unc. (replace nan by 0)
-    log.debug("fixing ill-defined stat. unc. for %s", name)
-    histogram["sumw2"] = np.nan_to_num(histogram["sumw2"], nan=0.0)
-    return histogram
