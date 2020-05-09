@@ -1,6 +1,6 @@
 import logging
 
-from . import histogram_wrapper
+from . import histo
 
 
 log = logging.getLogger(__name__)
@@ -96,15 +96,13 @@ def create_histograms(config, output_path, method="uproot", only_nominal=False):
                     raise NotImplementedError
 
                 # convert the information into a dictionary for easier handling
-                histogram = histogram_wrapper.to_dict(yields, sumw2, bins)
+                histogram = histo.to_dict(yields, sumw2, bins)
 
                 # generate a name for the histogram
-                histogram_name = histogram_wrapper.build_name(
-                    sample, region, systematic
-                )
+                histogram_name = histo.build_name(sample, region, systematic)
 
                 # check the histogram for common issues
-                histogram_wrapper.validate(histogram, histogram_name)
+                histo.validate(histogram, histogram_name)
 
                 # save it
-                histogram_wrapper.save(histogram, output_path, histogram_name)
+                histo.save(histogram, output_path, histogram_name)

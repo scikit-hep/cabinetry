@@ -4,7 +4,7 @@ as well as cosmetics such as axis labels and region names
 """
 import logging
 
-from . import histogram_wrapper
+from . import histo
 
 
 log = logging.getLogger(__name__)
@@ -33,12 +33,8 @@ def data_MC(config, histogram_folder, figure_folder, prefit=True, method="matplo
         for sample in config["Samples"]:
             for systematic in [{"Name": "nominal"}]:
                 is_data = sample.get("Data", False)
-                histogram_name = histogram_wrapper.build_name(
-                    sample, region, systematic
-                )
-                histogram = histogram_wrapper.load(
-                    histogram_folder, histogram_name, modified=True
-                )
+                histogram_name = histo.build_name(sample, region, systematic)
+                histogram = histo.load(histogram_folder, histogram_name, modified=True)
                 histogram_dict_list.append(
                     {
                         "label": sample["Name"],
