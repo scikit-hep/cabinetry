@@ -33,14 +33,17 @@ def data_MC(config, histogram_folder, figure_folder, prefit=True, method="matplo
         for sample in config["Samples"]:
             for systematic in [{"Name": "nominal"}]:
                 is_data = sample.get("Data", False)
-                histogram_name = histogram_wrapper._build_histogram_name(
+                histogram_name = histogram_wrapper._build_name(
                     sample, region, systematic
                 )
-                histogram = histogram_wrapper.load_histogram(
-                    histogram_folder, histogram_name
-                )
+                histogram = histogram_wrapper.load(histogram_folder, histogram_name)
                 histogram_dict_list.append(
-                    {"label": sample["Name"], "isData": is_data, "hist": histogram}
+                    {
+                        "label": sample["Name"],
+                        "isData": is_data,
+                        "hist": histogram,
+                        "variable": region["Variable"],
+                    }
                 )
 
         figure_name = _build_figure_name(region["Name"], prefit)

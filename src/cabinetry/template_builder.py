@@ -41,11 +41,11 @@ def _get_position_in_file(sample):
 def _get_binning(region):
     """
     determine the binning to be used in a given region
-    returns either amount of bins and range,
-    or the bins themselves and None
+    should eventually also support other ways of specifying bins,
+    such as the amount of bins and the range to bin in
     """
     if "Binning" in region.keys():
-        return region["Binning"], None
+        return region["Binning"]
     else:
         raise NotImplementedError
 
@@ -53,6 +53,8 @@ def _get_binning(region):
 def create_histograms(config, output_path, method="uproot", only_nominal=False):
     """
     generate all required histograms specified by a configuration file
+    a tool providing histograms should provide bin yields and statistical
+    uncertainties, as well as the bin edges
     """
     log.info("creating histograms")
 
@@ -77,14 +79,14 @@ def create_histograms(config, output_path, method="uproot", only_nominal=False):
                 pos_in_file = _get_position_in_file(sample)
                 selection = _get_selection(sample, region, systematic)
                 weight = _get_weight(sample, region, systematic)
-                bins, bin_range = _get_binning(region)
+                bins = _get_binning(region)
 
                 # obtain the histogram
                 if method == "uproot":
                     from cabinetry.contrib import histogram_creation
 
-                    histogram = histogram_creation.from_uproot(
-                        ntuple_path, pos_in_file, selection, weight, bins, bin_range
+                    yields, sumw2 = histogram_creation.from_uproot(
+                        ntuple_path, pos_in_file, selection, weight, bins
                     )
 
                 elif "method" == "ServiceX":
@@ -93,8 +95,18 @@ def create_histograms(config, output_path, method="uproot", only_nominal=False):
                 else:
                     raise NotImplementedError
 
-                # save the histogram
-                histogram_name = histogram_wrapper._build_histogram_name(
+                # convert the information into a dictionary for easier handling
+                histogram = histogram_wrapper.to_dict(yields, sumw2, bins)
+
+                # generate a name for the histogram
+                histogram_name = histogram_wrapper._build_name(
                     sample, region, systematic
                 )
-                histogram_wrapper.save_histogram(histogram, output_path, histogram_name)
+
+                # check the histogram for common issues, fix them possible
+                histogram = histogram_wrapper._validate_and_fix(
+                    histogram, histogram_name
+                )
+
+                # save it
+                histogram_wrapper.save(histogram, output_path, histogram_name)

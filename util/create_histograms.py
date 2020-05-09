@@ -125,9 +125,9 @@ def plot_distributions(data, weights, labels, pseudodata, bins):
 
 if __name__ == "__main__":
     # configuration
-    num_events = 100000
-    yield_s = 12500
-    yield_b = 100000
+    num_events = 1000
+    yield_s = 125
+    yield_b = 1000
     labels = ["signal", "background"]  # names of prcesses
     file_name = output_directory + "prediction.root"
     file_name_pseudodata = output_directory + "data.root"

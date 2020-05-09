@@ -1,10 +1,12 @@
 import numpy as np
+from scipy import stats
 import uproot
 
 
-def from_uproot(ntuple_path, pos_in_file, selection, weight, bins, range):
+def from_uproot(ntuple_path, pos_in_file, selection, weight, bins):
     """
-    create a single histogram with uproot
+    create a single histogram with uproot, return bin yields, statistical
+    uncertainties on the yield, and bin edges
     """
     with uproot.open(ntuple_path) as f:
         events = f[pos_in_file].array(selection)
@@ -13,16 +15,23 @@ def from_uproot(ntuple_path, pos_in_file, selection, weight, bins, range):
         else:
             weights = np.ones_like(events)
 
-    histogram = _bin_data(events, weights, bins, range)
-    return histogram
+    yields, sumw2 = _bin_data(events, weights, bins)
+    return yields, sumw2
 
 
-def _bin_data(data, weights, bins, bin_range=None):
+def _sumw2(arr):
     """
-    create a histogram from unbinned data
+    calculate the absolute statistical uncertainty given an array of weights in a bin
     """
-    if bin_range is not None:
-        range_low, range_high = bin_range
-        bins = np.linspace(range_low, range_high, bins)
-    binned_data, _ = np.histogram(data, bins, bin_range, weights=weights)
-    return binned_data
+    return np.sqrt(np.sum(arr * arr))
+
+
+def _bin_data(data, weights, bins):
+    """
+    create a histogram from unbinned data, providing yields, statistical uncertainties
+    and the bin edges
+    """
+    # get bin yield and stat. uncertainty
+    yields, _, _ = stats.binned_statistic(data, weights, statistic="sum", bins=bins)
+    sumw2, _, _ = stats.binned_statistic(data, weights, statistic=_sumw2, bins=bins)
+    return yields, sumw2
