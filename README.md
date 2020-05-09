@@ -7,6 +7,7 @@
 ## Table of contents
 
 - [Introduction](#introduction)
+- [Hello world](#hello-world)
 - [Template fits](#template-fits)
 - [Configuration file thoughts](#configuration-file-thoughts)
 - [Scope](#scope)
@@ -41,6 +42,13 @@ Interesting related projects:
 - [ServiceX for TRExFitter](https://github.com/kyungeonchoi/ServiceXforTRExFitter)
 - [Template fit workflows](https://github.com/alexander-held/template-fit-workflows)
 - [TRExFitter config translation](https://github.com/alexander-held/TRExFitter-config-translation)
+
+## Hello world
+
+The script `example.py` shows an example of how to use `cabinetry`.
+Beyond the core dependencies of `cabinetry` (currently `pyyaml` and `numpy`), it also requires additional libraries: `uproot`, `scipy` and `matplotlib`.
+Those additional dependencies are not installed together with `cabinetry`, as they are only used to perform tasks that are outside the `cabinetry` core functionality.
+Eventually the basic implementation (from `cabinetry/contrib`) will be replaced by calls to external modules (see also [Code](#code)).
 
 ## Template fits
 

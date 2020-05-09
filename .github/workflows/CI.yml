@@ -38,6 +38,6 @@ jobs:
       run: |
         pip install .
         # install extra dependencies the example needs
-        pip install matplotlib uproot
+        pip install matplotlib uproot scipy
         python util/create_histograms.py
         python example.py

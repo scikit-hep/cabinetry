@@ -1,4 +1,5 @@
 import logging
+import numpy as np
 
 from . import histogram_wrapper
 
@@ -6,11 +7,22 @@ from . import histogram_wrapper
 log = logging.getLogger(__name__)
 
 
-def _adjust_histogram(histogram):
+def _fix_stat_unc(histogram, name):
+    """
+    replace nan stat. unc. by zero
+    """
+    nan_pos = np.where(np.isnan(histogram["sumw2"]))[0]
+    if len(nan_pos) > 0:
+        log.debug("fixing ill-defined stat. unc. for %s", name)
+        histogram["sumw2"] = np.nan_to_num(histogram["sumw2"], nan=0.0)
+    return histogram
+
+
+def adjust_histogram(histogram, name):
     """
     create a new modified histogram
     """
-    new_histogram = histogram  # for now, the histogram is unchanged
+    new_histogram = _fix_stat_unc(histogram, name)
     return new_histogram
 
 
@@ -23,13 +35,14 @@ def run(config, histogram_folder):
     for sample in config["Samples"]:
         for region in config["Regions"]:
             for systematic in [{"Name": "nominal"}]:
-                histogram_name = histogram_wrapper._build_histogram_name(
+                histogram_name = histogram_wrapper.build_name(
                     sample, region, systematic
                 )
-                histogram = histogram_wrapper.load_histogram(
-                    histogram_folder, histogram_name
+                histogram = histogram_wrapper.load(
+                    histogram_folder, histogram_name, modified=False
                 )
-                new_histogram = _adjust_histogram(histogram)
-                histogram_wrapper.save_histogram(
+                new_histogram = adjust_histogram(histogram, histogram_name)
+                histogram_wrapper.validate(histogram, histogram_name)
+                histogram_wrapper.save(
                     new_histogram, histogram_folder, histogram_name + "_modified"
                 )
