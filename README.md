@@ -46,7 +46,7 @@ Interesting related projects:
 ## Hello world
 
 The script `example.py` shows an example of how to use `cabinetry`.
-Beyond the core dependencies of `cabinetry` (currently `pyyaml` and `numpy`), it also requires additional libraries: `uproot`, `scipy` and `matplotlib`.
+Beyond the core dependencies of `cabinetry` (currently `pyyaml`, `numpy`, `pyhf`, `iminuit`), it also requires additional libraries: `uproot`, `scipy`, `matplotlib`.
 Those additional dependencies are not installed together with `cabinetry`, as they are only used to perform tasks that are outside the `cabinetry` core functionality.
 Eventually the basic implementation (from `cabinetry/contrib`) will be replaced by calls to external modules (see also [Code](#code)).
 
