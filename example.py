@@ -31,8 +31,11 @@ if __name__ == "__main__":
     # perform histogram post-processing
     cabinetry.template_postprocessor.run(fit_configuration, histogram_folder)
 
-    # build a workspace
-    pass
+    # build a workspace and save to file
+    workspace_folder = "workspaces/"
+    workspace_name = "example_workspace"
+    ws = cabinetry.workspace.build(fit_configuration, histogram_folder)
+    cabinetry.workspace.save(ws, workspace_folder, workspace_name)
 
     # run a fit
     pass
