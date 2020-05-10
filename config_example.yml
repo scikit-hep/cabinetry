@@ -1,5 +1,6 @@
 General:
-  Label: "My fit"
+  Measurement: "My fit"
+  POI: "Signal strength"
 
 Samples:
   - Name: "Data"
@@ -26,10 +27,10 @@ Regions:
     Binning: [0, 100, 200, 300, 400, 500, 600, 700, 800, 900, 1000]
 
 Systematics:
-  - Name: Luminosity
+  - Name: "Luminosity"
     OverallDown: -0.02
     OverallUp: 0.02
-    Samples: all
+    Samples: ALL
     Type: OVERALL
 
 NormFactors:
@@ -37,4 +38,4 @@ NormFactors:
     Nominal: 1
     Min: 0
     Max: 5
-    Samples: Signal
+    Samples: "Signal"

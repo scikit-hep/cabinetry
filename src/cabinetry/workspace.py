@@ -2,6 +2,8 @@ import json
 import logging
 import os
 
+import pyhf
+
 from . import histo
 
 
@@ -43,6 +45,30 @@ def get_unc_for_sample(
     return histo_yield
 
 
+def get_NF_modifiers(config, sample):
+    """
+    get the list of NormFactor modifiers acting on a sample
+    """
+    modifiers = []
+    for NormFactor in config["NormFactors"]:
+        # if a single sample is affected by the normfactor, put it in a list as a single entry
+        # could force that behavior in config syntax instead by requiring a single sample to be
+        # still listed as "Samples": ["sample_name"]
+        affected_samples = (
+            NormFactor["Samples"]
+            if isinstance(NormFactor["Samples"], list)
+            else [NormFactor["Samples"]]
+        )
+        if sample["Name"] in affected_samples:
+            log.debug(
+                "adding NormFactor %s to sample %s", NormFactor["Name"], sample["Name"]
+            )
+            modifiers.append(
+                {"data": None, "name": NormFactor["Name"], "type": "normfactor"}
+            )
+    return modifiers
+
+
 def get_channels(config, histogram_folder):
     """
     construct the channel information: yields per sample and modifiers
@@ -53,10 +79,14 @@ def get_channels(config, histogram_folder):
         channel.update({"name": region["Name"]})
         samples = []
         for sample in config["Samples"]:
+            # yield of the samples
             histo_yield = get_yield_for_sample(sample, region, histogram_folder)
             current_sample = {}
             current_sample.update({"name": sample["Name"]})
             current_sample.update({"data": histo_yield})
+
+            # collect all modifiers for the sample
+            modifiers = []
 
             # gammas
             stat_unc = get_unc_for_sample(sample, region, histogram_folder)
@@ -64,9 +94,11 @@ def get_channels(config, histogram_folder):
             gammas.update({"name": "staterror_" + region["Name"].replace(" ", "-")})
             gammas.update({"type": "staterror"})
             gammas.update({"data": stat_unc})
+            modifiers.append(gammas)
 
-            # need to add modifiers here
-            modifiers = [{}, gammas, {}]
+            # check if Normfactor affect the sample and add modifiers as needed
+            NF_modifier_list = get_NF_modifiers(config, sample)
+            modifiers += NF_modifier_list
 
             current_sample.update({"modifiers": modifiers})
             samples.append(current_sample)
@@ -77,8 +109,19 @@ def get_channels(config, histogram_folder):
 
 def get_measurements(config):
     """
+    construct the measurements, including POI setting and lumi
+    only supporting a single measurement so far
     """
-    return
+    measurements = []
+    measurement = {}
+    measurement.update({"name": config["General"]["Measurement"]})
+    config_dict = {}
+    parameters = {"parameters": []}
+    config_dict.update(parameters)
+    config_dict.update({"poi": config["General"]["POI"]})
+    measurement.update({"config": config_dict})
+    measurements.append(measurement)
+    return measurements
 
 
 def get_observations(config, histogram_folder):
@@ -118,14 +161,24 @@ def build(config, histogram_folder):
 
     # workspace version
     ws.update({"version": "1.0.0"})
+
+    # validate the workspace
+    validate(ws)
     return ws
+
+
+def validate(ws):
+    """
+    validate a workspace
+    """
+    pyhf.Workspace(ws)
 
 
 def save(ws, path, name):
     """
     save the workspace to a file
     """
-    log.info("saving workspace %s to %s", name, path + name + ".json")
+    log.debug("saving workspace %s to %s", name, path + name + ".json")
 
     # create output directory if it does not exist yet
     if not os.path.exists(path):
