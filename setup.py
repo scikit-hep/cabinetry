@@ -6,7 +6,7 @@ with open("README.md", "r") as f:
 
 setup(
     name="cabinetry",
-    version="0.0.1",
+    version="0.0.2",
     author="cabinetry developers",
     description="design and steer profile likelihood fits",
     long_description=long_description,
@@ -21,5 +21,5 @@ setup(
         "Operating System :: OS Independent",
     ],
     python_requires=">=3.6",
-    install_requires=["numpy", "pyyaml", "pyhf"],
+    install_requires=["numpy", "pyyaml", "pyhf>=0.3.2", "iminuit"],
 )
