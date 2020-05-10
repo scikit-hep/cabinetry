@@ -79,6 +79,10 @@ def get_channels(config, histogram_folder):
         channel.update({"name": region["Name"]})
         samples = []
         for sample in config["Samples"]:
+            if sample.get("Data", False):
+                # skip the data sample, it goes into the observations instead
+                continue
+
             # yield of the samples
             histo_yield = get_yield_for_sample(sample, region, histogram_folder)
             current_sample = {}
