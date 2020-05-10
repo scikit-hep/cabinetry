@@ -99,6 +99,6 @@ def data_MC_matplotlib(histogram_dict_list, figure_folder, figure_name):
 
     if not os.path.exists(figure_folder):
         os.mkdir(figure_folder)
-    log.info("saving %s to %s", figure_name, figure_folder)
+    log.debug("saving %s to %s", figure_name, figure_folder)
     plt.savefig(figure_folder + figure_name)
     plt.clf()

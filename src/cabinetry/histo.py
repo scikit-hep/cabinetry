@@ -24,7 +24,7 @@ def save(histogram, path, histogram_name):
     """
     save a histogram to disk
     """
-    log.info("saving %s to %s", histogram_name, path)
+    log.debug("saving %s to %s", histogram_name, path)
 
     # create output directory if it does not exist yet
     if not os.path.exists(path):
