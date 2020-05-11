@@ -28,9 +28,9 @@ Regions:
 
 Systematics:
   - Name: "Luminosity"
-    OverallDown: -0.02
-    OverallUp: 0.02
-    Samples: ALL
+    OverallDown: -0.05
+    OverallUp: 0.05
+    Samples: ["Signal", "Background"]
     Type: OVERALL
 
 NormFactors:
