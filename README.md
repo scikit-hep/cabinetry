@@ -136,6 +136,31 @@ Some relevant work for [TRExFitter](https://gitlab.cern.ch/TRExStats/TRExFitter)
 Events for a given histogram are located at some path that can be specified by the sample name, region name, and systematic variation.
 It is unclear how to support as many structures as possible, while limiting the amount of options needed to specify them.
 
+### Single-element lists
+
+In multiple places in the config, lists of samples, regions, systematics etc. are needed.
+These could look like this:
+```yaml
+"Samples": ["ABC", "DEF"]
+```
+For cases where only a single entry is needed, it could either still be written as a single-element list, or alternatively as
+```yaml
+"Samples": "ABC"
+```
+which turns the value into a string instead.
+It is desirable to have consistency.
+During config parsing, everything could be put into a list as needed, or the code further downstream could handle both possible cases.
+While forcing the user to write everything as a list might result in less aesthetically pleasing results,
+```yaml
+"Samples": ["ABC"]
+```
+this still might be the best solution overall, as it also prevents other tools using the same config from having to manually implement the parsing of different types of values.
+
+### Reserved values for convenience
+
+For a systematic uncertainty affecting all existing samples, it might be convenient to support a setting like `"Samples": "ALL"`.
+This requires reserving such keywords, no samples could be allowed to have this name.
+
 ## Scope
 
 Traditional binned template fits in [HistFactory](https://cds.cern.ch/record/1456844/) style are substantially easier to support than the open world of binned and unbinned models.

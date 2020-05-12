@@ -45,20 +45,28 @@ def get_unc_for_sample(
     return histo_yield
 
 
+def _convert_samples_to_list(samples):
+    """
+    the config can allow for two ways of specifying samples, a single sample:
+    "Samples": "ABC"
+    or a list of samples:
+    "Samples": ["ABC", "DEF"]
+    for consistent treatment, convert the single sample into a single-element list
+    """
+    if isinstance(samples, list):
+        return samples
+    else:
+        return [samples]
+
+
 def get_NF_modifiers(config, sample):
     """
     get the list of NormFactor modifiers acting on a sample
     """
     modifiers = []
     for NormFactor in config["NormFactors"]:
-        # if a single sample is affected by the normfactor, put it in a list as a single entry
-        # could force that behavior in config syntax instead by requiring a single sample to be
-        # still listed as "Samples": ["sample_name"]
-        affected_samples = (
-            NormFactor["Samples"]
-            if isinstance(NormFactor["Samples"], list)
-            else [NormFactor["Samples"]]
-        )
+        affected_samples = _convert_samples_to_list(NormFactor["Samples"])
+
         if sample["Name"] in affected_samples:
             log.debug(
                 "adding NormFactor %s to sample %s", NormFactor["Name"], sample["Name"]
@@ -66,6 +74,43 @@ def get_NF_modifiers(config, sample):
             modifiers.append(
                 {"data": None, "name": NormFactor["Name"], "type": "normfactor"}
             )
+    return modifiers
+
+
+def get_OverallSys_modifier(systematic):
+    """
+    construct an OverallSys modifier
+    while this can be built without any histogram reference, it might be useful
+    to build a histogram for this anyway and possibly use it here
+    """
+    modifier = {}
+    modifier.update({"name": systematic["Name"]})
+    modifier.update({"type": "normsys"})
+    modifier.update(
+        {
+            "data": {
+                "hi": 1 + systematic["OverallUp"],
+                "lo": 1 + systematic["OverallDown"],
+            }
+        }
+    )
+    return modifier
+
+
+def get_sys_modifiers(config, sample):
+    """
+    get the list of all systematic modifiers acting on a sample
+    """
+    modifiers = []
+    for systematic in config["Systematics"]:
+        if systematic["Type"] == "OVERALL":
+            # OverallSys (norm uncertainty with Gaussian constraint)
+            log.debug(
+                "adding OverallSys %s to sample %s", systematic["Name"], sample["Name"]
+            )
+            modifiers.append(get_OverallSys_modifier(systematic))
+        else:
+            raise NotImplementedError("not supporting other systematic types yet")
     return modifiers
 
 
@@ -103,6 +148,10 @@ def get_channels(config, histogram_folder):
             # check if Normfactor affect the sample and add modifiers as needed
             NF_modifier_list = get_NF_modifiers(config, sample)
             modifiers += NF_modifier_list
+
+            # check if systematic uncertainties affect the samples, add modifiers as needed
+            sys_modifier_list = get_sys_modifiers(config, sample)
+            modifiers += sys_modifier_list
 
             current_sample.update({"modifiers": modifiers})
             samples.append(current_sample)
