@@ -18,7 +18,7 @@ def _build_figure_name(region, is_prefit):
     if is_prefit:
         figure_name += "_" + "prefit"
     else:
-        figure_name += "_" + "prefit"
+        figure_name += "_" + "postfit"
     figure_name += ".pdf"
     return figure_name
 
