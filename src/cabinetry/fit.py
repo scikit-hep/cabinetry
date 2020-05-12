@@ -2,8 +2,6 @@ import logging
 
 import pyhf
 
-from . import histo
-
 
 log = logging.getLogger(__name__)
 
@@ -28,9 +26,9 @@ def print_results(bestfit, uncertainty, labels):
     """
     print the best-fit parameter results and associated uncertainties
     """
-    max_label_length = max([len(l) for l in labels])
-    for i, l in enumerate(labels):
-        l_with_spacer = l + " " * (max_label_length - len(l))
+    max_label_length = max([len(label) for label in labels])
+    for i, label in enumerate(labels):
+        l_with_spacer = label + " " * (max_label_length - len(label))
         log.info("%s: %f +/- %f", l_with_spacer, bestfit[i], uncertainty[i])
 
 
