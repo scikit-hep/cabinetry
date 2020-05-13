@@ -1,7 +1,8 @@
 # cabinetry
 
-[![](https://github.com/alexander-held/cabinetry/workflows/CI/badge.svg)](https://github.com/alexander-held/cabinetry/actions?query=workflow%3ACI)
+[![CI status](https://github.com/alexander-held/cabinetry/workflows/CI/badge.svg)](https://github.com/alexander-held/cabinetry/actions?query=workflow%3ACI)
 [![PyPI version](https://badge.fury.io/py/cabinetry.svg)](https://badge.fury.io/py/cabinetry)
+[![python version](https://img.shields.io/pypi/pyversions/cabinetry.svg)](https://pypi.org/project/cabinetry/)
 [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
 
 ## Table of contents
@@ -16,9 +17,8 @@
 
 ## Introduction
 
-`cabinetry` is (or rather will be) a tool to build and steers (profile likelihood) template fits with applications in high energy physics in mind.
+`cabinetry` is a tool to build and steer (profile likelihood) template fits with applications in high energy physics in mind.
 It acts as an interface to many powerful tools to make it easier for an analyzer to run their statistical inference pipeline.
-For the moment, this repository is a collection of things rather than a fully featured product.
 An incomplete list of interesting tools to interface:
 
 - [ServiceX](https://github.com/ssl-hep/ServiceX) for data delivery,
@@ -140,20 +140,26 @@ It is unclear how to support as many structures as possible, while limiting the 
 
 In multiple places in the config, lists of samples, regions, systematics etc. are needed.
 These could look like this:
+
 ```yaml
 "Samples": ["ABC", "DEF"]
 ```
+
 For cases where only a single entry is needed, it could either still be written as a single-element list, or alternatively as
+
 ```yaml
 "Samples": "ABC"
 ```
+
 which turns the value into a string instead.
 It is desirable to have consistency.
 During config parsing, everything could be put into a list as needed, or the code further downstream could handle both possible cases.
 While forcing the user to write everything as a list might result in less aesthetically pleasing results,
+
 ```yaml
 "Samples": ["ABC"]
 ```
+
 this still might be the best solution overall, as it also prevents other tools using the same config from having to manually implement the parsing of different types of values.
 
 ### Reserved values for convenience
