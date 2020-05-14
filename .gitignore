@@ -3,6 +3,7 @@ __pycache__
 
 # code coverage
 .coverage
+htmlcov
 
 # packaging
 *.egg-info
