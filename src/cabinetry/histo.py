@@ -74,20 +74,22 @@ def validate(histogram, name):
     and ill-defined statistical uncertainties
     """
     # check for empty bins
-    empty_bins = np.where(histogram["yields"] == 0.0)[0]
+    # using np.atleast_1d to fix deprecation warning, even though the
+    # input should never need it
+    empty_bins = np.where(np.atleast_1d(histogram["yields"]) == 0.0)[0]
     if len(empty_bins) > 0:
-        log.warn("%s has empty bins: %s", name, empty_bins)
+        log.warning("%s has empty bins: %s", name, empty_bins)
 
     # check for ill-defined stat. unc.
     nan_pos = np.where(np.isnan(histogram["sumw2"]))[0]
     if len(nan_pos) > 0:
-        log.warn("%s has bins with ill-defined stat. unc.: %s", name, nan_pos)
+        log.warning("%s has bins with ill-defined stat. unc.: %s", name, nan_pos)
 
     # check whether there are any bins with ill-defined stat. uncertainty
     # but non-empty yield, those deserve a closer look
     not_empty_but_nan = [b for b in nan_pos if b not in empty_bins]
     if len(not_empty_but_nan) > 0:
-        log.warn(
+        log.warning(
             "%s has non-empty bins with ill-defined stat. unc.: %s",
             name,
             not_empty_but_nan,
