@@ -22,7 +22,7 @@ def test_get_parameter_names():
     spec = _get_spec()
     model = pyhf.Workspace(spec).model()
     labels = fit.get_parameter_names(model)
-    assert labels == ['staterror_Signal-Region', 'Signal strength']
+    assert labels == ["staterror_Signal-Region", "Signal strength"]
 
 
 def test_print_results(caplog):
@@ -42,4 +42,4 @@ def test_fit():
     bestfit, uncertainty, labels = fit.fit(spec)
     assert np.allclose(bestfit, [0.99998772, 9.16255687])
     assert np.allclose(uncertainty, [0.04954955, 0.61348804])
-    assert labels == ['staterror_Signal-Region', 'Signal strength']
+    assert labels == ["staterror_Signal-Region", "Signal strength"]
