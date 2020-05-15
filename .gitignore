@@ -1,6 +1,10 @@
 __pycache__
 *.pyc
 
+# code coverage
+.coverage
+htmlcov
+
 # packaging
 *.egg-info
 dist
