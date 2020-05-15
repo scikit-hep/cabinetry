@@ -50,3 +50,4 @@ def fit(spec):
     labels = get_parameter_names(model)
 
     print_results(bestfit, uncertainty, labels)
+    return bestfit, uncertainty, labels
