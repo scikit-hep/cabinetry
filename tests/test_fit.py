@@ -2,6 +2,7 @@ import logging
 import numpy as np
 
 import pyhf
+import pytest
 
 from cabinetry import fit
 
@@ -37,6 +38,9 @@ def test_print_results(caplog):
     caplog.clear()
 
 
+# skip a "RuntimeWarning: numpy.ufunc size changed" warning
+# due to different numpy versions used in dependencies
+@pytest.mark.filterwarnings("ignore::RuntimeWarning")
 def test_fit():
     spec = _get_spec()
     bestfit, uncertainty, labels = fit.fit(spec)

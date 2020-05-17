@@ -43,5 +43,5 @@ if __name__ == "__main__":
     # visualize some results
     figure_folder = "figures/"
     cabinetry.visualize.data_MC(
-        cabinetry_config, histo_folder, figure_folder, prefit=True, method="matplotlib",
+        cabinetry_config, histo_folder, figure_folder, prefit=True, method="matplotlib"
     )
