@@ -239,3 +239,12 @@ def save(ws, path, name):
     # save workspace to file
     with open(path + name + ".json", "w") as f:
         json.dump(ws, f, sort_keys=True, indent=4)
+
+
+def load(path, name):
+    """
+    load a workspace from file
+    """
+    with open(path + name + ".json", "r") as f:
+        ws = json.loads(f.read())
+    return ws

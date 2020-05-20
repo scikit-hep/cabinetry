@@ -38,6 +38,7 @@ if __name__ == "__main__":
     cabinetry.workspace.save(ws, workspace_folder, workspace_name)
 
     # run a fit
+    ws = cabinetry.workspace.load(workspace_folder, workspace_name)
     cabinetry.fit.fit(ws)
 
     # visualize some results
