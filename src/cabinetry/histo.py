@@ -4,6 +4,7 @@ different formats, so saving and loading should go through this wrapper
 """
 import logging
 import os
+from pathlib import Path
 
 import numpy as np
 
@@ -12,56 +13,102 @@ log = logging.getLogger(__name__)
 
 
 def to_dict(yields, sumw2, bins):
-    """
-    to more conveniently move around histogram information internally, put it
+    """to more conveniently move around histogram information internally, put it
     into a dictionary
+
+    Args:
+        yields (numpy.ndarray): yield per histogram bin
+        sumw2 (numpy.ndarray): statistical uncertainty of yield per bin
+        bins (list): edges of histogram bins
+
+    Returns:
+        dict: dictionary containing histogram information
     """
     histogram = {"yields": yields, "sumw2": sumw2, "bins": bins}
     return histogram
 
 
-def save(histogram, path, histogram_name):
+def save(histogram, histo_path):
+    """save a histogram to disk
+
+    Args:
+        histogram (dict): the histogram to be saved
+        histo_path (pathlib.Path): where to save the histogram
     """
-    save a histogram to disk
-    """
-    log.debug("saving %s to %s", histogram_name, path)
+    log.debug("saving histogram to %s", histo_path.with_suffix(".npz"))
 
     # create output directory if it does not exist yet
-    if not os.path.exists(path):
-        os.mkdir(path)
+    if not os.path.exists(histo_path.parent):
+        os.mkdir(histo_path.parent)
     np.savez(
-        path + histogram_name + ".npz",
+        histo_path.with_suffix(".npz"),
         yields=histogram["yields"],
         sumw2=histogram["sumw2"],
         bins=histogram["bins"],
     )
 
 
-def load(path, histogram_name, modified=True):
-    """
-    load a histogram from disk and convert it into dictionary form
+def _load(histo_path, modified=True):
+    """load a histogram from disk and convert it into dictionary form
     try to load the "modified" version of the histogram by default
     (which received post-processing)
+
+    Args:
+        histo_path (pathlib.Path): where the histogram is located
+        modified (bool, optional): whether to load the modified histogram (after post-processing), defaults to True
+
+    Returns:
+        dict: the loaded histogram
     """
     if modified:
-        histo_path = path + histogram_name + "_modified" + ".npz"
-        if not os.path.exists(histo_path):
-            log.error("the modified histogram %s does not exist", histo_path)
-            log.error("loading the un-modified histogram instead!")
-            histo_path = path + histogram_name + ".npz"
-    else:
-        histo_path = path + histogram_name + ".npz"
-    histogram_npz = np.load(histo_path)
+        histo_path_modified = histo_path.parent / (histo_path.name + "_modified")
+        if not histo_path_modified.with_suffix(".npz").exists():
+            log.warning(
+                "the modified histogram %s does not exist",
+                histo_path_modified.with_suffix(".npz"),
+            )
+            log.warning("loading the un-modified histogram instead!")
+        else:
+            histo_path = histo_path_modified
+    histogram_npz = np.load(histo_path.with_suffix(".npz"))
     yields = histogram_npz["yields"]
     sumw2 = histogram_npz["sumw2"]
     bins = histogram_npz["bins"]
     return to_dict(yields, sumw2, bins)
 
 
-def build_name(sample, region, systematic):
+def load_from_config(histo_folder, sample, region, systematic, modified=True):
+    """load a histogram, given a folder the histograms are located in and the
+    relevant information from the config: sample, region, systematic,
+
+    Args:
+        histo_folder (str): folder containing all histograms
+        sample (dict): containing all sample information
+        region (dict): containing all region information
+        systematic (dict): containing all systematic information
+        modified (bool, optional): whether to load the modified histogram (after post-processing), defaults to True
+
+    Returns:
+        dict: the loaded histogram
+        str: name of the histogram
     """
-    construct a unique name for each histogram
-    param sample: the sample
+    # find the histogram name given config information, and then load the histogram
+    histo_name = build_name(sample, region, systematic)
+    histo_path = Path(histo_folder) / histo_name
+    histogram = _load(histo_path, modified)
+    return histogram, histo_name
+
+
+def build_name(sample, region, systematic):
+    """construct a unique name for each histogram
+
+    Args:
+        sample (dict): containing all sample information
+        region (dict): containing all region information
+        systematic (dict): containing all systematic information
+
+    Returns:
+        str: unique name for the histogram
     """
     name = sample["Name"] + "_" + region["Name"] + "_" + systematic["Name"]
     name = name.replace(" ", "-")
@@ -69,9 +116,12 @@ def build_name(sample, region, systematic):
 
 
 def validate(histogram, name):
-    """
-    run consistency checks on a histogram, checking for empty bins
+    """run consistency checks on a histogram, checking for empty bins
     and ill-defined statistical uncertainties
+
+    Args:
+        histogram (dict): the histogram to validate
+        name (str): name of the histogram for logging purposes
     """
     # check for empty bins
     # using np.atleast_1d to fix deprecation warning, even though the

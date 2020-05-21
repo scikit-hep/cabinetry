@@ -9,12 +9,12 @@ from cabinetry import fit
 
 def _get_spec():
     # fmt: off
-    spec = {"channels":[{"name":"Signal Region","samples":[{"data":[51.839756],
-    "modifiers":[{"data":[2.5695188],"name":"staterror_Signal-Region",
-    "type":"staterror"},{"data":None,"name":"Signal strength","type":"normfactor"}],
-    "name":"Signal"}]}],"measurements":[{"config":{"parameters":[],
-    "poi":"Signal strength"},"name":"My fit"}],"observations":
-    [{"data":[475],"name":"Signal Region"}],"version":"1.0.0"}
+    spec = {"channels": [{"name": "Signal Region", "samples": [{"data": [51.839756],
+            "modifiers":[{"data": [2.5695188], "name": "staterror_Signal-Region",
+            "type": "staterror"}, {"data": None, "name": "Signal strength", "type": "normfactor"}],
+            "name": "Signal"}]}], "measurements": [{"config": {"parameters": [],
+            "poi": "Signal strength"}, "name":"My fit"}], "observations":
+            [{"data": [475], "name": "Signal Region"}], "version": "1.0.0"}
     # fmt: on
     return spec
 

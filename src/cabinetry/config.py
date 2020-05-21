@@ -1,4 +1,5 @@
 import logging
+from pathlib import Path
 import yaml
 
 
@@ -9,13 +10,13 @@ OPTIONAL_CONFIG_KEYS = ["Systematics"]
 log = logging.getLogger(__name__)
 
 
-def read(file_path):
+def read(file_path_string):
     """
     read a config file from a provided path and return it
     """
+    file_path = Path(file_path_string)
     log.info("opening config file %s", file_path)
-    with open(file_path) as f:
-        config = yaml.safe_load(f)
+    config = yaml.safe_load(file_path.read_text())
     validate(config)
     return config
 
