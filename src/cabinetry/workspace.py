@@ -27,8 +27,9 @@ def get_yield_for_sample(
     get the yield for a specific sample, by figuring out its name and then
     obtaining the yield from the correct histogram
     """
-    histogram_name = histo.build_name(sample, region, systematic)
-    histogram = histo.load(histogram_folder, histogram_name, modified=True)
+    histogram, _ = histo.load_from_config(
+        histogram_folder, sample, region, systematic, modified=True
+    )
     histo_yield = histogram["yields"].tolist()
     return histo_yield
 
@@ -40,8 +41,9 @@ def get_unc_for_sample(
     get the uncertainty of a specific sample, by figuring out its name and then
     obtaining the sumw2 from the correct histogram
     """
-    histogram_name = histo.build_name(sample, region, systematic)
-    histogram = histo.load(histogram_folder, histogram_name, modified=True)
+    histogram, _ = histo.load_from_config(
+        histogram_folder, sample, region, systematic, modified=True
+    )
     histo_yield = histogram["sumw2"].tolist()
     return histo_yield
 

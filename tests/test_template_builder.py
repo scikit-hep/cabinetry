@@ -1,13 +1,13 @@
+from pathlib import Path
 import pytest
 
 from cabinetry import template_builder
 
 
 def test__get_ntuple_path():
-    assert (
-        template_builder._get_ntuple_path({"Path": "test/path.root"}, {}, {})
-        == "test/path.root"
-    )
+    assert template_builder._get_ntuple_path(
+        {"Path": "test/path.root"}, {}, {}
+    ) == Path("test/path.root")
 
 
 def test__get_selection():

@@ -32,13 +32,12 @@ if __name__ == "__main__":
     cabinetry.template_postprocessor.run(cabinetry_config, histo_folder)
 
     # build a workspace and save to file
-    workspace_folder = "workspaces/"
-    workspace_name = "example_workspace"
+    workspace_path = "workspaces/example_workspace.json"
     ws = cabinetry.workspace.build(cabinetry_config, histo_folder)
-    cabinetry.workspace.save(ws, workspace_folder, workspace_name)
+    cabinetry.workspace.save(ws, workspace_path)
 
     # run a fit
-    ws = cabinetry.workspace.load(workspace_folder, workspace_name)
+    ws = cabinetry.workspace.load(workspace_path)
     cabinetry.fit.fit(ws)
 
     # visualize some results

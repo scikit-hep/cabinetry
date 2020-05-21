@@ -1,5 +1,6 @@
 import logging
 import numpy as np
+from pathlib import Path
 
 from . import histo
 
@@ -8,8 +9,14 @@ log = logging.getLogger(__name__)
 
 
 def _fix_stat_unc(histogram, name):
-    """
-    replace nan stat. unc. by zero
+    """replace nan stat. unc. by zero
+
+    Args:
+        histogram (dict): the histogram to fix
+        name (str): histogram name for logging
+
+    Returns:
+        dict: the fixed histogram
     """
     nan_pos = np.where(np.isnan(histogram["sumw2"]))[0]
     if len(nan_pos) > 0:
@@ -19,26 +26,36 @@ def _fix_stat_unc(histogram, name):
 
 
 def adjust_histogram(histogram, name):
-    """
-    create a new modified histogram
+    """create a new modified histogram, currently only calling the
+    stat. uncertainty fix
+
+    Args:
+        histogram (dict): the histogram to modify
+        name (str): histogram name for logging
+
+    Returns:
+        dict: the modified histogram
     """
     new_histogram = _fix_stat_unc(histogram, name)
     return new_histogram
 
 
 def run(config, histogram_folder):
-    """
-    apply post-processing as needed for all histograms
+    """apply post-processing as needed for all histograms
+
+    Args:
+        config (dict): the cabinetry config
+        histogram_folder (str): folder containing the histograms
     """
     log.info("applying post-processing to histograms")
     # loop over all histograms
     for sample in config["Samples"]:
         for region in config["Regions"]:
             for systematic in [{"Name": "nominal"}]:
-                histogram_name = histo.build_name(sample, region, systematic)
-                histogram = histo.load(histogram_folder, histogram_name, modified=False)
+                histogram, histogram_name = histo.load_from_config(
+                    histogram_folder, sample, region, systematic, modified=False
+                )
                 new_histogram = adjust_histogram(histogram, histogram_name)
                 histo.validate(histogram, histogram_name)
-                histo.save(
-                    new_histogram, histogram_folder, histogram_name + "_modified"
-                )
+                new_histo_path = Path(histogram_folder) / (histogram_name + "_modified")
+                histo.save(new_histogram, new_histo_path)

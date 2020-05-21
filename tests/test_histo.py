@@ -55,7 +55,11 @@ def test_save(tmpdir):
     pass
 
 
-def test_load():
+def test__load():
+    pass
+
+
+def test_load_from_config():
     pass
 
 
