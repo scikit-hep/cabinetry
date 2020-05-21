@@ -22,7 +22,6 @@ if __name__ == "__main__":
     cabinetry.config.print_overview(cabinetry_config)
 
     # create template histograms
-    input_folder = "util/ntuples"
     histo_folder = "histograms/"
     cabinetry.template_builder.create_histograms(
         cabinetry_config, histo_folder, only_nominal=True, method="uproot"
@@ -40,7 +39,7 @@ if __name__ == "__main__":
     ws = cabinetry.workspace.load(workspace_path)
     cabinetry.fit.fit(ws)
 
-    # visualize some results
+    # visualize templates and data
     figure_folder = "figures/"
     cabinetry.visualize.data_MC(
         cabinetry_config, histo_folder, figure_folder, prefit=True, method="matplotlib"
