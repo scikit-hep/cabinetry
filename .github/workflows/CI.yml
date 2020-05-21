@@ -40,7 +40,7 @@ jobs:
       run: |
         pip install .
         # install extra dependencies the example needs
-        pip install matplotlib uproot scipy iminuit
+        pip install matplotlib uproot scipy iminuit numexpr
         python util/create_histograms.py
         python example.py
     - name: Test with pytest
