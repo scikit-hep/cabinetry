@@ -1,7 +1,5 @@
 import logging
 
-import pytest
-
 from cabinetry import histo
 
 

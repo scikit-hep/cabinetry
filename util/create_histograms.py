@@ -87,7 +87,7 @@ def plot_distributions(data, weights, labels, pseudodata, bins):
 
     # labels = [l.split('\'')[1] for l in labels]
     yield_each = [str(round(np.sum(w), 1)) for w in weights]
-    labels = [l.decode().split(";")[0] for l in labels]
+    labels = [label.decode().split(";")[0] for label in labels]
 
     # plot normalized distributions
     for i in reversed(range(len(data))):

@@ -3,7 +3,6 @@ import os
 import matplotlib.pyplot as plt
 import matplotlib as mpl
 import numpy as np
-from pathlib import Path
 
 
 log = logging.getLogger(__name__)
