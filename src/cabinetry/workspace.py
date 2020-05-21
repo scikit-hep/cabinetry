@@ -1,6 +1,7 @@
 import json
 import logging
 import os
+from pathlib import Path
 
 import pyhf
 
@@ -227,24 +228,23 @@ def validate(ws):
     pyhf.Workspace(ws)
 
 
-def save(ws, path, name):
+def save(ws, file_path_string):
     """
     save the workspace to a file
     """
-    log.debug("saving workspace %s to %s", name, path + name + ".json")
-
+    file_path = Path(file_path_string)
+    log.debug("saving workspace to %s", file_path)
     # create output directory if it does not exist yet
-    if not os.path.exists(path):
-        os.mkdir(path)
+    if not os.path.exists(file_path.parent):
+        os.mkdir(file_path.parent)
     # save workspace to file
-    with open(path + name + ".json", "w") as f:
-        json.dump(ws, f, sort_keys=True, indent=4)
+    file_path.write_text(json.dumps(ws, sort_keys=True, indent=4))
 
 
-def load(path, name):
+def load(file_path_string):
     """
     load a workspace from file
     """
-    with open(path + name + ".json", "r") as f:
-        ws = json.loads(f.read())
+    file_path = Path(file_path_string)
+    ws = json.loads(file_path.read_text())
     return ws
