@@ -3,23 +3,32 @@ import os
 import matplotlib.pyplot as plt
 import matplotlib as mpl
 import numpy as np
+from pathlib import Path
 
 
 log = logging.getLogger(__name__)
 
 
 def _total_yield_uncertainty(sumw2_list):
-    """
-    calculate the absolute statistical uncertainty of a stack of MC
+    """calculate the absolute statistical uncertainty of a stack of MC
     via sum in quadrature
+
+    Args:
+        sumw2_list (list): list of absolute stat. uncertainty per sample
+
+    Returns:
+        np.array: absolute stat. uncertainty of stack of samples
     """
     tot_unc = np.sqrt(np.sum(np.power(sumw2_list, 2), axis=0))
     return tot_unc
 
 
-def data_MC_matplotlib(histogram_dict_list, figure_folder, figure_name):
-    """
-    draw a data/MC histogram with matplotlib
+def data_MC_matplotlib(histogram_dict_list, figure_path):
+    """draw a data/MC histogram with matplotlib
+
+    Args:
+        histogram_dict_list (list[dict]): list of samples (with info stored in one dict per sample)
+        figure_path (pathlib.Path): path where figure should be saved
     """
     mc_histograms_yields = []
     mc_histograms_sumw2 = []
@@ -97,8 +106,8 @@ def data_MC_matplotlib(histogram_dict_list, figure_folder, figure_name):
     plt.ylim([0, y_max * 1.1])  # 10% headroom
     plt.plot()
 
-    if not os.path.exists(figure_folder):
-        os.mkdir(figure_folder)
-    log.debug("saving %s to %s", figure_name, figure_folder)
-    plt.savefig(figure_folder + figure_name)
+    if not os.path.exists(figure_path.parent):
+        os.mkdir(figure_path.parent)
+    log.debug("saving figure as %s", figure_path)
+    plt.savefig(figure_path)
     plt.clf()
