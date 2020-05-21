@@ -45,7 +45,33 @@ Interesting related projects:
 
 ## Hello world
 
-The script `example.py` shows an example of how to use `cabinetry`.
+To run the following example, first generate the input files via the script `util/create_histograms.py`.
+
+```python
+import cabinetry
+
+cabinetry_config = cabinetry.config.read("config_example.yml")
+
+# create template histograms
+histo_folder = "histograms/"
+cabinetry.template_builder.create_histograms(
+    cabinetry_config, histo_folder, only_nominal=True, method="uproot"
+)
+
+# perform histogram post-processing
+cabinetry.template_postprocessor.run(cabinetry_config, histo_folder)
+
+# visualize templates and data
+cabinetry.visualize.data_MC(cabinetry_config, histo_folder, "figures/", prefit=True, method="matplotlib")
+
+# build a workspace
+ws = cabinetry.workspace.build(cabinetry_config, histo_folder)
+
+# run a fit
+cabinetry.fit.fit(ws)
+```
+
+The above is an abbreviated version of an example included in `example.py`, which shows how to use `cabinetry`.
 Beyond the core dependencies of `cabinetry` (currently `pyyaml`, `numpy`, `pyhf`, `iminuit`), it also requires additional libraries: `uproot`, `scipy`, `matplotlib`.
 Those additional dependencies are not installed together with `cabinetry`, as they are only used to perform tasks that are outside the `cabinetry` core functionality.
 Eventually the basic implementation (from `cabinetry/contrib`) will be replaced by calls to external modules (see also [Code](#code)).
