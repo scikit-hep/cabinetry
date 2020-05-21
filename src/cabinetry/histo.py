@@ -61,11 +61,15 @@ def _load(histo_path, modified=True):
         dict: the loaded histogram
     """
     if modified:
-        if not histo_path.exists:
-            log.error("the modified histogram %s does not exist", histo_path)
-            log.error("loading the un-modified histogram instead!")
-    else:
-        histo_path = histo_path.parent / (histo_path.name + "_modified")
+        histo_path_modified = histo_path.parent / (histo_path.name + "_modified")
+        if not histo_path_modified.with_suffix(".npz").exists():
+            log.warning(
+                "the modified histogram %s does not exist",
+                histo_path_modified.with_suffix(".npz"),
+            )
+            log.warning("loading the un-modified histogram instead!")
+        else:
+            histo_path = histo_path_modified
     histogram_npz = np.load(histo_path.with_suffix(".npz"))
     yields = histogram_npz["yields"]
     sumw2 = histogram_npz["sumw2"]
