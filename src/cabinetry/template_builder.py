@@ -39,8 +39,15 @@ def _get_variable(sample, region, systematic):
 
 
 def _get_filter(sample, region, systematic):
-    """
-    construct the filter to be applied for event selection
+    """construct the filter to be applied for event selection
+
+    Args:
+        sample (dict): containing all sample information
+        region (dict): containing all region information
+        systematic (dict): containing all systematic information
+
+    Returns:
+        str: expression for the filter to be used, or None for no filtering
     """
     selection_filter = region.get("Filter", None)
     return selection_filter
