@@ -14,6 +14,13 @@ def test__get_variable():
     assert template_builder._get_variable({}, {"Variable": "jet_pt"}, {}) == "jet_pt"
 
 
+def test__get_filter():
+    assert (
+        template_builder._get_filter({}, {"Filter": "jet_pt > 0"}, {}) == "jet_pt > 0"
+    )
+    assert template_builder._get_filter({}, {}, {}) == None
+
+
 def test__get_weight():
     assert template_builder._get_weight({"Weight": "weight_mc"}, {}, {}) == "weight_mc"
     assert template_builder._get_weight({}, {}, {}) == None
