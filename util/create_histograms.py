@@ -46,19 +46,37 @@ def create_pseudodata(yield_s, yield_b):
     return pseudodata
 
 
+def create_lepton_charge(n_events):
+    # lepton charge is +1 or -1 for all events, just to have an extra variable
+    charge = (np.random.randint(0, 2, size=n_events) * 2) - 1
+    return charge
+
+
 def create_file(file_name, distributions, weights, labels):
+    n_events = len(weights[0])
     with uproot.recreate(file_name) as f:
         # write the predicted processes
         for i, label in enumerate(labels):
-            f[label] = uproot.newtree({"jet_pt": "float64", "weight": "float64"})
-            f[label].extend({"jet_pt": distributions[i], "weight": weights[i]})
+            lep_charge = create_lepton_charge(n_events)
+            f[label] = uproot.newtree(
+                {"jet_pt": "float64", "weight": "float64", "lep_charge": "int"}
+            )
+            f[label].extend(
+                {
+                    "jet_pt": distributions[i],
+                    "weight": weights[i],
+                    "lep_charge": lep_charge,
+                }
+            )
 
 
 def create_file_pseudodata(file_name, pseudodata):
+    n_events = len(pseudodata)
     with uproot.recreate(file_name) as f:
         # write pseudodata
-        f["pseudodata"] = uproot.newtree({"jet_pt": "float64"})
-        f["pseudodata"].extend({"jet_pt": pseudodata})
+        lep_charge = create_lepton_charge(n_events)
+        f["pseudodata"] = uproot.newtree({"jet_pt": "float64", "lep_charge": "int"})
+        f["pseudodata"].extend({"jet_pt": pseudodata, "lep_charge": lep_charge})
 
 
 def read_file(file_name):

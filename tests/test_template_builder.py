@@ -10,8 +10,15 @@ def test__get_ntuple_path():
     ) == Path("test/path.root")
 
 
-def test__get_selection():
-    assert template_builder._get_selection({}, {"Variable": "jet_pt"}, {}) == "jet_pt"
+def test__get_variable():
+    assert template_builder._get_variable({}, {"Variable": "jet_pt"}, {}) == "jet_pt"
+
+
+def test__get_filter():
+    assert (
+        template_builder._get_filter({}, {"Filter": "jet_pt > 0"}, {}) == "jet_pt > 0"
+    )
+    assert template_builder._get_filter({}, {}, {}) == None
 
 
 def test__get_weight():

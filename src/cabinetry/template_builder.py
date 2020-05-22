@@ -23,8 +23,8 @@ def _get_ntuple_path(sample, region, systematic):
     return path
 
 
-def _get_selection(sample, region, systematic):
-    """construct the selection to be executed to obtain the histogram
+def _get_variable(sample, region, systematic):
+    """construct the variable the histogram will be binned in
 
     Args:
         sample (dict): containing all sample information
@@ -32,10 +32,25 @@ def _get_selection(sample, region, systematic):
         systematic (dict): containing all systematic information
 
     Returns:
-        str: expression determining the selection applied to get the data to histogram
+        str: name of variable to bin histogram in
     """
     axis_variable = region["Variable"]
     return axis_variable
+
+
+def _get_filter(sample, region, systematic):
+    """construct the filter to be applied for event selection
+
+    Args:
+        sample (dict): containing all sample information
+        region (dict): containing all region information
+        systematic (dict): containing all systematic information
+
+    Returns:
+        str: expression for the filter to be used, or None for no filtering
+    """
+    selection_filter = region.get("Filter", None)
+    return selection_filter
 
 
 def _get_weight(sample, region, systematic):
@@ -80,7 +95,7 @@ def _get_binning(region):
     Returns:
         list: bin boundaries to be used for histogram
     """
-    if "Binning" in region.keys():
+    if region.get("Binning", False):
         return region["Binning"]
     else:
         raise NotImplementedError
@@ -123,7 +138,8 @@ def create_histograms(config, folder_path_str, method="uproot", only_nominal=Fal
                 log.debug("  variation %s", systematic["Name"])
                 ntuple_path = _get_ntuple_path(sample, region, systematic)
                 pos_in_file = _get_position_in_file(sample)
-                selection = _get_selection(sample, region, systematic)
+                variable = _get_variable(sample, region, systematic)
+                selection_filter = _get_filter(sample, region, systematic)
                 weight = _get_weight(sample, region, systematic)
                 bins = _get_binning(region)
 
@@ -132,7 +148,12 @@ def create_histograms(config, folder_path_str, method="uproot", only_nominal=Fal
                     from cabinetry.contrib import histogram_creation
 
                     yields, sumw2 = histogram_creation.from_uproot(
-                        ntuple_path, pos_in_file, selection, weight, bins
+                        ntuple_path,
+                        pos_in_file,
+                        variable,
+                        bins,
+                        weight,
+                        selection_filter,
                     )
 
                 elif "method" == "ServiceX":

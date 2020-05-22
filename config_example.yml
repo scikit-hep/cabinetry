@@ -24,6 +24,7 @@ Samples:
 Regions:
   - Name: "Signal Region"
     Variable: "jet_pt"
+    Filter: "lep_charge > 0"
     Binning: [0, 100, 200, 300, 400, 500, 600, 700, 800, 900, 1000]
 
 Systematics:

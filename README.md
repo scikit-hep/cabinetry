@@ -72,7 +72,7 @@ cabinetry.fit.fit(ws)
 ```
 
 The above is an abbreviated version of an example included in `example.py`, which shows how to use `cabinetry`.
-Beyond the core dependencies of `cabinetry` (currently `pyyaml`, `numpy`, `pyhf`, `iminuit`), it also requires additional libraries: `uproot`, `scipy`, `matplotlib`.
+Beyond the core dependencies of `cabinetry` (currently `pyyaml`, `numpy`, `pyhf`, `iminuit`), it also requires additional libraries: `uproot`, `scipy`, `matplotlib`, `numexpr`.
 Those additional dependencies are not installed together with `cabinetry`, as they are only used to perform tasks that are outside the `cabinetry` core functionality.
 Eventually the basic implementation (from `cabinetry/contrib`) will be replaced by calls to external modules (see also [Code](#code)).
 
