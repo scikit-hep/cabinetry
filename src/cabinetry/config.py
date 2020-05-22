@@ -11,8 +11,13 @@ log = logging.getLogger(__name__)
 
 
 def read(file_path_string):
-    """
-    read a config file from a provided path and return it
+    """read a config file from a provided path and return it
+
+    Args:
+        file_path_string (str): path to config file
+
+    Returns:
+        dict: cabinetry configuration
     """
     file_path = Path(file_path_string)
     log.info("opening config file %s", file_path)
@@ -22,8 +27,15 @@ def read(file_path_string):
 
 
 def validate(config):
-    """
-    test whether the config is valid
+    """test whether the config is valid
+
+    Args:
+        config (dict): cabinetry configuration
+
+    Raises:
+        ValueError: when missing required keys
+        ValueError: when unknown keys are found
+        NotImplementedError: when more than one data sample is found
     """
     config_keys = config.keys()
 
@@ -46,8 +58,10 @@ def validate(config):
 
 
 def print_overview(config):
-    """
-    output a compact summary of a config file
+    """output a compact summary of a config file
+
+    Args:
+        config (dict): cabinetry configuration
     """
     log.info("the config contains:")
     log.info("  %i Sample(s)", len(config["Samples"]))
