@@ -19,7 +19,7 @@ def to_dict(yields, sumw2, bins):
     Args:
         yields (numpy.ndarray): yield per histogram bin
         sumw2 (numpy.ndarray): statistical uncertainty of yield per bin
-        bins (list): edges of histogram bins
+        bins (numpy.ndarray): edges of histogram bins
 
     Returns:
         dict: dictionary containing histogram information
