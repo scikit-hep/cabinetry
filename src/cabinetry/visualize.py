@@ -34,7 +34,7 @@ def data_MC(config, histogram_folder, figure_folder, prefit=True, method="matplo
     """draw a data/MC histogram, control whether it is pre- or postfit with a flag
 
     Args:
-        config (dict): cabinetry configuration file
+        config (dict): cabinetry configuration
         histogram_folder (str): path to the folder containing template histograms
         figure_folder (str): path to the folder to save figures in
         prefit (bool, optional): show the pre- or post-fit model, defaults to True
