@@ -107,7 +107,7 @@ def create_histograms(config, folder_path_str, method="uproot", only_nominal=Fal
     uncertainties, as well as the bin edges
 
     Args:
-        config (dict): the cabinetry config
+        config (dict): cabinetry configuration
         folder_path_str (str): folder to save the histograms to
         method (str, optional): backend to use for histogram production, defaults to "uproot"
         only_nominal (bool, optional): whether to only produce nominal histograms, defaults to False

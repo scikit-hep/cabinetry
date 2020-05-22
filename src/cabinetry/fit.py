@@ -7,9 +7,14 @@ log = logging.getLogger(__name__)
 
 
 def get_parameter_names(model):
-    """
-    get the labels of all fit parameters, expanding vectors that act on
+    """get the labels of all fit parameters, expanding vectors that act on
     one bin per vector entry (gammas)
+
+    Args:
+        model (pyhf.pdf.Model): a HistFactory-style model in pyhf format
+
+    Returns:
+        list: names of fit parameters
     """
     labels = []
     for parname in model.config.par_order:
@@ -23,8 +28,12 @@ def get_parameter_names(model):
 
 
 def print_results(bestfit, uncertainty, labels):
-    """
-    print the best-fit parameter results and associated uncertainties
+    """print the best-fit parameter results and associated uncertainties
+
+    Args:
+        bestfit (numpy.ndarray): best-fit results of parameters
+        uncertainty (numpy.ndarray): uncertainties of best-fit parameter results
+        labels (list): parameter labels
     """
     max_label_length = max([len(label) for label in labels])
     for i, label in enumerate(labels):
@@ -33,9 +42,14 @@ def print_results(bestfit, uncertainty, labels):
 
 
 def fit(spec):
-    """
-    perform an unconstrained maximum likelihood fit with pyhf and report
+    """perform an unconstrained maximum likelihood fit with pyhf and report
     the results of the fit
+
+    Args:
+        spec (dict): a pyhf workspace
+
+    Returns:
+        (numpy.ndarray, numpy.ndarray, list): best-fit positions of parameters, their uncertainties and names
     """
     log.info("performing unconstrained fit")
 

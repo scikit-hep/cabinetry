@@ -79,7 +79,7 @@ def _load(histo_path, modified=True):
 
 def load_from_config(histo_folder, sample, region, systematic, modified=True):
     """load a histogram, given a folder the histograms are located in and the
-    relevant information from the config: sample, region, systematic,
+    relevant information from the config: sample, region, systematic
 
     Args:
         histo_folder (str): folder containing all histograms

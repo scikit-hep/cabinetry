@@ -44,7 +44,7 @@ def run(config, histogram_folder):
     """apply post-processing as needed for all histograms
 
     Args:
-        config (dict): the cabinetry config
+        config (dict): cabinetry configuration
         histogram_folder (str): folder containing the histograms
     """
     log.info("applying post-processing to histograms")
