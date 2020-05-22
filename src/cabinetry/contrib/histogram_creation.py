@@ -21,8 +21,7 @@ def from_uproot(
     Returns:
         (np.ndarray, np.ndarray): tuple of yields and stat. uncertainties for all bins
     """
-    with uproot.open(ntuple_path) as f:
-        table = f[pos_in_file].lazyarrays()
+    table = uproot.open(ntuple_path)[pos_in_file].lazyarrays()
 
     # extract observable and weights
     observables = table[variable]
