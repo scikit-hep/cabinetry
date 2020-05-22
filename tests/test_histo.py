@@ -1,4 +1,7 @@
 import logging
+from pathlib import Path
+
+import numpy as np
 
 from cabinetry import histo
 
@@ -49,16 +52,64 @@ def test_to_dict():
     }
 
 
-def test_save(tmpdir):
-    pass
+def test_save(tmp_path):
+    hist = _example_hist()
+    histo.save(hist, tmp_path)
+    np.testing.assert_equal(histo._load(tmp_path, modified=False), hist)
 
 
-def test__load():
-    pass
+def test_save_new_dir(tmpdir):
+    hist = _example_hist()
+    # add a subdirectory that needs to be created for histogram saving
+    subdir = tmpdir / "subdir"
+    fname = Path(subdir.join("file"))
+    histo.save(hist, fname)
+    np.testing.assert_equal(histo._load(fname, modified=False), hist)
 
 
-def test_load_from_config():
-    pass
+def test__load(tmp_path, caplog):
+    hist = _example_hist()
+    histo.save(hist, tmp_path)
+
+    # try loading the original histogram
+    np.testing.assert_equal(histo._load(tmp_path, modified=False), hist)
+
+    # try loading the modified histograms, without success
+    np.testing.assert_equal(histo._load(tmp_path, modified=True), hist)
+    expected_warning = (
+        "the modified histogram " + str(tmp_path) + "_modified.npz " + "does not exist"
+    )
+    assert expected_warning in [rec.message for rec in caplog.records]
+    assert "loading the un-modified histogram instead!" in [
+        rec.message for rec in caplog.records
+    ]
+    caplog.clear()
+
+
+def test__load_modified(tmpdir, caplog):
+    hist = _example_hist()
+    histo_name = "histo"
+    fname_modified = Path(tmpdir.join(histo_name + "_modified"))
+    fname_original = Path(tmpdir.join(histo_name))
+    histo.save(hist, fname_modified)
+    # load the modified histogram by specifying the original name, which should produce no warning
+    np.testing.assert_equal(histo._load(fname_original, modified=True), hist)
+    assert [rec.message for rec in caplog.records] == []
+
+
+def test_load_from_config(tmpdir):
+    hist = _example_hist()
+    expected_name = "Sample_Region_Systematic"
+    fname = Path(tmpdir.join(expected_name))
+    histo.save(hist, fname)
+    sample = {"Name": "Sample"}
+    region = {"Name": "Region"}
+    systematic = {"Name": "Systematic"}
+    loaded_histo, loaded_name = histo.load_from_config(
+        tmpdir, sample, region, systematic, modified=False
+    )
+    np.testing.assert_equal(loaded_histo, hist)
+    assert loaded_name == expected_name
 
 
 def test_build_name():
