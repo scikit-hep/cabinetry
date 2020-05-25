@@ -1,6 +1,8 @@
 import logging
 from pathlib import Path
 
+import numpy as np
+
 from . import histo
 
 
@@ -93,10 +95,10 @@ def _get_binning(region):
         NotImplementedError: when the binning is not explicitly defined
 
     Returns:
-        list: bin boundaries to be used for histogram
+        numpy.ndarray: bin boundaries to be used for histogram
     """
     if region.get("Binning", False):
-        return region["Binning"]
+        return np.asarray(region["Binning"])
     else:
         raise NotImplementedError
 

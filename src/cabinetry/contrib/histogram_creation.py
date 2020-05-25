@@ -15,11 +15,11 @@ def from_uproot(
         pos_in_file (str): name of tree within ntuple
         variable (str): variable to bin histogram in
         weight (str): event weight to extract
-        bins (list): bin edges for histogram
+        bins (numpy.ndarray): bin edges for histogram
         selection_filter (str, optional): filter to be applied on events, defaults to None (no filter)
 
     Returns:
-        (np.ndarray, np.ndarray): tuple of yields and stat. uncertainties for all bins
+        (numpy.ndarray, numpy.ndarray): tuple of yields and stat. uncertainties for all bins
     """
     table = uproot.open(ntuple_path)[pos_in_file].lazyarrays()
 
@@ -49,7 +49,7 @@ def _sumw2(arr):
     """calculate the absolute statistical uncertainty given an array of weights in a bin
 
     Args:
-        arr (np.ndarray): all event weights in a given bin
+        arr (numpy.ndarray): all event weights in a given bin
 
     Returns:
         np.float64: stat. uncertainty calculated via sum in quadrature
@@ -62,12 +62,12 @@ def _bin_data(observables, weights, bins):
     and the bin edges
 
     Args:
-        observables (np.ndarray): values the histogram will be binned in
-        weights (np.ndarray): weights to apply for each histogram entry
-        bins (list): bin edges for histogram
+        observables (numpy.ndarray): values the histogram will be binned in
+        weights (numpy.ndarray): weights to apply for each histogram entry
+        bins (numpy.ndarray): bin edges for histogram
 
     Returns:
-        (np.ndarray, np.ndarray): tuple of yields and stat. uncertainties for all bins
+        (numpy.ndarray, numpy.ndarray): tuple of yields and stat. uncertainties for all bins
     """
     # get bin yield and stat. uncertainty
     yields, _, _ = stats.binned_statistic(

@@ -1,6 +1,8 @@
 from pathlib import Path
 import pytest
 
+import numpy as np
+
 from cabinetry import template_builder
 
 
@@ -18,12 +20,12 @@ def test__get_filter():
     assert (
         template_builder._get_filter({}, {"Filter": "jet_pt > 0"}, {}) == "jet_pt > 0"
     )
-    assert template_builder._get_filter({}, {}, {}) == None
+    assert template_builder._get_filter({}, {}, {}) is None
 
 
 def test__get_weight():
     assert template_builder._get_weight({"Weight": "weight_mc"}, {}, {}) == "weight_mc"
-    assert template_builder._get_weight({}, {}, {}) == None
+    assert template_builder._get_weight({}, {}, {}) is None
 
 
 def test__get_position_in_file():
@@ -31,7 +33,9 @@ def test__get_position_in_file():
 
 
 def test__get_binning():
-    assert template_builder._get_binning({"Binning": [1, 2, 3]}) == [1, 2, 3]
+    np.testing.assert_equal(
+        template_builder._get_binning({"Binning": [1, 2, 3]}), [1, 2, 3]
+    )
     with pytest.raises(Exception) as e_info:
         assert template_builder._get_binning({})
 
