@@ -3,6 +3,7 @@ from pathlib import Path
 
 import numpy as np
 
+from . import configuration
 from . import histo
 
 
@@ -130,12 +131,45 @@ def create_histograms(config, folder_path_str, method="uproot", only_nominal=Fal
             for isyst, systematic in enumerate(
                 ([{"Name": "nominal"}] + config["Systematics"])
             ):
-                # first do the nominal case, then systematics
-                # optionally skip non-nominal histograms
-                if isyst != 0 and only_nominal:
+                is_nominal = isyst == 0
+                # first need to figure out whether a histogram is needed
+                # for this specific combination of sample-region-systematic
+
+                if is_nominal:
+                    # for nominal, histograms are generally needed
+                    histo_needed = True
+                elif (not is_nominal) and only_nominal:
+                    # if not a nominal variation, but only nominal is requested, then no histo is needed
+                    histo_needed = False
+                elif (not is_nominal) and sample.get("Data", False):
+                    # for data, only nominal histograms are needed
+                    histo_needed = False
+                elif (not is_nominal) and (not sample.get("Data", False)):
+                    # handle non-nominal and non-data histograms
+                    if systematic["Type"] == "Overall":
+                        # no histogram needed for normalization variation
+                        histo_needed = False
+                    elif systematic["Type"] == "NormPlusShape":
+                        # for a variation defined via a template, a histogram is needed (if sample is affected)
+                        if configuration.sample_affected_by_modifier(
+                            sample, systematic
+                        ):
+                            histo_needed = True
+                        else:
+                            histo_needed = False
+
+                    else:
+                        raise NotImplementedError(
+                            "other systematics not yet implemented"
+                        )
+                else:
+                    raise NotImplementedError(
+                        "histogram treatment not defined for this case"
+                    )
+
+                if not histo_needed:
+                    # no further action is needed, continue with the next sample-region-systematic combination
                     continue
-                elif isyst > 0:
-                    raise NotImplementedError("systematics not yet implemented")
 
                 log.debug("  variation %s", systematic["Name"])
                 ntuple_path = _get_ntuple_path(sample, region, systematic)

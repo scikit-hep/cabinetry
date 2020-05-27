@@ -5,6 +5,7 @@ from pathlib import Path
 
 import pyhf
 
+from . import configuration
 from . import histo
 
 
@@ -69,25 +70,6 @@ def get_unc_for_sample(
     return histo_yield
 
 
-def _convert_samples_to_list(samples):
-    """the config can allow for two ways of specifying samples, a single sample:
-    "Samples": "ABC"
-    or a list of samples:
-    "Samples": ["ABC", "DEF"]
-    for consistent treatment, convert the single sample into a single-element list
-
-    Args:
-        samples (string/list): name of single sample or list of sample names
-
-    Returns:
-        list: name(s) of sample(s)
-    """
-    if isinstance(samples, list):
-        return samples
-    else:
-        return [samples]
-
-
 def get_NF_modifiers(config, sample):
     """get the list of NormFactor modifiers acting on a sample
 
@@ -100,9 +82,7 @@ def get_NF_modifiers(config, sample):
     """
     modifiers = []
     for NormFactor in config["NormFactors"]:
-        affected_samples = _convert_samples_to_list(NormFactor["Samples"])
-
-        if sample["Name"] in affected_samples:
+        if configuration.sample_affected_by_modifier(sample, NormFactor):
             log.debug(
                 "adding NormFactor %s to sample %s", NormFactor["Name"], sample["Name"]
             )
@@ -137,6 +117,17 @@ def get_OverallSys_modifier(systematic):
     return modifier
 
 
+def get_NormPlusShape_modifier(systematic):
+    # in the case of correlated norm + shape effect, need
+    # to create both a HistoSys (for shape) and an OverallSys
+    # (for the norm effect)
+    modifier = {}
+    modifier.update({"name": systematic["Name"]})
+    modifier.update({"type": "normsys"})
+    modifier.update({"data": {"hi": 1 + 0, "lo": 1 + 0,}})
+    return modifier
+
+
 def get_sys_modifiers(config, sample):
     """get the list of all systematic modifiers acting on a sample
 
@@ -152,14 +143,26 @@ def get_sys_modifiers(config, sample):
     """
     modifiers = []
     for systematic in config["Systematics"]:
-        if systematic["Type"] == "OVERALL":
-            # OverallSys (norm uncertainty with Gaussian constraint)
-            log.debug(
-                "adding OverallSys %s to sample %s", systematic["Name"], sample["Name"]
-            )
-            modifiers.append(get_OverallSys_modifier(systematic))
-        else:
-            raise NotImplementedError("not supporting other systematic types yet")
+        if configuration.sample_affected_by_modifier(sample, systematic):
+            if systematic["Type"] == "Overall":
+                # OverallSys (norm uncertainty with Gaussian constraint)
+                log.debug(
+                    "adding OverallSys %s to sample %s",
+                    systematic["Name"],
+                    sample["Name"],
+                )
+                modifiers.append(get_OverallSys_modifier(systematic))
+            elif systematic["Type"] == "NormPlusShape":
+                # two modifiers are needed - an OverallSys for the norm effect,
+                # and a HistoSys for the shape variation
+                log.debug(
+                    "adding OverallSys and HistoSys %s to sample %s",
+                    systematic["Name"],
+                    sample["Name"],
+                )
+                modifiers.append(get_NormPlusShape_modifier(systematic))
+            else:
+                raise NotImplementedError("not supporting other systematic types yet")
     return modifiers
 
 

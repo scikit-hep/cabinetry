@@ -32,7 +32,13 @@ Systematics:
     OverallDown: -0.05
     OverallUp: 0.05
     Samples: ["Signal", "Background"]
-    Type: OVERALL
+    Type: "Overall"
+
+  - Name: "Background modeling"
+    PathUp: "ntuples/prediction.root"
+    TreeUp: "background_varied"
+    Samples: "Background"
+    Type: "NormPlusShape"
 
 NormFactors:
   - Name: "Signal strength"

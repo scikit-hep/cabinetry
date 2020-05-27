@@ -1,16 +1,16 @@
 import pytest
 
-from cabinetry import config
+from cabinetry import configuration
 
 
 def test_read():
-    config.read("config_example.yml")
+    configuration.read("config_example.yml")
 
 
 def test_validate_missing_key():
     config_example = {"General": []}
     with pytest.raises(Exception) as e_info:
-        config.validate(config_example)
+        configuration.validate(config_example)
 
 
 def test_validate_unknown_key():
@@ -22,7 +22,7 @@ def test_validate_unknown_key():
         "unknown": [],
     }
     with pytest.raises(Exception) as e_info:
-        config.validate(config_example)
+        configuration.validate(config_example)
 
 
 def test_validate_multiple_data_samples():
@@ -33,7 +33,7 @@ def test_validate_multiple_data_samples():
         "Samples": [{"Data": True}, {"Data": True}],
     }
     with pytest.raises(Exception) as e_info:
-        config.validate(config_example)
+        configuration.validate(config_example)
 
 
 def test_validate_valid():
@@ -43,7 +43,7 @@ def test_validate_valid():
         "NormFactors": "",
         "Samples": [{"Data": True}],
     }
-    config.validate(config_example)
+    configuration.validate(config_example)
 
 
 def test_print_overview():
@@ -54,7 +54,7 @@ def test_print_overview():
         "Samples": [{"Data": True}],
         "Systematics": "",
     }
-    config.print_overview(config_example)
+    configuration.print_overview(config_example)
 
 
 def test_print_overview_no_sys():
@@ -64,4 +64,4 @@ def test_print_overview_no_sys():
         "NormFactors": "",
         "Samples": [{"Data": True}],
     }
-    config.print_overview(config_example)
+    configuration.print_overview(config_example)
