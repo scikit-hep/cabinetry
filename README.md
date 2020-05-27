@@ -161,6 +161,7 @@ Some relevant work for [TRExFitter](https://gitlab.cern.ch/TRExStats/TRExFitter)
 
 Events for a given histogram are located at some path that can be specified by the sample name, region name, and systematic variation.
 It is unclear how to support as many structures as possible, while limiting the amount of options needed to specify them.
+See the [related issue #16](https://github.com/alexander-held/cabinetry/issues/16).
 
 ### Single-element lists
 
