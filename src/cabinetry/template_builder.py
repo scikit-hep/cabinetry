@@ -18,10 +18,18 @@ def _get_ntuple_path(sample, region, systematic):
         region (dict): containing all region information
         systematic (dict): containing all systematic information
 
+    Raises:
+        NotImplementedError: if ntuple path treatment is not yet implemented
+
     Returns:
         pathlib.Path: path where the ntuples are located
     """
-    path_str = sample["Path"]
+    if systematic["Name"] == "nominal":
+        path_str = sample["Path"]
+    elif systematic["Type"] == "NormPlusShape":
+        path_str = systematic["PathUp"]
+    else:
+        raise NotImplementedError("ntuple path treatment not yet defined")
     path = Path(path_str)
     return path
 
@@ -71,17 +79,27 @@ def _get_weight(sample, region, systematic):
     return weight
 
 
-def _get_position_in_file(sample):
+def _get_position_in_file(sample, systematic):
     """the file might have some substructure, this specifies where in the file
     the data is
 
     Args:
         sample (dict): containing all sample information
+        systematic (dict): containing all systematic information
+
+    Raises:
+        NotImplementedError: if finding the position in file is not yet implemented
 
     Returns:
         str: where in the file to find the data, (right now the name of a tree)
     """
-    return sample["Tree"]
+    if systematic["Name"] == "nominal":
+        position = sample["Tree"]
+    elif systematic["Type"] == "NormPlusShape":
+        position = systematic["TreeUp"]
+    else:
+        raise NotImplementedError("ntuple path treatment not yet defined")
+    return position
 
 
 def _get_binning(region):
@@ -173,7 +191,7 @@ def create_histograms(config, folder_path_str, method="uproot", only_nominal=Fal
 
                 log.debug("  variation %s", systematic["Name"])
                 ntuple_path = _get_ntuple_path(sample, region, systematic)
-                pos_in_file = _get_position_in_file(sample)
+                pos_in_file = _get_position_in_file(sample, systematic)
                 variable = _get_variable(sample, region, systematic)
                 selection_filter = _get_filter(sample, region, systematic)
                 weight = _get_weight(sample, region, systematic)

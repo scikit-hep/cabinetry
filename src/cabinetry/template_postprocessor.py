@@ -52,6 +52,7 @@ def run(config, histogram_folder):
     for sample in config["Samples"]:
         for region in config["Regions"]:
             for systematic in [{"Name": "nominal"}]:
+                # need to add histogram-based systematics here as well
                 histogram, histogram_name = histo.load_from_config(
                     histogram_folder, sample, region, systematic, modified=False
                 )

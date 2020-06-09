@@ -89,8 +89,9 @@ def load_from_config(histo_folder, sample, region, systematic, modified=True):
         modified (bool, optional): whether to load the modified histogram (after post-processing), defaults to True
 
     Returns:
-        dict: the loaded histogram
-        str: name of the histogram
+        tuple: a tuple containing
+            dict: the loaded histogram
+            str: name of the histogram
     """
     # find the histogram name given config information, and then load the histogram
     histo_name = build_name(sample, region, systematic)
@@ -144,3 +145,24 @@ def validate(histogram, name):
             name,
             not_empty_but_nan,
         )
+
+
+def normalize_to_yield(histogram, reference_histogram):
+    """normalize a histogram to match the yield of a reference, and return the
+    modified histogram along with the normalization factor
+
+    Args:
+        histogram (dict): the histogram to be normalized
+        reference_histogram (dict): reference histogram to normalize to
+
+    Returns:
+        tuple: a tuple containing
+            dict: the normalized histogram
+            np.float64: the yield ratio: un-normalized yield / normalized yield
+    """
+    target_integrated_yield = sum(reference_histogram["yields"])
+    current_integrated_yield = sum(histogram["yields"])
+    normalization_ratio = current_integrated_yield / target_integrated_yield
+    # update integrated yield to match target
+    histogram["yields"] /= normalization_ratio
+    return histogram, normalization_ratio
