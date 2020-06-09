@@ -24,7 +24,7 @@ if __name__ == "__main__":
     # create template histograms
     histo_folder = "histograms/"
     cabinetry.template_builder.create_histograms(
-        cabinetry_config, histo_folder, only_nominal=False, method="uproot"
+        cabinetry_config, histo_folder, method="uproot"
     )
 
     # perform histogram post-processing

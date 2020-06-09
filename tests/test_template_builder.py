@@ -48,6 +48,4 @@ def test__get_binning():
 def test_create_histograms(tmpdir):
     # needs to be expanded into a proper test
     config = {"Samples": {}, "Regions": {}, "Systematics": {}}
-    template_builder.create_histograms(
-        config, tmpdir, method="uproot", only_nominal=True
-    )
+    template_builder.create_histograms(config, tmpdir, method="uproot")

@@ -55,7 +55,7 @@ cabinetry_config = cabinetry.config.read("config_example.yml")
 # create template histograms
 histo_folder = "histograms/"
 cabinetry.template_builder.create_histograms(
-    cabinetry_config, histo_folder, only_nominal=True, method="uproot"
+    cabinetry_config, histo_folder, method="uproot"
 )
 
 # perform histogram post-processing

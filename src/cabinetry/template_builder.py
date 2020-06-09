@@ -122,7 +122,7 @@ def _get_binning(region):
         raise NotImplementedError
 
 
-def create_histograms(config, folder_path_str, method="uproot", only_nominal=False):
+def create_histograms(config, folder_path_str, method="uproot"):
     """generate all required histograms specified by a configuration file
     a tool providing histograms should provide bin yields and statistical
     uncertainties, as well as the bin edges
@@ -131,7 +131,6 @@ def create_histograms(config, folder_path_str, method="uproot", only_nominal=Fal
         config (dict): cabinetry configuration
         folder_path_str (str): folder to save the histograms to
         method (str, optional): backend to use for histogram production, defaults to "uproot"
-        only_nominal (bool, optional): whether to only produce nominal histograms, defaults to False
 
     Raises:
         NotImplementedError: when systematic variations based on histograms are requested (not supported yet)
@@ -156,9 +155,6 @@ def create_histograms(config, folder_path_str, method="uproot", only_nominal=Fal
                 if is_nominal:
                     # for nominal, histograms are generally needed
                     histo_needed = True
-                elif (not is_nominal) and only_nominal:
-                    # if not a nominal variation, but only nominal is requested, then no histo is needed
-                    histo_needed = False
                 elif (not is_nominal) and sample.get("Data", False):
                     # for data, only nominal histograms are needed
                     histo_needed = False
