@@ -8,7 +8,7 @@ from cabinetry import template_builder
 
 def test__get_ntuple_path():
     assert template_builder._get_ntuple_path(
-        {"Path": "test/path.root"}, {}, {}
+        {"Path": "test/path.root"}, {}, {"Name": "nominal"}
     ) == Path("test/path.root")
 
 
@@ -29,7 +29,12 @@ def test__get_weight():
 
 
 def test__get_position_in_file():
-    assert template_builder._get_position_in_file({"Tree": "tree_name"}) == "tree_name"
+    assert (
+        template_builder._get_position_in_file(
+            {"Tree": "tree_name"}, {"Name": "nominal"}
+        )
+        == "tree_name"
+    )
 
 
 def test__get_binning():
