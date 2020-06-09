@@ -26,13 +26,15 @@ def toy_weights(total_yield, num_events):
 def get_samples(num_events):
     dist_s = toy_distribution(10, 12, 350, num_events)
     dist_b = toy_distribution(10, 25, 0, num_events)
-    return [dist_s, dist_b]
+    dist_b_var = toy_distribution(12, 30, 0, num_events)
+    return [dist_s, dist_b, dist_b_var]
 
 
-def get_weights(yield_s, yield_b, num_events):
+def get_weights(yield_s, yield_b, yield_b_var, num_events):
     w_s = toy_weights(yield_s, num_events)
     w_b = toy_weights(yield_b, num_events)
-    return [w_s, w_b]
+    w_b_var = toy_weights(yield_b_var, num_events)
+    return [w_s, w_b, w_b_var]
 
 
 def create_pseudodata(yield_s, yield_b):
@@ -124,7 +126,15 @@ def plot_distributions(data, weights, labels, pseudodata, bins):
 
     # plot stack
     plt.clf()
-    labels_with_yield = [labels[i] + " " + yield_each[i] for i in range(len(labels))]
+    # filter out samples with "varied" in the label,
+    # which correspond to background systematic variations
+    labels_with_yield = [
+        labels[i] + " " + yield_each[i]
+        for i in range(len(labels))
+        if "varied" not in labels[i]
+    ]
+    data = [data[i] for i in range(len(labels)) if "varied" not in labels[i]]
+    weights = [weights[i] for i in range(len(labels)) if "varied" not in labels[i]]
     pseudodata_label = "pseudodata " + str(len(pseudodata))
     plt.hist(
         data[::-1],
@@ -143,20 +153,21 @@ def plot_distributions(data, weights, labels, pseudodata, bins):
 
 if __name__ == "__main__":
     # configuration
-    num_events = 1000
+    num_events = 5000
     yield_s = 125
     yield_b = 1000
-    labels = ["signal", "background"]  # names of prcesses
+    yield_b_var = 1000
+    labels = ["signal", "background", "background_varied"]  # names of prcesses
     file_name = output_directory + "prediction.root"
     file_name_pseudodata = output_directory + "data.root"
 
     np.random.seed(0)
 
-    # distributions for two processes
+    # distributions for two processes, plus a background uncertainty
     distributions = get_samples(num_events)
 
     # corresponding weights
-    weights = get_weights(yield_s, yield_b, num_events)
+    weights = get_weights(yield_s, yield_b, yield_b_var, num_events)
 
     # create a pseudodataset
     pseudodata = create_pseudodata(yield_s, yield_b)

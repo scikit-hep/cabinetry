@@ -69,3 +69,40 @@ def print_overview(config):
     log.info("  %i NormFactor(s)", len(config["NormFactors"]))
     if "Systematics" in config.keys():
         log.info("  %i Systematic(s)", len(config["Systematics"]))
+
+
+def _convert_samples_to_list(samples):
+    """the config can allow for two ways of specifying samples, a single sample:
+    "Samples": "ABC"
+    or a list of samples:
+    "Samples": ["ABC", "DEF"]
+    for consistent treatment, convert the single sample into a single-element list
+
+    Args:
+        samples (string/list): name of single sample or list of sample names
+
+    Returns:
+        list: name(s) of sample(s)
+    """
+    if isinstance(samples, list):
+        return samples
+    else:
+        return [samples]
+
+
+def sample_affected_by_modifier(sample, modifier):
+    """check if a sample is affected by a given modifier (Systematic, NormFactor)
+
+    Args:
+        sample (dict): containing all sample information
+        modifier (dict): containing all modifier information (a Systematic of a NormFactor)
+
+    Returns:
+        bool: True if sample is affected, False otherwise
+    """
+    affected_samples = _convert_samples_to_list(modifier["Samples"])
+    if sample["Name"] in affected_samples:
+        affected = True
+    else:
+        affected = False
+    return affected

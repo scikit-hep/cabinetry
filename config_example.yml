@@ -1,6 +1,6 @@
 General:
-  Measurement: "My fit"
-  POI: "Signal strength"
+  Measurement: "minimal_example"
+  POI: "Signal_norm"
 
 Samples:
   - Name: "Data"
@@ -22,20 +22,26 @@ Samples:
     Color: "#FFAA55"
 
 Regions:
-  - Name: "Signal Region"
+  - Name: "Signal_region"
     Variable: "jet_pt"
     Filter: "lep_charge > 0"
-    Binning: [0, 100, 200, 300, 400, 500, 600, 700, 800, 900, 1000]
+    Binning: [200, 300, 400, 500, 600]
 
 Systematics:
   - Name: "Luminosity"
     OverallDown: -0.05
     OverallUp: 0.05
     Samples: ["Signal", "Background"]
-    Type: OVERALL
+    Type: "Overall"
+
+  - Name: "Modeling"
+    PathUp: "ntuples/prediction.root"
+    TreeUp: "background_varied"
+    Samples: "Background"
+    Type: "NormPlusShape"
 
 NormFactors:
-  - Name: "Signal strength"
+  - Name: "Signal_norm"
     Nominal: 1
     Min: 0
     Max: 5

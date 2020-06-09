@@ -5,6 +5,7 @@ from pathlib import Path
 
 import pyhf
 
+from . import configuration
 from . import histo
 
 
@@ -69,25 +70,6 @@ def get_unc_for_sample(
     return histo_yield
 
 
-def _convert_samples_to_list(samples):
-    """the config can allow for two ways of specifying samples, a single sample:
-    "Samples": "ABC"
-    or a list of samples:
-    "Samples": ["ABC", "DEF"]
-    for consistent treatment, convert the single sample into a single-element list
-
-    Args:
-        samples (string/list): name of single sample or list of sample names
-
-    Returns:
-        list: name(s) of sample(s)
-    """
-    if isinstance(samples, list):
-        return samples
-    else:
-        return [samples]
-
-
 def get_NF_modifiers(config, sample):
     """get the list of NormFactor modifiers acting on a sample
 
@@ -100,9 +82,7 @@ def get_NF_modifiers(config, sample):
     """
     modifiers = []
     for NormFactor in config["NormFactors"]:
-        affected_samples = _convert_samples_to_list(NormFactor["Samples"])
-
-        if sample["Name"] in affected_samples:
+        if configuration.sample_affected_by_modifier(sample, NormFactor):
             log.debug(
                 "adding NormFactor %s to sample %s", NormFactor["Name"], sample["Name"]
             )
@@ -114,14 +94,14 @@ def get_NF_modifiers(config, sample):
 
 def get_OverallSys_modifier(systematic):
     """construct an OverallSys modifier
-    while this can be built without any histogram reference, it might be useful
-    to build a histogram for this anyway and possibly use it here
+    While this can be built without any histogram reference, it might be useful
+    to build a histogram for this anyway and possibly use it here.
 
     Args:
         systematic (dict): systematic for which the modifier is constructed
 
     Returns:
-        dict: single modifier for pyhf-style workspace
+        dict: single normsys modifier for pyhf-style workspace
     """
     modifier = {}
     modifier.update({"name": systematic["Name"]})
@@ -137,12 +117,83 @@ def get_OverallSys_modifier(systematic):
     return modifier
 
 
-def get_sys_modifiers(config, sample):
+def get_NormPlusShape_modifiers(sample, region, systematic, histogram_folder):
+    """For a variation including a correlated shape + normalization effect, this
+    provides the histosys and normsys modifiers for pyhf (in HistFactory language,
+    this corresponds to a HistoSys and an OverallSys).
+    Symmetrization could happen either at this stage (this is the case currently),
+    or somewhere earlier, such as during template postprocessing.
+
+    Args:
+        sample (dict): sample the systematic variation acts on
+        region (dict): region the systematic variation acts in
+        systematic (dict): the systematic variation under consideration
+        histogram_folder (str): path to folder containing histograms
+
+    Returns:
+        list[dict]: a list with a pyhf normsys modifier and a histosys modifier
+    """
+    # load the systematic variation histogram
+    histogram_variation, _ = histo.load_from_config(
+        histogram_folder, sample, region, systematic, modified=True
+    )
+    histo_yield_variation = histogram_variation["yields"].tolist()
+
+    # also need the nominal histogram
+    histogram_nominal, _ = histo.load_from_config(
+        histogram_folder, sample, region, {"Name": "nominal"}, modified=True
+    )
+    histo_yield_nominal = histogram_nominal["yields"].tolist()
+
+    # need to add support for two-sided variations that do not require symmetrization here
+    # if symmetrization is desired, should support different implementations
+
+    # symmetrization according to "method 1" from issue #26: first normalization, then symmetrization
+
+    # normalize the variation to the same yield as nominal
+    histogram_variation, norm_effect = histo.normalize_to_yield(
+        histogram_variation, histogram_nominal
+    )
+    histo_yield_up = histogram_variation["yields"].tolist()
+    log.debug(
+        "normalization impact of systematic %s on sample %s in region %s is %f",
+        systematic["Name"],
+        sample["Name"],
+        region["Name"],
+        norm_effect,
+    )
+    # need another histogram that corresponds to the "down" variation, which is 2*nominal - up
+    histo_yield_down = (
+        2 * histogram_nominal["yields"] - histogram_variation["yields"]
+    ).tolist()
+
+    # add the normsys
+    modifiers = []
+    norm_modifier = {}
+    norm_modifier.update({"name": systematic["Name"]})
+    norm_modifier.update({"type": "normsys"})
+    norm_modifier.update({"data": {"hi": norm_effect, "lo": 2 - norm_effect,}})
+    modifiers.append(norm_modifier)
+
+    # add the shape part in a histosys
+    shape_modifier = {}
+    shape_modifier.update({"name": systematic["Name"]})
+    shape_modifier.update({"type": "histosys"})
+    shape_modifier.update(
+        {"data": {"hi_data": histo_yield_up, "lo_data": histo_yield_down,}}
+    )
+    modifiers.append(shape_modifier)
+    return modifiers
+
+
+def get_sys_modifiers(config, sample, region, histogram_folder):
     """get the list of all systematic modifiers acting on a sample
 
     Args:
         config (dict): cabinetry configuration
         sample (dict): specific sample to get modifiers for
+        region (dict): region considered
+        histogram_folder (str): path to folder containing histograms
 
     Raises:
         NotImplementedError: when unsupported modifiers act on sample
@@ -152,14 +203,28 @@ def get_sys_modifiers(config, sample):
     """
     modifiers = []
     for systematic in config["Systematics"]:
-        if systematic["Type"] == "OVERALL":
-            # OverallSys (norm uncertainty with Gaussian constraint)
-            log.debug(
-                "adding OverallSys %s to sample %s", systematic["Name"], sample["Name"]
-            )
-            modifiers.append(get_OverallSys_modifier(systematic))
-        else:
-            raise NotImplementedError("not supporting other systematic types yet")
+        if configuration.sample_affected_by_modifier(sample, systematic):
+            if systematic["Type"] == "Overall":
+                # OverallSys (norm uncertainty with Gaussian constraint)
+                log.debug(
+                    "adding OverallSys %s to sample %s",
+                    systematic["Name"],
+                    sample["Name"],
+                )
+                modifiers.append(get_OverallSys_modifier(systematic))
+            elif systematic["Type"] == "NormPlusShape":
+                # two modifiers are needed - an OverallSys for the norm effect,
+                # and a HistoSys for the shape variation
+                log.debug(
+                    "adding OverallSys and HistoSys %s to sample %s",
+                    systematic["Name"],
+                    sample["Name"],
+                )
+                modifiers += get_NormPlusShape_modifiers(
+                    sample, region, systematic, histogram_folder
+                )
+            else:
+                raise NotImplementedError("not supporting other systematic types yet")
     return modifiers
 
 
@@ -205,7 +270,9 @@ def get_channels(config, histogram_folder):
             modifiers += NF_modifier_list
 
             # check if systematic uncertainties affect the samples, add modifiers as needed
-            sys_modifier_list = get_sys_modifiers(config, sample)
+            sys_modifier_list = get_sys_modifiers(
+                config, sample, region, histogram_folder
+            )
             modifiers += sys_modifier_list
 
             current_sample.update({"modifiers": modifiers})

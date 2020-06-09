@@ -18,13 +18,13 @@ if __name__ == "__main__":
         raise SystemExit
 
     # import example config file
-    cabinetry_config = cabinetry.config.read("config_example.yml")
-    cabinetry.config.print_overview(cabinetry_config)
+    cabinetry_config = cabinetry.configuration.read("config_example.yml")
+    cabinetry.configuration.print_overview(cabinetry_config)
 
     # create template histograms
     histo_folder = "histograms/"
     cabinetry.template_builder.create_histograms(
-        cabinetry_config, histo_folder, only_nominal=True, method="uproot"
+        cabinetry_config, histo_folder, method="uproot"
     )
 
     # perform histogram post-processing

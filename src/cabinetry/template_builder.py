@@ -3,6 +3,7 @@ from pathlib import Path
 
 import numpy as np
 
+from . import configuration
 from . import histo
 
 
@@ -17,10 +18,18 @@ def _get_ntuple_path(sample, region, systematic):
         region (dict): containing all region information
         systematic (dict): containing all systematic information
 
+    Raises:
+        NotImplementedError: if ntuple path treatment is not yet implemented
+
     Returns:
         pathlib.Path: path where the ntuples are located
     """
-    path_str = sample["Path"]
+    if systematic["Name"] == "nominal":
+        path_str = sample["Path"]
+    elif systematic["Type"] == "NormPlusShape":
+        path_str = systematic["PathUp"]
+    else:
+        raise NotImplementedError("ntuple path treatment not yet defined")
     path = Path(path_str)
     return path
 
@@ -70,17 +79,27 @@ def _get_weight(sample, region, systematic):
     return weight
 
 
-def _get_position_in_file(sample):
+def _get_position_in_file(sample, systematic):
     """the file might have some substructure, this specifies where in the file
     the data is
 
     Args:
         sample (dict): containing all sample information
+        systematic (dict): containing all systematic information
+
+    Raises:
+        NotImplementedError: if finding the position in file is not yet implemented
 
     Returns:
         str: where in the file to find the data, (right now the name of a tree)
     """
-    return sample["Tree"]
+    if systematic["Name"] == "nominal":
+        position = sample["Tree"]
+    elif systematic["Type"] == "NormPlusShape":
+        position = systematic["TreeUp"]
+    else:
+        raise NotImplementedError("ntuple path treatment not yet defined")
+    return position
 
 
 def _get_binning(region):
@@ -103,7 +122,7 @@ def _get_binning(region):
         raise NotImplementedError
 
 
-def create_histograms(config, folder_path_str, method="uproot", only_nominal=False):
+def create_histograms(config, folder_path_str, method="uproot"):
     """generate all required histograms specified by a configuration file
     a tool providing histograms should provide bin yields and statistical
     uncertainties, as well as the bin edges
@@ -112,7 +131,6 @@ def create_histograms(config, folder_path_str, method="uproot", only_nominal=Fal
         config (dict): cabinetry configuration
         folder_path_str (str): folder to save the histograms to
         method (str, optional): backend to use for histogram production, defaults to "uproot"
-        only_nominal (bool, optional): whether to only produce nominal histograms, defaults to False
 
     Raises:
         NotImplementedError: when systematic variations based on histograms are requested (not supported yet)
@@ -130,16 +148,46 @@ def create_histograms(config, folder_path_str, method="uproot", only_nominal=Fal
             for isyst, systematic in enumerate(
                 ([{"Name": "nominal"}] + config["Systematics"])
             ):
-                # first do the nominal case, then systematics
-                # optionally skip non-nominal histograms
-                if isyst != 0 and only_nominal:
+                is_nominal = isyst == 0
+                # first need to figure out whether a histogram is needed
+                # for this specific combination of sample-region-systematic
+
+                if is_nominal:
+                    # for nominal, histograms are generally needed
+                    histo_needed = True
+                elif (not is_nominal) and sample.get("Data", False):
+                    # for data, only nominal histograms are needed
+                    histo_needed = False
+                elif (not is_nominal) and (not sample.get("Data", False)):
+                    # handle non-nominal and non-data histograms
+                    if systematic["Type"] == "Overall":
+                        # no histogram needed for normalization variation
+                        histo_needed = False
+                    elif systematic["Type"] == "NormPlusShape":
+                        # for a variation defined via a template, a histogram is needed (if sample is affected)
+                        if configuration.sample_affected_by_modifier(
+                            sample, systematic
+                        ):
+                            histo_needed = True
+                        else:
+                            histo_needed = False
+
+                    else:
+                        raise NotImplementedError(
+                            "other systematics not yet implemented"
+                        )
+                else:
+                    raise NotImplementedError(
+                        "histogram treatment not defined for this case"
+                    )
+
+                if not histo_needed:
+                    # no further action is needed, continue with the next sample-region-systematic combination
                     continue
-                elif isyst > 0:
-                    raise NotImplementedError("systematics not yet implemented")
 
                 log.debug("  variation %s", systematic["Name"])
                 ntuple_path = _get_ntuple_path(sample, region, systematic)
-                pos_in_file = _get_position_in_file(sample)
+                pos_in_file = _get_position_in_file(sample, systematic)
                 variable = _get_variable(sample, region, systematic)
                 selection_filter = _get_filter(sample, region, systematic)
                 weight = _get_weight(sample, region, systematic)
