@@ -43,6 +43,13 @@ jobs:
         pip install matplotlib uproot scipy iminuit numexpr
         python util/create_histograms.py
         python example.py
-    - name: Test with pytest
+    - name: Test with pytest and generate coverage report
       run: |
-        pytest
+        pytest --cov=cabinetry --cov-report=xml --cov-branch tests
+    - name: Upload coverage to codecov
+      uses: codecov/codecov-action@v1
+      with:
+        token: ${{ secrets.CODECOV_TOKEN }}
+        file: ./coverage.xml
+        name: codecov-umbrella
+        fail_ci_if_error: true
