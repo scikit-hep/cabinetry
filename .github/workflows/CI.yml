@@ -45,7 +45,9 @@ jobs:
         python example.py
     - name: Test with pytest and generate coverage report
       run: |
-        pytest --cov=cabinetry --cov-report=xml --cov-branch tests
+        pytest --version
+        pytest --help
+        pytest --cov=./ --cov-report=xml --cov-branch tests
     - name: Upload coverage to codecov
       uses: codecov/codecov-action@v1
       with:
