@@ -20,13 +20,13 @@ jobs:
     steps:
     - uses: actions/checkout@v2
     - name: Set up Python ${{ matrix.python-version }}
-      uses: actions/setup-python@v1
+      uses: actions/setup-python@v2
       with:
         python-version: ${{ matrix.python-version }}
-    - name: Install dependencies
+    - name: Install cabinetry and dependencies
       run: |
-        python -m pip install --upgrade pip
-        pip install flake8 black pytest pytest-cov
+        python -m pip install --upgrade pip setuptools wheel
+        python -m pip install -e .[test]
     - name: Lint with flake8
       run: |
         # stop the build if there are Python syntax errors or undefined names
@@ -36,11 +36,8 @@ jobs:
     - name: Format with Black
       run: |
         black --check --diff --verbose .
-    - name: Install cabinetry and dependencies, run example
+    - name: Run example
       run: |
-        pip install -e .
-        # install extra dependencies the example needs
-        pip install matplotlib uproot scipy iminuit numexpr
         python util/create_histograms.py
         python example.py
     - name: Test with pytest and generate coverage report
