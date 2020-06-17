@@ -38,7 +38,7 @@ jobs:
         black --check --diff --verbose .
     - name: Install cabinetry and dependencies, run example
       run: |
-        pip install .
+        pip install -e .
         # install extra dependencies the example needs
         pip install matplotlib uproot scipy iminuit numexpr
         python util/create_histograms.py
