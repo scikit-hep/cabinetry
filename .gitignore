@@ -21,3 +21,6 @@ build
 *.npy
 *.npz
 *.json
+
+# sphinx
+docs/_build
