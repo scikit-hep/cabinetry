@@ -133,7 +133,6 @@ def create_histograms(config, folder_path_str, method="uproot"):
         method (str, optional): backend to use for histogram production, defaults to "uproot"
 
     Raises:
-        NotImplementedError: when systematic variations based on histograms are requested (not supported yet)
         NotImplementedError: when requesting the ServiceX backend
         NotImplementedError: when requesting another unknown backend
     """
@@ -148,38 +147,11 @@ def create_histograms(config, folder_path_str, method="uproot"):
             for isyst, systematic in enumerate(
                 ([{"Name": "nominal"}] + config["Systematics"])
             ):
-                is_nominal = isyst == 0
-                # first need to figure out whether a histogram is needed
-                # for this specific combination of sample-region-systematic
-
-                if is_nominal:
-                    # for nominal, histograms are generally needed
-                    histo_needed = True
-                elif (not is_nominal) and sample.get("Data", False):
-                    # for data, only nominal histograms are needed
-                    histo_needed = False
-                elif (not is_nominal) and (not sample.get("Data", False)):
-                    # handle non-nominal and non-data histograms
-                    if systematic["Type"] == "Overall":
-                        # no histogram needed for normalization variation
-                        histo_needed = False
-                    elif systematic["Type"] == "NormPlusShape":
-                        # for a variation defined via a template, a histogram is needed (if sample is affected)
-                        if configuration.sample_affected_by_modifier(
-                            sample, systematic
-                        ):
-                            histo_needed = True
-                        else:
-                            histo_needed = False
-
-                    else:
-                        raise NotImplementedError(
-                            "other systematics not yet implemented"
-                        )
-                else:
-                    raise NotImplementedError(
-                        "histogram treatment not defined for this case"
-                    )
+                # determine whether a histogram is needed for this
+                # specific combination of sample-region-systematic
+                histo_needed = configuration.histogram_is_needed(
+                    sample, region, systematic
+                )
 
                 if not histo_needed:
                     # no further action is needed, continue with the next sample-region-systematic combination
