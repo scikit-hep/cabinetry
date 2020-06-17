@@ -137,13 +137,11 @@ def get_NormPlusShape_modifiers(sample, region, systematic, histogram_folder):
     histogram_variation, _ = histo.load_from_config(
         histogram_folder, sample, region, systematic, modified=True
     )
-    histo_yield_variation = histogram_variation["yields"].tolist()
 
     # also need the nominal histogram
     histogram_nominal, _ = histo.load_from_config(
         histogram_folder, sample, region, {"Name": "nominal"}, modified=True
     )
-    histo_yield_nominal = histogram_nominal["yields"].tolist()
 
     # need to add support for two-sided variations that do not require symmetrization here
     # if symmetrization is desired, should support different implementations
@@ -172,7 +170,7 @@ def get_NormPlusShape_modifiers(sample, region, systematic, histogram_folder):
     norm_modifier = {}
     norm_modifier.update({"name": systematic["Name"]})
     norm_modifier.update({"type": "normsys"})
-    norm_modifier.update({"data": {"hi": norm_effect, "lo": 2 - norm_effect,}})
+    norm_modifier.update({"data": {"hi": norm_effect, "lo": 2 - norm_effect}})
     modifiers.append(norm_modifier)
 
     # add the shape part in a histosys
@@ -180,7 +178,7 @@ def get_NormPlusShape_modifiers(sample, region, systematic, histogram_folder):
     shape_modifier.update({"name": systematic["Name"]})
     shape_modifier.update({"type": "histosys"})
     shape_modifier.update(
-        {"data": {"hi_data": histo_yield_up, "lo_data": histo_yield_down,}}
+        {"data": {"hi_data": histo_yield_up, "lo_data": histo_yield_down}}
     )
     modifiers.append(shape_modifier)
     return modifiers

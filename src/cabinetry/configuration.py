@@ -106,3 +106,43 @@ def sample_affected_by_modifier(sample, modifier):
     else:
         affected = False
     return affected
+
+
+def histogram_is_needed(sample, region, systematic):
+    """determine whether for a given sample-region-systematic pairing, there is
+    an associated histogram
+
+    Args:
+        sample (dict): containing all sample information
+        region (dict): containing all region information
+        systematic (dict): containing all systematic information
+
+    Raises:
+        NotImplementedError: non-supported systematic variations based on histograms are requested
+
+    Returns:
+        bool: whether a histogram is needed
+    """
+    if systematic.get("Name", None) == "nominal":
+        # for nominal, histograms are generally needed
+        histo_needed = True
+    else:
+        # non-nominal case
+        if sample.get("Data", False):
+            # for data, only nominal histograms are needed
+            histo_needed = False
+        else:
+            # handle non-nominal, non-data histograms
+            if systematic["Type"] == "Overall":
+                # no histogram needed for normalization variation
+                histo_needed = False
+            elif systematic["Type"] == "NormPlusShape":
+                # for a variation defined via a template, a histogram is needed (if sample is affected)
+                if sample_affected_by_modifier(sample, systematic):
+                    histo_needed = True
+                else:
+                    histo_needed = False
+            else:
+                raise NotImplementedError("other systematics not yet implemented")
+
+    return histo_needed
