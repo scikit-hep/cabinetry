@@ -1,3 +1,5 @@
+import pytest
+
 from cabinetry import workspace
 
 
@@ -32,6 +34,45 @@ def test_get_NF_modifiers():
         {"data": None, "name": "k", "type": "normfactor"},
     ]
     assert workspace.get_NF_modifiers(example_config, sample) == expected_modifier
+
+
+def test_get_OverallSys_modifier():
+    systematic = {"Name": "sys", "OverallUp": 0.1, "OverallDown": -0.05}
+    expected_modifier = {
+        "name": "sys",
+        "type": "normsys",
+        "data": {"hi": 1.1, "lo": 0.95},
+    }
+    assert workspace.get_OverallSys_modifier(systematic) == expected_modifier
+
+
+def test_get_sys_modifiers():
+    config_example = {
+        "Systematics": [
+            {
+                "Name": "sys",
+                "Type": "Overall",
+                "Samples": "Signal",
+                "OverallUp": 0.1,
+                "OverallDown": -0.05,
+            }
+        ]
+    }
+    sample = {"Name": "Signal"}
+    region = {}
+    # needs to be expanded to include histogram loading
+    modifiers = workspace.get_sys_modifiers(config_example, sample, region, None)
+    expected_modifiers = [
+        {"name": "sys", "type": "normsys", "data": {"hi": 1.1, "lo": 0.95}}
+    ]
+    assert modifiers == expected_modifiers
+
+    # unsupported systematics type
+    config_example_unsupported = {
+        "Systematics": [{"Name": "Normalization", "Type": "unknown"}]
+    }
+    with pytest.raises(Exception) as e_info:
+        workspace.get_sys_modifiers(config_example_unsupported, sample, region, None)
 
 
 def test_get_measurement():

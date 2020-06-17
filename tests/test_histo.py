@@ -7,44 +7,44 @@ from cabinetry import histo
 
 
 def _example_hist():
-    yields = [1, 2]
-    sumw2 = [0.1, 0.2]
-    bins = [1, 2]
+    yields = np.asarray([1.0, 2.0])
+    sumw2 = np.asarray([0.1, 0.2])
+    bins = np.asarray([1, 2, 3])
     return histo.to_dict(yields, sumw2, bins)
 
 
 def _example_hist_single_bin():
-    yields = [1]
-    sumw2 = [0.1]
-    bins = [1]
+    yields = np.asarray([1.0])
+    sumw2 = np.asarray([0.1])
+    bins = np.asarray([1, 2])
     return histo.to_dict(yields, sumw2, bins)
 
 
 def _example_hist_empty_bin():
-    yields = [1, 0]
-    sumw2 = [0.1, 0.2]
-    bins = [1, 2]
+    yields = np.asarray([1.0, 0.0])
+    sumw2 = np.asarray([0.1, 0.2])
+    bins = np.asarray([1, 2, 3])
     return histo.to_dict(yields, sumw2, bins)
 
 
 def _example_hist_nan_sumw2_empty_bin():
-    yields = [1, 0]
-    sumw2 = [0.1, float("NaN")]
-    bins = [1, 2]
+    yields = np.asarray([1.0, 0.0])
+    sumw2 = np.asarray([0.1, float("NaN")])
+    bins = np.asarray([1, 2, 3])
     return histo.to_dict(yields, sumw2, bins)
 
 
 def _example_hist_nan_sumw2_nonempty_bin():
-    yields = [1, 2]
-    sumw2 = [0.1, float("NaN")]
-    bins = [1, 2]
+    yields = np.asarray([1.0, 2.0])
+    sumw2 = np.asarray([0.1, float("NaN")])
+    bins = np.asarray([1, 2, 3])
     return histo.to_dict(yields, sumw2, bins)
 
 
 def test_to_dict():
-    yields = [1, 2]
-    sumw2 = [0.1, 0.2]
-    bins = [1, 2]
+    yields = np.asarray([1.0, 2.0])
+    sumw2 = np.asarray([0.1, 0.2])
+    bins = np.asarray([1, 2, 3])
     assert histo.to_dict(yields, sumw2, bins) == {
         "yields": yields,
         "sumw2": sumw2,
@@ -156,3 +156,11 @@ def test_validate(caplog):
         rec.message for rec in caplog.records
     ]
     caplog.clear()
+
+
+def test_normalize_to_yield():
+    hist = _example_hist_empty_bin()
+    var_hist = _example_hist()
+    modified_hist, factor = histo.normalize_to_yield(var_hist, hist)
+    assert factor == 3.0
+    np.testing.assert_equal(modified_hist["yields"], np.asarray([1 / 3, 2 / 3]))
