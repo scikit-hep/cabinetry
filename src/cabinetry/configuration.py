@@ -119,32 +119,30 @@ def histogram_is_needed(sample, region, systematic):
 
     Raises:
         NotImplementedError: non-supported systematic variations based on histograms are requested
-        NotImplementedError: histogram treatment is not defined for specific case
 
     Returns:
         bool: whether a histogram is needed
     """
-    is_nominal = systematic["Name"] == "nominal"
-    if is_nominal:
+    if systematic.get("Name", None) == "nominal":
         # for nominal, histograms are generally needed
         histo_needed = True
-    elif (not is_nominal) and sample.get("Data", False):
-        # for data, only nominal histograms are needed
-        histo_needed = False
-    elif (not is_nominal) and (not sample.get("Data", False)):
-        # handle non-nominal and non-data histograms
-        if systematic["Type"] == "Overall":
-            # no histogram needed for normalization variation
-            histo_needed = False
-        elif systematic["Type"] == "NormPlusShape":
-            # for a variation defined via a template, a histogram is needed (if sample is affected)
-            if sample_affected_by_modifier(sample, systematic):
-                histo_needed = True
-            else:
-                histo_needed = False
-        else:
-            raise NotImplementedError("other systematics not yet implemented")
     else:
-        raise NotImplementedError("histogram treatment not defined for this case")
+        # non-nominal case
+        if sample.get("Data", False):
+            # for data, only nominal histograms are needed
+            histo_needed = False
+        else:
+            # handle non-nominal, non-data histograms
+            if systematic["Type"] == "Overall":
+                # no histogram needed for normalization variation
+                histo_needed = False
+            elif systematic["Type"] == "NormPlusShape":
+                # for a variation defined via a template, a histogram is needed (if sample is affected)
+                if sample_affected_by_modifier(sample, systematic):
+                    histo_needed = True
+                else:
+                    histo_needed = False
+            else:
+                raise NotImplementedError("other systematics not yet implemented")
 
     return histo_needed
