@@ -2,8 +2,6 @@ import logging
 from pathlib import Path
 import yaml
 
-from . import configuration
-
 
 REQUIRED_CONFIG_KEYS = ["General", "Samples", "Regions", "NormFactors"]
 
@@ -140,7 +138,7 @@ def histogram_is_needed(sample, region, systematic):
             histo_needed = False
         elif systematic["Type"] == "NormPlusShape":
             # for a variation defined via a template, a histogram is needed (if sample is affected)
-            if configuration.sample_affected_by_modifier(sample, systematic):
+            if sample_affected_by_modifier(sample, systematic):
                 histo_needed = True
             else:
                 histo_needed = False
