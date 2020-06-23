@@ -68,7 +68,7 @@ def test__get_binning():
         assert template_builder._get_binning({})
 
 
-def test_create_histograms(tmpdir):
+def test_create_histograms(tmp_path):
     # needs to be expanded into a proper test
     config = {"Samples": {}, "Regions": {}, "Systematics": {}}
-    template_builder.create_histograms(config, tmpdir, method="uproot")
+    template_builder.create_histograms(config, tmp_path, method="uproot")

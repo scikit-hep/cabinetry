@@ -30,7 +30,7 @@ def test_adjust_histogram():
     )
 
 
-def test_run(tmpdir):
+def test_run(tmp_path):
     # needs to be expanded into a proper test
     config = {"Samples": {}, "Regions": {}, "Systematics": {}}
-    template_postprocessor.run(config, tmpdir)
+    template_postprocessor.run(config, tmp_path)

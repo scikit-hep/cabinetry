@@ -58,11 +58,10 @@ def test_save(tmp_path):
     np.testing.assert_equal(histo._load(tmp_path, modified=False), hist)
 
 
-def test_save_new_dir(tmpdir):
+def test_save_new_dir(tmp_path):
     hist = _example_hist()
     # add a subdirectory that needs to be created for histogram saving
-    subdir = tmpdir / "subdir"
-    fname = Path(subdir.join("file"))
+    fname = tmp_path / "subdir" / "file"
     histo.save(hist, fname)
     np.testing.assert_equal(histo._load(fname, modified=False), hist)
 
@@ -86,27 +85,28 @@ def test__load(tmp_path, caplog):
     caplog.clear()
 
 
-def test__load_modified(tmpdir, caplog):
+def test__load_modified(tmp_path, caplog):
     hist = _example_hist()
     histo_name = "histo"
-    fname_modified = Path(tmpdir.join(histo_name + "_modified"))
-    fname_original = Path(tmpdir.join(histo_name))
+    fname_modified = tmp_path / (histo_name + "_modified")
+    fname_original = tmp_path / histo_name
     histo.save(hist, fname_modified)
     # load the modified histogram by specifying the original name, which should produce no warning
     np.testing.assert_equal(histo._load(fname_original, modified=True), hist)
     assert [rec.message for rec in caplog.records] == []
+    caplog.clear()
 
 
-def test_load_from_config(tmpdir):
+def test_load_from_config(tmp_path):
     hist = _example_hist()
     expected_name = "Sample_Region_Systematic"
-    fname = Path(tmpdir.join(expected_name))
+    fname = tmp_path / expected_name
     histo.save(hist, fname)
     sample = {"Name": "Sample"}
     region = {"Name": "Region"}
     systematic = {"Name": "Systematic"}
     loaded_histo, loaded_name = histo.load_from_config(
-        tmpdir, sample, region, systematic, modified=False
+        tmp_path, sample, region, systematic, modified=False
     )
     np.testing.assert_equal(loaded_histo, hist)
     assert loaded_name == expected_name
