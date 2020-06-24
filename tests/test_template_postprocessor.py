@@ -1,5 +1,6 @@
 import numpy as np
 
+from cabinetry import histo
 from cabinetry import template_postprocessor
 
 
@@ -32,5 +33,17 @@ def test_adjust_histogram():
 
 def test_run(tmp_path):
     # needs to be expanded into a proper test
-    config = {"Samples": {}, "Regions": {}, "Systematics": {}}
+    config = {"Samples": [{"Name": "signal"}], "Regions": [{"Name": "region_1"}]}
+
+    # create an input histogram
+    histo_path = tmp_path / "signal_region_1_nominal.npz"
+    histogram = histo.to_dict(
+        np.asarray([1.0, 2.0]), np.asarray([1.0, 1.0]), np.asarray([0.0, 1.0, 2.0])
+    )
+    histo.save(histogram, histo_path)
+
     template_postprocessor.run(config, tmp_path)
+    modified_histo = histo._load(histo_path, modified=True)
+    assert np.allclose(modified_histo["yields"], histogram["yields"])
+    assert np.allclose(modified_histo["sumw2"], histogram["sumw2"])
+    assert np.allclose(modified_histo["bins"], histogram["bins"])
