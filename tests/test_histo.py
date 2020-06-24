@@ -7,44 +7,44 @@ from cabinetry import histo
 
 
 def _example_hist():
-    yields = [1, 2]
-    sumw2 = [0.1, 0.2]
-    bins = [1, 2]
+    yields = np.asarray([1.0, 2.0])
+    sumw2 = np.asarray([0.1, 0.2])
+    bins = np.asarray([1, 2, 3])
     return histo.to_dict(yields, sumw2, bins)
 
 
 def _example_hist_single_bin():
-    yields = [1]
-    sumw2 = [0.1]
-    bins = [1]
+    yields = np.asarray([1.0])
+    sumw2 = np.asarray([0.1])
+    bins = np.asarray([1, 2])
     return histo.to_dict(yields, sumw2, bins)
 
 
 def _example_hist_empty_bin():
-    yields = [1, 0]
-    sumw2 = [0.1, 0.2]
-    bins = [1, 2]
+    yields = np.asarray([1.0, 0.0])
+    sumw2 = np.asarray([0.1, 0.2])
+    bins = np.asarray([1, 2, 3])
     return histo.to_dict(yields, sumw2, bins)
 
 
 def _example_hist_nan_sumw2_empty_bin():
-    yields = [1, 0]
-    sumw2 = [0.1, float("NaN")]
-    bins = [1, 2]
+    yields = np.asarray([1.0, 0.0])
+    sumw2 = np.asarray([0.1, float("NaN")])
+    bins = np.asarray([1, 2, 3])
     return histo.to_dict(yields, sumw2, bins)
 
 
 def _example_hist_nan_sumw2_nonempty_bin():
-    yields = [1, 2]
-    sumw2 = [0.1, float("NaN")]
-    bins = [1, 2]
+    yields = np.asarray([1.0, 2.0])
+    sumw2 = np.asarray([0.1, float("NaN")])
+    bins = np.asarray([1, 2, 3])
     return histo.to_dict(yields, sumw2, bins)
 
 
 def test_to_dict():
-    yields = [1, 2]
-    sumw2 = [0.1, 0.2]
-    bins = [1, 2]
+    yields = np.asarray([1.0, 2.0])
+    sumw2 = np.asarray([0.1, 0.2])
+    bins = np.asarray([1, 2, 3])
     assert histo.to_dict(yields, sumw2, bins) == {
         "yields": yields,
         "sumw2": sumw2,
@@ -58,11 +58,10 @@ def test_save(tmp_path):
     np.testing.assert_equal(histo._load(tmp_path, modified=False), hist)
 
 
-def test_save_new_dir(tmpdir):
+def test_save_new_dir(tmp_path):
     hist = _example_hist()
     # add a subdirectory that needs to be created for histogram saving
-    subdir = tmpdir / "subdir"
-    fname = Path(subdir.join("file"))
+    fname = tmp_path / "subdir" / "file"
     histo.save(hist, fname)
     np.testing.assert_equal(histo._load(fname, modified=False), hist)
 
@@ -86,27 +85,28 @@ def test__load(tmp_path, caplog):
     caplog.clear()
 
 
-def test__load_modified(tmpdir, caplog):
+def test__load_modified(tmp_path, caplog):
     hist = _example_hist()
     histo_name = "histo"
-    fname_modified = Path(tmpdir.join(histo_name + "_modified"))
-    fname_original = Path(tmpdir.join(histo_name))
+    fname_modified = tmp_path / (histo_name + "_modified")
+    fname_original = tmp_path / histo_name
     histo.save(hist, fname_modified)
     # load the modified histogram by specifying the original name, which should produce no warning
     np.testing.assert_equal(histo._load(fname_original, modified=True), hist)
     assert [rec.message for rec in caplog.records] == []
+    caplog.clear()
 
 
-def test_load_from_config(tmpdir):
+def test_load_from_config(tmp_path):
     hist = _example_hist()
     expected_name = "Sample_Region_Systematic"
-    fname = Path(tmpdir.join(expected_name))
+    fname = tmp_path / expected_name
     histo.save(hist, fname)
     sample = {"Name": "Sample"}
     region = {"Name": "Region"}
     systematic = {"Name": "Systematic"}
     loaded_histo, loaded_name = histo.load_from_config(
-        tmpdir, sample, region, systematic, modified=False
+        tmp_path, sample, region, systematic, modified=False
     )
     np.testing.assert_equal(loaded_histo, hist)
     assert loaded_name == expected_name
@@ -156,3 +156,11 @@ def test_validate(caplog):
         rec.message for rec in caplog.records
     ]
     caplog.clear()
+
+
+def test_normalize_to_yield():
+    hist = _example_hist_empty_bin()
+    var_hist = _example_hist()
+    modified_hist, factor = histo.normalize_to_yield(var_hist, hist)
+    assert factor == 3.0
+    np.testing.assert_equal(modified_hist["yields"], np.asarray([1 / 3, 2 / 3]))

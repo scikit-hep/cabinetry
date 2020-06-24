@@ -1,6 +1,45 @@
 import numpy as np
+import uproot
 
 from cabinetry.contrib import histogram_creation
+
+
+def create_ntuple(fname, treename, varname, var_array, weightname, weight_array):
+    with uproot.recreate(fname) as f:
+        f[treename] = uproot.newtree({varname: "float64", weightname: "float64"})
+        f[treename].extend({varname: var_array, weightname: weight_array})
+
+
+def test_from_uproot(tmp_path):
+    fname = tmp_path / "test.root"
+    treename = "tree"
+    varname = "var"
+    var_array = [1.1, 2.3, 3.0, 3.2]
+    weightname = "weight"
+    weight_array = [1.0, 1.0, 2.0, 1.0]
+    bins = [1, 2, 3, 4]
+    # create something to read
+    create_ntuple(fname, treename, varname, var_array, weightname, weight_array)
+
+    # read - no weights or selection
+    yields, sumw2 = histogram_creation.from_uproot(fname, treename, varname, bins)
+    assert np.allclose(yields, [1, 1, 2])
+    assert np.allclose(sumw2, [1, 1, 1.41421356])
+
+    # read - with selection cut
+    selection = "var < 3.1"
+    yields, sumw2 = histogram_creation.from_uproot(
+        fname, treename, varname, bins, selection_filter=selection
+    )
+    assert np.allclose(yields, [1, 1, 1])
+    assert np.allclose(sumw2, [1, 1, 1])
+
+    # read - with weight
+    yields, sumw2 = histogram_creation.from_uproot(
+        fname, treename, varname, bins, weight=weightname
+    )
+    assert np.allclose(yields, [1, 1, 3])
+    assert np.allclose(sumw2, [1, 1, 2.23606798])
 
 
 def test__sumw2():
