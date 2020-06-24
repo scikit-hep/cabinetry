@@ -200,7 +200,7 @@ def get_sys_modifiers(config, sample, region, histogram_folder):
         list: modifiers for pyhf-style workspace
     """
     modifiers = []
-    for systematic in config["Systematics"]:
+    for systematic in config.get("Systematics", []):
         if configuration.sample_affected_by_modifier(sample, systematic):
             if systematic["Type"] == "Overall":
                 # OverallSys (norm uncertainty with Gaussian constraint)
@@ -323,12 +323,13 @@ def get_observations(config, histogram_folder):
     return observations
 
 
-def build(config, histogram_folder):
+def build(config, histogram_folder, with_validation=True):
     """build a HistFactory workspace, pyhf style
 
     Args:
         config (dict): cabinetry configuration
         histogram_folder (str): path to folder containing histograms
+        with_validation (bool, optional): validate workspace validity with pyhf, defaults to True
 
     Returns:
         dict: pyhf-compatible HistFactory workspace
@@ -352,8 +353,9 @@ def build(config, histogram_folder):
     # workspace version
     ws.update({"version": "1.0.0"})
 
-    # validate the workspace
-    validate(ws)
+    if with_validation:
+        # validate the workspace
+        validate(ws)
     return ws
 
 
