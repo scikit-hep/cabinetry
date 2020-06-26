@@ -77,34 +77,34 @@ def test_sample_affected_by_modifier():
         configuration.sample_affected_by_modifier(
             {"Name": "Signal"}, {"Samples": ["Signal", "Background"]}
         )
-        == True
+        is True
     )
     assert (
         configuration.sample_affected_by_modifier(
             {"Name": "Signal"}, {"Samples": {"Background"}}
         )
-        == False
+        is False
     )
 
 
 def test_histogram_is_needed():
     # nominal
-    assert configuration.histogram_is_needed({}, {}, {"Name": "nominal"}) == True
+    assert configuration.histogram_is_needed({}, {}, {"Name": "nominal"}) is True
 
     # non-nominal data
     assert (
-        configuration.histogram_is_needed({"Data": True}, {}, {"Name": "var"}) == False
+        configuration.histogram_is_needed({"Data": True}, {}, {"Name": "var"}) is False
     )
 
     # overall normalization variation
-    assert configuration.histogram_is_needed({}, {}, {"Type": "Overall"}) == False
+    assert configuration.histogram_is_needed({}, {}, {"Type": "Overall"}) is False
 
     # normalization + shape variation on affected sample
     assert (
         configuration.histogram_is_needed(
             {"Name": "Signal"}, {}, {"Type": "NormPlusShape", "Samples": "Signal"}
         )
-        == True
+        is True
     )
 
     # normalization + shape variation on non-affected sample
@@ -112,7 +112,7 @@ def test_histogram_is_needed():
         configuration.histogram_is_needed(
             {"Name": "Background"}, {}, {"Type": "NormPlusShape", "Samples": "Signal"}
         )
-        == False
+        is False
     )
 
     # non-supported systematic
