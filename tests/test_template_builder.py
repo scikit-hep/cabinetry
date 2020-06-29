@@ -1,9 +1,12 @@
 from pathlib import Path
 import pytest
 
+import logging
 import numpy as np
 
+from cabinetry import histo
 from cabinetry import template_builder
+from tests import utils
 
 
 def test__get_ntuple_path():
@@ -68,7 +71,45 @@ def test__get_binning():
         assert template_builder._get_binning({})
 
 
-def test_create_histograms(tmp_path):
-    # needs to be expanded into a proper test
-    config = {"Samples": {}, "Regions": {}, "Systematics": {}}
+def test_create_histograms(tmp_path, caplog):
+    caplog.set_level(logging.DEBUG)
+    fname = tmp_path / "test.root"
+    treename = "tree"
+    varname = "var"
+    var_array = [1.1, 2.3, 3.0, 3.2]
+    weightname = "weight"
+    weight_array = [1.0, 1.0, 2.0, 1.0]
+    bins = [1, 2, 3, 4]
+    # create something to read
+    utils.create_ntuple(fname, treename, varname, var_array, weightname, weight_array)
+
+    config = {
+        "Samples": [{"Name": "sample", "Tree": treename, "Path": fname}],
+        "Regions": [{"Name": "test_region", "Variable": varname, "Binning": bins}],
+        "Systematics": [],
+    }
     template_builder.create_histograms(config, tmp_path, method="uproot")
+
+    # ServiceX is not yet implemented
+    with pytest.raises(Exception) as e_info:
+        assert template_builder.create_histograms(config, tmp_path, method="ServiceX")
+
+    # other backends
+    with pytest.raises(Exception) as e_info:
+        assert template_builder.create_histograms(config, tmp_path, method="unknown")
+
+    saved_histo, _ = histo.load_from_config(
+        tmp_path,
+        config["Samples"][0],
+        config["Regions"][0],
+        {"Name": "nominal"},
+        modified=False,
+    )
+
+    assert np.allclose(saved_histo["yields"], [1, 1, 2])
+    assert np.allclose(saved_histo["sumw2"], [1, 1, 1.41421356])
+    assert np.allclose(saved_histo["bins"], bins)
+
+    assert "  reading sample sample" in [rec.message for rec in caplog.records]
+    assert "  in region test_region" in [rec.message for rec in caplog.records]
+    assert "  variation nominal" in [rec.message for rec in caplog.records]
