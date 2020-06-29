@@ -84,10 +84,9 @@ def _convert_samples_to_list(samples):
     Returns:
         list: name(s) of sample(s)
     """
-    if isinstance(samples, list):
-        return samples
-    else:
-        return [samples]
+    if not isinstance(samples, list):
+        samples = [samples]
+    return samples
 
 
 def sample_affected_by_modifier(sample, modifier):
