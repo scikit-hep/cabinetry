@@ -64,15 +64,15 @@ def data_MC_matplotlib(histogram_dict_list, figure_path):
     bin_left_edges = bins[:-1]
     bin_width = bin_right_edges - bin_left_edges
     bin_centers = 0.5 * (bin_left_edges + bin_right_edges)
-    for i_sample in range(len(mc_histograms_yields)):
+    for i_sample, mc_sample_yield in enumerate(mc_histograms_yields):
         plt.bar(
             bin_centers,
-            mc_histograms_yields[i_sample],
+            mc_sample_yield,
             width=bin_width,
             bottom=total_yield,
             label=mc_labels[i_sample],
         )
-        total_yield += mc_histograms_yields[i_sample]
+        total_yield += mc_sample_yield
 
     # add total MC uncertainty
     mc_stack_unc = _total_yield_uncertainty(mc_histograms_sumw2)

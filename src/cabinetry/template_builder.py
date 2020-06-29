@@ -118,8 +118,8 @@ def _get_binning(region):
     """
     if region.get("Binning", False):
         return np.asarray(region["Binning"])
-    else:
-        raise NotImplementedError
+
+    raise NotImplementedError
 
 
 def create_histograms(config, folder_path_str, method="uproot"):
