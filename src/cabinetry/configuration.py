@@ -84,10 +84,9 @@ def _convert_samples_to_list(samples):
     Returns:
         list: name(s) of sample(s)
     """
-    if isinstance(samples, list):
-        return samples
-    else:
-        return [samples]
+    if not isinstance(samples, list):
+        samples = [samples]
+    return samples
 
 
 def sample_affected_by_modifier(sample, modifier):
@@ -101,10 +100,7 @@ def sample_affected_by_modifier(sample, modifier):
         bool: True if sample is affected, False otherwise
     """
     affected_samples = _convert_samples_to_list(modifier["Samples"])
-    if sample["Name"] in affected_samples:
-        affected = True
-    else:
-        affected = False
+    affected = sample["Name"] in affected_samples
     return affected
 
 
@@ -138,10 +134,7 @@ def histogram_is_needed(sample, region, systematic):
                 histo_needed = False
             elif systematic["Type"] == "NormPlusShape":
                 # for a variation defined via a template, a histogram is needed (if sample is affected)
-                if sample_affected_by_modifier(sample, systematic):
-                    histo_needed = True
-                else:
-                    histo_needed = False
+                histo_needed = sample_affected_by_modifier(sample, systematic)
             else:
                 raise NotImplementedError("other systematics not yet implemented")
 
