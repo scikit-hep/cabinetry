@@ -116,10 +116,10 @@ def _get_binning(region):
     Returns:
         numpy.ndarray: bin boundaries to be used for histogram
     """
-    if region.get("Binning", False):
-        return np.asarray(region["Binning"])
+    if not region.get("Binning", False):
+        raise NotImplementedError
 
-    raise NotImplementedError
+    return np.asarray(region["Binning"])
 
 
 def create_histograms(config, folder_path_str, method="uproot"):
