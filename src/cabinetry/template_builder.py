@@ -178,7 +178,7 @@ def create_histograms(config, folder_path_str, method="uproot"):
                         selection_filter,
                     )
 
-                elif "method" == "ServiceX":
+                elif method == "ServiceX":
                     raise NotImplementedError
 
                 else:

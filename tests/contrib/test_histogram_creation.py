@@ -1,13 +1,7 @@
 import numpy as np
-import uproot
 
 from cabinetry.contrib import histogram_creation
-
-
-def create_ntuple(fname, treename, varname, var_array, weightname, weight_array):
-    with uproot.recreate(fname) as f:
-        f[treename] = uproot.newtree({varname: "float64", weightname: "float64"})
-        f[treename].extend({varname: var_array, weightname: weight_array})
+from tests import utils
 
 
 def test_from_uproot(tmp_path):
@@ -19,7 +13,7 @@ def test_from_uproot(tmp_path):
     weight_array = [1.0, 1.0, 2.0, 1.0]
     bins = [1, 2, 3, 4]
     # create something to read
-    create_ntuple(fname, treename, varname, var_array, weightname, weight_array)
+    utils.create_ntuple(fname, treename, varname, var_array, weightname, weight_array)
 
     # read - no weights or selection
     yields, sumw2 = histogram_creation.from_uproot(fname, treename, varname, bins)
