@@ -25,3 +25,6 @@ build
 
 # sphinx
 docs/_build
+
+# reference for tests
+!tests/contrib/reference/*
