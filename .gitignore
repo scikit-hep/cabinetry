@@ -27,4 +27,4 @@ build
 docs/_build
 
 # reference for tests
-!tests/contrib/reference/*
+!tests/contrib/reference/*pdf

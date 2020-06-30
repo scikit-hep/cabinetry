@@ -14,7 +14,7 @@ def test__total_yield_uncertainty():
 
 
 def test_data_MC(tmp_path):
-    fname = tmp_path / "fig.pdf"
+    fname = tmp_path / "subdir" / "fig.pdf"
     bg_hist = histo.to_dict(
         np.asarray([12.5, 14]), np.asarray([0.4, 0.5]), np.asarray([1, 2, 3])
     )
