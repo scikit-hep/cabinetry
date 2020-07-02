@@ -1,12 +1,11 @@
 from pathlib import Path
-import pytest
 
 import logging
 import numpy as np
+import pytest
 
 from cabinetry import histo
 from cabinetry import template_builder
-from tests import utils
 
 
 def test__get_ntuple_path():
@@ -71,7 +70,7 @@ def test__get_binning():
         assert template_builder._get_binning({})
 
 
-def test_create_histograms(tmp_path, caplog):
+def test_create_histograms(tmp_path, caplog, utils):
     caplog.set_level(logging.DEBUG)
     fname = tmp_path / "test.root"
     treename = "tree"

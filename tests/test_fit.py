@@ -1,13 +1,14 @@
 import logging
-import numpy as np
 
+import numpy as np
 import pyhf
 import pytest
 
 from cabinetry import fit
 
 
-def _get_spec():
+@pytest.fixture
+def example_spec():
     # fmt: off
     spec = {"channels": [{"name": "Signal Region", "samples": [{"data": [51.839756],
             "modifiers":[{"data": [2.5695188], "name": "staterror_Signal-Region",
@@ -19,9 +20,8 @@ def _get_spec():
     return spec
 
 
-def test_get_parameter_names():
-    spec = _get_spec()
-    model = pyhf.Workspace(spec).model()
+def test_get_parameter_names(example_spec):
+    model = pyhf.Workspace(example_spec).model()
     labels = fit.get_parameter_names(model)
     assert labels == ["staterror_Signal-Region", "Signal strength"]
 
@@ -41,9 +41,8 @@ def test_print_results(caplog):
 # skip a "RuntimeWarning: numpy.ufunc size changed" warning
 # due to different numpy versions used in dependencies
 @pytest.mark.filterwarnings("ignore::RuntimeWarning")
-def test_fit():
-    spec = _get_spec()
-    bestfit, uncertainty, labels = fit.fit(spec)
+def test_fit(example_spec):
+    bestfit, uncertainty, labels = fit.fit(example_spec)
     assert np.allclose(bestfit, [0.99998772, 9.16255687])
     assert np.allclose(uncertainty, [0.04954955, 0.61348804])
     assert labels == ["staterror_Signal-Region", "Signal strength"]
