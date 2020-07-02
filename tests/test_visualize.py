@@ -35,8 +35,8 @@ def test_data_MC(mock_load, mock_draw, tmp_path):
 
     visualize.data_MC(config, tmp_path, tmp_path, prefit=True, method="matplotlib")
 
-    # the call_args_list contains calls (first round bracket), first filled with
-    # arguments and then keyword arguments
+    # the call_args_list contains calls (outer round brackets), first filled with
+    # arguments (inner round brackets) and then keyword arguments
     assert mock_load.call_args_list == [
         (
             (
