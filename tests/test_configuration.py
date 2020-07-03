@@ -1,52 +1,55 @@
+import logging
+from unittest import mock
+
 import pytest
 
 from cabinetry import configuration
 
 
-def test_read():
-    configuration.read("config_example.yml")
+@mock.patch("cabinetry.configuration.validate")
+def test_read(mock_validation):
+    conf = configuration.read("config_example.yml")
+    assert isinstance(conf, dict)
+    mock_validation.assert_called_once()
 
 
-def test_validate_missing_key():
-    config_example = {"General": []}
-    with pytest.raises(Exception) as e_info:
-        configuration.validate(config_example)
+def test_validate():
+    config_valid = {
+        "General": "",
+        "Regions": "",
+        "NormFactors": "",
+        "Samples": [{"Data": True}],
+    }
+    assert configuration.validate(config_valid) is True
 
+    config_missing_key = {"General": []}
+    with pytest.raises(ValueError, match="missing required key in config") as e_info:
+        configuration.validate(config_missing_key)
 
-def test_validate_unknown_key():
-    config_example = {
+    config_unknown_key = {
         "General": "",
         "Regions": "",
         "NormFactors": "",
         "Samples": "",
         "unknown": [],
     }
-    with pytest.raises(Exception) as e_info:
-        configuration.validate(config_example)
+    with pytest.raises(ValueError, match="unknown key found") as e_info:
+        configuration.validate(config_unknown_key)
 
-
-def test_validate_multiple_data_samples():
-    config_example = {
+    config_multiple_data_samples = {
         "General": "",
         "Regions": "",
         "NormFactors": "",
         "Samples": [{"Data": True}, {"Data": True}],
     }
-    with pytest.raises(Exception) as e_info:
-        configuration.validate(config_example)
+    with pytest.raises(
+        NotImplementedError, match="can only handle cases with exactly one data sample"
+    ) as e_info:
+        configuration.validate(config_multiple_data_samples)
 
 
-def test_validate_valid():
-    config_example = {
-        "General": "",
-        "Regions": "",
-        "NormFactors": "",
-        "Samples": [{"Data": True}],
-    }
-    configuration.validate(config_example)
-
-
-def test_print_overview():
+def test_print_overview(caplog):
+    caplog.set_level(logging.DEBUG)
     config_example = {
         "General": "",
         "Regions": "",
@@ -55,66 +58,71 @@ def test_print_overview():
         "Systematics": "",
     }
     configuration.print_overview(config_example)
+    assert "  1 Sample(s)" in [rec.message for rec in caplog.records]
+    assert "  0 Regions(s)" in [rec.message for rec in caplog.records]
+    assert "  0 NormFactor(s)" in [rec.message for rec in caplog.records]
+    assert "  0 Systematic(s)" in [rec.message for rec in caplog.records]
+    caplog.clear()
 
-
-def test_print_overview_no_sys():
-    config_example = {
+    config_example_no_sys = {
         "General": "",
         "Regions": "",
         "NormFactors": "",
         "Samples": [{"Data": True}],
     }
-    configuration.print_overview(config_example)
+    configuration.print_overview(config_example_no_sys)
+    assert "Systematic(s)" not in [rec.message for rec in caplog.records]
+    caplog.clear()
 
 
-def test__convert_samples_to_list():
-    assert configuration._convert_samples_to_list("sample") == ["sample"]
-    assert configuration._convert_samples_to_list(["sample"]) == ["sample"]
+@pytest.mark.parametrize(
+    "samples, converted", [("sample", ["sample"]), (["sample"], ["sample"])]
+)
+def test__convert_samples_to_list(samples, converted):
+    assert configuration._convert_samples_to_list(samples) == converted
 
 
-def test_sample_affected_by_modifier():
-    assert (
-        configuration.sample_affected_by_modifier(
-            {"Name": "Signal"}, {"Samples": ["Signal", "Background"]}
-        )
-        is True
-    )
-    assert (
-        configuration.sample_affected_by_modifier(
-            {"Name": "Signal"}, {"Samples": {"Background"}}
-        )
-        is False
-    )
+@pytest.mark.parametrize(
+    "sample_and_modifier, affected",
+    [
+        (({"Name": "Signal"}, {"Samples": ["Signal", "Background"]}), True),
+        (({"Name": "Signal"}, {"Samples": {"Background"}}), False),
+    ],
+)
+def test_sample_affected_by_modifier(sample_and_modifier, affected):
+    assert configuration.sample_affected_by_modifier(*sample_and_modifier) is affected
 
 
-def test_histogram_is_needed():
-    # nominal
-    assert configuration.histogram_is_needed({}, {}, {"Name": "nominal"}) is True
-
-    # non-nominal data
-    assert (
-        configuration.histogram_is_needed({"Data": True}, {}, {"Name": "var"}) is False
-    )
-
-    # overall normalization variation
-    assert configuration.histogram_is_needed({}, {}, {"Type": "Overall"}) is False
-
-    # normalization + shape variation on affected sample
-    assert (
-        configuration.histogram_is_needed(
-            {"Name": "Signal"}, {}, {"Type": "NormPlusShape", "Samples": "Signal"}
-        )
-        is True
-    )
-
-    # normalization + shape variation on non-affected sample
-    assert (
-        configuration.histogram_is_needed(
-            {"Name": "Background"}, {}, {"Type": "NormPlusShape", "Samples": "Signal"}
-        )
-        is False
-    )
+@pytest.mark.parametrize(
+    "sam_reg_sys, needed",
+    [
+        # nominal
+        (({}, {}, {"Name": "nominal"}), True),
+        # non-nominal data
+        (({"Data": True}, {}, {"Name": "var"}), False),
+        # overall normalization variation
+        (({}, {}, {"Type": "Overall"}), False),
+        # normalization + shape variation on affected sample
+        (
+            ({"Name": "Signal"}, {}, {"Type": "NormPlusShape", "Samples": "Signal"}),
+            True,
+        ),
+        # normalization + shape variation on non-affected sample
+        (
+            (
+                {"Name": "Background"},
+                {},
+                {"Type": "NormPlusShape", "Samples": "Signal"},
+            ),
+            False,
+        ),
+    ],
+)
+def test_histogram_is_needed(sam_reg_sys, needed):
+    assert configuration.histogram_is_needed(*sam_reg_sys) is needed
 
     # non-supported systematic
-    with pytest.raises(Exception) as e_info:
+    with pytest.raises(
+        NotImplementedError, match="other systematics not yet implemented"
+    ) as e_info:
         configuration.histogram_is_needed({}, {}, {"Type": "unknown"})

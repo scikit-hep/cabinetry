@@ -54,7 +54,9 @@ def validate(config):
         raise NotImplementedError("can only handle cases with exactly one data sample")
 
     # should also check here for conflicting settings
-    pass
+
+    # if no issues are found
+    return True
 
 
 def print_overview(config):
