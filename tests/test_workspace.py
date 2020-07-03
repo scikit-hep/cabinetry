@@ -71,9 +71,13 @@ def test_get_sys_modifiers():
 
     # unsupported systematics type
     config_example_unsupported = {
-        "Systematics": [{"Name": "Normalization", "Type": "unknown"}]
+        "Systematics": [
+            {"Name": "Normalization", "Type": "unknown", "Samples": "Signal"}
+        ]
     }
-    with pytest.raises(Exception) as e_info:
+    with pytest.raises(
+        NotImplementedError, match="not supporting other systematic types yet"
+    ) as e_info:
         workspace.get_sys_modifiers(config_example_unsupported, sample, region, None)
 
 

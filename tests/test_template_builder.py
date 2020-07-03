@@ -19,7 +19,9 @@ def test__get_ntuple_path():
         {"Name": "variation", "Type": "NormPlusShape", "PathUp": "test/path.root"},
     ) == Path("test/path.root")
 
-    with pytest.raises(Exception) as e_info:
+    with pytest.raises(
+        NotImplementedError, match="ntuple path treatment not yet defined"
+    ) as e_info:
         assert template_builder._get_ntuple_path(
             {}, {}, {"Name": "unknown_variation_type", "Type": "unknown"}
         )
@@ -56,7 +58,9 @@ def test__get_position_in_file():
         == "up_tree"
     )
 
-    with pytest.raises(Exception) as e_info:
+    with pytest.raises(
+        NotImplementedError, match="ntuple path treatment not yet defined"
+    ) as e_info:
         template_builder._get_position_in_file(
             {}, {"Name": "unknown_variation", "Type": "unknown"}
         )
@@ -66,7 +70,7 @@ def test__get_binning():
     np.testing.assert_equal(
         template_builder._get_binning({"Binning": [1, 2, 3]}), [1, 2, 3]
     )
-    with pytest.raises(Exception) as e_info:
+    with pytest.raises(NotImplementedError, match="cannot determine binning") as e_info:
         assert template_builder._get_binning({})
 
 
@@ -90,11 +94,13 @@ def test_create_histograms(tmp_path, caplog, utils):
     template_builder.create_histograms(config, tmp_path, method="uproot")
 
     # ServiceX is not yet implemented
-    with pytest.raises(Exception) as e_info:
+    with pytest.raises(
+        NotImplementedError, match="ServiceX not yet implemented"
+    ) as e_info:
         assert template_builder.create_histograms(config, tmp_path, method="ServiceX")
 
     # other backends
-    with pytest.raises(Exception) as e_info:
+    with pytest.raises(NotImplementedError, match="unknown backend") as e_info:
         assert template_builder.create_histograms(config, tmp_path, method="unknown")
 
     saved_histo, _ = histo.load_from_config(
@@ -112,3 +118,4 @@ def test_create_histograms(tmp_path, caplog, utils):
     assert "  reading sample sample" in [rec.message for rec in caplog.records]
     assert "  in region test_region" in [rec.message for rec in caplog.records]
     assert "  variation nominal" in [rec.message for rec in caplog.records]
+    caplog.clear()
