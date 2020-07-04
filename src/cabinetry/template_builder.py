@@ -117,7 +117,7 @@ def _get_binning(region):
         numpy.ndarray: bin boundaries to be used for histogram
     """
     if not region.get("Binning", False):
-        raise NotImplementedError
+        raise NotImplementedError("cannot determine binning")
 
     return np.asarray(region["Binning"])
 
@@ -179,10 +179,10 @@ def create_histograms(config, folder_path_str, method="uproot"):
                     )
 
                 elif method == "ServiceX":
-                    raise NotImplementedError
+                    raise NotImplementedError("ServiceX not yet implemented")
 
                 else:
-                    raise NotImplementedError
+                    raise NotImplementedError("unknown backend")
 
                 # convert the information into a dictionary for easier handling
                 histogram = histo.to_dict(yields, sumw2, bins)

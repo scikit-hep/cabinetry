@@ -1,10 +1,9 @@
 import numpy as np
 
 from cabinetry.contrib import histogram_creation
-from tests import utils
 
 
-def test_from_uproot(tmp_path):
+def test_from_uproot(tmp_path, utils):
     fname = tmp_path / "test.root"
     treename = "tree"
     varname = "var"

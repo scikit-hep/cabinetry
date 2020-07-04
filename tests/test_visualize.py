@@ -58,9 +58,11 @@ def test_data_MC(mock_load, mock_draw, tmp_path):
     ]
 
     # other plotting method
-    with pytest.raises(Exception) as e_info:
+    with pytest.raises(NotImplementedError, match="unknown backend") as e_info:
         visualize.data_MC(config, tmp_path, tmp_path, prefit=True, method="unknown")
 
     # postfit
-    with pytest.raises(Exception) as e_info:
+    with pytest.raises(
+        NotImplementedError, match="only prefit implemented so far"
+    ) as e_info:
         visualize.data_MC(config, tmp_path, tmp_path, prefit=False, method="matplotlib")

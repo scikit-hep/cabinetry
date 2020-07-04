@@ -71,6 +71,6 @@ def data_MC(config, histogram_folder, figure_folder, prefit=True, method="matplo
                 figure_path = Path(figure_folder) / figure_name
                 histogram_drawing.data_MC_matplotlib(histogram_dict_list, figure_path)
             else:
-                raise NotImplementedError
+                raise NotImplementedError("unknown backend")
         else:
             raise NotImplementedError("only prefit implemented so far")
