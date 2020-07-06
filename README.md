@@ -1,6 +1,7 @@
 # cabinetry
 
 [![CI status](https://github.com/alexander-held/cabinetry/workflows/CI/badge.svg)](https://github.com/alexander-held/cabinetry/actions?query=workflow%3ACI)
+[![codecov](https://codecov.io/gh/alexander-held/cabinetry/branch/master/graph/badge.svg)](https://codecov.io/gh/alexander-held/cabinetry)
 [![PyPI version](https://badge.fury.io/py/cabinetry.svg)](https://badge.fury.io/py/cabinetry)
 [![python version](https://img.shields.io/pypi/pyversions/cabinetry.svg)](https://pypi.org/project/cabinetry/)
 [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
@@ -10,14 +11,13 @@
 - [Introduction](#introduction)
 - [Hello world](#hello-world)
 - [Template fits](#template-fits)
-- [Configuration file thoughts](#configuration-file-thoughts)
 - [Scope](#scope)
 - [Code](#code)
 - [Acknowledgements](#acknowledgements)
 
 ## Introduction
 
-`cabinetry` is a tool to build and steer (profile likelihood) template fits with applications in high energy physics in mind.
+`cabinetry` is a Python package to build and steer (profile likelihood) template fits with applications in high energy physics in mind.
 It acts as an interface to many powerful tools to make it easier for an analyzer to run their statistical inference pipeline.
 An incomplete list of interesting tools to interface:
 
@@ -72,8 +72,7 @@ cabinetry.fit.fit(ws)
 ```
 
 The above is an abbreviated version of an example included in `example.py`, which shows how to use `cabinetry`.
-Beyond the core dependencies of `cabinetry` (currently `pyyaml`, `numpy`, `pyhf`, `iminuit`), it also requires additional libraries: `uproot`, `scipy`, `matplotlib`, `numexpr`.
-Those additional dependencies are not installed together with `cabinetry`, as they are only used to perform tasks that are outside the `cabinetry` core functionality.
+It requires additional libraries beyond the core dependencies of `cabinetry`, which can be installed via `pip install cabinetry[contrib]` (or `pip install -e .[contrib]` from the repository).
 Eventually the basic implementation (from `cabinetry/contrib`) will be replaced by calls to external modules (see also [Code](#code)).
 
 ## Template fits
@@ -136,74 +135,15 @@ External tools are called to perform inference, configured as specified by the c
 
 Some information of relevant kinds of visualization is provided in [as-user-facing/fit-visualization.md](https://github.com/iris-hep/as-user-facing/blob/master/fit-visualization.md) and the links therein.
 
-## Configuration file thoughts
-
-### Grouping of options
-
-The configuration file is how analyzers specify their fit model.
-Experience shows that it can get complex quickly.
-It is desirable to group configuration settings in ways that can make the file easier to read.
-For example, the color with which to draw a sample in figures does not matter for the fit model.
-It should be possible to easily hide such options for easier inspection of the configuration file, and this could be achieved by grouping them together as "cosmetics".
-
-### Validation
-
-As much as possible, automatic checks of the configuration file structure and content should happen before running any computationally expensive steps.
-For example, if input data is declared to be at various different locations, a quick check could verify that indeed data can be found at the paths declared.
-This can quickly flag typos before any histogram production is run.
-
-### Interactions with other existing frameworks
-
-While ambitious, it would be great to be able to translate configurations of other existing frameworks into a `cabinetry` configuration, to be able to easily run detailed comparisons.
-Some relevant work for [TRExFitter](https://gitlab.cern.ch/TRExStats/TRExFitter) exists [here](https://github.com/alexander-held/TRExFitter-config-translation).
-
-### Where to specify file paths
-
-Events for a given histogram are located at some path that can be specified by the sample name, region name, and systematic variation.
-It is unclear how to support as many structures as possible, while limiting the amount of options needed to specify them.
-See the [related issue #16](https://github.com/alexander-held/cabinetry/issues/16).
-
-### Single-element lists
-
-In multiple places in the config, lists of samples, regions, systematics etc. are needed.
-These could look like this:
-
-```yaml
-"Samples": ["ABC", "DEF"]
-```
-
-For cases where only a single entry is needed, it could either still be written as a single-element list, or alternatively as
-
-```yaml
-"Samples": "ABC"
-```
-
-which turns the value into a string instead.
-It is desirable to have consistency.
-During config parsing, everything could be put into a list as needed, or the code further downstream could handle both possible cases.
-While forcing the user to write everything as a list might result in less aesthetically pleasing results,
-
-```yaml
-"Samples": ["ABC"]
-```
-
-this still might be the best solution overall, as it also prevents other tools using the same config from having to manually implement the parsing of different types of values.
-
-### Reserved values for convenience
-
-For a systematic uncertainty affecting all existing samples, it might be convenient to support a setting like `"Samples": "ALL"`.
-This requires reserving such keywords, no samples could be allowed to have this name.
-
 ## Scope
 
-Traditional binned template fits in [HistFactory](https://cds.cern.ch/record/1456844/) style are substantially easier to support than the open world of binned and unbinned models.
+For now, `cabinetry` is focused on [HistFactory](https://cds.cern.ch/record/1456844/) style template fit models.
+Those traditional binned template fits are substantially easier to support than the open world of binned and unbinned models.
 Likelihood-free inference approaches in  the style of [MadMiner](https://github.com/diana-hep/madminer) have a more well-defined scope than the open world of [RooFit](https://root.cern.ch/roofit), and might be easier to integrate.
 
 ## Code
 
-Currently experimenting with a functional approach.
-This may or may not change in the future.
-Everything in `cabinetry/contrib` are very basic implementation of tasks that should be done by other tools, and interfaces to those tools should be added.
+Everything in `cabinetry/contrib` are basic implementation of tasks that should be done by other tools, and interfaces to those tools should be added.
 The basic implementations that exist there help with API design.
 
 ## Acknowledgements
