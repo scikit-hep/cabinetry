@@ -25,7 +25,7 @@ with open("README.md", "r") as f:
 
 setup(
     name="cabinetry",
-    version="0.0.3",
+    version="0.0.4",
     author="cabinetry developers",
     description="design and steer profile likelihood fits",
     long_description=long_description,
