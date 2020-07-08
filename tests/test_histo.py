@@ -16,35 +16,35 @@ class ExampleHistograms:
         yields = np.asarray([1.0, 2.0])
         sumw2 = np.asarray([0.1, 0.2])
         bins = np.asarray([1, 2, 3])
-        return histo.to_dict(yields, sumw2, bins)
+        return yields, sumw2, bins
 
     @staticmethod
     def single_bin():
         yields = np.asarray([1.0])
         sumw2 = np.asarray([0.1])
         bins = np.asarray([1, 2])
-        return histo.to_dict(yields, sumw2, bins)
+        return yields, sumw2, bins
 
     @staticmethod
     def empty_bin():
         yields = np.asarray([1.0, 0.0])
         sumw2 = np.asarray([0.1, 0.2])
         bins = np.asarray([1, 2, 3])
-        return histo.to_dict(yields, sumw2, bins)
+        return yields, sumw2, bins
 
     @staticmethod
     def nan_sumw2_empty_bin():
         yields = np.asarray([1.0, 0.0])
         sumw2 = np.asarray([0.1, float("NaN")])
         bins = np.asarray([1, 2, 3])
-        return histo.to_dict(yields, sumw2, bins)
+        return yields, sumw2, bins
 
     @staticmethod
     def nan_sumw2_nonempty_bin():
         yields = np.asarray([1.0, 2.0])
         sumw2 = np.asarray([0.1, float("NaN")])
         bins = np.asarray([1, 2, 3])
-        return histo.to_dict(yields, sumw2, bins)
+        return yields, sumw2, bins
 
 
 @pytest.fixture
@@ -52,37 +52,37 @@ def example_histograms():
     return ExampleHistograms
 
 
-def test_to_dict():
-    yields = np.asarray([1.0, 2.0])
-    sumw2 = np.asarray([0.1, 0.2])
-    bins = np.asarray([1, 2, 3])
-    assert histo.to_dict(yields, sumw2, bins) == {
-        "yields": yields,
-        "sumw2": sumw2,
-        "bins": bins,
-    }
+class HistogramHelpers:
+    @staticmethod
+    def assert_equal(h1, h2):
+        assert np.allclose(h1.yields, h2.yields)
+        assert np.allclose(h1.sumw2, h2.sumw2)
+        assert np.allclose(h1.bins, h2.bins)
 
 
-def test_save(tmp_path, example_histograms):
-    hist = example_histograms.normal()
-    histo.save(hist, tmp_path)
-    np.testing.assert_equal(histo._load(tmp_path, modified=False), hist)
-
-    # add a subdirectory that needs to be created for histogram saving
-    fname = tmp_path / "subdir" / "file"
-    histo.save(hist, fname)
-    np.testing.assert_equal(histo._load(fname, modified=False), hist)
+@pytest.fixture
+def histogram_helpers():
+    return HistogramHelpers
 
 
-def test__load(tmp_path, caplog, example_histograms):
-    hist = example_histograms.normal()
-    histo.save(hist, tmp_path)
+def test_Histogram(example_histograms):
+    yields, sumw2, bins = example_histograms.normal()
+    h = histo.Histogram(yields, sumw2, bins)
+    assert np.allclose(h.yields, yields)
+    assert np.allclose(h.sumw2, sumw2)
+    assert np.allclose(h.bins, bins)
 
-    # try loading the original histogram
-    np.testing.assert_equal(histo._load(tmp_path, modified=False), hist)
 
-    # try loading the modified histograms, without success
-    np.testing.assert_equal(histo._load(tmp_path, modified=True), hist)
+def test_Histogram_from_path(tmp_path, caplog, example_histograms, histogram_helpers):
+    h_ref = histo.Histogram(*example_histograms.normal())
+    h_ref.save(tmp_path)
+
+    # load the original histogram
+    h_from_path = histo.Histogram.from_path(tmp_path, modified=False)
+    histogram_helpers.assert_equal(h_ref, h_from_path)
+
+    # try loading a modified one, without success since it does not exist
+    h_from_path_modified = histo.Histogram.from_path(tmp_path, modified=True)
     expected_warning = (
         "the modified histogram " + str(tmp_path) + "_modified.npz " + "does not exist"
     )
@@ -96,26 +96,80 @@ def test__load(tmp_path, caplog, example_histograms):
     histo_name = "histo"
     fname_modified = tmp_path / (histo_name + "_modified")
     fname_original = tmp_path / histo_name
-    histo.save(hist, fname_modified)
+    h_ref.save(fname_modified)
     # load the modified histogram by specifying the original name, which should produce no warning
-    np.testing.assert_equal(histo._load(fname_original, modified=True), hist)
+    h_from_path_modified = histo.Histogram.from_path(fname_original, modified=True)
+    histogram_helpers.assert_equal(h_ref, h_from_path_modified)
     assert [rec.message for rec in caplog.records] == []
     caplog.clear()
 
 
-def test_load_from_config(tmp_path, example_histograms):
-    hist = example_histograms.normal()
-    expected_name = "Sample_Region_Systematic"
-    fname = tmp_path / expected_name
-    histo.save(hist, fname)
-    sample = {"Name": "Sample"}
-    region = {"Name": "Region"}
-    systematic = {"Name": "Systematic"}
-    loaded_histo, loaded_name = histo.load_from_config(
+def test_Histogram_from_config(tmp_path, example_histograms, histogram_helpers):
+    h_ref = histo.Histogram(*example_histograms.normal())
+    histo_path = tmp_path / "sample_region_nominal.npz"
+    h_ref.save(histo_path)
+
+    sample = {"Name": "sample"}
+    region = {"Name": "region"}
+    systematic = {"Name": "nominal"}
+    h_from_path = histo.Histogram.from_config(
         tmp_path, sample, region, systematic, modified=False
     )
-    np.testing.assert_equal(loaded_histo, hist)
-    assert loaded_name == expected_name
+    histogram_helpers.assert_equal(h_ref, h_from_path)
+
+
+def test_Histogram_save(tmp_path, example_histograms, histogram_helpers):
+    hist = histo.Histogram(*example_histograms.normal())
+    hist.save(tmp_path)
+    hist_loaded = histo.Histogram.from_path(tmp_path, modified=False)
+    histogram_helpers.assert_equal(hist, hist_loaded)
+    # add a subdirectory that needs to be created for histogram saving
+    fname = tmp_path / "subdir" / "file"
+    hist.save(fname)
+    hist_loaded = histo.Histogram.from_path(fname, modified=False)
+    histogram_helpers.assert_equal(hist, hist_loaded)
+
+
+def test_Histogram_validate(caplog, example_histograms):
+    caplog.set_level(logging.DEBUG)
+    name = "test_histo"
+
+    # should cause no warnings
+    histo.Histogram(*example_histograms.normal()).validate(name)
+    histo.Histogram(*example_histograms.single_bin()).validate(name)
+    assert [rec.message for rec in caplog.records] == []
+    caplog.clear()
+
+    # check for empty bin warning
+    histo.Histogram(*example_histograms.empty_bin()).validate(name)
+    assert "test_histo has empty bins: [1]" in [rec.message for rec in caplog.records]
+    caplog.clear()
+
+    # check for ill-defined stat uncertainty warning
+    histo.Histogram(*example_histograms.nan_sumw2_empty_bin()).validate(name)
+    assert "test_histo has empty bins: [1]" in [rec.message for rec in caplog.records]
+    assert "test_histo has bins with ill-defined stat. unc.: [1]" in [
+        rec.message for rec in caplog.records
+    ]
+    caplog.clear()
+
+    # check for ill-defined stat uncertainty warning with non-zero bin
+    histo.Histogram(*example_histograms.nan_sumw2_nonempty_bin()).validate(name)
+    assert "test_histo has bins with ill-defined stat. unc.: [1]" in [
+        rec.message for rec in caplog.records
+    ]
+    assert "test_histo has non-empty bins with ill-defined stat. unc.: [1]" in [
+        rec.message for rec in caplog.records
+    ]
+    caplog.clear()
+
+
+def test_Histogram_normalize_to_yield(example_histograms):
+    hist = histo.Histogram(*example_histograms.empty_bin())
+    var_hist = histo.Histogram(*example_histograms.normal())
+    factor = var_hist.normalize_to_yield(hist)
+    assert factor == 3.0
+    np.testing.assert_equal(var_hist.yields, np.asarray([1 / 3, 2 / 3]))
 
 
 def test_build_name():
@@ -130,43 +184,3 @@ def test_build_name():
     assert (
         histo.build_name(sample, region, systematic) == "Sample-1_Region-1_Systematic-1"
     )
-
-
-def test_validate(caplog, example_histograms):
-    caplog.set_level(logging.DEBUG)
-    name = "test_histo"
-
-    # should cause no warnings
-    histo.validate(example_histograms.normal(), name)
-    histo.validate(example_histograms.single_bin(), name)
-
-    # check for empty bin warning
-    histo.validate(example_histograms.empty_bin(), name)
-    assert "test_histo has empty bins: [1]" in [rec.message for rec in caplog.records]
-    caplog.clear()
-
-    # check for ill-defined stat uncertainty warning
-    histo.validate(example_histograms.nan_sumw2_empty_bin(), name)
-    assert "test_histo has empty bins: [1]" in [rec.message for rec in caplog.records]
-    assert "test_histo has bins with ill-defined stat. unc.: [1]" in [
-        rec.message for rec in caplog.records
-    ]
-    caplog.clear()
-
-    # check for ill-defined stat uncertainty warning with non-zero bin
-    histo.validate(example_histograms.nan_sumw2_nonempty_bin(), name)
-    assert "test_histo has bins with ill-defined stat. unc.: [1]" in [
-        rec.message for rec in caplog.records
-    ]
-    assert "test_histo has non-empty bins with ill-defined stat. unc.: [1]" in [
-        rec.message for rec in caplog.records
-    ]
-    caplog.clear()
-
-
-def test_normalize_to_yield(example_histograms):
-    hist = example_histograms.empty_bin()
-    var_hist = example_histograms.normal()
-    modified_hist, factor = histo.normalize_to_yield(var_hist, hist)
-    assert factor == 3.0
-    np.testing.assert_equal(modified_hist["yields"], np.asarray([1 / 3, 2 / 3]))
