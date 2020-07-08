@@ -90,10 +90,10 @@ def test_get_channels(tmp_path):
 
     # create a histogram for testing
     histo_path = tmp_path / "signal_region_1_nominal.npz"
-    histogram = histo.to_dict(
+    histogram = histo.Histogram(
         np.asarray([1.0, 2.0]), np.asarray([1.0, 1.0]), np.asarray([0.0, 1.0, 2.0])
     )
-    histo.save(histogram, histo_path)
+    histogram.save(histo_path)
 
     channels = workspace.get_channels(example_config, tmp_path)
     expected_channels = [
@@ -127,10 +127,10 @@ def test_get_observations(tmp_path):
     histo_path = tmp_path / "Data_test_region_nominal.npz"
 
     # build a test histogram and save it
-    histogram = histo.to_dict(
+    histogram = histo.Histogram(
         np.asarray([1.0, 2.0]), np.asarray([1.0, 1.0]), np.asarray([0.0, 1.0, 2.0])
     )
-    histo.save(histogram, histo_path)
+    histogram.save(histo_path)
 
     # create observations list from config
     config = {

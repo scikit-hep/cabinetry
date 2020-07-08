@@ -103,7 +103,7 @@ def test_create_histograms(tmp_path, caplog, utils):
     with pytest.raises(NotImplementedError, match="unknown backend") as e_info:
         assert template_builder.create_histograms(config, tmp_path, method="unknown")
 
-    saved_histo, _ = histo.load_from_config(
+    saved_histo = histo.Histogram.from_config(
         tmp_path,
         config["Samples"][0],
         config["Regions"][0],
@@ -111,9 +111,9 @@ def test_create_histograms(tmp_path, caplog, utils):
         modified=False,
     )
 
-    assert np.allclose(saved_histo["yields"], [1, 1, 2])
-    assert np.allclose(saved_histo["sumw2"], [1, 1, 1.41421356])
-    assert np.allclose(saved_histo["bins"], bins)
+    assert np.allclose(saved_histo.yields, [1, 1, 2])
+    assert np.allclose(saved_histo.sumw2, [1, 1, 1.41421356])
+    assert np.allclose(saved_histo.bins, bins)
 
     assert "  reading sample sample" in [rec.message for rec in caplog.records]
     assert "  in region test_region" in [rec.message for rec in caplog.records]
