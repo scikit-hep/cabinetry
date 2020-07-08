@@ -20,7 +20,7 @@ def test_validate():
         "NormFactors": "",
         "Samples": [{"Data": True}],
     }
-    assert configuration.validate(config_valid) is True
+    assert configuration.validate(config_valid)
 
     config_missing_key = {"General": []}
     with pytest.raises(ValueError, match="missing required key in config") as e_info:
