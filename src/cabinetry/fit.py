@@ -49,7 +49,11 @@ def fit(spec):
         spec (dict): a pyhf workspace
 
     Returns:
-        (numpy.ndarray, numpy.ndarray, list): best-fit positions of parameters, their uncertainties and names
+        tuple: a tuple containing
+            - numpy.ndarray: best-fit positions of parameters
+            - numpy.ndarray: parameter uncertainties
+            - list: parameter names
+            - float: -2 log(likelihood) at best-fit point
     """
     log.info("performing unconstrained fit")
 
@@ -58,10 +62,12 @@ def fit(spec):
     data = workspace.data(model)
 
     pyhf.set_backend("numpy", pyhf.optimize.minuit_optimizer(verbose=True))
-    result = pyhf.infer.mle.fit(data, model, return_uncertainties=True)
+    result, twice_nll = pyhf.infer.mle.fit(
+        data, model, return_uncertainties=True, return_fitted_val=True
+    )
     bestfit = result[:, 0]
     uncertainty = result[:, 1]
     labels = get_parameter_names(model)
 
     print_results(bestfit, uncertainty, labels)
-    return bestfit, uncertainty, labels
+    return bestfit, uncertainty, labels, twice_nll
