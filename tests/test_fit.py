@@ -42,7 +42,8 @@ def test_print_results(caplog):
 # due to different numpy versions used in dependencies
 @pytest.mark.filterwarnings("ignore::RuntimeWarning")
 def test_fit(example_spec):
-    bestfit, uncertainty, labels = fit.fit(example_spec)
+    bestfit, uncertainty, labels, twice_nll = fit.fit(example_spec)
     assert np.allclose(bestfit, [0.99998772, 9.16255687])
     assert np.allclose(uncertainty, [0.04954955, 0.61348804])
     assert labels == ["staterror_Signal-Region", "Signal strength"]
+    assert np.allclose(twice_nll, 3.83054341)
