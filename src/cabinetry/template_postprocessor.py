@@ -12,16 +12,16 @@ def _fix_stat_unc(histogram, name):
     """replace nan stat. unc. by zero
 
     Args:
-        histogram (dict): the histogram to fix
+        histogram (cabinetry.histo.Histogram): the histogram to fix
         name (str): histogram name for logging
 
     Returns:
-        dict: the fixed histogram
+        cabinetry.histo.Histogram: the fixed histogram
     """
-    nan_pos = np.where(np.isnan(histogram["sumw2"]))[0]
+    nan_pos = np.where(np.isnan(histogram.sumw2))[0]
     if len(nan_pos) > 0:
         log.debug("fixing ill-defined stat. unc. for %s", name)
-        histogram["sumw2"] = np.nan_to_num(histogram["sumw2"], nan=0.0)
+        histogram.sumw2 = np.nan_to_num(histogram.sumw2, nan=0.0)
     return histogram
 
 
@@ -30,11 +30,11 @@ def adjust_histogram(histogram, name):
     stat. uncertainty fix
 
     Args:
-        histogram (dict): the histogram to modify
+        histogram (cabinetry.histo.Histogram): the histogram to modify
         name (str): histogram name for logging
 
     Returns:
-        dict: the modified histogram
+        cabinetry.histo.Histogram: the modified histogram
     """
     new_histogram = _fix_stat_unc(histogram, name)
     return new_histogram
@@ -53,10 +53,11 @@ def run(config, histogram_folder):
         for region in config["Regions"]:
             for systematic in [{"Name": "nominal"}]:
                 # need to add histogram-based systematics here as well
-                histogram, histogram_name = histo.load_from_config(
+                histogram = histo.Histogram.from_config(
                     histogram_folder, sample, region, systematic, modified=False
                 )
+                histogram_name = histo.build_name(sample, region, systematic)
                 new_histogram = adjust_histogram(histogram, histogram_name)
-                histo.validate(histogram, histogram_name)
+                histogram.validate(histogram_name)
                 new_histo_path = Path(histogram_folder) / (histogram_name + "_modified")
-                histo.save(new_histogram, new_histo_path)
+                new_histogram.save(new_histo_path)
