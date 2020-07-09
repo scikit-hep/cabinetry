@@ -184,15 +184,15 @@ def create_histograms(config, folder_path_str, method="uproot"):
                 else:
                     raise NotImplementedError("unknown backend")
 
-                # convert the information into a dictionary for easier handling
-                histogram = histo.to_dict(yields, sumw2, bins)
+                # store information in a Histogram instance
+                histogram = histo.Histogram(yields, sumw2, bins)
 
                 # generate a name for the histogram
                 histogram_name = histo.build_name(sample, region, systematic)
 
                 # check the histogram for common issues
-                histo.validate(histogram, histogram_name)
+                histogram.validate(histogram_name)
 
                 # save it
                 histo_path = Path(folder_path_str) / histogram_name
-                histo.save(histogram, histo_path)
+                histogram.save(histo_path)

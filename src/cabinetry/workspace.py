@@ -41,10 +41,10 @@ def get_yield_for_sample(
     Returns:
         list: yields per bin for the sample
     """
-    histogram, _ = histo.load_from_config(
+    histogram = histo.Histogram.from_config(
         histogram_folder, sample, region, systematic, modified=True
     )
-    histo_yield = histogram["yields"].tolist()
+    histo_yield = histogram.yields.tolist()
     return histo_yield
 
 
@@ -63,10 +63,10 @@ def get_unc_for_sample(
     Returns:
         list: statistical uncertainty of yield per bin for the sample
     """
-    histogram, _ = histo.load_from_config(
+    histogram = histo.Histogram.from_config(
         histogram_folder, sample, region, systematic, modified=True
     )
-    histo_yield = histogram["sumw2"].tolist()
+    histo_yield = histogram.sumw2.tolist()
     return histo_yield
 
 
@@ -134,12 +134,12 @@ def get_NormPlusShape_modifiers(sample, region, systematic, histogram_folder):
         list[dict]: a list with a pyhf normsys modifier and a histosys modifier
     """
     # load the systematic variation histogram
-    histogram_variation, _ = histo.load_from_config(
+    histogram_variation = histo.Histogram.from_config(
         histogram_folder, sample, region, systematic, modified=True
     )
 
     # also need the nominal histogram
-    histogram_nominal, _ = histo.load_from_config(
+    histogram_nominal = histo.Histogram.from_config(
         histogram_folder, sample, region, {"Name": "nominal"}, modified=True
     )
 
@@ -149,10 +149,8 @@ def get_NormPlusShape_modifiers(sample, region, systematic, histogram_folder):
     # symmetrization according to "method 1" from issue #26: first normalization, then symmetrization
 
     # normalize the variation to the same yield as nominal
-    histogram_variation, norm_effect = histo.normalize_to_yield(
-        histogram_variation, histogram_nominal
-    )
-    histo_yield_up = histogram_variation["yields"].tolist()
+    norm_effect = histogram_variation.normalize_to_yield(histogram_nominal)
+    histo_yield_up = histogram_variation.yields.tolist()
     log.debug(
         "normalization impact of systematic %s on sample %s in region %s is %f",
         systematic["Name"],
@@ -162,7 +160,7 @@ def get_NormPlusShape_modifiers(sample, region, systematic, histogram_folder):
     )
     # need another histogram that corresponds to the "down" variation, which is 2*nominal - up
     histo_yield_down = (
-        2 * histogram_nominal["yields"] - histogram_variation["yields"]
+        2 * histogram_nominal.yields - histogram_variation.yields
     ).tolist()
 
     # add the normsys
