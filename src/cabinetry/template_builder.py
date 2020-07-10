@@ -140,8 +140,10 @@ def create_histograms(config, folder_path_str, method="uproot"):
 
     for region in config["Regions"]:
         log.debug("  in region %s", region["Name"])
+
         for sample in config["Samples"]:
             log.debug("  reading sample %s", sample["Name"])
+
             for isyst, systematic in enumerate(
                 ([{"Name": "nominal"}] + config["Systematics"])
             ):
