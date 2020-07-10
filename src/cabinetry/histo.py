@@ -58,22 +58,22 @@ class Histogram:
         return cls(yields, sumw2, bins)
 
     @classmethod
-    def from_config(cls, histo_folder, sample, systematic, region, modified=True):
+    def from_config(cls, histo_folder, region, sample, systematic, modified=True):
         """load a histogram, given a folder the histogram is located in and the
         relevant information from the config: sample, systematic, region
 
         Args:
             histo_folder (str): folder containing all histograms
+            region (dict): containing all region information
             sample (dict): containing all sample information
             systematic (dict): containing all systematic information
-            region (dict): containing all region information
             modified (bool, optional): whether to load the modified histogram (after post-processing), defaults to True
 
         Returns:
             cabinetry.histo.Histogram: the loaded histogram
         """
         # find the histogram name given config information, and then load the histogram
-        histo_name = build_name(sample, systematic, region)
+        histo_name = build_name(region, sample, systematic)
         histo_path = Path(histo_folder) / histo_name
         return cls.from_path(histo_path, modified)
 
@@ -142,17 +142,17 @@ class Histogram:
         return normalization_ratio
 
 
-def build_name(sample, systematic, region):
+def build_name(region, sample, systematic):
     """construct a unique name for each histogram
 
     Args:
+        region (dict): containing all region information
         sample (dict): containing all sample information
         systematic (dict): containing all systematic information
-        region (dict): containing all region information
 
     Returns:
         str: unique name for the histogram
     """
-    name = sample["Name"] + "_" + systematic["Name"] + "_" + region["Name"]
+    name = region["Name"] + "_" + sample["Name"] + "_" + systematic["Name"]
     name = name.replace(" ", "-")
     return name

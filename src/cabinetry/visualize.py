@@ -51,7 +51,7 @@ def data_MC(config, histogram_folder, figure_folder, prefit=True, method="matplo
             for systematic in [{"Name": "nominal"}]:
                 is_data = sample.get("Data", False)
                 histogram = histo.Histogram.from_config(
-                    histogram_folder, sample, systematic, region, modified=True
+                    histogram_folder, region, sample, systematic, modified=True
                 )
                 histogram_dict_list.append(
                     {

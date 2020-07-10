@@ -50,14 +50,14 @@ def run(config, histogram_folder):
     """
     log.info("applying post-processing to histograms")
     # loop over all histograms
-    for sample in config["Samples"]:
-        for systematic in [{"Name": "nominal"}]:
-            for region in config["Regions"]:
+    for region in config["Regions"]:
+        for sample in config["Samples"]:
+            for systematic in [{"Name": "nominal"}]:
                 # need to add histogram-based systematics here as well
                 histogram = histo.Histogram.from_config(
-                    histogram_folder, sample, systematic, region, modified=False
+                    histogram_folder, region, sample, systematic, modified=False
                 )
-                histogram_name = histo.build_name(sample, systematic, region)
+                histogram_name = histo.build_name(region, sample, systematic)
                 new_histogram = apply_postprocessing(histogram, histogram_name)
                 histogram.validate(histogram_name)
                 new_histo_path = Path(histogram_folder) / (histogram_name + "_modified")

@@ -98,12 +98,12 @@ The production of a template histogram requires the following information:
 
 In practice, histogram information can be given by specifying lists of:
 
+- regions of phase space (or channels, independent regions obtained via different selection requirements),
 - samples (physics processes),
-- systematic uncertainties for the samples, which might vary across samples (and phase space regions),
-- regions of phase space (or channels, independent regions obtained via different selection requirements).
+- systematic uncertainties for the samples, which might vary across samples and phase space regions.
 
 For LHC-style template profile likelihood fits, typically a few thousand histograms are needed.
-An analysis that considers 10 different physics processes (simulated as 10 independent Monte Carlo samples), with an average of 50 systematic uncertainties for all the samples (implemented by specifying variations from the nominal configuration in two directions), which uses 5 different phase space regions, needs `10x100x5=5000` histograms.
+An analysis that considers 5 different phase space regions, with 10 different physics processes (simulated as 10 independent Monte Carlo samples), and an average of 50 systematic uncertainties for all the samples (implemented by specifying variations from the nominal configuration in two directions), needs `5x10x100=5000` histograms.
 
 ### 2. Histogram adjustments
 

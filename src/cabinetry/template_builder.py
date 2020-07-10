@@ -10,13 +10,13 @@ from . import histo
 log = logging.getLogger(__name__)
 
 
-def _get_ntuple_path(sample, systematic, region):
+def _get_ntuple_path(region, sample, systematic):
     """determine the path to ntuples from which a histogram has to be built
 
     Args:
+        region (dict): containing all region information
         sample (dict): containing all sample information
         systematic (dict): containing all systematic information
-        region (dict): containing all region information
 
     Raises:
         NotImplementedError: if ntuple path treatment is not yet implemented
@@ -34,13 +34,13 @@ def _get_ntuple_path(sample, systematic, region):
     return path
 
 
-def _get_variable(sample, systematic, region):
+def _get_variable(region, sample, systematic):
     """construct the variable the histogram will be binned in
 
     Args:
+        region (dict): containing all region information
         sample (dict): containing all sample information
         systematic (dict): containing all systematic information
-        region (dict): containing all region information
 
     Returns:
         str: name of variable to bin histogram in
@@ -49,13 +49,13 @@ def _get_variable(sample, systematic, region):
     return axis_variable
 
 
-def _get_filter(sample, systematic, region):
+def _get_filter(region, sample, systematic):
     """construct the filter to be applied for event selection
 
     Args:
+        region (dict): containing all region information
         sample (dict): containing all sample information
         systematic (dict): containing all systematic information
-        region (dict): containing all region information
 
     Returns:
         str: expression for the filter to be used, or None for no filtering
@@ -64,13 +64,13 @@ def _get_filter(sample, systematic, region):
     return selection_filter
 
 
-def _get_weight(sample, systematic, region):
+def _get_weight(region, sample, systematic):
     """find the weight to be used for the events in the histogram
 
     Args:
+        region (dict): containing all region information
         sample (dict): containing all sample information
         systematic (dict): containing all systematic information
-        region (dict): containing all region information
 
     Returns:
         str: weight used for events when filled into histograms
@@ -138,19 +138,17 @@ def create_histograms(config, folder_path_str, method="uproot"):
     """
     log.info("creating histograms")
 
-    for sample in config["Samples"]:
-        log.debug("  reading sample %s", sample["Name"])
-
-        for isyst, systematic in enumerate(
-            ([{"Name": "nominal"}] + config["Systematics"])
-        ):
-            for region in config["Regions"]:
-                log.debug("  in region %s", region["Name"])
-
+    for region in config["Regions"]:
+        log.debug("  in region %s", region["Name"])
+        for sample in config["Samples"]:
+            log.debug("  reading sample %s", sample["Name"])
+            for isyst, systematic in enumerate(
+                ([{"Name": "nominal"}] + config["Systematics"])
+            ):
                 # determine whether a histogram is needed for this
                 # specific combination of sample-region-systematic
                 histo_needed = configuration.histogram_is_needed(
-                    sample, systematic, region
+                    region, sample, systematic
                 )
 
                 if not histo_needed:
@@ -158,11 +156,11 @@ def create_histograms(config, folder_path_str, method="uproot"):
                     continue
 
                 log.debug("  variation %s", systematic["Name"])
-                ntuple_path = _get_ntuple_path(sample, systematic, region)
+                ntuple_path = _get_ntuple_path(region, sample, systematic)
                 pos_in_file = _get_position_in_file(sample, systematic)
-                variable = _get_variable(sample, systematic, region)
-                selection_filter = _get_filter(sample, systematic, region)
-                weight = _get_weight(sample, systematic, region)
+                variable = _get_variable(region, sample, systematic)
+                selection_filter = _get_filter(region, sample, systematic)
+                weight = _get_weight(region, sample, systematic)
                 bins = _get_binning(region)
 
                 # obtain the histogram
@@ -188,7 +186,7 @@ def create_histograms(config, folder_path_str, method="uproot"):
                 histogram = histo.Histogram(yields, sumw2, bins)
 
                 # generate a name for the histogram
-                histogram_name = histo.build_name(sample, systematic, region)
+                histogram_name = histo.build_name(region, sample, systematic)
 
                 # check the histogram for common issues
                 histogram.validate(histogram_name)

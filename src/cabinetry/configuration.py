@@ -106,14 +106,14 @@ def sample_affected_by_modifier(sample, modifier):
     return affected
 
 
-def histogram_is_needed(sample, systematic, region):
+def histogram_is_needed(region, sample, systematic):
     """determine whether for a given sample-region-systematic pairing, there is
     an associated histogram
 
     Args:
+        region (dict): containing all region information
         sample (dict): containing all sample information
         systematic (dict): containing all systematic information
-        region (dict): containing all region information
 
     Raises:
         NotImplementedError: non-supported systematic variations based on histograms are requested
