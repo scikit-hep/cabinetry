@@ -60,7 +60,7 @@ class Histogram:
     @classmethod
     def from_config(cls, histo_folder, region, sample, systematic, modified=True):
         """load a histogram, given a folder the histogram is located in and the
-        relevant information from the config: sample, systematic, region
+        relevant information from the config: region, sample, systematic
 
         Args:
             histo_folder (str): folder containing all histograms
