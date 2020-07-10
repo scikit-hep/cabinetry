@@ -94,35 +94,35 @@ def test_sample_affected_by_modifier(sample_and_modifier, affected):
 
 
 @pytest.mark.parametrize(
-    "sam_reg_sys, needed",
+    "sam_sys_reg, needed",
     [
         # nominal
-        (({}, {}, {"Name": "nominal"}), True),
+        (({}, {"Name": "nominal"}, {}), True),
         # non-nominal data
-        (({"Data": True}, {}, {"Name": "var"}), False),
+        (({"Data": True}, {"Name": "var"}, {}), False),
         # overall normalization variation
-        (({}, {}, {"Type": "Overall"}), False),
+        (({}, {"Type": "Overall"}, {}), False),
         # normalization + shape variation on affected sample
         (
-            ({"Name": "Signal"}, {}, {"Type": "NormPlusShape", "Samples": "Signal"}),
+            ({"Name": "Signal"}, {"Type": "NormPlusShape", "Samples": "Signal"}, {}),
             True,
         ),
         # normalization + shape variation on non-affected sample
         (
             (
                 {"Name": "Background"},
-                {},
                 {"Type": "NormPlusShape", "Samples": "Signal"},
+                {},
             ),
             False,
         ),
     ],
 )
-def test_histogram_is_needed(sam_reg_sys, needed):
-    assert configuration.histogram_is_needed(*sam_reg_sys) is needed
+def test_histogram_is_needed(sam_sys_reg, needed):
+    assert configuration.histogram_is_needed(*sam_sys_reg) is needed
 
     # non-supported systematic
     with pytest.raises(
         NotImplementedError, match="other systematics not yet implemented"
     ) as e_info:
-        configuration.histogram_is_needed({}, {}, {"Type": "unknown"})
+        configuration.histogram_is_needed({}, {"Type": "unknown"}, {})

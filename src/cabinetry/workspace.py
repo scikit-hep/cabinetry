@@ -42,7 +42,7 @@ def get_yield_for_sample(
         list: yields per bin for the sample
     """
     histogram = histo.Histogram.from_config(
-        histogram_folder, sample, region, systematic, modified=True
+        histogram_folder, sample, systematic, region, modified=True
     )
     histo_yield = histogram.yields.tolist()
     return histo_yield
@@ -64,7 +64,7 @@ def get_unc_for_sample(
         list: statistical uncertainty of yield per bin for the sample
     """
     histogram = histo.Histogram.from_config(
-        histogram_folder, sample, region, systematic, modified=True
+        histogram_folder, sample, systematic, region, modified=True
     )
     histo_yield = histogram.sumw2.tolist()
     return histo_yield
@@ -117,7 +117,7 @@ def get_OverallSys_modifier(systematic):
     return modifier
 
 
-def get_NormPlusShape_modifiers(sample, region, systematic, histogram_folder):
+def get_NormPlusShape_modifiers(sample, systematic, region, histogram_folder):
     """For a variation including a correlated shape + normalization effect, this
     provides the histosys and normsys modifiers for pyhf (in HistFactory language,
     this corresponds to a HistoSys and an OverallSys).
@@ -126,8 +126,8 @@ def get_NormPlusShape_modifiers(sample, region, systematic, histogram_folder):
 
     Args:
         sample (dict): sample the systematic variation acts on
-        region (dict): region the systematic variation acts in
         systematic (dict): the systematic variation under consideration
+        region (dict): region the systematic variation acts in
         histogram_folder (str): path to folder containing histograms
 
     Returns:
@@ -135,12 +135,12 @@ def get_NormPlusShape_modifiers(sample, region, systematic, histogram_folder):
     """
     # load the systematic variation histogram
     histogram_variation = histo.Histogram.from_config(
-        histogram_folder, sample, region, systematic, modified=True
+        histogram_folder, sample, systematic, region, modified=True
     )
 
     # also need the nominal histogram
     histogram_nominal = histo.Histogram.from_config(
-        histogram_folder, sample, region, {"Name": "nominal"}, modified=True
+        histogram_folder, sample, {"Name": "nominal"}, region, modified=True
     )
 
     # need to add support for two-sided variations that do not require symmetrization here
@@ -217,7 +217,7 @@ def get_sys_modifiers(config, sample, region, histogram_folder):
                     sample["Name"],
                 )
                 modifiers += get_NormPlusShape_modifiers(
-                    sample, region, systematic, histogram_folder
+                    sample, systematic, region, histogram_folder
                 )
             else:
                 raise NotImplementedError("not supporting other systematic types yet")

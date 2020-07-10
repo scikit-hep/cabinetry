@@ -89,7 +89,7 @@ def test_get_channels(tmp_path):
     }
 
     # create a histogram for testing
-    histo_path = tmp_path / "signal_region_1_nominal.npz"
+    histo_path = tmp_path / "signal_nominal_region_1.npz"
     histogram = histo.Histogram(
         np.asarray([1.0, 2.0]), np.asarray([1.0, 1.0]), np.asarray([0.0, 1.0, 2.0])
     )
@@ -124,7 +124,7 @@ def test_get_measurement():
 
 
 def test_get_observations(tmp_path):
-    histo_path = tmp_path / "Data_test_region_nominal.npz"
+    histo_path = tmp_path / "Data_nominal_test_region.npz"
 
     # build a test histogram and save it
     histogram = histo.Histogram(
