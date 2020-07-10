@@ -154,7 +154,7 @@ def create_histograms(config, folder_path_str, method="uproot"):
                 )
 
                 if not histo_needed:
-                    # no further action is needed, continue with the next sample-systematic-region combination
+                    # no further action is needed, continue with the next region-sample-systematic combination
                     continue
 
                 log.debug("  variation %s", systematic["Name"])
