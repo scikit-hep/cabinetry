@@ -106,14 +106,14 @@ def test_Histogram_from_path(tmp_path, caplog, example_histograms, histogram_hel
 
 def test_Histogram_from_config(tmp_path, example_histograms, histogram_helpers):
     h_ref = histo.Histogram(*example_histograms.normal())
-    histo_path = tmp_path / "sample_region_nominal.npz"
+    histo_path = tmp_path / "region_sample_nominal.npz"
     h_ref.save(histo_path)
 
-    sample = {"Name": "sample"}
     region = {"Name": "region"}
+    sample = {"Name": "sample"}
     systematic = {"Name": "nominal"}
     h_from_path = histo.Histogram.from_config(
-        tmp_path, sample, region, systematic, modified=False
+        tmp_path, region, sample, systematic, modified=False
     )
     histogram_helpers.assert_equal(h_ref, h_from_path)
 
@@ -173,14 +173,14 @@ def test_Histogram_normalize_to_yield(example_histograms):
 
 
 def test_build_name():
-    sample = {"Name": "Sample"}
     region = {"Name": "Region"}
+    sample = {"Name": "Sample"}
     systematic = {"Name": "Systematic"}
-    assert histo.build_name(sample, region, systematic) == "Sample_Region_Systematic"
+    assert histo.build_name(region, sample, systematic) == "Region_Sample_Systematic"
 
-    sample = {"Name": "Sample 1"}
     region = {"Name": "Region 1"}
+    sample = {"Name": "Sample 1"}
     systematic = {"Name": "Systematic 1"}
     assert (
-        histo.build_name(sample, region, systematic) == "Sample-1_Region-1_Systematic-1"
+        histo.build_name(region, sample, systematic) == "Region-1_Sample-1_Systematic-1"
     )

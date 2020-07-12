@@ -10,7 +10,7 @@ from cabinetry import template_builder
 
 def test__get_ntuple_path():
     assert template_builder._get_ntuple_path(
-        {"Path": "test/path.root"}, {}, {"Name": "nominal"}
+        {}, {"Path": "test/path.root"}, {"Name": "nominal"}
     ) == Path("test/path.root")
 
     assert template_builder._get_ntuple_path(
@@ -28,18 +28,18 @@ def test__get_ntuple_path():
 
 
 def test__get_variable():
-    assert template_builder._get_variable({}, {"Variable": "jet_pt"}, {}) == "jet_pt"
+    assert template_builder._get_variable({"Variable": "jet_pt"}, {}, {}) == "jet_pt"
 
 
 def test__get_filter():
     assert (
-        template_builder._get_filter({}, {"Filter": "jet_pt > 0"}, {}) == "jet_pt > 0"
+        template_builder._get_filter({"Filter": "jet_pt > 0"}, {}, {}) == "jet_pt > 0"
     )
     assert template_builder._get_filter({}, {}, {}) is None
 
 
 def test__get_weight():
-    assert template_builder._get_weight({"Weight": "weight_mc"}, {}, {}) == "weight_mc"
+    assert template_builder._get_weight({}, {"Weight": "weight_mc"}, {}) == "weight_mc"
     assert template_builder._get_weight({}, {}, {}) is None
 
 
@@ -87,8 +87,8 @@ def test_create_histograms(tmp_path, caplog, utils):
     utils.create_ntuple(fname, treename, varname, var_array, weightname, weight_array)
 
     config = {
-        "Samples": [{"Name": "sample", "Tree": treename, "Path": fname}],
         "Regions": [{"Name": "test_region", "Variable": varname, "Binning": bins}],
+        "Samples": [{"Name": "sample", "Tree": treename, "Path": fname}],
         "Systematics": [],
     }
     template_builder.create_histograms(config, tmp_path, method="uproot")
@@ -105,8 +105,8 @@ def test_create_histograms(tmp_path, caplog, utils):
 
     saved_histo = histo.Histogram.from_config(
         tmp_path,
-        config["Samples"][0],
         config["Regions"][0],
+        config["Samples"][0],
         {"Name": "nominal"},
         modified=False,
     )

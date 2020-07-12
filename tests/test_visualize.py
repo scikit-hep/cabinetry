@@ -44,8 +44,8 @@ def test_data_MC(mock_load, mock_draw, tmp_path):
         (
             (
                 tmp_path,
-                {"Name": "sample_1"},
                 {"Name": "reg_1", "Variable": "x"},
+                {"Name": "sample_1"},
                 {"Name": "nominal"},
             ),
             {"modified": True},

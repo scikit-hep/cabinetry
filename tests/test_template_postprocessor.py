@@ -32,7 +32,7 @@ def test_run(tmp_path):
     config = {"Samples": [{"Name": "signal"}], "Regions": [{"Name": "region_1"}]}
 
     # create an input histogram
-    histo_path = tmp_path / "signal_region_1_nominal.npz"
+    histo_path = tmp_path / "region_1_signal_nominal.npz"
     histogram = histo.Histogram(
         np.asarray([1.0, 2.0]), np.asarray([1.0, 1.0]), np.asarray([0.0, 1.0, 2.0])
     )

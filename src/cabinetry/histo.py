@@ -58,14 +58,14 @@ class Histogram:
         return cls(yields, sumw2, bins)
 
     @classmethod
-    def from_config(cls, histo_folder, sample, region, systematic, modified=True):
+    def from_config(cls, histo_folder, region, sample, systematic, modified=True):
         """load a histogram, given a folder the histogram is located in and the
-        relevant information from the config: sample, region, systematic
+        relevant information from the config: region, sample, systematic
 
         Args:
             histo_folder (str): folder containing all histograms
-            sample (dict): containing all sample information
             region (dict): containing all region information
+            sample (dict): containing all sample information
             systematic (dict): containing all systematic information
             modified (bool, optional): whether to load the modified histogram (after post-processing), defaults to True
 
@@ -73,7 +73,7 @@ class Histogram:
             cabinetry.histo.Histogram: the loaded histogram
         """
         # find the histogram name given config information, and then load the histogram
-        histo_name = build_name(sample, region, systematic)
+        histo_name = build_name(region, sample, systematic)
         histo_path = Path(histo_folder) / histo_name
         return cls.from_path(histo_path, modified)
 
@@ -142,17 +142,17 @@ class Histogram:
         return normalization_ratio
 
 
-def build_name(sample, region, systematic):
+def build_name(region, sample, systematic):
     """construct a unique name for each histogram
 
     Args:
-        sample (dict): containing all sample information
         region (dict): containing all region information
+        sample (dict): containing all sample information
         systematic (dict): containing all systematic information
 
     Returns:
         str: unique name for the histogram
     """
-    name = sample["Name"] + "_" + region["Name"] + "_" + systematic["Name"]
+    name = region["Name"] + "_" + sample["Name"] + "_" + systematic["Name"]
     name = name.replace(" ", "-")
     return name

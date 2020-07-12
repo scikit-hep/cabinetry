@@ -2,6 +2,12 @@ General:
   Measurement: "minimal_example"
   POI: "Signal_norm"
 
+Regions:
+  - Name: "Signal_region"
+    Variable: "jet_pt"
+    Filter: "lep_charge > 0"
+    Binning: [200, 300, 400, 500, 600]
+
 Samples:
   - Name: "Data"
     Tree: "pseudodata"
@@ -20,12 +26,6 @@ Samples:
     Path: "ntuples/prediction.root"
     Weight: "weight"
     Color: "#FFAA55"
-
-Regions:
-  - Name: "Signal_region"
-    Variable: "jet_pt"
-    Filter: "lep_charge > 0"
-    Binning: [200, 300, 400, 500, 600]
 
 Systematics:
   - Name: "Luminosity"
