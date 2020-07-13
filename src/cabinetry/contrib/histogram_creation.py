@@ -1,6 +1,6 @@
+import boost_histogram as bh
 import numexpr as ne
 import numpy as np
-from scipy import stats
 import uproot
 
 
@@ -45,18 +45,6 @@ def from_uproot(
     return yields, sumw2
 
 
-def _sumw2(arr):
-    """calculate the absolute statistical uncertainty given an array of weights in a bin
-
-    Args:
-        arr (numpy.ndarray): all event weights in a given bin
-
-    Returns:
-        np.float64: stat. uncertainty calculated via sum in quadrature
-    """
-    return np.sqrt(np.sum(arr * arr))
-
-
 def _bin_data(observables, weights, bins):
     """create a histogram from unbinned data, providing yields, statistical uncertainties
     and the bin edges
@@ -67,13 +55,12 @@ def _bin_data(observables, weights, bins):
         bins (numpy.ndarray): bin edges for histogram
 
     Returns:
-        (numpy.ndarray, numpy.ndarray): tuple of yields and stat. uncertainties for all bins
+        tuple: a tuple containing
+            - numpy.ndarray: yields per bin
+            - numpy.ndarray): and stat. uncertainty per bin
     """
-    # get bin yield and stat. uncertainty
-    yields, _, _ = stats.binned_statistic(
-        observables, weights, statistic="sum", bins=bins
-    )
-    sumw2, _, _ = stats.binned_statistic(
-        observables, weights, statistic=_sumw2, bins=bins
-    )
+    hist = bh.Histogram(bh.axis.Variable(bins), storage=bh.storage.Weight())
+    hist.fill(observables, weight=weights)
+    yields = hist.view().value
+    sumw2 = np.sqrt(hist.view().variance)
     return yields, sumw2

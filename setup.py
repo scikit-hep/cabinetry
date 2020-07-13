@@ -1,6 +1,6 @@
 from setuptools import setup, find_packages
 
-extras_require = {"contrib": ["matplotlib", "uproot", "scipy", "iminuit", "numexpr"]}
+extras_require = {"contrib": ["matplotlib", "uproot", "boost_histogram", "numexpr"]}
 extras_require["test"] = sorted(
     set(
         extras_require["contrib"]
