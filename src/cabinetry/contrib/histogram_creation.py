@@ -6,8 +6,7 @@ import uproot4 as uproot
 def from_uproot(
     ntuple_path, pos_in_file, variable, bins, weight=None, selection_filter=None
 ):
-    """create a single histogram with uproot, return bin yields and statistical
-    uncertainties on the yield
+    """read an ntuple with uproot, the resulting arrays are then filled into a histogram
 
     Args:
         ntuple_path (pathlib.Path): path to ntuple
@@ -24,6 +23,7 @@ def from_uproot(
 
     # extract observable and weights
     # need the last [variable] to select the right entry out of the dict
+    # this only reads the observable branch and branches needed for the cut into memory
     observables = tree[variable].arrays(cut=selection_filter, library="np")[variable]
 
     if weight is not None:
