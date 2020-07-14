@@ -57,7 +57,7 @@ def _bin_data(observables, weights, bins):
     Returns:
         tuple: a tuple containing
             - numpy.ndarray: yields per bin
-            - numpy.ndarray): and stat. uncertainty per bin
+            - numpy.ndarray: and stat. uncertainty per bin
     """
     hist = bh.Histogram(bh.axis.Variable(bins), storage=bh.storage.Weight())
     hist.fill(observables, weight=weights)
