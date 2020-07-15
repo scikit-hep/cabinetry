@@ -38,7 +38,7 @@ jobs:
         black --check --diff --verbose .
     - name: Run example
       run: |
-        python util/create_histograms.py
+        python util/create_ntuples.py
         python example.py
     - name: Test with pytest and generate coverage report
       run: |
