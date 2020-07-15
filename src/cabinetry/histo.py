@@ -1,19 +1,17 @@
-"""
-it might make sense to allow serialization of histograms in various
-different formats, so saving and loading should go through this wrapper
-"""
 import logging
 import os
 from pathlib import Path
 
+import boost_histogram as bh
 import numpy as np
 
 
 log = logging.getLogger(__name__)
 
 
-class Histogram:
-    """class to hold histogram information
+class Histogram(bh.Histogram):
+    """class to hold histogram information, extends functionality provided
+    by boost_histogram.Histogram
     """
 
     def __init__(self, yields, sumw2, bins):

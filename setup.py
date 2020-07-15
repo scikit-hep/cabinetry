@@ -1,8 +1,6 @@
 from setuptools import setup, find_packages
 
-extras_require = {
-    "contrib": ["matplotlib", "uproot", "boost_histogram", "uproot4", "awkward1"]
-}
+extras_require = {"contrib": ["matplotlib", "uproot", "uproot4", "awkward1"]}
 extras_require["test"] = sorted(
     set(
         extras_require["contrib"]
@@ -46,6 +44,6 @@ setup(
         "Topic :: Scientific/Engineering :: Physics",
     ],
     python_requires=">=3.6",
-    install_requires=["numpy", "pyyaml", "pyhf>=0.3.2", "iminuit"],
+    install_requires=["numpy", "pyyaml", "pyhf>=0.3.2", "iminuit", "boost_histogram"],
     extras_require=extras_require,
 )
