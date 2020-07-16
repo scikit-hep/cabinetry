@@ -56,6 +56,7 @@ def data_MC_matplotlib(histogram_dict_list, figure_path):
     )
 
     mpl.style.use("seaborn-colorblind")
+    fig, ax = plt.subplots()
 
     # plot MC stacked together
     total_yield = np.zeros_like(mc_histograms_yields[0])
@@ -65,7 +66,7 @@ def data_MC_matplotlib(histogram_dict_list, figure_path):
     bin_width = bin_right_edges - bin_left_edges
     bin_centers = 0.5 * (bin_left_edges + bin_right_edges)
     for i_sample, mc_sample_yield in enumerate(mc_histograms_yields):
-        plt.bar(
+        ax.bar(
             bin_centers,
             mc_sample_yield,
             width=bin_width,
@@ -76,7 +77,7 @@ def data_MC_matplotlib(histogram_dict_list, figure_path):
 
     # add total MC uncertainty
     mc_stack_unc = _total_yield_uncertainty(mc_histograms_sumw2)
-    plt.bar(
+    ax.bar(
         bin_centers,
         2 * mc_stack_unc,
         width=bin_width,
@@ -89,7 +90,7 @@ def data_MC_matplotlib(histogram_dict_list, figure_path):
     )
 
     # plot data
-    plt.errorbar(
+    ax.errorbar(
         bin_centers,
         data_histogram_yields,
         yerr=data_histogram_sumw2,
@@ -98,15 +99,13 @@ def data_MC_matplotlib(histogram_dict_list, figure_path):
         label=data_label,
     )
 
-    plt.legend(frameon=False)
-    plt.xlabel(histogram_dict_list[0]["variable"])
-    plt.ylabel("events")
-    plt.xlim(bin_left_edges[0], bin_right_edges[-1])
-    plt.ylim([0, y_max * 1.1])  # 10% headroom
-    plt.plot()
+    ax.legend(frameon=False)
+    ax.set_xlabel(histogram_dict_list[0]["variable"])
+    ax.set_ylabel("events")
+    ax.set_xlim(bin_left_edges[0], bin_right_edges[-1])
+    ax.set_ylim([0, y_max * 1.1])  # 10% headroom
 
     if not os.path.exists(figure_path.parent):
         os.mkdir(figure_path.parent)
     log.debug("saving figure as %s", figure_path)
-    plt.savefig(figure_path)
-    plt.clf()
+    fig.savefig(figure_path)

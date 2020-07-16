@@ -4,11 +4,6 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 
-output_directory = "ntuples/"
-if not os.path.exists(output_directory):
-    os.mkdir(output_directory)
-
-
 def toy_distribution(noncentral, multiplier, offset, num_events):
     return (
         np.random.noncentral_chisquare(5, noncentral, num_events) * multiplier + offset
@@ -151,7 +146,7 @@ def plot_distributions(data, weights, labels, pseudodata, bins):
     plt.savefig("stacked.png", dpi=200)
 
 
-if __name__ == "__main__":
+def run(output_directory):
     # configuration
     num_events = 5000
     yield_s = 125
@@ -188,3 +183,10 @@ if __name__ == "__main__":
     # visualize results
     bins = np.linspace(0, 1200, 24 + 1)
     plot_distributions(d_read, w_read, l_read, pseudodata, bins)
+
+
+if __name__ == "__main__":
+    output_directory = "ntuples/"
+    if not os.path.exists(output_directory):
+        os.mkdir(output_directory)
+    run(output_directory)
