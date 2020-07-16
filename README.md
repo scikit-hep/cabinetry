@@ -23,18 +23,17 @@ An incomplete list of interesting tools to interface:
 
 - [ServiceX](https://github.com/ssl-hep/ServiceX) for data delivery,
 - [coffea](https://github.com/CoffeaTeam/coffea) for histogram processing,
-- [uproot](https://github.com/scikit-hep/uproot) for reading [ROOT](https://root.cern.ch/) files
+- [uproot](https://github.com/scikit-hep/uproot) for reading [ROOT](https://root.cern.ch/) files,
 - for building likelihood functions (captured in so-called workspaces in [RooFit](https://root.cern.ch/roofit)) and inference:
-  - [RooFit](https://root.cern.ch/roofit) to model probability distributions
-  - [RooStats](http://cds.cern.ch/record/1289965) for statistical tools
-  - [HistFactory](https://cds.cern.ch/record/1456844/) to implement a subset of binned template fits
+  - [RooFit](https://root.cern.ch/roofit) to model probability distributions,
+  - [RooStats](http://cds.cern.ch/record/1289965) for statistical tools,
+  - [HistFactory](https://cds.cern.ch/record/1456844/) to implement a subset of binned template fits,
   - [pyhf](https://github.com/scikit-hep/pyhf) for a pythonic take on [HistFactory](https://cds.cern.ch/record/1456844/),
-  - [zfit](https://github.com/zfit/zfit) for a pythonic take on [RooFit](https://root.cern.ch/roofit)
-  - [MadMiner](https://github.com/diana-hep/madminer) for likelihood-free inference techniques
+  - [zfit](https://github.com/zfit/zfit) for a pythonic take on [RooFit](https://root.cern.ch/roofit),
+  - [MadMiner](https://github.com/diana-hep/madminer) for likelihood-free inference techniques (see [Scope](#scope)).
 
 The project is a work in progress.
-Configuration fo `cabinetry` should happen in a declarative manner, and be easily serializable via JSON/YAML into a configuration file.
-Some of the discussion below needs generalization for [MadMiner](https://github.com/diana-hep/madminer) style applications, see also the [Scope](#scope) section.
+Configuration of `cabinetry` happens in a declarative manner, and is easily serializable via JSON/YAML into a configuration file.
 
 Interesting related projects:
 
@@ -45,7 +44,7 @@ Interesting related projects:
 
 ## Hello world
 
-To run the following example, first generate the input files via the script `util/create_histograms.py`.
+To run the following example, first generate the input files via the script `util/create_ntuples.py`.
 
 ```python
 import cabinetry
@@ -54,15 +53,13 @@ cabinetry_config = cabinetry.configuration.read("config_example.yml")
 
 # create template histograms
 histo_folder = "histograms/"
-cabinetry.template_builder.create_histograms(
-    cabinetry_config, histo_folder, method="uproot"
-)
+cabinetry.template_builder.create_histograms(cabinetry_config, histo_folder)
 
 # perform histogram post-processing
 cabinetry.template_postprocessor.run(cabinetry_config, histo_folder)
 
 # visualize templates and data
-cabinetry.visualize.data_MC(cabinetry_config, histo_folder, "figures/", prefit=True, method="matplotlib")
+cabinetry.visualize.data_MC(cabinetry_config, histo_folder, "figures/")
 
 # build a workspace
 ws = cabinetry.workspace.build(cabinetry_config, histo_folder)
