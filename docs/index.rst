@@ -19,38 +19,6 @@ This documentation can be built and viewed via
    sphinx-build docs docs/_build
    open docs/_build/index.html
 
-Hello world
------------
-
-.. code-block:: python
-
-   import cabinetry
-
-   cabinetry_config = cabinetry.configuration.read("config_example.yml")
-
-   # create template histograms
-   histo_folder = "histograms/"
-   cabinetry.template_builder.create_histograms(
-       cabinetry_config, histo_folder, method="uproot"
-   )
-
-   # perform histogram post-processing
-   cabinetry.template_postprocessor.run(cabinetry_config, histo_folder)
-
-   # visualize templates and data
-   cabinetry.visualize.data_MC(
-       cabinetry_config, histo_folder, "figures/", prefit=True, method="matplotlib"
-   )
-
-   # build a workspace
-   ws = cabinetry.workspace.build(cabinetry_config, histo_folder)
-
-   # run a fit
-   cabinetry.fit.fit(ws)
-
-The above is an abbreviated version of an example included in `example.py`, which shows how to use `cabinetry`.
-It requires additional libraries beyond the core dependencies of `cabinetry`, which can be installed via `pip install cabinetry[contrib]` (or `pip install -e .[contrib]` from the repository).
-
 Acknowledgements
 ----------------
 This work was supported by the U.S. National Science Foundation (NSF) cooperative agreement OAC-1836650 (IRIS-HEP).

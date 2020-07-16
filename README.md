@@ -45,7 +45,7 @@ Interesting related projects:
 
 ## Hello world
 
-To run the following example, first generate the input files via the script `util/create_histograms.py`.
+To run the following example, first generate the input files via the script `util/create_ntuples.py`.
 
 ```python
 import cabinetry
@@ -54,15 +54,13 @@ cabinetry_config = cabinetry.configuration.read("config_example.yml")
 
 # create template histograms
 histo_folder = "histograms/"
-cabinetry.template_builder.create_histograms(
-    cabinetry_config, histo_folder, method="uproot"
-)
+cabinetry.template_builder.create_histograms(cabinetry_config, histo_folder)
 
 # perform histogram post-processing
 cabinetry.template_postprocessor.run(cabinetry_config, histo_folder)
 
 # visualize templates and data
-cabinetry.visualize.data_MC(cabinetry_config, histo_folder, "figures/", prefit=True, method="matplotlib")
+cabinetry.visualize.data_MC(cabinetry_config, histo_folder, "figures/")
 
 # build a workspace
 ws = cabinetry.workspace.build(cabinetry_config, histo_folder)
