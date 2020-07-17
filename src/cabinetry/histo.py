@@ -96,14 +96,29 @@ class Histogram(bh.Histogram):
 
     @property
     def yields(self):
+        """get the yields per histogram bin
+
+        Returns:
+            numpy.ndarray: yields per bin
+        """
         return self.view().value
 
     @property
     def sumw2(self):
+        """get the stat. uncertainty per histogram bin
+
+        Returns:
+            numpy.ndarray: stat. uncertainty per bin
+        """
         return np.sqrt(self.view().variance)
 
     @property
     def bins(self):
+        """get the bin edges
+
+        Returns:
+            numpy.ndarray: bin edges
+        """
         return self.axes[0].edges
 
     def save(self, histo_path):
