@@ -46,6 +46,20 @@ class ExampleHistograms:
         sumw2 = [0.1, float("NaN")]
         return bins, yields, sumw2
 
+    @staticmethod
+    def wrong_bin_number():
+        bins = [1, 2, 3]
+        yields = [1.0]
+        sumw2 = [0.1]
+        return bins, yields, sumw2
+
+    @staticmethod
+    def yields_sumw2_mismatch():
+        bins = [1, 2, 3]
+        yields = [1.0, 2.0]
+        sumw2 = [0.1]
+        return bins, yields, sumw2
+
 
 @pytest.fixture
 def example_histograms():
@@ -71,6 +85,16 @@ def test_Histogram_from_arrays(example_histograms):
     assert np.allclose(h.yields, yields)
     assert np.allclose(h.sumw2, sumw2)
     assert np.allclose(h.bins, bins)
+
+    with pytest.raises(
+        ValueError, match="bin edges need one more entry than yields"
+    ) as e_info:
+        histo.Histogram.from_arrays(*example_histograms.wrong_bin_number())
+
+    with pytest.raises(
+        ValueError, match="yields and sumw2 need to have the same shape"
+    ) as e_info:
+        histo.Histogram.from_arrays(*example_histograms.yields_sumw2_mismatch())
 
 
 def test_Histogram_from_path(tmp_path, caplog, example_histograms, histogram_helpers):
