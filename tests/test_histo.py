@@ -13,38 +13,38 @@ class ExampleHistograms:
 
     @staticmethod
     def normal():
-        yields = np.asarray([1.0, 2.0])
-        sumw2 = np.asarray([0.1, 0.2])
-        bins = np.asarray([1, 2, 3])
-        return yields, sumw2, bins
+        bins = [1, 2, 3]
+        yields = [1.0, 2.0]
+        sumw2 = [0.1, 0.2]
+        return bins, yields, sumw2
 
     @staticmethod
     def single_bin():
-        yields = np.asarray([1.0])
-        sumw2 = np.asarray([0.1])
-        bins = np.asarray([1, 2])
-        return yields, sumw2, bins
+        bins = [1, 2]
+        yields = [1.0]
+        sumw2 = [0.1]
+        return bins, yields, sumw2
 
     @staticmethod
     def empty_bin():
-        yields = np.asarray([1.0, 0.0])
-        sumw2 = np.asarray([0.1, 0.2])
-        bins = np.asarray([1, 2, 3])
-        return yields, sumw2, bins
+        bins = [1, 2, 3]
+        yields = [1.0, 0.0]
+        sumw2 = [0.1, 0.2]
+        return bins, yields, sumw2
 
     @staticmethod
     def nan_sumw2_empty_bin():
-        yields = np.asarray([1.0, 0.0])
-        sumw2 = np.asarray([0.1, float("NaN")])
-        bins = np.asarray([1, 2, 3])
-        return yields, sumw2, bins
+        bins = [1, 2, 3]
+        yields = [1.0, 0.0]
+        sumw2 = [0.1, float("NaN")]
+        return bins, yields, sumw2
 
     @staticmethod
     def nan_sumw2_nonempty_bin():
-        yields = np.asarray([1.0, 2.0])
-        sumw2 = np.asarray([0.1, float("NaN")])
-        bins = np.asarray([1, 2, 3])
-        return yields, sumw2, bins
+        bins = [1, 2, 3]
+        yields = [1.0, 2.0]
+        sumw2 = [0.1, float("NaN")]
+        return bins, yields, sumw2
 
 
 @pytest.fixture
@@ -65,16 +65,16 @@ def histogram_helpers():
     return HistogramHelpers
 
 
-def test_Histogram(example_histograms):
-    yields, sumw2, bins = example_histograms.normal()
-    h = histo.Histogram(yields, sumw2, bins)
+def test_Histogram_from_arrays(example_histograms):
+    bins, yields, sumw2 = example_histograms.normal()
+    h = histo.Histogram.from_arrays(bins, yields, sumw2)
     assert np.allclose(h.yields, yields)
     assert np.allclose(h.sumw2, sumw2)
     assert np.allclose(h.bins, bins)
 
 
 def test_Histogram_from_path(tmp_path, caplog, example_histograms, histogram_helpers):
-    h_ref = histo.Histogram(*example_histograms.normal())
+    h_ref = histo.Histogram.from_arrays(*example_histograms.normal())
     h_ref.save(tmp_path)
 
     # load the original histogram
@@ -105,7 +105,7 @@ def test_Histogram_from_path(tmp_path, caplog, example_histograms, histogram_hel
 
 
 def test_Histogram_from_config(tmp_path, example_histograms, histogram_helpers):
-    h_ref = histo.Histogram(*example_histograms.normal())
+    h_ref = histo.Histogram.from_arrays(*example_histograms.normal())
     histo_path = tmp_path / "region_sample_nominal.npz"
     h_ref.save(histo_path)
 
@@ -119,7 +119,7 @@ def test_Histogram_from_config(tmp_path, example_histograms, histogram_helpers):
 
 
 def test_Histogram_save(tmp_path, example_histograms, histogram_helpers):
-    hist = histo.Histogram(*example_histograms.normal())
+    hist = histo.Histogram.from_arrays(*example_histograms.normal())
     hist.save(tmp_path)
     hist_loaded = histo.Histogram.from_path(tmp_path, modified=False)
     histogram_helpers.assert_equal(hist, hist_loaded)
@@ -135,18 +135,20 @@ def test_Histogram_validate(caplog, example_histograms):
     name = "test_histo"
 
     # should cause no warnings
-    histo.Histogram(*example_histograms.normal()).validate(name)
-    histo.Histogram(*example_histograms.single_bin()).validate(name)
+    histo.Histogram.from_arrays(*example_histograms.normal()).validate(name)
+    histo.Histogram.from_arrays(*example_histograms.single_bin()).validate(name)
     assert [rec.message for rec in caplog.records] == []
     caplog.clear()
 
     # check for empty bin warning
-    histo.Histogram(*example_histograms.empty_bin()).validate(name)
+    histo.Histogram.from_arrays(*example_histograms.empty_bin()).validate(name)
     assert "test_histo has empty bins: [1]" in [rec.message for rec in caplog.records]
     caplog.clear()
 
     # check for ill-defined stat uncertainty warning
-    histo.Histogram(*example_histograms.nan_sumw2_empty_bin()).validate(name)
+    histo.Histogram.from_arrays(*example_histograms.nan_sumw2_empty_bin()).validate(
+        name
+    )
     assert "test_histo has empty bins: [1]" in [rec.message for rec in caplog.records]
     assert "test_histo has bins with ill-defined stat. unc.: [1]" in [
         rec.message for rec in caplog.records
@@ -154,7 +156,9 @@ def test_Histogram_validate(caplog, example_histograms):
     caplog.clear()
 
     # check for ill-defined stat uncertainty warning with non-zero bin
-    histo.Histogram(*example_histograms.nan_sumw2_nonempty_bin()).validate(name)
+    histo.Histogram.from_arrays(*example_histograms.nan_sumw2_nonempty_bin()).validate(
+        name
+    )
     assert "test_histo has bins with ill-defined stat. unc.: [1]" in [
         rec.message for rec in caplog.records
     ]
@@ -165,8 +169,8 @@ def test_Histogram_validate(caplog, example_histograms):
 
 
 def test_Histogram_normalize_to_yield(example_histograms):
-    hist = histo.Histogram(*example_histograms.empty_bin())
-    var_hist = histo.Histogram(*example_histograms.normal())
+    hist = histo.Histogram.from_arrays(*example_histograms.empty_bin())
+    var_hist = histo.Histogram.from_arrays(*example_histograms.normal())
     factor = var_hist.normalize_to_yield(hist)
     assert factor == 3.0
     np.testing.assert_equal(var_hist.yields, np.asarray([1 / 3, 2 / 3]))

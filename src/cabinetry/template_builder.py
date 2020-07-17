@@ -185,7 +185,7 @@ def create_histograms(config, folder_path_str, method="uproot"):
                     raise NotImplementedError("unknown backend")
 
                 # store information in a Histogram instance
-                histogram = histo.Histogram(yields, sumw2, bins)
+                histogram = histo.Histogram.from_arrays(bins, yields, sumw2)
 
                 # generate a name for the histogram
                 histogram_name = histo.build_name(region, sample, systematic)

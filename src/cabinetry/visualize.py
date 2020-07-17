@@ -58,9 +58,9 @@ def data_MC(config, histogram_folder, figure_folder, prefit=True, method="matplo
                         "label": sample["Name"],
                         "isData": is_data,
                         "hist": {
+                            "bins": histogram.bins,
                             "yields": histogram.yields,
                             "sumw2": histogram.sumw2,
-                            "bins": histogram.bins,
                         },
                         "variable": region["Variable"],
                     }

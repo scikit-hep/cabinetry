@@ -8,8 +8,11 @@ from cabinetry import template_postprocessor
 @pytest.mark.parametrize(
     "test_histo, fixed_sumw2",
     [
-        (histo.Histogram([], [float("nan"), 0.2], []), [0.0, 0.2]),
-        (histo.Histogram([], [0.1, 0.2], []), [0.1, 0.2]),
+        (
+            histo.Histogram.from_arrays([1, 2, 3], [1, 2], [float("nan"), 0.2]),
+            [0.0, 0.2],
+        ),
+        (histo.Histogram.from_arrays([1, 2, 3], [1, 2], [0.1, 0.2]), [0.1, 0.2],),
     ],
 )
 def test__fix_stat_unc(test_histo, fixed_sumw2):
@@ -19,7 +22,7 @@ def test__fix_stat_unc(test_histo, fixed_sumw2):
 
 
 def test_apply_postprocessing():
-    histogram = histo.Histogram([], [float("nan"), 0.2], [])
+    histogram = histo.Histogram.from_arrays([1, 2, 3], [1, 1], [float("nan"), 0.2])
     name = "test_histo"
     fixed_sumw2 = [0.0, 0.2]
     fixed_histogram = template_postprocessor.apply_postprocessing(histogram, name)
@@ -33,9 +36,7 @@ def test_run(tmp_path):
 
     # create an input histogram
     histo_path = tmp_path / "region_1_signal_nominal.npz"
-    histogram = histo.Histogram(
-        np.asarray([1.0, 2.0]), np.asarray([1.0, 1.0]), np.asarray([0.0, 1.0, 2.0])
-    )
+    histogram = histo.Histogram.from_arrays([0.0, 1.0, 2.0], [1.0, 2.0], [1.0, 1.0])
     histogram.save(histo_path)
 
     template_postprocessor.run(config, tmp_path)

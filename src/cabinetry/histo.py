@@ -14,17 +14,36 @@ class Histogram(bh.Histogram):
     by boost_histogram.Histogram
     """
 
-    def __init__(self, yields, sumw2, bins):
-        """constructor building histogram from arrays
+    @classmethod
+    def from_arrays(cls, bins, yields, sumw2):
+        """construct a histogram from arrays of yields and uncertainties, the input
+        can be lists or numpy.ndarrays
 
         Args:
-            yields (numpy.ndarray): yield per histogram bin
-            sumw2 (numpy.ndarray): statistical uncertainty of yield per bin
-            bins (numpy.ndarray): edges of histogram bins
+            bins (Union[list, numpy.ndarray]): edges of histogram bins
+            yields (Union[list, numpy.ndarray]): yield per histogram bin
+            sumw2 (Union[list, numpy.ndarray]): statistical uncertainty of yield per bin
+
+        Raises:
+            ValueError: when amount of bins specified via bin edges and bin contents do not match
+            ValueError: when length of yields and sumw2 do not match
+
+        Returns:
+            cabinetry.histo.Histogram: the histogram instance
         """
-        self.yields = yields
-        self.sumw2 = sumw2
-        self.bins = bins
+        if len(bins) != len(yields) + 1:
+            raise ValueError("bin edges need one more entry than yields")
+        if len(yields) != len(sumw2):
+            raise ValueError("yields and sumw2 need to have the same shape")
+
+        out = cls(
+            bh.axis.Variable(bins, underflow=False, overflow=False),
+            storage=bh.storage.Weight(),
+        )
+        yields = np.asarray(yields)
+        sumw2 = np.asarray(sumw2)
+        out[...] = np.stack([yields, sumw2 ** 2], axis=-1)
+        return out
 
     @classmethod
     def from_path(cls, histo_path, modified=True):
@@ -50,10 +69,10 @@ class Histogram(bh.Histogram):
             else:
                 histo_path = histo_path_modified
         histogram_npz = np.load(histo_path.with_suffix(".npz"))
+        bins = histogram_npz["bins"]
         yields = histogram_npz["yields"]
         sumw2 = histogram_npz["sumw2"]
-        bins = histogram_npz["bins"]
-        return cls(yields, sumw2, bins)
+        return cls.from_arrays(bins, yields, sumw2)
 
     @classmethod
     def from_config(cls, histo_folder, region, sample, systematic, modified=True):
@@ -74,6 +93,18 @@ class Histogram(bh.Histogram):
         histo_name = build_name(region, sample, systematic)
         histo_path = Path(histo_folder) / histo_name
         return cls.from_path(histo_path, modified)
+
+    @property
+    def yields(self):
+        return self.view().value
+
+    @property
+    def sumw2(self):
+        return np.sqrt(self.view().variance)
+
+    @property
+    def bins(self):
+        return self.axes[0].edges
 
     def save(self, histo_path):
         """save a histogram to disk
@@ -136,7 +167,7 @@ class Histogram(bh.Histogram):
         current_integrated_yield = sum(self.yields)
         normalization_ratio = current_integrated_yield / target_integrated_yield
         # update integrated yield to match target
-        self.yields /= normalization_ratio
+        self.view().value /= normalization_ratio
         return normalization_ratio
 
 
