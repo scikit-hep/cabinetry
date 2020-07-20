@@ -44,7 +44,7 @@ def data_MC(config, histogram_folder, figure_folder, prefit=True, method="matplo
         NotImplementedError: when trying to plot with a method that is not supported
         NotImplementedError: when trying to visualize post-fit distributions, not supported yet
     """
-    log.info(f"visualizing histogram")
+    log.info("visualizing histogram")
     for region in config["Regions"]:
         histogram_dict_list = []
         for sample in config["Samples"]:

@@ -152,7 +152,8 @@ def get_NormPlusShape_modifiers(region, sample, systematic, histogram_folder):
     norm_effect = histogram_variation.normalize_to_yield(histogram_nominal)
     histo_yield_up = histogram_variation.yields.tolist()
     log.debug(
-        f"normalization impact of systematic {systematic['Name']} on sample {sample['Name']} in region {region['Name']} is {norm_effect}",
+        f"normalization impact of systematic {systematic['Name']} on sample {sample['Name']}"
+        f" in region {region['Name']} is {norm_effect:.3f}"
     )
     # need another histogram that corresponds to the "down" variation, which is 2*nominal - up
     histo_yield_down = (
@@ -324,7 +325,7 @@ def build(config, histogram_folder, with_validation=True):
     Returns:
         dict: pyhf-compatible HistFactory workspace
     """
-    log.info(f"building workspace")
+    log.info("building workspace")
 
     ws = {}  # the workspace
 

@@ -136,7 +136,7 @@ def create_histograms(config, folder_path_str, method="uproot"):
         NotImplementedError: when requesting the ServiceX backend
         NotImplementedError: when requesting another unknown backend
     """
-    log.info(f"creating histograms")
+    log.info("creating histograms")
 
     for region in config["Regions"]:
         log.debug(f"  in region {region['Name']}")
