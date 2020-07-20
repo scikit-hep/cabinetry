@@ -19,7 +19,7 @@ def _fix_stat_unc(histogram, name):
     """
     nan_pos = np.where(np.isnan(histogram.stdev))[0]
     if len(nan_pos) > 0:
-        log.debug("fixing ill-defined stat. unc. for %s", name)
+        log.debug(f"fixing ill-defined stat. unc. for {name}")
         histogram.view().variance = np.nan_to_num(histogram.stdev ** 2, nan=0.0)
 
 
@@ -48,7 +48,7 @@ def run(config, histogram_folder):
         config (dict): cabinetry configuration
         histogram_folder (str): folder containing the histograms
     """
-    log.info("applying post-processing to histograms")
+    log.info(f"applying post-processing to histograms")
     # loop over all histograms
     for region in config["Regions"]:
         for sample in config["Samples"]:
