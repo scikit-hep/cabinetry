@@ -107,5 +107,5 @@ def data_MC_matplotlib(histogram_dict_list, figure_path):
 
     if not os.path.exists(figure_path.parent):
         os.mkdir(figure_path.parent)
-    log.debug("saving figure as %s", figure_path)
+    log.debug(f"saving figure as {figure_path}")
     fig.savefig(figure_path)

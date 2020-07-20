@@ -62,10 +62,9 @@ class Histogram(bh.Histogram):
             histo_path_modified = histo_path.parent / (histo_path.name + "_modified")
             if not histo_path_modified.with_suffix(".npz").exists():
                 log.warning(
-                    "the modified histogram %s does not exist",
-                    histo_path_modified.with_suffix(".npz"),
+                    f"the modified histogram {histo_path_modified.with_suffix('.npz')} does not exist",
                 )
-                log.warning("loading the un-modified histogram instead!")
+                log.warning(f"loading the un-modified histogram instead!")
             else:
                 histo_path = histo_path_modified
         histogram_npz = np.load(histo_path.with_suffix(".npz"))
@@ -127,7 +126,7 @@ class Histogram(bh.Histogram):
         Args:
             histo_path (pathlib.Path): where to save the histogram
         """
-        log.debug("saving histogram to %s", histo_path.with_suffix(".npz"))
+        log.debug(f"saving histogram to {histo_path.with_suffix('.npz')}")
 
         # create output directory if it does not exist yet
         if not os.path.exists(histo_path.parent):
@@ -151,21 +150,19 @@ class Histogram(bh.Histogram):
         # input should never need it
         empty_bins = np.where(np.atleast_1d(self.yields) == 0.0)[0]
         if len(empty_bins) > 0:
-            log.warning("%s has empty bins: %s", name, empty_bins)
+            log.warning(f"{name} has empty bins: {empty_bins}")
 
         # check for ill-defined stat. unc.
         nan_pos = np.where(np.isnan(self.stdev))[0]
         if len(nan_pos) > 0:
-            log.warning("%s has bins with ill-defined stat. unc.: %s", name, nan_pos)
+            log.warning(f"{name} has bins with ill-defined stat. unc.: {nan_pos}")
 
         # check whether there are any bins with ill-defined stat. uncertainty
         # but non-empty yield, those deserve a closer look
         not_empty_but_nan = [b for b in nan_pos if b not in empty_bins]
         if len(not_empty_but_nan) > 0:
             log.warning(
-                "%s has non-empty bins with ill-defined stat. unc.: %s",
-                name,
-                not_empty_but_nan,
+                f"{name} has non-empty bins with ill-defined stat. unc.: {not_empty_but_nan}",
             )
 
     def normalize_to_yield(self, reference_histogram):

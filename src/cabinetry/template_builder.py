@@ -136,13 +136,13 @@ def create_histograms(config, folder_path_str, method="uproot"):
         NotImplementedError: when requesting the ServiceX backend
         NotImplementedError: when requesting another unknown backend
     """
-    log.info("creating histograms")
+    log.info(f"creating histograms")
 
     for region in config["Regions"]:
-        log.debug("  in region %s", region["Name"])
+        log.debug(f"  in region {region['Name']}")
 
         for sample in config["Samples"]:
-            log.debug("  reading sample %s", sample["Name"])
+            log.debug(f"  reading sample {sample['Name']}")
 
             for isyst, systematic in enumerate(
                 ([{"Name": "nominal"}] + config["Systematics"])
@@ -157,7 +157,7 @@ def create_histograms(config, folder_path_str, method="uproot"):
                     # no further action is needed, continue with the next region-sample-systematic combination
                     continue
 
-                log.debug("  variation %s", systematic["Name"])
+                log.debug(f"  variation {systematic['Name']}")
                 ntuple_path = _get_ntuple_path(region, sample, systematic)
                 pos_in_file = _get_position_in_file(sample, systematic)
                 variable = _get_variable(region, sample, systematic)

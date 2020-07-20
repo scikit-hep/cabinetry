@@ -20,7 +20,7 @@ def read(file_path_string):
         dict: cabinetry configuration
     """
     file_path = Path(file_path_string)
-    log.info("opening config file %s", file_path)
+    log.info(f"opening config file {file_path}")
     config = yaml.safe_load(file_path.read_text())
     validate(config)
     return config
@@ -65,12 +65,12 @@ def print_overview(config):
     Args:
         config (dict): cabinetry configuration
     """
-    log.info("the config contains:")
-    log.info("  %i Sample(s)", len(config["Samples"]))
-    log.info("  %i Regions(s)", len(config["Regions"]))
-    log.info("  %i NormFactor(s)", len(config["NormFactors"]))
+    log.info(f"the config contains:")
+    log.info(f"  {len(config['Samples'])} Sample(s)")
+    log.info(f"  {len(config['Regions'])} Regions(s)")
+    log.info(f"  {len(config['NormFactors'])} NormFactor(s)")
     if "Systematics" in config.keys():
-        log.info("  %i Systematic(s)", len(config["Systematics"]))
+        log.info(f"  {len(config['Systematics'])} Systematic(s)")
 
 
 def _convert_samples_to_list(samples):

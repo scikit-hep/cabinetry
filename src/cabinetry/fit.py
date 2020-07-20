@@ -38,7 +38,7 @@ def print_results(bestfit, uncertainty, labels):
     max_label_length = max([len(label) for label in labels])
     for i, label in enumerate(labels):
         l_with_spacer = label + " " * (max_label_length - len(label))
-        log.info("%s: %f +/- %f", l_with_spacer, bestfit[i], uncertainty[i])
+        log.info(f"{l_with_spacer}: {bestfit[i]:.6f} +/- {uncertainty[i]:.6f}")
 
 
 def fit(spec):
@@ -55,7 +55,7 @@ def fit(spec):
             - list: parameter names
             - float: -2 log(likelihood) at best-fit point
     """
-    log.info("performing unconstrained fit")
+    log.info(f"performing unconstrained fit")
 
     workspace = pyhf.Workspace(spec)
     model = workspace.model()
@@ -70,4 +70,5 @@ def fit(spec):
     labels = get_parameter_names(model)
 
     print_results(bestfit, uncertainty, labels)
+    log.debug(f"-2 log(L) = {twice_nll:.6f} at the best-fit point")
     return bestfit, uncertainty, labels, twice_nll

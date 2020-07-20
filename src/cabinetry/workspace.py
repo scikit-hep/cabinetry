@@ -84,7 +84,7 @@ def get_NF_modifiers(config, sample):
     for NormFactor in config["NormFactors"]:
         if configuration.sample_affected_by_modifier(sample, NormFactor):
             log.debug(
-                "adding NormFactor %s to sample %s", NormFactor["Name"], sample["Name"]
+                f"adding NormFactor {NormFactor['Name']} to sample {sample['Name']}"
             )
             modifiers.append(
                 {"data": None, "name": NormFactor["Name"], "type": "normfactor"}
@@ -152,11 +152,7 @@ def get_NormPlusShape_modifiers(region, sample, systematic, histogram_folder):
     norm_effect = histogram_variation.normalize_to_yield(histogram_nominal)
     histo_yield_up = histogram_variation.yields.tolist()
     log.debug(
-        "normalization impact of systematic %s on sample %s in region %s is %f",
-        systematic["Name"],
-        sample["Name"],
-        region["Name"],
-        norm_effect,
+        f"normalization impact of systematic {systematic['Name']} on sample {sample['Name']} in region {region['Name']} is {norm_effect}",
     )
     # need another histogram that corresponds to the "down" variation, which is 2*nominal - up
     histo_yield_down = (
@@ -203,18 +199,14 @@ def get_sys_modifiers(config, sample, region, histogram_folder):
             if systematic["Type"] == "Overall":
                 # OverallSys (norm uncertainty with Gaussian constraint)
                 log.debug(
-                    "adding OverallSys %s to sample %s",
-                    systematic["Name"],
-                    sample["Name"],
+                    f"adding OverallSys {systematic['Name']} to sample {sample['Name']}",
                 )
                 modifiers.append(get_OverallSys_modifier(systematic))
             elif systematic["Type"] == "NormPlusShape":
                 # two modifiers are needed - an OverallSys for the norm effect,
                 # and a HistoSys for the shape variation
                 log.debug(
-                    "adding OverallSys and HistoSys %s to sample %s",
-                    systematic["Name"],
-                    sample["Name"],
+                    f"adding OverallSys and HistoSys {systematic['Name']} to sample {sample['Name']}",
                 )
                 modifiers += get_NormPlusShape_modifiers(
                     region, sample, systematic, histogram_folder
@@ -332,7 +324,7 @@ def build(config, histogram_folder, with_validation=True):
     Returns:
         dict: pyhf-compatible HistFactory workspace
     """
-    log.info("building workspace")
+    log.info(f"building workspace")
 
     ws = {}  # the workspace
 
@@ -374,7 +366,7 @@ def save(ws, file_path_string):
         file_path_string (str): path to the file to save the workspace in
     """
     file_path = Path(file_path_string)
-    log.debug("saving workspace to %s", file_path)
+    log.debug(f"saving workspace to {file_path}")
     # create output directory if it does not exist yet
     if not os.path.exists(file_path.parent):
         os.mkdir(file_path.parent)
