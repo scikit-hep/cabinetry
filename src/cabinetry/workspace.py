@@ -143,22 +143,25 @@ def get_NormPlusShape_modifiers(region, sample, systematic, histogram_folder):
         histogram_folder, region, sample, {"Name": "nominal"}, modified=True
     )
 
-    # need to add support for two-sided variations that do not require symmetrization here
-    # if symmetrization is desired, should support different implementations
+    if systematic["Down"]["Symmetrize"]:
+        # need to add support for two-sided variations that do not require symmetrization here
+        # if symmetrization is desired, should support different implementations
 
-    # symmetrization according to "method 1" from issue #26: first normalization, then symmetrization
+        # symmetrization according to "method 1" from issue #26: first normalization, then symmetrization
 
-    # normalize the variation to the same yield as nominal
-    norm_effect = histogram_variation.normalize_to_yield(histogram_nominal)
-    histo_yield_up = histogram_variation.yields.tolist()
-    log.debug(
-        f"normalization impact of systematic {systematic['Name']} on sample {sample['Name']}"
-        f" in region {region['Name']} is {norm_effect:.3f}"
-    )
-    # need another histogram that corresponds to the "down" variation, which is 2*nominal - up
-    histo_yield_down = (
-        2 * histogram_nominal.yields - histogram_variation.yields
-    ).tolist()
+        # normalize the variation to the same yield as nominal
+        norm_effect = histogram_variation.normalize_to_yield(histogram_nominal)
+        histo_yield_up = histogram_variation.yields.tolist()
+        log.debug(
+            f"normalization impact of systematic {systematic['Name']} on sample {sample['Name']}"
+            f" in region {region['Name']} is {norm_effect:.3f}"
+        )
+        # need another histogram that corresponds to the "down" variation, which is 2*nominal - up
+        histo_yield_down = (
+            2 * histogram_nominal.yields - histogram_variation.yields
+        ).tolist()
+    else:
+        raise NotImplementedError("only symmetrization is currently supported")
 
     # add the normsys
     modifiers = []

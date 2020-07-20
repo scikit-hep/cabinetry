@@ -37,6 +37,8 @@ Systematics:
     Up:
       Path: "ntuples/prediction.root"
       Tree: "background_varied"
+    Down:
+      Symmetrize: True
     Samples: "Background"
     Type: "NormPlusShape"
 
