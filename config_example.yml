@@ -29,14 +29,17 @@ Samples:
 
 Systematics:
   - Name: "Luminosity"
-    OverallDown: -0.05
-    OverallUp: 0.05
+    Up:
+      Normalization: 0.05
+    Down:
+      Normalization: -0.05
     Samples: ["Signal", "Background"]
-    Type: "Overall"
+    Type: "Normalization"
 
   - Name: "Modeling"
-    PathUp: "ntuples/prediction.root"
-    TreeUp: "background_varied"
+    Up:
+      Path: "ntuples/prediction.root"
+      Tree: "background_varied"
     Samples: "Background"
     Type: "NormPlusShape"
 

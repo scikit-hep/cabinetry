@@ -92,8 +92,8 @@ def get_NF_modifiers(config, sample):
     return modifiers
 
 
-def get_OverallSys_modifier(systematic):
-    """construct an OverallSys modifier
+def get_Normalization_modifier(systematic):
+    """construct a normalization modifier (OverallSys in HistFactory)
     While this can be built without any histogram reference, it might be useful
     to build a histogram for this anyway and possibly use it here.
 
@@ -109,8 +109,8 @@ def get_OverallSys_modifier(systematic):
     modifier.update(
         {
             "data": {
-                "hi": 1 + systematic["OverallUp"],
-                "lo": 1 + systematic["OverallDown"],
+                "hi": 1 + systematic["Up"]["Normalization"],
+                "lo": 1 + systematic["Down"]["Normalization"],
             }
         }
     )
@@ -197,12 +197,12 @@ def get_sys_modifiers(config, sample, region, histogram_folder):
     modifiers = []
     for systematic in config.get("Systematics", []):
         if configuration.sample_affected_by_modifier(sample, systematic):
-            if systematic["Type"] == "Overall":
+            if systematic["Type"] == "Normalization":
                 # OverallSys (norm uncertainty with Gaussian constraint)
                 log.debug(
                     f"adding OverallSys {systematic['Name']} to sample {sample['Name']}",
                 )
-                modifiers.append(get_OverallSys_modifier(systematic))
+                modifiers.append(get_Normalization_modifier(systematic))
             elif systematic["Type"] == "NormPlusShape":
                 # two modifiers are needed - an OverallSys for the norm effect,
                 # and a HistoSys for the shape variation

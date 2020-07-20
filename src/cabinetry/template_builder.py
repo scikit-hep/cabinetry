@@ -27,7 +27,7 @@ def _get_ntuple_path(region, sample, systematic):
     if systematic["Name"] == "nominal":
         path_str = sample["Path"]
     elif systematic["Type"] == "NormPlusShape":
-        path_str = systematic["PathUp"]
+        path_str = systematic["Up"]["Path"]
     else:
         raise NotImplementedError("ntuple path treatment not yet defined")
     path = Path(path_str)
@@ -96,7 +96,7 @@ def _get_position_in_file(sample, systematic):
     if systematic["Name"] == "nominal":
         position = sample["Tree"]
     elif systematic["Type"] == "NormPlusShape":
-        position = systematic["TreeUp"]
+        position = systematic["Up"]["Tree"]
     else:
         raise NotImplementedError("ntuple path treatment not yet defined")
     return position

@@ -16,7 +16,11 @@ def test__get_ntuple_path():
     assert template_builder._get_ntuple_path(
         {},
         {},
-        {"Name": "variation", "Type": "NormPlusShape", "PathUp": "test/path.root"},
+        {
+            "Name": "variation",
+            "Type": "NormPlusShape",
+            "Up": {"Path": "test/path.root"},
+        },
     ) == Path("test/path.root")
 
     with pytest.raises(
@@ -53,7 +57,8 @@ def test__get_position_in_file():
 
     assert (
         template_builder._get_position_in_file(
-            {}, {"Name": "variation", "Type": "NormPlusShape", "TreeUp": "up_tree"}
+            {},
+            {"Name": "variation", "Type": "NormPlusShape", "Up": {"Tree": "up_tree"}},
         )
         == "up_tree"
     )
