@@ -10,7 +10,7 @@ from cabinetry.contrib import histogram_drawing
 class MockHistogram:
     bins = []
     yields = []
-    sumw2 = []
+    stdev = []
 
 
 @pytest.mark.parametrize(
@@ -64,7 +64,7 @@ def test_data_MC(mock_load, mock_draw, tmp_path):
                     {
                         "label": "sample_1",
                         "isData": False,
-                        "hist": {"yields": [], "sumw2": [], "bins": []},
+                        "hist": {"bins": [], "yields": [], "stdev": []},
                         "variable": "x",
                     }
                 ],

@@ -15,50 +15,50 @@ class ExampleHistograms:
     def normal():
         bins = [1, 2, 3]
         yields = [1.0, 2.0]
-        sumw2 = [0.1, 0.2]
-        return bins, yields, sumw2
+        stdev = [0.1, 0.2]
+        return bins, yields, stdev
 
     @staticmethod
     def single_bin():
         bins = [1, 2]
         yields = [1.0]
-        sumw2 = [0.1]
-        return bins, yields, sumw2
+        stdev = [0.1]
+        return bins, yields, stdev
 
     @staticmethod
     def empty_bin():
         bins = [1, 2, 3]
         yields = [1.0, 0.0]
-        sumw2 = [0.1, 0.2]
-        return bins, yields, sumw2
+        stdev = [0.1, 0.2]
+        return bins, yields, stdev
 
     @staticmethod
-    def nan_sumw2_empty_bin():
+    def nan_stdev_empty_bin():
         bins = [1, 2, 3]
         yields = [1.0, 0.0]
-        sumw2 = [0.1, float("NaN")]
-        return bins, yields, sumw2
+        stdev = [0.1, float("NaN")]
+        return bins, yields, stdev
 
     @staticmethod
-    def nan_sumw2_nonempty_bin():
+    def nan_stdev_nonempty_bin():
         bins = [1, 2, 3]
         yields = [1.0, 2.0]
-        sumw2 = [0.1, float("NaN")]
-        return bins, yields, sumw2
+        stdev = [0.1, float("NaN")]
+        return bins, yields, stdev
 
     @staticmethod
     def wrong_bin_number():
         bins = [1, 2, 3]
         yields = [1.0]
-        sumw2 = [0.1]
-        return bins, yields, sumw2
+        stdev = [0.1]
+        return bins, yields, stdev
 
     @staticmethod
-    def yields_sumw2_mismatch():
+    def yields_stdev_mismatch():
         bins = [1, 2, 3]
         yields = [1.0, 2.0]
-        sumw2 = [0.1]
-        return bins, yields, sumw2
+        stdev = [0.1]
+        return bins, yields, stdev
 
 
 @pytest.fixture
@@ -70,7 +70,7 @@ class HistogramHelpers:
     @staticmethod
     def assert_equal(h1, h2):
         assert np.allclose(h1.yields, h2.yields)
-        assert np.allclose(h1.sumw2, h2.sumw2)
+        assert np.allclose(h1.stdev, h2.stdev)
         assert np.allclose(h1.bins, h2.bins)
 
 
@@ -80,10 +80,10 @@ def histogram_helpers():
 
 
 def test_Histogram_from_arrays(example_histograms):
-    bins, yields, sumw2 = example_histograms.normal()
-    h = histo.Histogram.from_arrays(bins, yields, sumw2)
+    bins, yields, stdev = example_histograms.normal()
+    h = histo.Histogram.from_arrays(bins, yields, stdev)
     assert np.allclose(h.yields, yields)
-    assert np.allclose(h.sumw2, sumw2)
+    assert np.allclose(h.stdev, stdev)
     assert np.allclose(h.bins, bins)
 
     with pytest.raises(
@@ -92,9 +92,9 @@ def test_Histogram_from_arrays(example_histograms):
         histo.Histogram.from_arrays(*example_histograms.wrong_bin_number())
 
     with pytest.raises(
-        ValueError, match="yields and sumw2 need to have the same shape"
+        ValueError, match="yields and stdev need to have the same shape"
     ) as e_info:
-        histo.Histogram.from_arrays(*example_histograms.yields_sumw2_mismatch())
+        histo.Histogram.from_arrays(*example_histograms.yields_stdev_mismatch())
 
 
 def test_Histogram_from_path(tmp_path, caplog, example_histograms, histogram_helpers):
@@ -170,7 +170,7 @@ def test_Histogram_validate(caplog, example_histograms):
     caplog.clear()
 
     # check for ill-defined stat uncertainty warning
-    histo.Histogram.from_arrays(*example_histograms.nan_sumw2_empty_bin()).validate(
+    histo.Histogram.from_arrays(*example_histograms.nan_stdev_empty_bin()).validate(
         name
     )
     assert "test_histo has empty bins: [1]" in [rec.message for rec in caplog.records]
@@ -180,7 +180,7 @@ def test_Histogram_validate(caplog, example_histograms):
     caplog.clear()
 
     # check for ill-defined stat uncertainty warning with non-zero bin
-    histo.Histogram.from_arrays(*example_histograms.nan_sumw2_nonempty_bin()).validate(
+    histo.Histogram.from_arrays(*example_histograms.nan_stdev_nonempty_bin()).validate(
         name
     )
     assert "test_histo has bins with ill-defined stat. unc.: [1]" in [

@@ -15,34 +15,34 @@ class Histogram(bh.Histogram):
     """
 
     @classmethod
-    def from_arrays(cls, bins, yields, sumw2):
+    def from_arrays(cls, bins, yields, stdev):
         """construct a histogram from arrays of yields and uncertainties, the input
         can be lists or numpy.ndarrays
 
         Args:
             bins (Union[list, numpy.ndarray]): edges of histogram bins
             yields (Union[list, numpy.ndarray]): yield per histogram bin
-            sumw2 (Union[list, numpy.ndarray]): statistical uncertainty of yield per bin
+            stdev (Union[list, numpy.ndarray]): statistical uncertainty of yield per bin
 
         Raises:
             ValueError: when amount of bins specified via bin edges and bin contents do not match
-            ValueError: when length of yields and sumw2 do not match
+            ValueError: when length of yields and stdev do not match
 
         Returns:
             cabinetry.histo.Histogram: the histogram instance
         """
         if len(bins) != len(yields) + 1:
             raise ValueError("bin edges need one more entry than yields")
-        if len(yields) != len(sumw2):
-            raise ValueError("yields and sumw2 need to have the same shape")
+        if len(yields) != len(stdev):
+            raise ValueError("yields and stdev need to have the same shape")
 
         out = cls(
             bh.axis.Variable(bins, underflow=False, overflow=False),
             storage=bh.storage.Weight(),
         )
         yields = np.asarray(yields)
-        sumw2 = np.asarray(sumw2)
-        out[...] = np.stack([yields, sumw2 ** 2], axis=-1)
+        stdev = np.asarray(stdev)
+        out[...] = np.stack([yields, stdev ** 2], axis=-1)
         return out
 
     @classmethod
@@ -71,8 +71,8 @@ class Histogram(bh.Histogram):
         histogram_npz = np.load(histo_path.with_suffix(".npz"))
         bins = histogram_npz["bins"]
         yields = histogram_npz["yields"]
-        sumw2 = histogram_npz["sumw2"]
-        return cls.from_arrays(bins, yields, sumw2)
+        stdev = histogram_npz["stdev"]
+        return cls.from_arrays(bins, yields, stdev)
 
     @classmethod
     def from_config(cls, histo_folder, region, sample, systematic, modified=True):
@@ -104,7 +104,7 @@ class Histogram(bh.Histogram):
         return self.view().value
 
     @property
-    def sumw2(self):
+    def stdev(self):
         """get the stat. uncertainty per histogram bin
 
         Returns:
@@ -135,7 +135,7 @@ class Histogram(bh.Histogram):
         np.savez(
             histo_path.with_suffix(".npz"),
             yields=self.yields,
-            sumw2=self.sumw2,
+            stdev=self.stdev,
             bins=self.bins,
         )
 
@@ -154,7 +154,7 @@ class Histogram(bh.Histogram):
             log.warning("%s has empty bins: %s", name, empty_bins)
 
         # check for ill-defined stat. unc.
-        nan_pos = np.where(np.isnan(self.sumw2))[0]
+        nan_pos = np.where(np.isnan(self.stdev))[0]
         if len(nan_pos) > 0:
             log.warning("%s has bins with ill-defined stat. unc.: %s", name, nan_pos)
 

@@ -17,10 +17,10 @@ def _fix_stat_unc(histogram, name):
         histogram (cabinetry.histo.Histogram): the histogram to fix
         name (str): histogram name for logging
     """
-    nan_pos = np.where(np.isnan(histogram.sumw2))[0]
+    nan_pos = np.where(np.isnan(histogram.stdev))[0]
     if len(nan_pos) > 0:
         log.debug("fixing ill-defined stat. unc. for %s", name)
-        histogram.view().variance = np.nan_to_num(histogram.sumw2 ** 2, nan=0.0)
+        histogram.view().variance = np.nan_to_num(histogram.stdev ** 2, nan=0.0)
 
 
 def apply_postprocessing(histogram, name):

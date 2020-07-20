@@ -112,7 +112,7 @@ def test_create_histograms(tmp_path, caplog, utils):
     )
 
     assert np.allclose(saved_histo.yields, [1, 1, 2])
-    assert np.allclose(saved_histo.sumw2, [1, 1, 1.41421356])
+    assert np.allclose(saved_histo.stdev, [1, 1, 1.41421356])
     assert np.allclose(saved_histo.bins, bins)
 
     assert "  reading sample sample" in [rec.message for rec in caplog.records]

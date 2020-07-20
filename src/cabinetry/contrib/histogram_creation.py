@@ -31,8 +31,8 @@ def from_uproot(
     else:
         weights = np.ones_like(observables)
 
-    yields, sumw2 = _bin_data(observables, weights, bins)
-    return yields, sumw2
+    yields, stdev = _bin_data(observables, weights, bins)
+    return yields, stdev
 
 
 def _bin_data(observables, weights, bins):
@@ -52,5 +52,5 @@ def _bin_data(observables, weights, bins):
     hist = bh.Histogram(bh.axis.Variable(bins), storage=bh.storage.Weight())
     hist.fill(observables, weight=weights)
     yields = hist.view().value
-    sumw2 = np.sqrt(hist.view().variance)
-    return yields, sumw2
+    stdev = np.sqrt(hist.view().variance)
+    return yields, stdev
