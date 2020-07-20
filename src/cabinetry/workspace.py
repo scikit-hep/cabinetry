@@ -52,7 +52,7 @@ def get_unc_for_sample(
     sample, region, histogram_folder, systematic={"Name": "nominal"}
 ):
     """get the uncertainty of a specific sample, by figuring out its name and then
-    obtaining the sumw2 from the correct histogram
+    obtaining the stdev from the correct histogram
 
     Args:
         sample (dict): specific sample to use
@@ -66,7 +66,7 @@ def get_unc_for_sample(
     histogram = histo.Histogram.from_config(
         histogram_folder, region, sample, systematic, modified=True
     )
-    histo_yield = histogram.sumw2.tolist()
+    histo_yield = histogram.stdev.tolist()
     return histo_yield
 
 

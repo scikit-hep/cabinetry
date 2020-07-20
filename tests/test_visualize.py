@@ -7,6 +7,12 @@ from cabinetry import visualize
 from cabinetry.contrib import histogram_drawing
 
 
+class MockHistogram:
+    bins = []
+    yields = []
+    stdev = []
+
+
 @pytest.mark.parametrize(
     "test_input, expected",
     [
@@ -22,7 +28,7 @@ def test__build_figure_name(test_input, expected):
 
 @mock.patch("cabinetry.contrib.histogram_drawing.data_MC_matplotlib")
 @mock.patch(
-    "cabinetry.histo.Histogram.from_config", return_value=histo.Histogram([], [], [])
+    "cabinetry.histo.Histogram.from_config", return_value=MockHistogram(),
 )
 def test_data_MC(mock_load, mock_draw, tmp_path):
     """contrib.histogram_drawing is only imported depending on the keyword argument,
@@ -58,7 +64,7 @@ def test_data_MC(mock_load, mock_draw, tmp_path):
                     {
                         "label": "sample_1",
                         "isData": False,
-                        "hist": {"yields": [], "sumw2": [], "bins": []},
+                        "hist": {"bins": [], "yields": [], "stdev": []},
                         "variable": "x",
                     }
                 ],

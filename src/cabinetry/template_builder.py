@@ -169,7 +169,7 @@ def create_histograms(config, folder_path_str, method="uproot"):
                 if method == "uproot":
                     from cabinetry.contrib import histogram_creation
 
-                    yields, sumw2 = histogram_creation.from_uproot(
+                    yields, stdev = histogram_creation.from_uproot(
                         ntuple_path,
                         pos_in_file,
                         variable,
@@ -185,7 +185,7 @@ def create_histograms(config, folder_path_str, method="uproot"):
                     raise NotImplementedError("unknown backend")
 
                 # store information in a Histogram instance
-                histogram = histo.Histogram(yields, sumw2, bins)
+                histogram = histo.Histogram.from_arrays(bins, yields, stdev)
 
                 # generate a name for the histogram
                 histogram_name = histo.build_name(region, sample, systematic)

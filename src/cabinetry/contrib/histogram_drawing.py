@@ -8,17 +8,17 @@ import numpy as np
 log = logging.getLogger(__name__)
 
 
-def _total_yield_uncertainty(sumw2_list):
+def _total_yield_uncertainty(stdev_list):
     """calculate the absolute statistical uncertainty of a stack of MC
     via sum in quadrature
 
     Args:
-        sumw2_list (list): list of absolute stat. uncertainty per sample
+        stdev_list (list): list of absolute stat. uncertainty per sample
 
     Returns:
         np.array: absolute stat. uncertainty of stack of samples
     """
-    tot_unc = np.sqrt(np.sum(np.power(sumw2_list, 2), axis=0))
+    tot_unc = np.sqrt(np.sum(np.power(stdev_list, 2), axis=0))
     return tot_unc
 
 
@@ -30,16 +30,16 @@ def data_MC_matplotlib(histogram_dict_list, figure_path):
         figure_path (pathlib.Path): path where figure should be saved
     """
     mc_histograms_yields = []
-    mc_histograms_sumw2 = []
+    mc_histograms_stdev = []
     mc_labels = []
     for h in histogram_dict_list:
         if h["isData"]:
             data_histogram_yields = h["hist"]["yields"]
-            data_histogram_sumw2 = h["hist"]["sumw2"]
+            data_histogram_stdev = h["hist"]["stdev"]
             data_label = h["label"]
         else:
             mc_histograms_yields.append(h["hist"]["yields"])
-            mc_histograms_sumw2.append(h["hist"]["sumw2"])
+            mc_histograms_stdev.append(h["hist"]["stdev"])
             mc_labels.append(h["label"])
 
     # get the highest single bin from the sum of MC
@@ -76,7 +76,7 @@ def data_MC_matplotlib(histogram_dict_list, figure_path):
         total_yield += mc_sample_yield
 
     # add total MC uncertainty
-    mc_stack_unc = _total_yield_uncertainty(mc_histograms_sumw2)
+    mc_stack_unc = _total_yield_uncertainty(mc_histograms_stdev)
     ax.bar(
         bin_centers,
         2 * mc_stack_unc,
@@ -93,7 +93,7 @@ def data_MC_matplotlib(histogram_dict_list, figure_path):
     ax.errorbar(
         bin_centers,
         data_histogram_yields,
-        yerr=data_histogram_sumw2,
+        yerr=data_histogram_stdev,
         fmt="o",
         c="k",
         label=data_label,

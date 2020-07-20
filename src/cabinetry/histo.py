@@ -1,32 +1,49 @@
-"""
-it might make sense to allow serialization of histograms in various
-different formats, so saving and loading should go through this wrapper
-"""
 import logging
 import os
 from pathlib import Path
 
+import boost_histogram as bh
 import numpy as np
 
 
 log = logging.getLogger(__name__)
 
 
-class Histogram:
-    """class to hold histogram information
+class Histogram(bh.Histogram):
+    """class to hold histogram information, extends functionality provided
+    by boost_histogram.Histogram
     """
 
-    def __init__(self, yields, sumw2, bins):
-        """constructor building histogram from arrays
+    @classmethod
+    def from_arrays(cls, bins, yields, stdev):
+        """construct a histogram from arrays of yields and uncertainties, the input
+        can be lists or numpy.ndarrays
 
         Args:
-            yields (numpy.ndarray): yield per histogram bin
-            sumw2 (numpy.ndarray): statistical uncertainty of yield per bin
-            bins (numpy.ndarray): edges of histogram bins
+            bins (Union[list, numpy.ndarray]): edges of histogram bins
+            yields (Union[list, numpy.ndarray]): yield per histogram bin
+            stdev (Union[list, numpy.ndarray]): statistical uncertainty of yield per bin
+
+        Raises:
+            ValueError: when amount of bins specified via bin edges and bin contents do not match
+            ValueError: when length of yields and stdev do not match
+
+        Returns:
+            cabinetry.histo.Histogram: the histogram instance
         """
-        self.yields = yields
-        self.sumw2 = sumw2
-        self.bins = bins
+        if len(bins) != len(yields) + 1:
+            raise ValueError("bin edges need one more entry than yields")
+        if len(yields) != len(stdev):
+            raise ValueError("yields and stdev need to have the same shape")
+
+        out = cls(
+            bh.axis.Variable(bins, underflow=False, overflow=False),
+            storage=bh.storage.Weight(),
+        )
+        yields = np.asarray(yields)
+        stdev = np.asarray(stdev)
+        out[...] = np.stack([yields, stdev ** 2], axis=-1)
+        return out
 
     @classmethod
     def from_path(cls, histo_path, modified=True):
@@ -52,10 +69,10 @@ class Histogram:
             else:
                 histo_path = histo_path_modified
         histogram_npz = np.load(histo_path.with_suffix(".npz"))
-        yields = histogram_npz["yields"]
-        sumw2 = histogram_npz["sumw2"]
         bins = histogram_npz["bins"]
-        return cls(yields, sumw2, bins)
+        yields = histogram_npz["yields"]
+        stdev = histogram_npz["stdev"]
+        return cls.from_arrays(bins, yields, stdev)
 
     @classmethod
     def from_config(cls, histo_folder, region, sample, systematic, modified=True):
@@ -77,6 +94,33 @@ class Histogram:
         histo_path = Path(histo_folder) / histo_name
         return cls.from_path(histo_path, modified)
 
+    @property
+    def yields(self):
+        """get the yields per histogram bin
+
+        Returns:
+            numpy.ndarray: yields per bin
+        """
+        return self.view().value
+
+    @property
+    def stdev(self):
+        """get the stat. uncertainty per histogram bin
+
+        Returns:
+            numpy.ndarray: stat. uncertainty per bin
+        """
+        return np.sqrt(self.view().variance)
+
+    @property
+    def bins(self):
+        """get the bin edges
+
+        Returns:
+            numpy.ndarray: bin edges
+        """
+        return self.axes[0].edges
+
     def save(self, histo_path):
         """save a histogram to disk
 
@@ -91,7 +135,7 @@ class Histogram:
         np.savez(
             histo_path.with_suffix(".npz"),
             yields=self.yields,
-            sumw2=self.sumw2,
+            stdev=self.stdev,
             bins=self.bins,
         )
 
@@ -110,7 +154,7 @@ class Histogram:
             log.warning("%s has empty bins: %s", name, empty_bins)
 
         # check for ill-defined stat. unc.
-        nan_pos = np.where(np.isnan(self.sumw2))[0]
+        nan_pos = np.where(np.isnan(self.stdev))[0]
         if len(nan_pos) > 0:
             log.warning("%s has bins with ill-defined stat. unc.: %s", name, nan_pos)
 
@@ -138,7 +182,7 @@ class Histogram:
         current_integrated_yield = sum(self.yields)
         normalization_ratio = current_integrated_yield / target_integrated_yield
         # update integrated yield to match target
-        self.yields /= normalization_ratio
+        self.view().value /= normalization_ratio
         return normalization_ratio
 
 
