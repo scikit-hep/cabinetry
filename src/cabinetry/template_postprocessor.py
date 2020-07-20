@@ -48,7 +48,7 @@ def run(config, histogram_folder):
         config (dict): cabinetry configuration
         histogram_folder (str): folder containing the histograms
     """
-    log.info(f"applying post-processing to histograms")
+    log.info("applying post-processing to histograms")
     # loop over all histograms
     for region in config["Regions"]:
         for sample in config["Samples"]:

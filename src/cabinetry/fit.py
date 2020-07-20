@@ -55,7 +55,7 @@ def fit(spec):
             - list: parameter names
             - float: -2 log(likelihood) at best-fit point
     """
-    log.info(f"performing unconstrained fit")
+    log.info("performing unconstrained fit")
 
     workspace = pyhf.Workspace(spec)
     model = workspace.model()

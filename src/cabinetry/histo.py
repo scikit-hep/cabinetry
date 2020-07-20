@@ -64,7 +64,7 @@ class Histogram(bh.Histogram):
                 log.warning(
                     f"the modified histogram {histo_path_modified.with_suffix('.npz')} does not exist",
                 )
-                log.warning(f"loading the un-modified histogram instead!")
+                log.warning("loading the un-modified histogram instead!")
             else:
                 histo_path = histo_path_modified
         histogram_npz = np.load(histo_path.with_suffix(".npz"))

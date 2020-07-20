@@ -65,7 +65,7 @@ def print_overview(config):
     Args:
         config (dict): cabinetry configuration
     """
-    log.info(f"the config contains:")
+    log.info("the config contains:")
     log.info(f"  {len(config['Samples'])} Sample(s)")
     log.info(f"  {len(config['Regions'])} Regions(s)")
     log.info(f"  {len(config['NormFactors'])} NormFactor(s)")
