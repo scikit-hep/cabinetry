@@ -94,14 +94,14 @@ def test_sample_affected_by_modifier(sample_and_modifier, affected):
 
 
 @pytest.mark.parametrize(
-    "reg_sam_sys, needed",
+    "reg_sam_sys, is_needed",
     [
         # nominal
         (({}, {}, {"Name": "nominal"}), True),
         # non-nominal data
         (({}, {"Data": True}, {"Name": "var"}), False),
         # overall normalization variation
-        (({}, {}, {"Type": "Overall"}), False),
+        (({}, {}, {"Type": "Normalization"}), False),
         # normalization + shape variation on affected sample
         (
             ({}, {"Name": "Signal"}, {"Type": "NormPlusShape", "Samples": "Signal"}),
@@ -118,8 +118,8 @@ def test_sample_affected_by_modifier(sample_and_modifier, affected):
         ),
     ],
 )
-def test_histogram_is_needed(reg_sam_sys, needed):
-    assert configuration.histogram_is_needed(*reg_sam_sys) is needed
+def test_histogram_is_needed(reg_sam_sys, is_needed):
+    assert configuration.histogram_is_needed(*reg_sam_sys) is is_needed
 
     # non-supported systematic
     with pytest.raises(

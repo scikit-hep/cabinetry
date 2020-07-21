@@ -92,8 +92,8 @@ def get_NF_modifiers(config, sample):
     return modifiers
 
 
-def get_OverallSys_modifier(systematic):
-    """construct an OverallSys modifier
+def get_Normalization_modifier(systematic):
+    """construct a normalization modifier (OverallSys in HistFactory)
     While this can be built without any histogram reference, it might be useful
     to build a histogram for this anyway and possibly use it here.
 
@@ -109,8 +109,8 @@ def get_OverallSys_modifier(systematic):
     modifier.update(
         {
             "data": {
-                "hi": 1 + systematic["OverallUp"],
-                "lo": 1 + systematic["OverallDown"],
+                "hi": 1 + systematic["Up"]["Normalization"],
+                "lo": 1 + systematic["Down"]["Normalization"],
             }
         }
     )
@@ -143,22 +143,25 @@ def get_NormPlusShape_modifiers(region, sample, systematic, histogram_folder):
         histogram_folder, region, sample, {"Name": "nominal"}, modified=True
     )
 
-    # need to add support for two-sided variations that do not require symmetrization here
-    # if symmetrization is desired, should support different implementations
+    if systematic["Down"]["Symmetrize"]:
+        # need to add support for two-sided variations that do not require symmetrization here
+        # if symmetrization is desired, should support different implementations
 
-    # symmetrization according to "method 1" from issue #26: first normalization, then symmetrization
+        # symmetrization according to "method 1" from issue #26: first normalization, then symmetrization
 
-    # normalize the variation to the same yield as nominal
-    norm_effect = histogram_variation.normalize_to_yield(histogram_nominal)
-    histo_yield_up = histogram_variation.yields.tolist()
-    log.debug(
-        f"normalization impact of systematic {systematic['Name']} on sample {sample['Name']}"
-        f" in region {region['Name']} is {norm_effect:.3f}"
-    )
-    # need another histogram that corresponds to the "down" variation, which is 2*nominal - up
-    histo_yield_down = (
-        2 * histogram_nominal.yields - histogram_variation.yields
-    ).tolist()
+        # normalize the variation to the same yield as nominal
+        norm_effect = histogram_variation.normalize_to_yield(histogram_nominal)
+        histo_yield_up = histogram_variation.yields.tolist()
+        log.debug(
+            f"normalization impact of systematic {systematic['Name']} on sample {sample['Name']}"
+            f" in region {region['Name']} is {norm_effect:.3f}"
+        )
+        # need another histogram that corresponds to the "down" variation, which is 2*nominal - up
+        histo_yield_down = (
+            2 * histogram_nominal.yields - histogram_variation.yields
+        ).tolist()
+    else:
+        raise NotImplementedError("only symmetrization is currently supported")
 
     # add the normsys
     modifiers = []
@@ -197,12 +200,12 @@ def get_sys_modifiers(config, sample, region, histogram_folder):
     modifiers = []
     for systematic in config.get("Systematics", []):
         if configuration.sample_affected_by_modifier(sample, systematic):
-            if systematic["Type"] == "Overall":
+            if systematic["Type"] == "Normalization":
                 # OverallSys (norm uncertainty with Gaussian constraint)
                 log.debug(
                     f"adding OverallSys {systematic['Name']} to sample {sample['Name']}",
                 )
-                modifiers.append(get_OverallSys_modifier(systematic))
+                modifiers.append(get_Normalization_modifier(systematic))
             elif systematic["Type"] == "NormPlusShape":
                 # two modifiers are needed - an OverallSys for the norm effect,
                 # and a HistoSys for the shape variation

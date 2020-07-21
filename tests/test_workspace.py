@@ -38,14 +38,18 @@ def test_get_NF_modifiers():
     assert workspace.get_NF_modifiers(example_config, sample) == expected_modifier
 
 
-def test_get_OverallSys_modifier():
-    systematic = {"Name": "sys", "OverallUp": 0.1, "OverallDown": -0.05}
+def test_get_Normalization_modifier():
+    systematic = {
+        "Name": "sys",
+        "Up": {"Normalization": 0.1},
+        "Down": {"Normalization": -0.05},
+    }
     expected_modifier = {
         "name": "sys",
         "type": "normsys",
         "data": {"hi": 1.1, "lo": 0.95},
     }
-    assert workspace.get_OverallSys_modifier(systematic) == expected_modifier
+    assert workspace.get_Normalization_modifier(systematic) == expected_modifier
 
 
 def test_get_sys_modifiers():
@@ -53,10 +57,10 @@ def test_get_sys_modifiers():
         "Systematics": [
             {
                 "Name": "sys",
-                "Type": "Overall",
+                "Type": "Normalization",
                 "Samples": "Signal",
-                "OverallUp": 0.1,
-                "OverallDown": -0.05,
+                "Up": {"Normalization": 0.1},
+                "Down": {"Normalization": -0.05},
             }
         ]
     }

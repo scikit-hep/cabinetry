@@ -20,7 +20,7 @@ def _fix_stat_unc(histogram, name):
     nan_pos = np.where(np.isnan(histogram.stdev))[0]
     if len(nan_pos) > 0:
         log.debug(f"fixing ill-defined stat. unc. for {name}")
-        histogram.view().variance = np.nan_to_num(histogram.stdev ** 2, nan=0.0)
+        histogram.stdev = np.nan_to_num(histogram.stdev, nan=0.0)
 
 
 def apply_postprocessing(histogram, name):

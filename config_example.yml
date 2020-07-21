@@ -12,31 +12,33 @@ Samples:
   - Name: "Data"
     Tree: "pseudodata"
     Path: "ntuples/data.root"
-    Color: "#000000"
     Data: True
 
   - Name: "Background"
     Tree: "background"
     Path: "ntuples/prediction.root"
     Weight: "weight"
-    Color: "#F55EE33"
 
   - Name: "Signal"
     Tree: "signal"
     Path: "ntuples/prediction.root"
     Weight: "weight"
-    Color: "#FFAA55"
 
 Systematics:
   - Name: "Luminosity"
-    OverallDown: -0.05
-    OverallUp: 0.05
+    Up:
+      Normalization: 0.05
+    Down:
+      Normalization: -0.05
     Samples: ["Signal", "Background"]
-    Type: "Overall"
+    Type: "Normalization"
 
   - Name: "Modeling"
-    PathUp: "ntuples/prediction.root"
-    TreeUp: "background_varied"
+    Up:
+      Path: "ntuples/prediction.root"
+      Tree: "background_varied"
+    Down:
+      Symmetrize: True
     Samples: "Background"
     Type: "NormPlusShape"
 

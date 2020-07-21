@@ -131,7 +131,7 @@ def histogram_is_needed(region, sample, systematic):
             histo_needed = False
         else:
             # handle non-nominal, non-data histograms
-            if systematic["Type"] == "Overall":
+            if systematic["Type"] == "Normalization":
                 # no histogram needed for normalization variation
                 histo_needed = False
             elif systematic["Type"] == "NormPlusShape":
