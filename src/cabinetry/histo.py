@@ -111,6 +111,15 @@ class Histogram(bh.Histogram):
         """
         return np.sqrt(self.view().variance)
 
+    @stdev.setter
+    def stdev(self, value):
+        """update the variance (by specifying the standard deviation)
+
+        Args:
+            value (numpy.ndarray): the standard deviation
+        """
+        self.view().variance = value ** 2
+
     @property
     def bins(self):
         """get the bin edges
