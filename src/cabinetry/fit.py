@@ -1,5 +1,6 @@
 import logging
 
+import iminuit
 import pyhf
 
 
@@ -72,3 +73,46 @@ def fit(spec):
     print_results(bestfit, uncertainty, labels)
     log.debug(f"-2 log(L) = {twice_nll:.6f} at the best-fit point")
     return bestfit, uncertainty, labels, twice_nll
+
+
+def custom_fit(spec: dict) -> None:
+    """Perform an unconstrained maximum likelihood fit with iminuit and report
+    the result. Compared to fit(), this does not use the pyhf.infer API for more
+    control over the minimization.
+
+    Args:
+        spec (dict): a pyhf workspace
+    """
+    pyhf.set_backend("numpy", pyhf.optimize.minuit_optimizer(verbose=True))
+
+    workspace = pyhf.Workspace(spec)
+    model = workspace.model()
+    data = workspace.data(model)
+
+    init_pars = model.config.suggested_init()
+    par_bounds = model.config.suggested_bounds()
+    step_size = [0.1 for _ in init_pars]
+    fix_pars = [False for _ in init_pars]
+
+    labels = get_parameter_names(model)
+
+    def objective(pars):
+        x = pyhf.infer.mle.twice_nll(pars, data, model)
+        return x[0]
+
+    m = iminuit.Minuit.from_array_func(
+        objective,
+        init_pars,
+        error=step_size,
+        limit=par_bounds,
+        fix=fix_pars,
+        name=labels,
+        errordef=1,
+        print_level=1,
+    )
+    # decrease tolerance (goal: EDM < 0.002*tol*errordef), default tolerance is 0.1
+    m.tol /= 10
+    m.migrad()
+
+    print_results(m.np_values(), m.np_errors(), labels)
+    log.debug(f"-2 log(L) = {m.fval:.6f} at the best-fit point")
