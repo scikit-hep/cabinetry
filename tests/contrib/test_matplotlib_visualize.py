@@ -1,7 +1,7 @@
 from matplotlib.testing.compare import compare_images
 import numpy as np
 
-from cabinetry.contrib import histogram_drawing
+from cabinetry.contrib import matplotlib_visualize
 from cabinetry import histo
 
 
@@ -9,11 +9,12 @@ def test__total_yield_uncertainty():
     stdev_list = [[0.1, 0.2, 0.1], [0.3, 0.2, 0.1]]
     expected_uncertainties = [0.31622777, 0.28284271, 0.14142136]
     assert np.allclose(
-        histogram_drawing._total_yield_uncertainty(stdev_list), expected_uncertainties
+        matplotlib_visualize._total_yield_uncertainty(stdev_list),
+        expected_uncertainties,
     )
 
 
-def test_data_MC_matplotlib(tmp_path):
+def test_data_MC(tmp_path):
     fname = tmp_path / "subdir" / "fig.pdf"
     bg_hist = {
         "yields": np.asarray([12.5, 14]),
@@ -35,7 +36,7 @@ def test_data_MC_matplotlib(tmp_path):
         {"label": "Signal", "isData": False, "hist": sig_hist, "variable": "x"},
         {"label": "Data", "isData": True, "hist": data_hist, "variable": "x"},
     ]
-    histogram_drawing.data_MC_matplotlib(histo_dict_list, fname)
+    matplotlib_visualize.data_MC(histo_dict_list, fname)
     assert (
         compare_images("tests/contrib/reference/ref_data_MC.pdf", str(fname), 0) is None
     )

@@ -3,6 +3,7 @@ import logging
 import iminuit
 import pyhf
 
+from cabinetry.contrib import matplotlib_visualize
 
 log = logging.getLogger(__name__)
 
@@ -75,13 +76,14 @@ def fit(spec):
     return bestfit, uncertainty, labels, best_twice_nll
 
 
-def custom_fit(spec: dict) -> None:
+def custom_fit(spec: dict, figure_folder: str) -> None:
     """Perform an unconstrained maximum likelihood fit with iminuit and report
     the result. Compared to fit(), this does not use the pyhf.infer API for more
     control over the minimization.
 
     Args:
         spec (dict): a pyhf workspace
+        figure_folder (str): path to folder where figures will be saved
 
     Returns:
         tuple: a tuple containing
@@ -121,10 +123,12 @@ def custom_fit(spec: dict) -> None:
     m.tol /= 10
     m.migrad()
 
+    corr_mat = m.np_matrix(correlation=True)
     bestfit = m.np_values()
     uncertainty = m.np_errors()
     best_twice_nll = m.fval
 
     print_results(bestfit, uncertainty, labels)
     log.debug(f"-2 log(L) = {best_twice_nll:.6f} at the best-fit point")
+    matplotlib_visualize.correlation_matrix(corr_mat, labels, figure_folder)
     return bestfit, uncertainty, labels, best_twice_nll

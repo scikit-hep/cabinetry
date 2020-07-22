@@ -1,5 +1,8 @@
 import logging
 import os
+from pathlib import Path
+from typing import List
+
 import matplotlib.pyplot as plt
 import matplotlib as mpl
 import numpy as np
@@ -22,7 +25,7 @@ def _total_yield_uncertainty(stdev_list):
     return tot_unc
 
 
-def data_MC_matplotlib(histogram_dict_list, figure_path):
+def data_MC(histogram_dict_list, figure_path):
     """draw a data/MC histogram with matplotlib
 
     Args:
@@ -105,6 +108,46 @@ def data_MC_matplotlib(histogram_dict_list, figure_path):
     ax.set_xlim(bin_left_edges[0], bin_right_edges[-1])
     ax.set_ylim([0, y_max * 1.1])  # 10% headroom
 
+    if not os.path.exists(figure_path.parent):
+        os.mkdir(figure_path.parent)
+    log.debug(f"saving figure as {figure_path}")
+    fig.savefig(figure_path)
+
+
+def correlation_matrix(
+    corr_mat: np.ndarray, labels: List[str], figure_folder: str
+) -> None:
+    """draw a correlation matrix
+
+    Args:
+        corr_mat (np.ndarray): the correlation matrix to plot
+        labels (List[str]): names of parameters in the correlation matrix
+        figure_folder (str): path where figure should be saved
+    """
+    fig, ax = plt.subplots(figsize=(10, 8))
+    im = ax.imshow(corr_mat, vmin=-1, vmax=1, cmap="RdBu")
+
+    ax.set_xticks(np.arange(len(labels)))
+    ax.set_yticks(np.arange(len(labels)))
+    ax.set_xticklabels(labels)
+    ax.set_yticklabels(labels)
+    for tick in ax.get_xticklabels():
+        tick.set_rotation(45)
+        tick.set_horizontalalignment("right")
+
+    fig.colorbar(im, ax=ax)
+    ax.set_aspect("auto")  # to get colorbar aligned with matrix
+    fig.tight_layout()
+
+    # add correlation as text
+    for (j, i), label in np.ndenumerate(corr_mat):
+        if abs(corr_mat[j, i]) > 0.75:
+            text_color = "white"
+        else:
+            text_color = "black"
+        ax.text(i, j, f"{label:.2f}", ha="center", va="center", c=text_color)
+
+    figure_path = Path(figure_folder) / "correlation_matrix.pdf"
     if not os.path.exists(figure_path.parent):
         os.mkdir(figure_path.parent)
     log.debug(f"saving figure as {figure_path}")

@@ -4,7 +4,7 @@ import pytest
 
 from cabinetry import histo
 from cabinetry import visualize
-from cabinetry.contrib import histogram_drawing
+from cabinetry.contrib import matplotlib_visualize
 
 
 class MockHistogram:
@@ -26,15 +26,15 @@ def test__build_figure_name(test_input, expected):
     assert visualize._build_figure_name(*test_input) == expected
 
 
-@mock.patch("cabinetry.contrib.histogram_drawing.data_MC_matplotlib")
+@mock.patch("cabinetry.contrib.matplotlib_visualize.data_MC")
 @mock.patch(
     "cabinetry.histo.Histogram.from_config", return_value=MockHistogram(),
 )
 def test_data_MC(mock_load, mock_draw, tmp_path):
-    """contrib.histogram_drawing is only imported depending on the keyword argument,
-    so cannot patch via cabinetry.visualize.histogram_drawing
+    """contrib.matplotlib_visualize is only imported depending on the keyword argument,
+    so cannot patch via cabinetry.visualize.matplotlib_visualize
     Generally it seems like following the path to the module is preferred, but that
-    does not work for the `data_MC_matplotlib` case. For some information see also
+    does not work for the `data_MC` case. For some information see also
     https://docs.python.org/3/library/unittest.mock.html#where-to-patch
     """
     config = {

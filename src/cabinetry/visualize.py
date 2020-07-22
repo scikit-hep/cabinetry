@@ -70,10 +70,12 @@ def data_MC(config, histogram_folder, figure_folder, prefit=True, method="matplo
 
         if prefit:
             if method == "matplotlib":
-                from cabinetry.contrib import histogram_drawing
+                from cabinetry.contrib import matplotlib_visualize
 
                 figure_path = Path(figure_folder) / figure_name
-                histogram_drawing.data_MC_matplotlib(histogram_dict_list, figure_path)
+                matplotlib_visualize.data_MC_matplotlib(
+                    histogram_dict_list, figure_path
+                )
             else:
                 raise NotImplementedError("unknown backend")
         else:
