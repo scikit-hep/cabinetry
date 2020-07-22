@@ -1,10 +1,10 @@
+from pathlib import Path
 from unittest import mock
 
+import numpy as np
 import pytest
 
-from cabinetry import histo
 from cabinetry import visualize
-from cabinetry.contrib import matplotlib_visualize
 
 
 class MockHistogram:
@@ -74,7 +74,7 @@ def test_data_MC(mock_load, mock_draw, tmp_path):
     ]
 
     # other plotting method
-    with pytest.raises(NotImplementedError, match="unknown backend") as e_info:
+    with pytest.raises(NotImplementedError, match="unknown backend: unknown") as e_info:
         visualize.data_MC(config, tmp_path, tmp_path, prefit=True, method="unknown")
 
     # postfit
@@ -82,3 +82,19 @@ def test_data_MC(mock_load, mock_draw, tmp_path):
         NotImplementedError, match="only prefit implemented so far"
     ) as e_info:
         visualize.data_MC(config, tmp_path, tmp_path, prefit=False, method="matplotlib")
+
+
+@mock.patch("cabinetry.contrib.matplotlib_visualize.correlation_matrix")
+def test_correlation_matrix(mock_draw):
+    corr_mat = np.asarray([[1.0, 0.2], [0.2, 1.0]])
+    labels = ["a", "b"]
+    folder_path = "tmp"
+    figure_path = Path(folder_path) / "correlation_matrix.pdf"
+
+    visualize.correlation_matrix(corr_mat, labels, folder_path, method="matplotlib")
+
+    assert mock_draw.call_args_list == [((corr_mat, labels, figure_path))]
+
+    # unknown plotting method
+    with pytest.raises(NotImplementedError, match="unknown backend: unknown") as e_info:
+        visualize.correlation_matrix(corr_mat, labels, folder_path, method="unknown")

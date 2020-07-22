@@ -78,7 +78,7 @@ def data_MC(config, histogram_folder, figure_folder, prefit=True, method="matplo
                 figure_path = Path(figure_folder) / figure_name
                 matplotlib_visualize.data_MC(histogram_dict_list, figure_path)
             else:
-                raise NotImplementedError(f"unknown backend {method}")
+                raise NotImplementedError(f"unknown backend: {method}")
         else:
             raise NotImplementedError("only prefit implemented so far")
 
@@ -103,4 +103,4 @@ def correlation_matrix(
 
         matplotlib_visualize.correlation_matrix(corr_mat, labels, figure_path)
     else:
-        raise NotImplementedError(f"unknown backend {method}")
+        raise NotImplementedError(f"unknown backend: {method}")
