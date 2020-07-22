@@ -93,7 +93,7 @@ def test_correlation_matrix(mock_draw):
 
     visualize.correlation_matrix(corr_mat, labels, folder_path, method="matplotlib")
 
-    assert mock_draw.call_args_list == [((corr_mat, labels, figure_path))]
+    assert mock_draw.call_args_list == [((corr_mat, labels, figure_path),)]
 
     # unknown plotting method
     with pytest.raises(NotImplementedError, match="unknown backend: unknown") as e_info:
