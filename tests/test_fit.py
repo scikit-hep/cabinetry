@@ -1,4 +1,5 @@
 import logging
+from unittest import mock
 
 import numpy as np
 import pyhf
@@ -72,8 +73,11 @@ def test_fit(example_spec):
 
 
 @pytest.mark.filterwarnings("ignore::RuntimeWarning")
-def test_custom_fit(example_spec):
-    bestfit, uncertainty, labels, best_twice_nll = fit.custom_fit(example_spec)
+@mock.patch("cabinetry.contrib.matplotlib_visualize.correlation_matrix")
+def test_custom_fit(tmp_path, example_spec):
+    bestfit, uncertainty, labels, best_twice_nll = fit.custom_fit(
+        example_spec, tmp_path
+    )
     # the results match those from fit.fit(),
     # unless the tolerance is decreased significantly
     assert np.allclose(bestfit, [0.99998772, 9.16255687])
