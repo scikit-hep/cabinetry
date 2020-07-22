@@ -1,12 +1,10 @@
 import logging
-from pathlib import Path
 from typing import Tuple
 
 import iminuit
 import numpy as np
 import pyhf
 
-from cabinetry.contrib import matplotlib_visualize
 
 log = logging.getLogger(__name__)
 
