@@ -73,10 +73,9 @@ def test_fit(example_spec):
 
 
 @pytest.mark.filterwarnings("ignore::RuntimeWarning")
-@mock.patch("cabinetry.contrib.matplotlib_visualize.correlation_matrix")
-def test_custom_fit(tmp_path, example_spec):
-    bestfit, uncertainty, labels, best_twice_nll = fit.custom_fit(
-        example_spec, str(tmp_path)
+def test_custom_fit(example_spec):
+    bestfit, uncertainty, labels, best_twice_nll, corr_mat = fit.custom_fit(
+        example_spec
     )
     # the results match those from fit.fit(),
     # unless the tolerance is decreased significantly
@@ -84,3 +83,4 @@ def test_custom_fit(tmp_path, example_spec):
     assert np.allclose(uncertainty, [0.04954955, 0.61348804])
     assert labels == ["staterror_Signal-Region", "Signal strength"]
     assert np.allclose(best_twice_nll, 3.83054341)
+    assert np.allclose(corr_mat, [[1.0, -0.73366055], [-0.73366055, 1.0]])

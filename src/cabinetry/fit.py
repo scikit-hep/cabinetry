@@ -1,7 +1,9 @@
 import logging
 from pathlib import Path
+from typing import Tuple
 
 import iminuit
+import numpy as np
 import pyhf
 
 from cabinetry.contrib import matplotlib_visualize
@@ -77,14 +79,13 @@ def fit(spec):
     return bestfit, uncertainty, labels, best_twice_nll
 
 
-def custom_fit(spec: dict, figure_folder: str) -> None:
+def custom_fit(spec: dict,) -> Tuple[np.ndarray, np.ndarray, list, float, np.ndarray]:
     """Perform an unconstrained maximum likelihood fit with iminuit and report
     the result. Compared to fit(), this does not use the pyhf.infer API for more
-    control over the minimization.
+    control over the minimization, and it returns the correlation matrix.
 
     Args:
         spec (dict): a pyhf workspace
-        figure_folder (str): path to folder where figures will be saved
 
     Returns:
         tuple: a tuple containing
@@ -92,6 +93,7 @@ def custom_fit(spec: dict, figure_folder: str) -> None:
             - numpy.ndarray: parameter uncertainties
             - list: parameter names
             - float: -2 log(likelihood) at best-fit point
+            - numpy.ndarray: correlation matrix
     """
     pyhf.set_backend("numpy", pyhf.optimize.minuit_optimizer(verbose=True))
 
@@ -132,8 +134,4 @@ def custom_fit(spec: dict, figure_folder: str) -> None:
     print_results(bestfit, uncertainty, labels)
     log.debug(f"-2 log(L) = {best_twice_nll:.6f} at the best-fit point")
 
-    # visualize correlation matrix
-    figure_path = Path(figure_folder) / "correlation_matrix.pdf"
-    matplotlib_visualize.correlation_matrix(corr_mat, labels, figure_path)
-
-    return bestfit, uncertainty, labels, best_twice_nll
+    return bestfit, uncertainty, labels, best_twice_nll, corr_mat

@@ -4,6 +4,9 @@ as well as cosmetics such as axis labels and region names
 """
 import logging
 from pathlib import Path
+from typing import List
+
+import numpy as np
 
 from . import histo
 
@@ -75,6 +78,29 @@ def data_MC(config, histogram_folder, figure_folder, prefit=True, method="matplo
                 figure_path = Path(figure_folder) / figure_name
                 matplotlib_visualize.data_MC(histogram_dict_list, figure_path)
             else:
-                raise NotImplementedError("unknown backend")
+                raise NotImplementedError(f"unknown backend {method}")
         else:
             raise NotImplementedError("only prefit implemented so far")
+
+
+def correlation_matrix(
+    corr_mat: np.ndarray, labels: List[str], figure_folder: str, method="matplotlib"
+) -> None:
+    """plot a correlation matrix
+
+    Args:
+        corr_mat (np.ndarray): the correlation matrix to plot
+        labels (List[str]): names of parameters in the correlation matrix
+        figure_folder (str): path to the folder to save figures in
+        method (str, optional): what backend to use for plotting, defaults to "matplotlib"
+
+    Raises:
+        NotImplementedError: when trying to plot with a method that is not supported
+    """
+    figure_path = Path(figure_folder) / "correlation_matrix.pdf"
+    if method == "matplotlib":
+        from cabinetry.contrib import matplotlib_visualize
+
+        matplotlib_visualize.correlation_matrix(corr_mat, labels, figure_path)
+    else:
+        raise NotImplementedError(f"unknown backend {method}")
