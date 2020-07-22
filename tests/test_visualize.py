@@ -74,13 +74,11 @@ def test_data_MC(mock_load, mock_draw, tmp_path):
     ]
 
     # other plotting method
-    with pytest.raises(NotImplementedError, match="unknown backend: unknown") as e_info:
+    with pytest.raises(NotImplementedError, match="unknown backend: unknown"):
         visualize.data_MC(config, tmp_path, tmp_path, prefit=True, method="unknown")
 
     # postfit
-    with pytest.raises(
-        NotImplementedError, match="only prefit implemented so far"
-    ) as e_info:
+    with pytest.raises(NotImplementedError, match="only prefit implemented so far"):
         visualize.data_MC(config, tmp_path, tmp_path, prefit=False, method="matplotlib")
 
 
@@ -96,5 +94,5 @@ def test_correlation_matrix(mock_draw):
     assert mock_draw.call_args_list == [((corr_mat, labels, figure_path),)]
 
     # unknown plotting method
-    with pytest.raises(NotImplementedError, match="unknown backend: unknown") as e_info:
+    with pytest.raises(NotImplementedError, match="unknown backend: unknown"):
         visualize.correlation_matrix(corr_mat, labels, folder_path, method="unknown")

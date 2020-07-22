@@ -2,7 +2,6 @@ from matplotlib.testing.compare import compare_images
 import numpy as np
 
 from cabinetry.contrib import matplotlib_visualize
-from cabinetry import histo
 
 
 def test__total_yield_uncertainty():
