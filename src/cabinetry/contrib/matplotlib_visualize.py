@@ -115,14 +115,14 @@ def data_MC(histogram_dict_list, figure_path):
 
 
 def correlation_matrix(
-    corr_mat: np.ndarray, labels: List[str], figure_folder: str
+    corr_mat: np.ndarray, labels: List[str], figure_path: Path
 ) -> None:
     """draw a correlation matrix
 
     Args:
         corr_mat (np.ndarray): the correlation matrix to plot
         labels (List[str]): names of parameters in the correlation matrix
-        figure_folder (str): path where figure should be saved
+        figure_path (pathlib.Path): path where figure should be saved
     """
     fig, ax = plt.subplots(figsize=(10, 8))
     im = ax.imshow(corr_mat, vmin=-1, vmax=1, cmap="RdBu")
@@ -147,7 +147,6 @@ def correlation_matrix(
             text_color = "black"
         ax.text(i, j, f"{label:.2f}", ha="center", va="center", c=text_color)
 
-    figure_path = Path(figure_folder) / "correlation_matrix.pdf"
     if not os.path.exists(figure_path.parent):
         os.mkdir(figure_path.parent)
     log.debug(f"saving figure as {figure_path}")

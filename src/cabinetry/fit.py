@@ -1,4 +1,5 @@
 import logging
+from pathlib import Path
 
 import iminuit
 import pyhf
@@ -130,5 +131,9 @@ def custom_fit(spec: dict, figure_folder: str) -> None:
 
     print_results(bestfit, uncertainty, labels)
     log.debug(f"-2 log(L) = {best_twice_nll:.6f} at the best-fit point")
-    matplotlib_visualize.correlation_matrix(corr_mat, labels, figure_folder)
+
+    # visualize correlation matrix
+    figure_path = Path(figure_folder) / "correlation_matrix.pdf"
+    matplotlib_visualize.correlation_matrix(corr_mat, labels, figure_path)
+
     return bestfit, uncertainty, labels, best_twice_nll

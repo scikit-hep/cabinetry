@@ -76,7 +76,7 @@ def test_fit(example_spec):
 @mock.patch("cabinetry.contrib.matplotlib_visualize.correlation_matrix")
 def test_custom_fit(tmp_path, example_spec):
     bestfit, uncertainty, labels, best_twice_nll = fit.custom_fit(
-        example_spec, tmp_path
+        example_spec, str(tmp_path)
     )
     # the results match those from fit.fit(),
     # unless the tolerance is decreased significantly

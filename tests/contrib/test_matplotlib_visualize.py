@@ -40,3 +40,14 @@ def test_data_MC(tmp_path):
     assert (
         compare_images("tests/contrib/reference/ref_data_MC.pdf", str(fname), 0) is None
     )
+
+
+def test_correlation_matrix(tmp_path):
+    fname = tmp_path / "subdir" / "fig.pdf"
+    corr_mat = np.asarray([[1.0, 0.35, 0.1], [0.35, 1.0, -0.2], [0.1, -0.2, 1.0]])
+    labels = ["a", "b", "c"]
+    matplotlib_visualize.correlation_matrix(corr_mat, labels, fname)
+    assert (
+        compare_images("tests/contrib/reference/correlation_matrix.pdf", str(fname), 0)
+        is None
+    )
