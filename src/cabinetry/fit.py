@@ -63,7 +63,7 @@ def fit(spec):
     data = workspace.data(model)
 
     pyhf.set_backend("numpy", pyhf.optimize.minuit_optimizer(verbose=True))
-    result, twice_nll = pyhf.infer.mle.fit(
+    result, best_twice_nll = pyhf.infer.mle.fit(
         data, model, return_uncertainties=True, return_fitted_val=True
     )
     bestfit = result[:, 0]
@@ -71,8 +71,8 @@ def fit(spec):
     labels = get_parameter_names(model)
 
     print_results(bestfit, uncertainty, labels)
-    log.debug(f"-2 log(L) = {twice_nll:.6f} at the best-fit point")
-    return bestfit, uncertainty, labels, twice_nll
+    log.debug(f"-2 log(L) = {best_twice_nll:.6f} at the best-fit point")
+    return bestfit, uncertainty, labels, best_twice_nll
 
 
 def custom_fit(spec: dict) -> None:
@@ -82,6 +82,13 @@ def custom_fit(spec: dict) -> None:
 
     Args:
         spec (dict): a pyhf workspace
+
+    Returns:
+        tuple: a tuple containing
+            - numpy.ndarray: best-fit positions of parameters
+            - numpy.ndarray: parameter uncertainties
+            - list: parameter names
+            - float: -2 log(likelihood) at best-fit point
     """
     pyhf.set_backend("numpy", pyhf.optimize.minuit_optimizer(verbose=True))
 
@@ -96,12 +103,12 @@ def custom_fit(spec: dict) -> None:
 
     labels = get_parameter_names(model)
 
-    def objective(pars):
-        x = pyhf.infer.mle.twice_nll(pars, data, model)
-        return x[0]
+    def twice_nll_func(pars):
+        twice_nll = -2 * model.logpdf(pars, data)
+        return twice_nll[0]
 
     m = iminuit.Minuit.from_array_func(
-        objective,
+        twice_nll_func,
         init_pars,
         error=step_size,
         limit=par_bounds,
@@ -114,5 +121,10 @@ def custom_fit(spec: dict) -> None:
     m.tol /= 10
     m.migrad()
 
-    print_results(m.np_values(), m.np_errors(), labels)
-    log.debug(f"-2 log(L) = {m.fval:.6f} at the best-fit point")
+    bestfit = m.np_values()
+    uncertainty = m.np_errors()
+    best_twice_nll = m.fval
+
+    print_results(bestfit, uncertainty, labels)
+    log.debug(f"-2 log(L) = {best_twice_nll:.6f} at the best-fit point")
+    return bestfit, uncertainty, labels, best_twice_nll

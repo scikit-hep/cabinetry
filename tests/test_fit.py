@@ -9,14 +9,36 @@ from cabinetry import fit
 
 @pytest.fixture
 def example_spec():
-    # fmt: off
-    spec = {"channels": [{"name": "Signal Region", "samples": [{"data": [51.839756],
-            "modifiers":[{"data": [2.5695188], "name": "staterror_Signal-Region",
-            "type": "staterror"}, {"data": None, "name": "Signal strength", "type": "normfactor"}],
-            "name": "Signal"}]}], "measurements": [{"config": {"parameters": [],
-            "poi": "Signal strength"}, "name":"My fit"}], "observations":
-            [{"data": [475], "name": "Signal Region"}], "version": "1.0.0"}
-    # fmt: on
+    spec = {
+        "channels": [
+            {
+                "name": "Signal Region",
+                "samples": [
+                    {
+                        "data": [51.839756],
+                        "modifiers": [
+                            {
+                                "data": [2.5695188],
+                                "name": "staterror_Signal-Region",
+                                "type": "staterror",
+                            },
+                            {
+                                "data": None,
+                                "name": "Signal strength",
+                                "type": "normfactor",
+                            },
+                        ],
+                        "name": "Signal",
+                    }
+                ],
+            }
+        ],
+        "measurements": [
+            {"config": {"parameters": [], "poi": "Signal strength"}, "name": "My fit"}
+        ],
+        "observations": [{"data": [475], "name": "Signal Region"}],
+        "version": "1.0.0",
+    }
     return spec
 
 
@@ -42,8 +64,19 @@ def test_print_results(caplog):
 # due to different numpy versions used in dependencies
 @pytest.mark.filterwarnings("ignore::RuntimeWarning")
 def test_fit(example_spec):
-    bestfit, uncertainty, labels, twice_nll = fit.fit(example_spec)
+    bestfit, uncertainty, labels, best_twice_nll = fit.fit(example_spec)
     assert np.allclose(bestfit, [0.99998772, 9.16255687])
     assert np.allclose(uncertainty, [0.04954955, 0.61348804])
     assert labels == ["staterror_Signal-Region", "Signal strength"]
-    assert np.allclose(twice_nll, 3.83054341)
+    assert np.allclose(best_twice_nll, 3.83054341)
+
+
+@pytest.mark.filterwarnings("ignore::RuntimeWarning")
+def test_custom_fit(example_spec):
+    bestfit, uncertainty, labels, best_twice_nll = fit.custom_fit(example_spec)
+    # the results match those from fit.fit(),
+    # unless the tolerance is decreased significantly
+    assert np.allclose(bestfit, [0.99998772, 9.16255687])
+    assert np.allclose(uncertainty, [0.04954955, 0.61348804])
+    assert labels == ["staterror_Signal-Region", "Signal strength"]
+    assert np.allclose(best_twice_nll, 3.83054341)
