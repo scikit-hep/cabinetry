@@ -144,6 +144,19 @@ def test_get_measurement():
     ]
     assert workspace.get_measurements(example_config) == expected_measurement
 
+    # no norm factor settings
+    example_config_no_NF_settings = {
+        "General": {"Measurement": "fit", "POI": "mu"},
+        "NormFactors": [{"Name": "NF"}],
+    }
+    expected_measurement_no_NF_settings = [
+        {"name": "fit", "config": {"poi": "mu", "parameters": [{"name": "NF",}],},}
+    ]
+    assert (
+        workspace.get_measurements(example_config_no_NF_settings)
+        == expected_measurement_no_NF_settings
+    )
+
 
 def test_get_observations(tmp_path):
     histo_path = tmp_path / "test_region_Data_nominal.npz"

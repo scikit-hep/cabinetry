@@ -17,7 +17,7 @@ def test_validate():
     config_valid = {
         "General": [],
         "Regions": [],
-        "NormFactors": [],
+        "NormFactors": [{"Name": "NF", "Samples": "signal"}],
         "Samples": [{"Data": True}],
     }
     assert configuration.validate(config_valid)
