@@ -2,7 +2,7 @@ import json
 import logging
 import os
 from pathlib import Path
-from typing import List
+from typing import List, Optional
 
 import pyhf
 
@@ -28,8 +28,8 @@ def _get_data_sample(config):
 
 
 def get_yield_for_sample(
-    sample, region, histogram_folder, systematic={"Name": "nominal"}
-):
+    sample: dict, region: dict, histogram_folder: str, systematic: Optional[dict] = None
+) -> list:
     """get the yield for a specific sample, by figuring out its name and then
     obtaining the yield from the correct histogram
 
@@ -37,11 +37,14 @@ def get_yield_for_sample(
         sample (dict): specific sample to use
         region (dict): specific region to use
         histogram_folder (str): path to folder containing histograms
-        systematic (dict, optional): specific systematic variation to use, defaults to {"Name": "nominal"}
+        systematic (dict, optional): specific systematic variation to use, defaults to None -> {"Name": "nominal"}
 
     Returns:
         list: yields per bin for the sample
     """
+    if systematic is None:
+        systematic = {"Name": "nominal"}
+
     histogram = histo.Histogram.from_config(
         histogram_folder, region, sample, systematic, modified=True
     )
@@ -50,8 +53,8 @@ def get_yield_for_sample(
 
 
 def get_unc_for_sample(
-    sample, region, histogram_folder, systematic={"Name": "nominal"}
-):
+    sample: dict, region: dict, histogram_folder: str, systematic: Optional[dict] = None
+) -> list:
     """get the uncertainty of a specific sample, by figuring out its name and then
     obtaining the stdev from the correct histogram
 
@@ -59,11 +62,14 @@ def get_unc_for_sample(
         sample (dict): specific sample to use
         region (dict): specific region to use
         histogram_folder (str): path to folder containing histograms
-        systematic (dict, optional): specific systematic variation to use, defaults to {"Name": "nominal"}
+        systematic (dict, optional): specific systematic variation to use, defaults to None -> {"Name": "nominal"}
 
     Returns:
         list: statistical uncertainty of yield per bin for the sample
     """
+    if systematic is None:
+        systematic = {"Name": "nominal"}
+
     histogram = histo.Histogram.from_config(
         histogram_folder, region, sample, systematic, modified=True
     )

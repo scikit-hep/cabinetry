@@ -1,8 +1,7 @@
-import numpy as np
 import pytest
 
-from cabinetry import workspace
 from cabinetry import histo
+from cabinetry import workspace
 
 
 def test__get_data_sample():
@@ -150,7 +149,7 @@ def test_get_measurement():
         "NormFactors": [{"Name": "NF"}],
     }
     expected_measurement_no_NF_settings = [
-        {"name": "fit", "config": {"poi": "mu", "parameters": [{"name": "NF",}],},}
+        {"name": "fit", "config": {"poi": "mu", "parameters": [{"name": "NF"}]}}
     ]
     assert (
         workspace.get_measurements(example_config_no_NF_settings)

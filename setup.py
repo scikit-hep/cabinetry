@@ -10,6 +10,8 @@ extras_require["test"] = sorted(
             "pydocstyle",
             "check-manifest",
             "flake8",
+            "flake8-bugbear",
+            "flake8-import-order",
             "black;python_version>='3.6'",  # Black is Python3 only
         ]
     )

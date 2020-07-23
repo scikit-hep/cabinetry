@@ -144,9 +144,7 @@ def create_histograms(config, folder_path_str, method="uproot"):
         for sample in config["Samples"]:
             log.debug(f"  reading sample {sample['Name']}")
 
-            for isyst, systematic in enumerate(
-                ([{"Name": "nominal"}] + config["Systematics"])
-            ):
+            for systematic in [{"Name": "nominal"}] + config["Systematics"]:
                 # determine whether a histogram is needed for this
                 # specific combination of sample-region-systematic
                 histo_needed = configuration.histogram_is_needed(
