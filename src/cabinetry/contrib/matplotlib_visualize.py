@@ -3,8 +3,8 @@ import os
 from pathlib import Path
 from typing import List
 
-import matplotlib.pyplot as plt
 import matplotlib as mpl
+import matplotlib.pyplot as plt
 import numpy as np
 
 

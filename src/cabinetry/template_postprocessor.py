@@ -1,7 +1,8 @@
 import copy
 import logging
-import numpy as np
 from pathlib import Path
+
+import numpy as np
 
 from . import histo
 
