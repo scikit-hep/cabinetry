@@ -2,6 +2,7 @@ import json
 import logging
 import os
 from pathlib import Path
+from typing import List
 
 import pyhf
 
@@ -274,8 +275,9 @@ def get_channels(config, histogram_folder):
     return channels
 
 
-def get_measurements(config):
-    """construct the measurements, including POI setting and lumi
+def get_measurements(config: dict) -> List[dict]:
+    """construct the measurements, including POI setting and parameter bounds,
+    initial values and whether they are set to constant
     only supporting a single measurement so far
 
     Args:
@@ -288,7 +290,27 @@ def get_measurements(config):
     measurement = {}
     measurement.update({"name": config["General"]["Measurement"]})
     config_dict = {}
-    parameters = {"parameters": []}
+
+    # get the norm factor intial values / bounds / constant setting
+    parameters_list = []
+    for nf in config.get("NormFactors", []):
+        nf_name = nf["Name"]  # every NormFactor needs to have a name
+        init = nf.get("Nominal", None)
+        bounds = nf.get("Bounds", None)
+        fixed = nf.get("Fixed", None)
+
+        parameter = {"name": nf_name}
+        if init is not None:
+            parameter.update({"inits": [init]})
+        if bounds is not None:
+            parameter.update({"bounds": [bounds]})
+        if fixed is not None:
+            log.warning("fixed parameters are not yet propagated through pyhf to fits")
+            parameter.update({"fixed": fixed})
+
+        parameters_list.append(parameter)
+
+    parameters = {"parameters": parameters_list}
     config_dict.update(parameters)
     config_dict.update({"poi": config["General"]["POI"]})
     measurement.update({"config": config_dict})

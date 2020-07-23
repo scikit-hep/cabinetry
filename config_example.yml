@@ -44,7 +44,7 @@ Systematics:
 
 NormFactors:
   - Name: "Signal_norm"
-    Nominal: 1
-    Min: 0
-    Max: 5
     Samples: "Signal"
+    Nominal: 1
+    Bounds: [0, 5]
+    Fixed: True

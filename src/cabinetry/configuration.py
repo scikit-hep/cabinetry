@@ -26,7 +26,7 @@ def read(file_path_string):
     return config
 
 
-def validate(config):
+def validate(config: dict) -> bool:
     """test whether the config is valid
 
     Args:
@@ -36,22 +36,34 @@ def validate(config):
         ValueError: when missing required keys
         ValueError: when unknown keys are found
         NotImplementedError: when more than one data sample is found
+        ValueError: when missing a name for a NormFactor
+        ValueError: when missing a samples for a NormFactor
+
+    Returns:
+        bool: whether the validation was successful
     """
     config_keys = config.keys()
 
     # check whether all required keys exist
     for required_key in REQUIRED_CONFIG_KEYS:
         if required_key not in config_keys:
-            raise ValueError("missing required key in config:", required_key)
+            raise ValueError(f"missing required key in config: {required_key}")
 
     # check whether all keys are known
     for key in config_keys:
         if key not in (REQUIRED_CONFIG_KEYS + OPTIONAL_CONFIG_KEYS):
-            raise ValueError("unknown key found:", key)
+            raise ValueError(f"unknown key found: {key}")
 
     # check that there is exactly one data sample
     if sum([sample.get("Data", False) for sample in config["Samples"]]) != 1:
         raise NotImplementedError("can only handle cases with exactly one data sample")
+
+    # check that NormFactors have necessary values defined
+    for nf in config.get("NormFactors", []):
+        if not nf.get("Name", False):
+            raise ValueError(f"need to specify Name for NormFactor {nf}")
+        if not nf.get("Samples", False):
+            raise ValueError(f"need to specify Samples for NormFactor {nf}")
 
     # should also check here for conflicting settings
 
