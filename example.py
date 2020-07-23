@@ -14,7 +14,7 @@ logging.getLogger("matplotlib").setLevel(logging.WARNING)
 if __name__ == "__main__":
     # check whether input data exists
     if not os.path.exists("ntuples/"):
-        print(f"run util/create_histograms.py to create input data")
+        print(f"run util/create_ntuples.py to create input data")
         raise SystemExit
 
     # import example config file
