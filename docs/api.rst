@@ -63,5 +63,5 @@ cabinetry.contrib
 .. automodule:: cabinetry.contrib.histogram_creation
    :members:
 
-.. automodule:: cabinetry.contrib.histogram_drawing
+.. automodule:: cabinetry.contrib.matplotlib_visualize
    :members:

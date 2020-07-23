@@ -44,6 +44,12 @@ setup(
         "Topic :: Scientific/Engineering :: Physics",
     ],
     python_requires=">=3.6",
-    install_requires=["numpy", "pyyaml", "pyhf>=0.3.2", "iminuit", "boost_histogram"],
+    install_requires=[
+        "numpy",
+        "pyyaml",
+        "pyhf>=0.3.2",
+        "iminuit>1.4.0",
+        "boost_histogram",
+    ],
     extras_require=extras_require,
 )

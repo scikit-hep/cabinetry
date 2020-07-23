@@ -27,7 +27,7 @@ def test_integration(tmp_path, ntuple_creator):
     ws = cabinetry.workspace.build(cabinetry_config, histo_folder)
     cabinetry.workspace.save(ws, workspace_path)
     ws = cabinetry.workspace.load(workspace_path)
-    bestfit, uncertainty, _, twice_nll = cabinetry.fit.fit(ws)
+    bestfit, uncertainty, _, best_twice_nll = cabinetry.fit.fit(ws)
 
     bestfit_expected = [
         1.00520446,
@@ -47,7 +47,7 @@ def test_integration(tmp_path, ntuple_creator):
         0.16042208,
         0.40949858,
     ]
-    twice_nll_expected = 16.274739734197926
+    best_twice_nll_expected = 16.274739734197926
     assert np.allclose(bestfit, bestfit_expected)
     assert np.allclose(uncertainty, uncertainty_expected)
-    assert np.allclose(twice_nll, twice_nll_expected)
+    assert np.allclose(best_twice_nll, best_twice_nll_expected)
