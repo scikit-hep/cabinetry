@@ -1,3 +1,5 @@
+from unittest import mock
+
 import pytest
 
 from cabinetry import histo
@@ -9,6 +11,62 @@ def test__get_data_sample():
     data_sample = {"Name": "Data", "Data": True}
     config_example = {"Samples": [mc_sample, data_sample]}
     assert workspace._get_data_sample(config_example) == data_sample
+
+
+@mock.patch(
+    "cabinetry.workspace.histo.Histogram.from_config",
+    return_value=histo.Histogram.from_arrays([0, 1, 2], [1.0, 2.0], [0.1, 0.1]),
+)
+def test_get_yield_for_sample(mock_histogram):
+    expected_yields = [1.0, 2.0]
+    yields = workspace.get_yield_for_sample(
+        {"Name": "signal"}, {"Name": "region"}, "path"
+    )
+    assert yields == expected_yields
+
+    # non-nominal
+    yields_non_nominal = workspace.get_yield_for_sample(
+        {"Name": "signal"}, {"Name": "region"}, "path", systematic={"Name": "variation"}
+    )
+    assert yields_non_nominal == expected_yields
+
+    assert mock_histogram.call_args_list == [
+        (
+            ("path", {"Name": "region"}, {"Name": "signal"}, {"Name": "nominal"}),
+            {"modified": True},
+        ),
+        (
+            ("path", {"Name": "region"}, {"Name": "signal"}, {"Name": "variation"}),
+            {"modified": True},
+        ),
+    ]
+
+
+@mock.patch(
+    "cabinetry.workspace.histo.Histogram.from_config",
+    return_value=histo.Histogram.from_arrays([0, 1, 2], [1.0, 2.0], [0.1, 0.1]),
+)
+def test_get_unc_for_sample(mock_histogram):
+    expected_unc = [0.1, 0.1]
+    unc = workspace.get_unc_for_sample({"Name": "signal"}, {"Name": "region"}, "path")
+    assert unc == expected_unc
+
+    # non-nominal
+    unc_non_nominal = workspace.get_unc_for_sample(
+        {"Name": "signal"}, {"Name": "region"}, "path", systematic={"Name": "variation"}
+    )
+    assert unc_non_nominal == expected_unc
+
+    assert mock_histogram.call_args_list == [
+        (
+            ("path", {"Name": "region"}, {"Name": "signal"}, {"Name": "nominal"}),
+            {"modified": True},
+        ),
+        (
+            ("path", {"Name": "region"}, {"Name": "signal"}, {"Name": "variation"}),
+            {"modified": True},
+        ),
+    ]
 
 
 def test_get_NF_modifiers():
@@ -84,19 +142,18 @@ def test_get_sys_modifiers():
         workspace.get_sys_modifiers(config_example_unsupported, sample, region, None)
 
 
-def test_get_channels(tmp_path):
+@mock.patch("cabinetry.workspace.get_unc_for_sample", return_value=[0.1, 0.1])
+@mock.patch(
+    "cabinetry.workspace.get_yield_for_sample", return_value=[1.0, 2.0],
+)
+def test_get_channels(mock_get_yield, mock_get_unc):
     example_config = {
         "Regions": [{"Name": "region_1"}],
         "Samples": [{"Name": "signal"}, {"Data": True}],
         "NormFactors": [],
     }
 
-    # create a histogram for testing
-    histo_path = tmp_path / "region_1_signal_nominal.npz"
-    histogram = histo.Histogram.from_arrays([0.0, 1.0, 2.0], [1.0, 2.0], [1.0, 1.0])
-    histogram.save(histo_path)
-
-    channels = workspace.get_channels(example_config, tmp_path)
+    channels = workspace.get_channels(example_config, "path")
     expected_channels = [
         {
             "name": "region_1",
@@ -108,7 +165,7 @@ def test_get_channels(tmp_path):
                         {
                             "name": "staterror_region_1",
                             "type": "staterror",
-                            "data": [1.0, 1.0],
+                            "data": [0.1, 0.1],
                         }
                     ],
                 }
@@ -116,6 +173,12 @@ def test_get_channels(tmp_path):
         }
     ]
     assert channels == expected_channels
+    assert mock_get_yield.call_args_list == [
+        ((example_config["Samples"][0], example_config["Regions"][0], "path"),)
+    ]
+    assert mock_get_unc.call_args_list == [
+        ((example_config["Samples"][0], example_config["Regions"][0], "path"),)
+    ]
 
 
 def test_get_measurement():
@@ -157,21 +220,21 @@ def test_get_measurement():
     )
 
 
-def test_get_observations(tmp_path):
-    histo_path = tmp_path / "test_region_Data_nominal.npz"
-
-    # build a test histogram and save it
-    histogram = histo.Histogram.from_arrays([0.0, 1.0, 2.0], [1.0, 2.0], [1.0, 1.0])
-    histogram.save(histo_path)
-
+@mock.patch(
+    "cabinetry.workspace.get_yield_for_sample", return_value=[1.0, 2.0],
+)
+def test_get_observations(mock_get_yield):
     # create observations list from config
     config = {
-        "Samples": [{"Name": "Data", "Tree": "tree", "Path": tmp_path, "Data": True}],
+        "Samples": [{"Name": "data", "Data": True}],
         "Regions": [{"Name": "test_region"}],
     }
-    obs = workspace.get_observations(config, tmp_path)
+    obs = workspace.get_observations(config, "path")
     expected_obs = [{"name": "test_region", "data": [1.0, 2.0]}]
     assert obs == expected_obs
+    assert mock_get_yield.call_args_list == [
+        ((config["Samples"][0], config["Regions"][0], "path"),)
+    ]
 
 
 def test_build(tmp_path):
@@ -190,6 +253,18 @@ def test_build(tmp_path):
         "version": "1.0.0",
     }
     assert ws == ws_expected
+
+    with mock.patch("cabinetry.workspace.validate") as mock_validate:
+        ws = workspace.build(minimal_config, tmp_path, with_validation=True)
+        assert ws == ws_expected
+        assert mock_validate.call_args_list == [((ws,),)]
+
+
+@mock.patch("cabinetry.workspace.pyhf.Workspace")
+def test_validate(mock_validate):
+    test_ws = {"workspace": "test"}
+    workspace.validate(test_ws)
+    assert mock_validate.call_args_list == [((test_ws,),)]
 
 
 def test_save(tmp_path):
