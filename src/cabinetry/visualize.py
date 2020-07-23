@@ -84,7 +84,10 @@ def data_MC(config, histogram_folder, figure_folder, prefit=True, method="matplo
 
 
 def correlation_matrix(
-    corr_mat: np.ndarray, labels: List[str], figure_folder: str, method="matplotlib"
+    corr_mat: np.ndarray,
+    labels: List[str],
+    figure_folder: str,
+    method: str = "matplotlib",
 ) -> None:
     """plot a correlation matrix
 
