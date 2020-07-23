@@ -66,6 +66,7 @@ def validate(config: dict) -> bool:
             raise ValueError(f"need to specify Samples for NormFactor {nf}")
 
     # should also check here for conflicting settings
+    ...
 
     # if no issues are found
     return True
