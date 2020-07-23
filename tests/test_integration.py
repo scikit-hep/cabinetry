@@ -30,22 +30,22 @@ def test_integration(tmp_path, ntuple_creator):
     bestfit, uncertainty, _, best_twice_nll = cabinetry.fit.fit(ws)
 
     bestfit_expected = [
-        1.00520446,
-        0.98118674,
-        1.02070816,
-        0.98229396,
-        -0.21494591,
-        0.04238099,
-        0.85726033,
+        1.005119,
+        0.981114,
+        1.020708,
+        0.982209,
+        -0.213536,
+        0.042937,
+        0.857655,
     ]
     uncertainty_expected = [
-        0.04095113,
-        0.03727586,
-        0.03649927,
-        0.04248655,
-        0.97692647,
-        0.16042208,
-        0.40949858,
+        0.040951,
+        0.037276,
+        0.036499,
+        0.042487,
+        0.976741,
+        0.160393,
+        0.407588,
     ]
     best_twice_nll_expected = 16.274739734197926
     assert np.allclose(bestfit, bestfit_expected)
