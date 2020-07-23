@@ -47,4 +47,4 @@ NormFactors:
     Samples: "Signal"
     Nominal: 1
     Bounds: [0, 5]
-    Fixed: True
+    Fixed: False
