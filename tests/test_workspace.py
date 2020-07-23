@@ -88,7 +88,7 @@ def test_get_sys_modifiers():
 def test_get_channels(tmp_path):
     example_config = {
         "Regions": [{"Name": "region_1"}],
-        "Samples": [{"Name": "signal"}],
+        "Samples": [{"Name": "signal"}, {"Data": True}],
         "NormFactors": [],
     }
 
@@ -120,8 +120,28 @@ def test_get_channels(tmp_path):
 
 
 def test_get_measurement():
-    example_config = {"General": {"Measurement": "fit", "POI": "mu"}}
-    expected_measurement = [{"name": "fit", "config": {"poi": "mu", "parameters": []}}]
+    example_config = {
+        "General": {"Measurement": "fit", "POI": "mu"},
+        "NormFactors": [
+            {"Name": "NF", "Nominal": 1.0, "Bounds": [0.0, 5.0], "Fixed": False}
+        ],
+    }
+    expected_measurement = [
+        {
+            "name": "fit",
+            "config": {
+                "poi": "mu",
+                "parameters": [
+                    {
+                        "name": "NF",
+                        "inits": [1.0],
+                        "bounds": [[0.0, 5.0]],
+                        "fixed": False,
+                    }
+                ],
+            },
+        }
+    ]
     assert workspace.get_measurements(example_config) == expected_measurement
 
 

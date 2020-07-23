@@ -15,9 +15,9 @@ def test_read(mock_validation):
 
 def test_validate():
     config_valid = {
-        "General": "",
-        "Regions": "",
-        "NormFactors": "",
+        "General": [],
+        "Regions": [],
+        "NormFactors": [],
         "Samples": [{"Data": True}],
     }
     assert configuration.validate(config_valid)
@@ -27,25 +27,43 @@ def test_validate():
         configuration.validate(config_missing_key)
 
     config_unknown_key = {
-        "General": "",
-        "Regions": "",
-        "NormFactors": "",
-        "Samples": "",
+        "General": [],
+        "Regions": [],
+        "NormFactors": [],
+        "Samples": [],
         "unknown": [],
     }
     with pytest.raises(ValueError, match="unknown key found") as e_info:
         configuration.validate(config_unknown_key)
 
     config_multiple_data_samples = {
-        "General": "",
-        "Regions": "",
-        "NormFactors": "",
+        "General": [],
+        "Regions": [],
+        "NormFactors": [],
         "Samples": [{"Data": True}, {"Data": True}],
     }
     with pytest.raises(
         NotImplementedError, match="can only handle cases with exactly one data sample"
     ) as e_info:
         configuration.validate(config_multiple_data_samples)
+
+    config_missing_NF_name = {
+        "General": [],
+        "Regions": [],
+        "NormFactors": [{"Samples": []}],
+        "Samples": [{"Data": True}],
+    }
+    with pytest.raises(ValueError, match="need to specify Name for NormFactor"):
+        configuration.validate(config_missing_NF_name)
+
+    config_missing_NF_samples = {
+        "General": [],
+        "Regions": [],
+        "NormFactors": [{"Name": "NF"}],
+        "Samples": [{"Data": True}],
+    }
+    with pytest.raises(ValueError, match="need to specify Samples for NormFactor"):
+        configuration.validate(config_missing_NF_samples)
 
 
 def test_print_overview(caplog):
