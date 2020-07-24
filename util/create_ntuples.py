@@ -50,9 +50,7 @@ def create_lepton_charge(n_events):
     return charge
 
 
-def create_file(file_name, distributions, weights, labels, extra_weights=None):
-    if extra_weights is None:
-        extra_weights = []
+def create_file(file_name, distributions, weights, labels):
     n_events = len(weights[0])
     with uproot.recreate(file_name) as f:
         # write the predicted processes

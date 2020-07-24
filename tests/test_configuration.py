@@ -143,4 +143,4 @@ def test_histogram_is_needed(reg_sam_sys, is_needed):
     with pytest.raises(
         NotImplementedError, match="other systematics not yet implemented"
     ):
-        configuration.histogram_is_needed({}, {}, {"Type": "unknown"}, "")
+        configuration.histogram_is_needed({}, {}, {"Type": "unknown"})
