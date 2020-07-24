@@ -1,7 +1,8 @@
 import os
-import uproot
-import numpy as np
+
 import matplotlib.pyplot as plt
+import numpy as np
+import uproot
 
 
 def toy_distribution(noncentral, multiplier, offset, num_events):
