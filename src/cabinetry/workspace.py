@@ -142,7 +142,7 @@ def get_NormPlusShape_modifiers(region, sample, systematic, histogram_folder):
     """
     # load the systematic variation histogram
     histogram_variation = histo.Histogram.from_config(
-        histogram_folder, region, sample, systematic, modified=True
+        histogram_folder, region, sample, systematic, modified=True, template="Up"
     )
 
     # also need the nominal histogram
@@ -150,7 +150,8 @@ def get_NormPlusShape_modifiers(region, sample, systematic, histogram_folder):
         histogram_folder, region, sample, {"Name": "nominal"}, modified=True
     )
 
-    if systematic["Down"]["Symmetrize"]:
+    # TODO: this should work for both up/down
+    if systematic.get("Down", {}).get("Symmetrize", False):
         # need to add support for two-sided variations that do not require symmetrization here
         # if symmetrization is desired, should support different implementations
 
@@ -158,6 +159,8 @@ def get_NormPlusShape_modifiers(region, sample, systematic, histogram_folder):
 
         # normalize the variation to the same yield as nominal
         norm_effect = histogram_variation.normalize_to_yield(histogram_nominal)
+        norm_effect_up = norm_effect
+        norm_effect_down = norm_effect
         histo_yield_up = histogram_variation.yields.tolist()
         log.debug(
             f"normalization impact of systematic {systematic['Name']} on sample {sample['Name']}"
@@ -168,14 +171,21 @@ def get_NormPlusShape_modifiers(region, sample, systematic, histogram_folder):
             2 * histogram_nominal.yields - histogram_variation.yields
         ).tolist()
     else:
-        raise NotImplementedError("only symmetrization is currently supported")
+        histo_name = histo.build_name(region, sample, systematic, "Down")
+        histo_down = histo.Histogram.from_path(Path(histogram_folder) / histo_name)
+        norm_effect_up = sum(histogram_variation.yields) / sum(histogram_nominal.yields)
+        norm_effect_down = sum(histo_down.yields) / sum(histogram_nominal.yields)
+        # normalize templates to same yield as nominal
+        histo_yield_up = list(histogram_variation.yields / norm_effect_up)
+        histo_yield_down = list(histo_down.yields / norm_effect_down)
+        norm_effect_down = 2 - norm_effect_down  # this is needed in the ws
 
     # add the normsys
     modifiers = []
     norm_modifier = {}
     norm_modifier.update({"name": systematic["Name"]})
     norm_modifier.update({"type": "normsys"})
-    norm_modifier.update({"data": {"hi": norm_effect, "lo": 2 - norm_effect}})
+    norm_modifier.update({"data": {"hi": norm_effect_up, "lo": 2 - norm_effect_down}})
     modifiers.append(norm_modifier)
 
     # add the shape part in a histosys

@@ -42,6 +42,14 @@ Systematics:
     Samples: "Background"
     Type: "NormPlusShape"
 
+  - Name: "WeightBasedModeling"
+    Up:
+      Weight: "weight_up"
+    Down:
+      Weight: "weight_down"
+    Samples: "Background"
+    Type: "NormPlusShape"
+
 NormFactors:
   - Name: "Signal_norm"
     Samples: "Signal"

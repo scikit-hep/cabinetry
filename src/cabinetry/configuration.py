@@ -120,7 +120,9 @@ def sample_affected_by_modifier(sample, modifier):
     return affected
 
 
-def histogram_is_needed(region, sample, systematic):
+def histogram_is_needed(
+    region: dict, sample: dict, systematic: dict, template: str
+) -> bool:
     """determine whether for a given sample-region-systematic pairing, there is
     an associated histogram
 
@@ -128,6 +130,7 @@ def histogram_is_needed(region, sample, systematic):
         region (dict): containing all region information
         sample (dict): containing all sample information
         systematic (dict): containing all systematic information
+        template (str): which template is considered: "Nominal", "Up", "Down"
 
     Raises:
         NotImplementedError: non-supported systematic variations based on histograms are requested
@@ -151,6 +154,10 @@ def histogram_is_needed(region, sample, systematic):
             elif systematic["Type"] == "NormPlusShape":
                 # for a variation defined via a template, a histogram is needed (if sample is affected)
                 histo_needed = sample_affected_by_modifier(sample, systematic)
+                # if symmetrization is specified for the template under consideration, a histogram
+                # is not needed (since it will later on be obtained via symmetrization)
+                if systematic.get(template, {}).get("Symmetrize", False):
+                    histo_needed = False
             else:
                 raise NotImplementedError("other systematics not yet implemented")
 
