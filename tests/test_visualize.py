@@ -96,3 +96,39 @@ def test_correlation_matrix(mock_draw):
     # unknown plotting method
     with pytest.raises(NotImplementedError, match="unknown backend: unknown"):
         visualize.correlation_matrix(corr_mat, labels, folder_path, method="unknown")
+
+
+@mock.patch("cabinetry.contrib.matplotlib_visualize.pulls")
+def test_pulls(mock_draw):
+    bestfit = np.asarray([0.8, 1.0, 1.1])
+    uncertainty = np.asarray([0.9, 1.0, 0.7])
+    labels = ["a", "b", "c"]
+    exclude_list = ["a"]
+    folder_path = "tmp"
+
+    expected_bestfit = np.asarray([1.0, 1.1])
+    expected_uncertainty = np.asarray([1.0, 0.7])
+    expected_labels = np.asarray(["b", "c"])
+    figure_path = Path(folder_path) / "pulls.pdf"
+
+    visualize.pulls(
+        bestfit, uncertainty, labels, exclude_list, folder_path, method="matplotlib"
+    )
+
+    mock_draw.assert_called_once()
+    assert np.allclose(mock_draw.call_args[0][0], expected_bestfit)
+    assert np.allclose(mock_draw.call_args[0][1], expected_uncertainty)
+    assert np.any(
+        [
+            mock_draw.call_args[0][2][i] == expected_labels[i]
+            for i in range(len(expected_labels))
+        ]
+    )
+    assert mock_draw.call_args[0][3] == figure_path
+    assert mock_draw.call_args[1] == {}
+
+    # unknown plotting method
+    with pytest.raises(NotImplementedError, match="unknown backend: unknown"):
+        visualize.pulls(
+            bestfit, uncertainty, labels, exclude_list, folder_path, method="unknown"
+        )

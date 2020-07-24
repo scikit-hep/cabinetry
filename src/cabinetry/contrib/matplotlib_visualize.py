@@ -26,7 +26,7 @@ def _total_yield_uncertainty(stdev_list):
 
 
 def data_MC(histogram_dict_list, figure_path):
-    """draw a data/MC histogram with matplotlib
+    """draw a data/MC histogram
 
     Args:
         histogram_dict_list (list[dict]): list of samples (with info stored in one dict per sample)
@@ -98,7 +98,7 @@ def data_MC(histogram_dict_list, figure_path):
         data_histogram_yields,
         yerr=data_histogram_stdev,
         fmt="o",
-        c="k",
+        color="k",
         label=data_label,
     )
 
@@ -124,7 +124,11 @@ def correlation_matrix(
         labels (List[str]): names of parameters in the correlation matrix
         figure_path (pathlib.Path): path where figure should be saved
     """
-    fig, ax = plt.subplots(figsize=(10, 8))
+    # rounding for test in CI to match reference
+    fig, ax = plt.subplots(
+        figsize=(round(5 + len(labels) / 1.6, 1), round(3 + len(labels) / 1.6, 1)),
+        dpi=100,
+    )
     im = ax.imshow(corr_mat, vmin=-1, vmax=1, cmap="RdBu")
 
     ax.set_xticks(np.arange(len(labels)))
@@ -145,7 +149,40 @@ def correlation_matrix(
             text_color = "white"
         else:
             text_color = "black"
-        ax.text(i, j, f"{label:.2f}", ha="center", va="center", c=text_color)
+        ax.text(i, j, f"{label:.2f}", ha="center", va="center", color=text_color)
+
+    if not os.path.exists(figure_path.parent):
+        os.mkdir(figure_path.parent)
+    log.debug(f"saving figure as {figure_path}")
+    fig.savefig(figure_path)
+
+
+def pulls(
+    bestfit: np.ndarray, uncertainty: np.ndarray, labels: np.ndarray, figure_path: Path
+) -> None:
+    """draw a pull plot
+
+    Args:
+        bestfit (np.ndarray): [description]
+        uncertainty (np.ndarray): parameter uncertainties
+        labels (np.ndarray): parameter names
+        figure_path (pathlib.Path): path where figure should be saved
+    """
+    num_pars = len(bestfit)
+    y_positions = np.arange(num_pars)[::-1]
+    fig, ax = plt.subplots(figsize=(6, 1 + num_pars / 4), dpi=100)
+    ax.errorbar(bestfit, y_positions, xerr=uncertainty, fmt="o", color="black")
+
+    ax.fill_between([-2, 2], -0.5, len(bestfit) - 0.5, color="yellow")
+    ax.fill_between([-1, 1], -0.5, len(bestfit) - 0.5, color="limegreen")
+    ax.vlines(0, -0.5, len(bestfit) - 0.5, linestyles="dotted", color="black")
+
+    ax.set_xlim([-3, 3])
+    ax.set_xlabel(r"$\left(\hat{\theta} - \theta_0\right) / \Delta \theta$")
+    ax.set_ylim([-0.5, num_pars - 0.5])
+    ax.set_yticks(np.arange(num_pars))
+    ax.set_yticklabels(labels[::-1])
+    fig.tight_layout()
 
     if not os.path.exists(figure_path.parent):
         os.mkdir(figure_path.parent)

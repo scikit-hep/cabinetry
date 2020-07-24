@@ -1,7 +1,3 @@
-"""
-need to save the histogram bins for visualization purposes still,
-as well as cosmetics such as axis labels and region names
-"""
 import logging
 from pathlib import Path
 from typing import List
@@ -105,5 +101,42 @@ def correlation_matrix(
         from cabinetry.contrib import matplotlib_visualize
 
         matplotlib_visualize.correlation_matrix(corr_mat, labels, figure_path)
+    else:
+        raise NotImplementedError(f"unknown backend: {method}")
+
+
+def pulls(
+    bestfit: np.ndarray,
+    uncertainty: np.ndarray,
+    labels: List[str],
+    exclude_list: List[str],
+    figure_folder: str,
+    method: str = "matplotlib",
+) -> None:
+    """produce a pull plot of parameter results and uncertainties
+
+    Args:
+        bestfit (np.ndarray): best-fit results for parameters
+        uncertainty (np.ndarray): parameter uncertainties
+        labels (List[str]): parameter names
+        exclude_list (List[str]): list of parameters to exclude from plot
+        figure_folder (str): path to the folder to save figures in
+        method (str, optional): what backend to use for plotting, defaults to "matplotlib"
+
+    Raises:
+        NotImplementedError: when trying to plot with a method that is not supported
+    """
+    figure_path = Path(figure_folder) / "pulls.pdf"
+
+    # filter out parameters
+    mask = [True if label not in exclude_list else False for label in labels]
+    bestfit = bestfit[mask]
+    uncertainty = uncertainty[mask]
+    labels = np.asarray(labels)[mask]
+
+    if method == "matplotlib":
+        from cabinetry.contrib import matplotlib_visualize
+
+        matplotlib_visualize.pulls(bestfit, uncertainty, labels, figure_path)
     else:
         raise NotImplementedError(f"unknown backend: {method}")

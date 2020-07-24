@@ -1,5 +1,6 @@
 from matplotlib.testing.compare import compare_images
 import numpy as np
+import pytest
 
 from cabinetry.contrib import matplotlib_visualize
 
@@ -13,8 +14,9 @@ def test__total_yield_uncertainty():
     )
 
 
-def test_data_MC(tmp_path):
-    fname = tmp_path / "subdir" / "fig.pdf"
+@pytest.mark.parametrize("figure_extension", ["fig.pdf", "subdir/fig.pdf"])
+def test_data_MC(figure_extension, tmp_path):
+    fname = tmp_path / figure_extension
     bg_hist = {
         "yields": np.asarray([12.5, 14]),
         "stdev": np.asarray([0.4, 0.5]),
@@ -36,13 +38,12 @@ def test_data_MC(tmp_path):
         {"label": "Data", "isData": True, "hist": data_hist, "variable": "x"},
     ]
     matplotlib_visualize.data_MC(histo_dict_list, fname)
-    assert (
-        compare_images("tests/contrib/reference/ref_data_MC.pdf", str(fname), 0) is None
-    )
+    assert compare_images("tests/contrib/reference/data_MC.pdf", str(fname), 0) is None
 
 
-def test_correlation_matrix(tmp_path):
-    fname = tmp_path / "subdir" / "fig.pdf"
+@pytest.mark.parametrize("figure_extension", ["fig.pdf", "subdir/fig.pdf"])
+def test_correlation_matrix(figure_extension, tmp_path):
+    fname = tmp_path / figure_extension
     corr_mat = np.asarray([[1.0, 0.35, 0.1], [0.35, 1.0, -0.2], [0.1, -0.2, 1.0]])
     labels = ["a", "b", "c"]
     matplotlib_visualize.correlation_matrix(corr_mat, labels, fname)
@@ -50,3 +51,13 @@ def test_correlation_matrix(tmp_path):
         compare_images("tests/contrib/reference/correlation_matrix.pdf", str(fname), 0)
         is None
     )
+
+
+@pytest.mark.parametrize("figure_extension", ["fig.pdf", "subdir/fig.pdf"])
+def test_pulls(figure_extension, tmp_path):
+    fname = tmp_path / figure_extension
+    bestfit = np.asarray([-0.2, 0.0, 0.1])
+    uncertainty = np.asarray([0.9, 1.0, 0.7])
+    labels = np.asarray(["a", "b", "c"])
+    matplotlib_visualize.pulls(bestfit, uncertainty, labels, fname)
+    assert compare_images("tests/contrib/reference/pulls.pdf", str(fname), 0) is None
