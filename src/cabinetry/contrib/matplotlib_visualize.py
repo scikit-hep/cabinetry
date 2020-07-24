@@ -126,7 +126,8 @@ def correlation_matrix(
     """
     # rounding to avoid slight size mismatches in CI
     fig, ax = plt.subplots(
-        figsize=(round(5 + len(labels) / 1.6, 1), round(3 + len(labels) / 1.6, 1))
+        figsize=(round(5 + len(labels) / 1.6, 1), round(3 + len(labels) / 1.6, 1)),
+        dpi=100,
     )
     im = ax.imshow(corr_mat, vmin=-1, vmax=1, cmap="RdBu")
 
