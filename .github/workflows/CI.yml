@@ -45,6 +45,7 @@ jobs:
         pytest --cov=src/cabinetry --cov-report=xml --cov-report=term-missing --cov-branch tests
     - name: upload artifacts
       uses: actions/upload-artifact@v2
+      if: failure()
       with:
         name: artifacts
     - name: Upload coverage to codecov
