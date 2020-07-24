@@ -20,13 +20,13 @@ def test__get_data_sample():
 def test_get_yield_for_sample(mock_histogram):
     expected_yields = [1.0, 2.0]
     yields = workspace.get_yield_for_sample(
-        {"Name": "signal"}, {"Name": "region"}, "path"
+        {"Name": "region"}, {"Name": "signal"}, "path"
     )
     assert yields == expected_yields
 
     # non-nominal
     yields_non_nominal = workspace.get_yield_for_sample(
-        {"Name": "signal"}, {"Name": "region"}, "path", systematic={"Name": "variation"}
+        {"Name": "region"}, {"Name": "signal"}, "path", systematic={"Name": "variation"}
     )
     assert yields_non_nominal == expected_yields
 
@@ -48,12 +48,12 @@ def test_get_yield_for_sample(mock_histogram):
 )
 def test_get_unc_for_sample(mock_histogram):
     expected_unc = [0.1, 0.1]
-    unc = workspace.get_unc_for_sample({"Name": "signal"}, {"Name": "region"}, "path")
+    unc = workspace.get_unc_for_sample({"Name": "region"}, {"Name": "signal"}, "path")
     assert unc == expected_unc
 
     # non-nominal
     unc_non_nominal = workspace.get_unc_for_sample(
-        {"Name": "signal"}, {"Name": "region"}, "path", systematic={"Name": "variation"}
+        {"Name": "region"}, {"Name": "signal"}, "path", systematic={"Name": "variation"}
     )
     assert unc_non_nominal == expected_unc
 
@@ -124,7 +124,7 @@ def test_get_sys_modifiers():
     sample = {"Name": "Signal"}
     region = {}
     # needs to be expanded to include histogram loading
-    modifiers = workspace.get_sys_modifiers(config_example, sample, region, None)
+    modifiers = workspace.get_sys_modifiers(config_example, region, sample, None)
     expected_modifiers = [
         {"name": "sys", "type": "normsys", "data": {"hi": 1.1, "lo": 0.95}}
     ]
@@ -139,7 +139,7 @@ def test_get_sys_modifiers():
     with pytest.raises(
         NotImplementedError, match="not supporting other systematic types yet"
     ):
-        workspace.get_sys_modifiers(config_example_unsupported, sample, region, None)
+        workspace.get_sys_modifiers(config_example_unsupported, region, sample, None)
 
 
 @mock.patch("cabinetry.workspace.get_unc_for_sample", return_value=[0.1, 0.1])
