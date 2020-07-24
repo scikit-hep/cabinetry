@@ -162,10 +162,25 @@ def test_create_histograms(tmp_path, caplog, utils):
     # create something to read
     utils.create_ntuple(fname, treename, varname, var_array, weightname, weight_array)
 
+    # create a systematic uncertainty to read
+    var_array_sys = [1.1, 1.1, 1.1, 1.1]
+    fname_sys = tmp_path / "test_sys.root"
+    utils.create_ntuple(
+        fname_sys, treename, varname, var_array_sys, weightname, weight_array
+    )
+
     config = {
         "Regions": [{"Name": "test_region", "Variable": varname, "Binning": bins}],
         "Samples": [{"Name": "sample", "Tree": treename, "Path": fname}],
-        "Systematics": [],
+        "Systematics": [
+            {"Name": "norm", "Type": "Normalization"},
+            {
+                "Name": "var",
+                "Type": "NormPlusShape",
+                "Samples": "sample",
+                "Up": {"Path": fname_sys},
+            },
+        ],
     }
     template_builder.create_histograms(config, tmp_path, method="uproot")
 
@@ -189,7 +204,21 @@ def test_create_histograms(tmp_path, caplog, utils):
     assert np.allclose(saved_histo.stdev, [1, 1, 1.41421356])
     assert np.allclose(saved_histo.bins, bins)
 
+    saved_histo_sys = histo.Histogram.from_config(
+        tmp_path,
+        config["Regions"][0],
+        config["Samples"][0],
+        {"Name": "var"},
+        modified=False,
+        template="Up",
+    )
+
+    assert np.allclose(saved_histo_sys.yields, [4, 0, 0])
+    assert np.allclose(saved_histo_sys.stdev, [2, 0, 0])
+    assert np.allclose(saved_histo_sys.bins, bins)
+
     assert "  reading sample sample" in [rec.message for rec in caplog.records]
     assert "  in region test_region" in [rec.message for rec in caplog.records]
     assert "  variation nominal" in [rec.message for rec in caplog.records]
+    assert "  variation var" in [rec.message for rec in caplog.records]
     caplog.clear()
