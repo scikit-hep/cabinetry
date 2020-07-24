@@ -47,7 +47,7 @@ jobs:
       uses: actions/upload-artifact@v2
       if: failure()
       with:
-        path: /tmp/pytest-of-runner/pytest-0/
+        path: /tmp/pytest-of-runner/pytest-0/test_correlation_matrix_subdir0/subdir/fig.pdf
     - name: Upload coverage to codecov
       if: matrix.python-version == 3.7
       uses: codecov/codecov-action@v1
