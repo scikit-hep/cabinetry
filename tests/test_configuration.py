@@ -23,7 +23,7 @@ def test_validate():
     assert configuration.validate(config_valid)
 
     config_missing_key = {"General": []}
-    with pytest.raises(ValueError, match="missing required key in config") as e_info:
+    with pytest.raises(ValueError, match="missing required key in config"):
         configuration.validate(config_missing_key)
 
     config_unknown_key = {
@@ -33,7 +33,7 @@ def test_validate():
         "Samples": [],
         "unknown": [],
     }
-    with pytest.raises(ValueError, match="unknown key found") as e_info:
+    with pytest.raises(ValueError, match="unknown key found"):
         configuration.validate(config_unknown_key)
 
     config_multiple_data_samples = {
@@ -44,7 +44,7 @@ def test_validate():
     }
     with pytest.raises(
         NotImplementedError, match="can only handle cases with exactly one data sample"
-    ) as e_info:
+    ):
         configuration.validate(config_multiple_data_samples)
 
     config_missing_NF_name = {

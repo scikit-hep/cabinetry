@@ -25,7 +25,7 @@ def test__get_ntuple_path():
 
     with pytest.raises(
         NotImplementedError, match="ntuple path treatment not yet defined"
-    ) as e_info:
+    ):
         assert template_builder._get_ntuple_path(
             {}, {}, {"Name": "unknown_variation_type", "Type": "unknown"}
         )
@@ -65,7 +65,7 @@ def test__get_position_in_file():
 
     with pytest.raises(
         NotImplementedError, match="ntuple path treatment not yet defined"
-    ) as e_info:
+    ):
         template_builder._get_position_in_file(
             {}, {"Name": "unknown_variation", "Type": "unknown"}
         )
@@ -75,7 +75,7 @@ def test__get_binning():
     np.testing.assert_equal(
         template_builder._get_binning({"Binning": [1, 2, 3]}), [1, 2, 3]
     )
-    with pytest.raises(NotImplementedError, match="cannot determine binning") as e_info:
+    with pytest.raises(NotImplementedError, match="cannot determine binning"):
         assert template_builder._get_binning({})
 
 
@@ -99,13 +99,11 @@ def test_create_histograms(tmp_path, caplog, utils):
     template_builder.create_histograms(config, tmp_path, method="uproot")
 
     # ServiceX is not yet implemented
-    with pytest.raises(
-        NotImplementedError, match="ServiceX not yet implemented"
-    ) as e_info:
+    with pytest.raises(NotImplementedError, match="ServiceX not yet implemented"):
         assert template_builder.create_histograms(config, tmp_path, method="ServiceX")
 
     # other backends
-    with pytest.raises(NotImplementedError, match="unknown backend") as e_info:
+    with pytest.raises(NotImplementedError, match="unknown backend"):
         assert template_builder.create_histograms(config, tmp_path, method="unknown")
 
     saved_histo = histo.Histogram.from_config(

@@ -85,14 +85,12 @@ def test_Histogram_from_arrays(example_histograms):
     assert np.allclose(h.stdev, stdev)
     assert np.allclose(h.bins, bins)
 
-    with pytest.raises(
-        ValueError, match="bin edges need one more entry than yields"
-    ) as e_info:
+    with pytest.raises(ValueError, match="bin edges need one more entry than yields"):
         histo.Histogram.from_arrays(*example_histograms.wrong_bin_number())
 
     with pytest.raises(
         ValueError, match="yields and stdev need to have the same shape"
-    ) as e_info:
+    ):
         histo.Histogram.from_arrays(*example_histograms.yields_stdev_mismatch())
 
 

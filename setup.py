@@ -1,4 +1,4 @@
-from setuptools import setup, find_packages
+from setuptools import find_packages, setup
 
 extras_require = {"contrib": ["matplotlib", "uproot", "uproot4", "awkward1"]}
 extras_require["test"] = sorted(

@@ -1,7 +1,8 @@
 import os
-import uproot
-import numpy as np
+
 import matplotlib.pyplot as plt
+import numpy as np
+import uproot
 
 
 def toy_distribution(noncentral, multiplier, offset, num_events):
@@ -49,7 +50,9 @@ def create_lepton_charge(n_events):
     return charge
 
 
-def create_file(file_name, distributions, weights, labels):
+def create_file(file_name, distributions, weights, labels, extra_weights=None):
+    if extra_weights is None:
+        extra_weights = []
     n_events = len(weights[0])
     with uproot.recreate(file_name) as f:
         # write the predicted processes
