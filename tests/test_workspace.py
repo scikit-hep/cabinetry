@@ -233,7 +233,7 @@ def test_get_observations(mock_get_yield):
     expected_obs = [{"name": "test_region", "data": [1.0, 2.0]}]
     assert obs == expected_obs
     assert mock_get_yield.call_args_list == [
-        ((config["Samples"][0], config["Regions"][0], "path"),)
+        ((config["Regions"][0], config["Samples"][0], "path"),)
     ]
 
 
