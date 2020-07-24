@@ -124,7 +124,10 @@ def correlation_matrix(
         labels (List[str]): names of parameters in the correlation matrix
         figure_path (pathlib.Path): path where figure should be saved
     """
-    fig, ax = plt.subplots(figsize=(5 + len(labels) / 1.6, 3 + len(labels) / 1.6))
+    # rounding to avoid slight size mismatches in CI
+    fig, ax = plt.subplots(
+        figsize=(round(5 + len(labels) / 1.6, 1), round(3 + len(labels) / 1.6, 1))
+    )
     im = ax.imshow(corr_mat, vmin=-1, vmax=1, cmap="RdBu")
 
     ax.set_xticks(np.arange(len(labels)))
