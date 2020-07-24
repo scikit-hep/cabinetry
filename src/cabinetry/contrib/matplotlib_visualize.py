@@ -126,8 +126,7 @@ def correlation_matrix(
     """
     # rounding to avoid slight size mismatches in CI
     fig, ax = plt.subplots(
-        figsize=(round(5 + len(labels) / 1.6, 1), round(3 + len(labels) / 1.6, 1)),
-        dpi=100,
+        figsize=(5 + len(labels) / 1.6, 3 + len(labels) / 1.6), dpi=100,
     )
     im = ax.imshow(corr_mat, vmin=-1, vmax=1, cmap="RdBu")
 
@@ -170,7 +169,7 @@ def pulls(
     """
     num_pars = len(bestfit)
     y_positions = np.arange(num_pars)[::-1]
-    fig, ax = plt.subplots(figsize=(6, 1 + num_pars / 4))
+    fig, ax = plt.subplots(figsize=(6, 1 + num_pars / 4), dpi=100)
     ax.errorbar(bestfit, y_positions, xerr=uncertainty, fmt="o", color="black")
 
     ax.fill_between([-2, 2], -0.5, len(bestfit) - 0.5, color="yellow")
