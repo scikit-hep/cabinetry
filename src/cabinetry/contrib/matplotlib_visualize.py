@@ -165,7 +165,7 @@ def pulls(
         figure_path (pathlib.Path): path where figure should be saved
     """
     num_pars = len(bestfit)
-    y_positions = np.arange(num_pars)
+    y_positions = np.arange(num_pars)[::-1]
     fig, ax = plt.subplots(figsize=(6, 1 + num_pars / 4))
     ax.errorbar(bestfit, y_positions, xerr=uncertainty, fmt="o", color="black")
 
@@ -177,7 +177,7 @@ def pulls(
     ax.set_xlabel(r"$\left(\hat{\theta} - \theta_0\right) / \Delta \theta$")
     ax.set_ylim([-0.5, num_pars - 0.5])
     ax.set_yticks(np.arange(num_pars))
-    ax.set_yticklabels(labels)
+    ax.set_yticklabels(labels[::-1])
     fig.tight_layout()
 
     if not os.path.exists(figure_path.parent):
