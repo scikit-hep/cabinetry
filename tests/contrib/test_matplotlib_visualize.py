@@ -36,9 +36,7 @@ def test_data_MC(tmp_path):
         {"label": "Data", "isData": True, "hist": data_hist, "variable": "x"},
     ]
     matplotlib_visualize.data_MC(histo_dict_list, fname)
-    assert (
-        compare_images("tests/contrib/reference/ref_data_MC.pdf", str(fname), 0) is None
-    )
+    assert compare_images("tests/contrib/reference/data_MC.pdf", str(fname), 0) is None
 
 
 def test_correlation_matrix(tmp_path):
