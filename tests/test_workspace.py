@@ -174,10 +174,10 @@ def test_get_channels(mock_get_yield, mock_get_unc):
     ]
     assert channels == expected_channels
     assert mock_get_yield.call_args_list == [
-        ((example_config["Samples"][0], example_config["Regions"][0], "path"),)
+        ((example_config["Regions"][0], example_config["Samples"][0], "path"),)
     ]
     assert mock_get_unc.call_args_list == [
-        ((example_config["Samples"][0], example_config["Regions"][0], "path"),)
+        ((example_config["Regions"][0], example_config["Samples"][0], "path"),)
     ]
 
 
