@@ -138,7 +138,7 @@ def test_get_sys_modifiers():
     }
     with pytest.raises(
         NotImplementedError, match="not supporting other systematic types yet"
-    ) as e_info:
+    ):
         workspace.get_sys_modifiers(config_example_unsupported, sample, region, None)
 
 
