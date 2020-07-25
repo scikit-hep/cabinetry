@@ -112,17 +112,22 @@ def test_sample_affected_by_modifier(sample_and_modifier, affected):
 
 
 @pytest.mark.parametrize(
-    "reg_sam_sys, is_needed",
+    "reg_sam_sys_tem, is_needed",
     [
         # nominal
-        (({}, {}, {"Name": "nominal"}), True),
+        (({}, {}, {"Name": "nominal"}, "Nominal"), True),
         # non-nominal data
-        (({}, {"Data": True}, {"Name": "var"}), False),
+        (({}, {"Data": True}, {"Name": "var"}, ""), False),
         # overall normalization variation
-        (({}, {}, {"Type": "Normalization"}), False),
+        (({}, {}, {"Type": "Normalization"}, ""), False),
         # normalization + shape variation on affected sample
         (
-            ({}, {"Name": "Signal"}, {"Type": "NormPlusShape", "Samples": "Signal"}),
+            (
+                {},
+                {"Name": "Signal"},
+                {"Type": "NormPlusShape", "Samples": "Signal"},
+                "Up",
+            ),
             True,
         ),
         # normalization + shape variation on non-affected sample
@@ -131,16 +136,48 @@ def test_sample_affected_by_modifier(sample_and_modifier, affected):
                 {},
                 {"Name": "Background"},
                 {"Type": "NormPlusShape", "Samples": "Signal"},
+                "",
             ),
             False,
         ),
+        # non-needed template of systematic due to symmetrization
+        (
+            (
+                {},
+                {"Name": "Signal"},
+                {
+                    "Type": "NormPlusShape",
+                    "Samples": "Signal",
+                    "Up": {"Symmetrize": True},
+                },
+                "Up",
+            ),
+            False,
+        ),
+        # template needed since symmetrization is only for other direction
+        (
+            (
+                {},
+                {"Name": "Signal"},
+                {
+                    "Type": "NormPlusShape",
+                    "Samples": "Signal",
+                    "Down": {"Symmetrize": True},
+                },
+                "Up",
+            ),
+            True,
+        ),
     ],
 )
-def test_histogram_is_needed(reg_sam_sys, is_needed):
-    assert configuration.histogram_is_needed(*reg_sam_sys) is is_needed
+def test_histogram_is_needed(reg_sam_sys_tem, is_needed):
+    reg, sam, sys, tem = reg_sam_sys_tem
+    assert configuration.histogram_is_needed(*reg_sam_sys_tem) is is_needed
 
+
+def test_histogram_is_needed_unknown():
     # non-supported systematic
     with pytest.raises(
         NotImplementedError, match="other systematics not yet implemented"
     ):
-        configuration.histogram_is_needed({}, {}, {"Type": "unknown"})
+        configuration.histogram_is_needed({}, {}, {"Type": "unknown"}, "")

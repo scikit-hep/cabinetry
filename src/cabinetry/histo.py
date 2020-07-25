@@ -74,7 +74,9 @@ class Histogram(bh.Histogram):
         return cls.from_arrays(bins, yields, stdev)
 
     @classmethod
-    def from_config(cls, histo_folder, region, sample, systematic, modified=True):
+    def from_config(
+        cls, histo_folder, region, sample, systematic, modified=True, template="Nominal"
+    ):
         """load a histogram, given a folder the histogram is located in and the
         relevant information from the config: region, sample, systematic
 
@@ -84,12 +86,13 @@ class Histogram(bh.Histogram):
             sample (dict): containing all sample information
             systematic (dict): containing all systematic information
             modified (bool, optional): whether to load the modified histogram (after post-processing), defaults to True
+            template (str): which template (nominal/up/down) to consider, defaults to "Nominal"
 
         Returns:
             cabinetry.histo.Histogram: the loaded histogram
         """
         # find the histogram name given config information, and then load the histogram
-        histo_name = build_name(region, sample, systematic)
+        histo_name = build_name(region, sample, systematic, template)
         histo_path = Path(histo_folder) / histo_name
         return cls.from_path(histo_path, modified)
 
@@ -192,17 +195,22 @@ class Histogram(bh.Histogram):
         return normalization_ratio
 
 
-def build_name(region, sample, systematic):
+def build_name(
+    region: dict, sample: dict, systematic: dict, template: str = "Nominal"
+) -> str:
     """construct a unique name for each histogram
 
     Args:
         region (dict): containing all region information
         sample (dict): containing all sample information
         systematic (dict): containing all systematic information
+        template (str): which template (nominal/up/down) to consider, defaults to "Nominal"
 
     Returns:
         str: unique name for the histogram
     """
     name = region["Name"] + "_" + sample["Name"] + "_" + systematic["Name"]
+    if template != "Nominal":
+        name += "_" + template
     name = name.replace(" ", "-")
     return name

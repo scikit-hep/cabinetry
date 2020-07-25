@@ -4,6 +4,7 @@ from pathlib import Path
 
 import numpy as np
 
+from . import configuration
 from . import histo
 
 
@@ -44,6 +45,7 @@ def apply_postprocessing(histogram, name):
 
 def run(config, histogram_folder):
     """apply post-processing as needed for all histograms
+    this is very similar to template_builder.create_histograms() and should be refactored
 
     Args:
         config (dict): cabinetry configuration
@@ -53,13 +55,39 @@ def run(config, histogram_folder):
     # loop over all histograms
     for region in config["Regions"]:
         for sample in config["Samples"]:
-            for systematic in [{"Name": "nominal"}]:
-                # need to add histogram-based systematics here as well
-                histogram = histo.Histogram.from_config(
-                    histogram_folder, region, sample, systematic, modified=False
-                )
-                histogram_name = histo.build_name(region, sample, systematic)
-                new_histogram = apply_postprocessing(histogram, histogram_name)
-                histogram.validate(histogram_name)
-                new_histo_path = Path(histogram_folder) / (histogram_name + "_modified")
-                new_histogram.save(new_histo_path)
+            for systematic in [{"Name": "nominal"}] + config["Systematics"]:
+                # determine how many templates need to be considered
+                if systematic["Name"] == "nominal":
+                    # only nominal template is needed
+                    templates = ["Nominal"]
+                else:
+                    # systematics can have up and down template
+                    templates = ["Up", "Down"]
+                for template in templates:
+                    # determine whether a histogram is needed for this
+                    # specific combination of sample-region-systematic-template
+                    histo_needed = configuration.histogram_is_needed(
+                        region, sample, systematic, template
+                    )
+
+                    if not histo_needed:
+                        # no further action is needed, continue with the next region-sample-systematic combination
+                        continue
+
+                    histogram = histo.Histogram.from_config(
+                        histogram_folder,
+                        region,
+                        sample,
+                        systematic,
+                        modified=False,
+                        template=template,
+                    )
+                    histogram_name = histo.build_name(
+                        region, sample, systematic, template
+                    )
+                    new_histogram = apply_postprocessing(histogram, histogram_name)
+                    histogram.validate(histogram_name)
+                    new_histo_path = Path(histogram_folder) / (
+                        histogram_name + "_modified"
+                    )
+                    new_histogram.save(new_histo_path)

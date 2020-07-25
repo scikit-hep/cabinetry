@@ -50,22 +50,44 @@ def create_lepton_charge(n_events):
     return charge
 
 
-def create_file(file_name, distributions, weights, labels):
+def create_file(file_name, distributions, weights, labels, extra_weights=None):
+    if extra_weights is None:
+        extra_weights = []
     n_events = len(weights[0])
     with uproot.recreate(file_name) as f:
         # write the predicted processes
         for i, label in enumerate(labels):
             lep_charge = create_lepton_charge(n_events)
-            f[label] = uproot.newtree(
-                {"jet_pt": "float64", "weight": "float64", "lep_charge": "int"}
-            )
-            f[label].extend(
-                {
-                    "jet_pt": distributions[i],
-                    "weight": weights[i],
-                    "lep_charge": lep_charge,
-                }
-            )
+            if label == "background":
+                f[label] = uproot.newtree(
+                    {
+                        "jet_pt": "float64",
+                        "weight": "float64",
+                        "lep_charge": "int",
+                        "weight_up": "float64",
+                        "weight_down": "float64",
+                    }
+                )
+                f[label].extend(
+                    {
+                        "jet_pt": distributions[i],
+                        "weight": weights[i],
+                        "lep_charge": lep_charge,
+                        "weight_up": extra_weights[0],
+                        "weight_down": extra_weights[1],
+                    }
+                )
+            else:
+                f[label] = uproot.newtree(
+                    {"jet_pt": "float64", "weight": "float64", "lep_charge": "int"}
+                )
+                f[label].extend(
+                    {
+                        "jet_pt": distributions[i],
+                        "weight": weights[i],
+                        "lep_charge": lep_charge,
+                    }
+                )
 
 
 def create_file_pseudodata(file_name, pseudodata):
@@ -165,11 +187,21 @@ def run(output_directory):
     # corresponding weights
     weights = get_weights(yield_s, yield_b, yield_b_var, num_events)
 
+    # weights for an extra background uncertainty
+    weight_var_up = (1.2 * (distributions[1] / 350)) * weights[1]
+    weight_var_down = (np.ones_like(weight_var_up) * 0.7) * weights[1]
+
     # create a pseudodataset
     pseudodata = create_pseudodata(yield_s, yield_b)
 
     # write it all to a file
-    create_file(file_name, distributions, weights, labels)
+    create_file(
+        file_name,
+        distributions,
+        weights,
+        labels,
+        extra_weights=[weight_var_up, weight_var_down],
+    )
     create_file_pseudodata(file_name_pseudodata, pseudodata)
 
     # read the files again

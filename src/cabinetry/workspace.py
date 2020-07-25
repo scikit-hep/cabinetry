@@ -28,14 +28,14 @@ def _get_data_sample(config):
 
 
 def get_yield_for_sample(
-    sample: dict, region: dict, histogram_folder: str, systematic: Optional[dict] = None
+    region: dict, sample: dict, histogram_folder: str, systematic: Optional[dict] = None
 ) -> list:
     """get the yield for a specific sample, by figuring out its name and then
     obtaining the yield from the correct histogram
 
     Args:
-        sample (dict): specific sample to use
         region (dict): specific region to use
+        sample (dict): specific sample to use
         histogram_folder (str): path to folder containing histograms
         systematic (dict, optional): specific systematic variation to use, defaults to None -> {"Name": "nominal"}
 
@@ -53,14 +53,14 @@ def get_yield_for_sample(
 
 
 def get_unc_for_sample(
-    sample: dict, region: dict, histogram_folder: str, systematic: Optional[dict] = None
+    region: dict, sample: dict, histogram_folder: str, systematic: Optional[dict] = None
 ) -> list:
     """get the uncertainty of a specific sample, by figuring out its name and then
     obtaining the stdev from the correct histogram
 
     Args:
-        sample (dict): specific sample to use
         region (dict): specific region to use
+        sample (dict): specific sample to use
         histogram_folder (str): path to folder containing histograms
         systematic (dict, optional): specific systematic variation to use, defaults to None -> {"Name": "nominal"}
 
@@ -141,8 +141,8 @@ def get_NormPlusShape_modifiers(region, sample, systematic, histogram_folder):
         list[dict]: a list with a pyhf normsys modifier and a histosys modifier
     """
     # load the systematic variation histogram
-    histogram_variation = histo.Histogram.from_config(
-        histogram_folder, region, sample, systematic, modified=True
+    histogram_up = histo.Histogram.from_config(
+        histogram_folder, region, sample, systematic, modified=True, template="Up"
     )
 
     # also need the nominal histogram
@@ -150,32 +150,39 @@ def get_NormPlusShape_modifiers(region, sample, systematic, histogram_folder):
         histogram_folder, region, sample, {"Name": "nominal"}, modified=True
     )
 
-    if systematic["Down"]["Symmetrize"]:
+    if systematic.get("Down", {}).get("Symmetrize", False):
         # need to add support for two-sided variations that do not require symmetrization here
         # if symmetrization is desired, should support different implementations
 
         # symmetrization according to "method 1" from issue #26: first normalization, then symmetrization
 
         # normalize the variation to the same yield as nominal
-        norm_effect = histogram_variation.normalize_to_yield(histogram_nominal)
-        histo_yield_up = histogram_variation.yields.tolist()
+        norm_effect = histogram_up.normalize_to_yield(histogram_nominal)
+        norm_effect_up = norm_effect
+        norm_effect_down = 2 - norm_effect
+        histo_yield_up = histogram_up.yields.tolist()
         log.debug(
             f"normalization impact of systematic {systematic['Name']} on sample {sample['Name']}"
             f" in region {region['Name']} is {norm_effect:.3f}"
         )
         # need another histogram that corresponds to the "down" variation, which is 2*nominal - up
-        histo_yield_down = (
-            2 * histogram_nominal.yields - histogram_variation.yields
-        ).tolist()
+        histo_yield_down = (2 * histogram_nominal.yields - histogram_up.yields).tolist()
     else:
-        raise NotImplementedError("only symmetrization is currently supported")
+        histogram_down = histo.Histogram.from_config(
+            histogram_folder, region, sample, systematic, modified=True, template="Down"
+        )
+        norm_effect_up = sum(histogram_up.yields) / sum(histogram_nominal.yields)
+        norm_effect_down = sum(histogram_down.yields) / sum(histogram_nominal.yields)
+        # normalize templates to same yield as nominal
+        histo_yield_up = list(histogram_up.yields / norm_effect_up)
+        histo_yield_down = list(histogram_down.yields / norm_effect_down)
 
     # add the normsys
     modifiers = []
     norm_modifier = {}
     norm_modifier.update({"name": systematic["Name"]})
     norm_modifier.update({"type": "normsys"})
-    norm_modifier.update({"data": {"hi": norm_effect, "lo": 2 - norm_effect}})
+    norm_modifier.update({"data": {"hi": norm_effect_up, "lo": norm_effect_down}})
     modifiers.append(norm_modifier)
 
     # add the shape part in a histosys
@@ -189,13 +196,13 @@ def get_NormPlusShape_modifiers(region, sample, systematic, histogram_folder):
     return modifiers
 
 
-def get_sys_modifiers(config, sample, region, histogram_folder):
+def get_sys_modifiers(config, region, sample, histogram_folder):
     """get the list of all systematic modifiers acting on a sample
 
     Args:
         config (dict): cabinetry configuration
-        sample (dict): specific sample to get modifiers for
         region (dict): region considered
+        sample (dict): specific sample to get modifiers for
         histogram_folder (str): path to folder containing histograms
 
     Raises:
@@ -248,7 +255,7 @@ def get_channels(config, histogram_folder):
                 continue
 
             # yield of the samples
-            histo_yield = get_yield_for_sample(sample, region, histogram_folder)
+            histo_yield = get_yield_for_sample(region, sample, histogram_folder)
             current_sample = {}
             current_sample.update({"name": sample["Name"]})
             current_sample.update({"data": histo_yield})
@@ -257,7 +264,7 @@ def get_channels(config, histogram_folder):
             modifiers = []
 
             # gammas
-            stat_unc = get_unc_for_sample(sample, region, histogram_folder)
+            stat_unc = get_unc_for_sample(region, sample, histogram_folder)
             gammas = {}
             gammas.update({"name": "staterror_" + region["Name"].replace(" ", "-")})
             gammas.update({"type": "staterror"})
@@ -270,7 +277,7 @@ def get_channels(config, histogram_folder):
 
             # check if systematic uncertainties affect the samples, add modifiers as needed
             sys_modifier_list = get_sys_modifiers(
-                config, sample, region, histogram_folder
+                config, region, sample, histogram_folder
             )
             modifiers += sys_modifier_list
 
@@ -338,7 +345,7 @@ def get_observations(config, histogram_folder):
     observations = []
     observation = {}
     for region in config["Regions"]:
-        histo_yield = get_yield_for_sample(data_sample, region, histogram_folder)
+        histo_yield = get_yield_for_sample(region, data_sample, histogram_folder)
         observation.update({"name": region["Name"]})
         observation.update({"data": histo_yield})
         observations.append(observation)
