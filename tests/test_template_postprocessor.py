@@ -32,7 +32,15 @@ def test_apply_postprocessing():
 
 
 def test_run(tmp_path):
-    config = {"Samples": [{"Name": "signal"}], "Regions": [{"Name": "region_1"}]}
+    # should test systematics here as well, but the logic is the same as in
+    # template_builder.create_histograms(), where it gets tested
+    config = {
+        "Regions": [{"Name": "region_1"}],
+        "Samples": [{"Name": "signal"}],
+        "Systematics": [
+            {"Name": "var", "Samples": "background", "Type": "Normalization"}
+        ],
+    }
 
     # create an input histogram
     histo_path = tmp_path / "region_1_signal_nominal.npz"

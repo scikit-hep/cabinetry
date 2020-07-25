@@ -176,7 +176,6 @@ def get_NormPlusShape_modifiers(region, sample, systematic, histogram_folder):
         # normalize templates to same yield as nominal
         histo_yield_up = list(histogram_up.yields / norm_effect_up)
         histo_yield_down = list(histogram_down.yields / norm_effect_down)
-        print("norm_down", norm_effect_down)
 
     # add the normsys
     modifiers = []
