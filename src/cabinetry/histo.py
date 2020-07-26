@@ -20,17 +20,17 @@ class Histogram(bh.Histogram):
     @classmethod
     def from_arrays(
         cls: Type[H],
-        bins: Union[List[Union[int, float]], np.ndarray],
-        yields: Union[List[Union[int, float]], np.ndarray],
-        stdev: Union[List[Union[int, float]], np.ndarray],
+        bins: Union[List[float], np.ndarray],
+        yields: Union[List[float], np.ndarray],
+        stdev: Union[List[float], np.ndarray],
     ) -> H:
         """construct a histogram from arrays of yields and uncertainties, the input
         can be lists of ints or floats, or numpy.ndarrays
 
         Args:
-            bins (Union[List[Union[int, float]], np.ndarray]): edges of histogram bins
-            yields (Union[List[Union[int, float]], np.ndarray]): yield per histogram bin
-            stdev (Union[List[Union[int, float]], np.ndarray]): statistical uncertainty of yield per bin
+            bins (Union[List[float], np.ndarray]): edges of histogram bins
+            yields (Union[List[float], np.ndarray]): yield per histogram bin
+            stdev (Union[List[float], np.ndarray]): statistical uncertainty of yield per bin
 
         Raises:
             ValueError: when amount of bins specified via bin edges and bin contents do not match
