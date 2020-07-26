@@ -1,11 +1,19 @@
+from pathlib import Path
+from typing import Optional, Tuple
+
 import boost_histogram as bh
 import numpy as np
 import uproot4 as uproot
 
 
 def from_uproot(
-    ntuple_path, pos_in_file, variable, bins, weight=None, selection_filter=None
-):
+    ntuple_path: Path,
+    pos_in_file: str,
+    variable: str,
+    bins: np.ndarray,
+    weight: Optional[str] = None,
+    selection_filter: Optional[str] = None,
+) -> Tuple[np.ndarray, np.ndarray]:
     """read an ntuple with uproot, the resulting arrays are then filled into a histogram
 
     Args:
@@ -13,12 +21,15 @@ def from_uproot(
         pos_in_file (str): name of tree within ntuple
         variable (str): variable to bin histogram in
         bins (numpy.ndarray): bin edges for histogram
-        weight (str): event weight to extract, defaults to None (no weights applied)
-        selection_filter (str, optional): filter to be applied on events, defaults to None (no filter)
+        weight (Optional[str], optional): event weight to extract, defaults to None (no weights applied)
+        selection_filter (Optional[str], optional): filter to be applied on events, defaults to None (no filter)
 
     Returns:
-        (numpy.ndarray, numpy.ndarray): tuple of yields and stat. uncertainties for all bins
+        Tuple[np.ndarray, np.ndarray]:
+            - yield per bin
+            - stat. uncertainty per bin
     """
+
     tree = uproot.open(str(ntuple_path) + ":" + pos_in_file)
 
     # extract observable and weights
@@ -35,7 +46,9 @@ def from_uproot(
     return yields, stdev
 
 
-def _bin_data(observables, weights, bins):
+def _bin_data(
+    observables: np.ndarray, weights: np.ndarray, bins: np.ndarray
+) -> Tuple[np.ndarray, np.ndarray]:
     """create a histogram from unbinned data, providing yields, statistical uncertainties
     and the bin edges
 
@@ -45,9 +58,9 @@ def _bin_data(observables, weights, bins):
         bins (numpy.ndarray): bin edges for histogram
 
     Returns:
-        tuple: a tuple containing
-            - numpy.ndarray: yields per bin
-            - numpy.ndarray: and stat. uncertainty per bin
+        Tuple[np.ndarray, np.ndarray]:
+            - yield per bin
+            - stat. uncertainty per bin
     """
     hist = bh.Histogram(bh.axis.Variable(bins), storage=bh.storage.Weight())
     hist.fill(observables, weight=weights)

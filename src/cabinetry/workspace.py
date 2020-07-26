@@ -2,7 +2,7 @@ import json
 import logging
 import os
 from pathlib import Path
-from typing import List, Optional
+from typing import Any, Dict, List, Optional
 
 import pyhf
 
@@ -13,14 +13,14 @@ from . import histo
 log = logging.getLogger(__name__)
 
 
-def _get_data_sample(config):
+def _get_data_sample(config: Dict[str, Any]) -> Dict[str, Any]:
     """get the sample name of the data sample
 
     Args:
-        config (dict): cabinetry configuration
+        config (Dict[str, Any]): cabinetry configuration
 
     Returns:
-        str: name of the data sample
+        Dict[str, Any]: the data sample
     """
     data_samples = [sample for sample in config["Samples"] if sample.get("Data", False)]
     assert len(data_samples) == 1
@@ -28,16 +28,20 @@ def _get_data_sample(config):
 
 
 def get_yield_for_sample(
-    region: dict, sample: dict, histogram_folder: str, systematic: Optional[dict] = None
-) -> list:
+    region: Dict[str, Any],
+    sample: Dict[str, Any],
+    histogram_folder: str,
+    systematic: Optional[Dict[str, Any]] = None,
+) -> List[float]:
     """get the yield for a specific sample, by figuring out its name and then
     obtaining the yield from the correct histogram
 
     Args:
-        region (dict): specific region to use
-        sample (dict): specific sample to use
+        region (Dict[str, Any]): specific region to use
+        sample (Dict[str, Any]): specific sample to use
         histogram_folder (str): path to folder containing histograms
-        systematic (dict, optional): specific systematic variation to use, defaults to None -> {"Name": "nominal"}
+        systematic (Optional[Dict[str, Any]], optional): specific systematic variation to use,
+            defaults to None -> {"Name": "nominal"}
 
     Returns:
         list: yields per bin for the sample
@@ -53,16 +57,20 @@ def get_yield_for_sample(
 
 
 def get_unc_for_sample(
-    region: dict, sample: dict, histogram_folder: str, systematic: Optional[dict] = None
-) -> list:
+    region: Dict[str, Any],
+    sample: Dict[str, Any],
+    histogram_folder: str,
+    systematic: Optional[Dict[str, Any]] = None,
+) -> List[float]:
     """get the uncertainty of a specific sample, by figuring out its name and then
     obtaining the stdev from the correct histogram
 
     Args:
-        region (dict): specific region to use
-        sample (dict): specific sample to use
+        region (Dict[str, Any]): specific region to use
+        sample (Dict[str, Any]): specific sample to use
         histogram_folder (str): path to folder containing histograms
-        systematic (dict, optional): specific systematic variation to use, defaults to None -> {"Name": "nominal"}
+        systematic (Optional[Dict[str, Any]], optional): specific systematic variation to use,
+            defaults to None -> {"Name": "nominal"}
 
     Returns:
         list: statistical uncertainty of yield per bin for the sample
@@ -73,19 +81,21 @@ def get_unc_for_sample(
     histogram = histo.Histogram.from_config(
         histogram_folder, region, sample, systematic, modified=True
     )
-    histo_yield = histogram.stdev.tolist()
-    return histo_yield
+    histo_stdev = histogram.stdev.tolist()
+    return histo_stdev
 
 
-def get_NF_modifiers(config, sample):
+def get_NF_modifiers(
+    config: Dict[str, Any], sample: Dict[str, Any]
+) -> List[Dict[str, Any]]:
     """get the list of NormFactor modifiers acting on a sample
 
     Args:
-        config (dict): cabinetry configuration
-        sample (dict): specific sample to get NormFactor modifiers for
+        config (Dict[str, Any]): cabinetry configuration
+        sample (Dict[str, Any]): specific sample to get NormFactor modifiers for
 
     Returns:
-        list: NormFactor modifiers for sample
+        List[Dict[str, Any]]: NormFactor modifiers for sample
     """
     modifiers = []
     for NormFactor in config["NormFactors"]:
@@ -99,16 +109,16 @@ def get_NF_modifiers(config, sample):
     return modifiers
 
 
-def get_Normalization_modifier(systematic):
+def get_Normalization_modifier(systematic: Dict[str, Any]) -> Dict[str, Any]:
     """construct a normalization modifier (OverallSys in HistFactory)
     While this can be built without any histogram reference, it might be useful
     to build a histogram for this anyway and possibly use it here.
 
     Args:
-        systematic (dict): systematic for which the modifier is constructed
+        systematic (Dict[str, Any]): systematic for which the modifier is constructed
 
     Returns:
-        dict: single normsys modifier for pyhf-style workspace
+        Dict[str, Any]: single normsys modifier for pyhf-style workspace
     """
     modifier = {}
     modifier.update({"name": systematic["Name"]})
@@ -124,7 +134,12 @@ def get_Normalization_modifier(systematic):
     return modifier
 
 
-def get_NormPlusShape_modifiers(region, sample, systematic, histogram_folder):
+def get_NormPlusShape_modifiers(
+    region: Dict[str, Any],
+    sample: Dict[str, Any],
+    systematic: Dict[str, Any],
+    histogram_folder: str,
+) -> List[Dict[str, Any]]:
     """For a variation including a correlated shape + normalization effect, this
     provides the histosys and normsys modifiers for pyhf (in HistFactory language,
     this corresponds to a HistoSys and an OverallSys).
@@ -132,13 +147,13 @@ def get_NormPlusShape_modifiers(region, sample, systematic, histogram_folder):
     or somewhere earlier, such as during template postprocessing.
 
     Args:
-        region (dict): region the systematic variation acts in
-        sample (dict): sample the systematic variation acts on
-        systematic (dict): the systematic variation under consideration
+        region (Dict[str, Any]): region the systematic variation acts in
+        sample (Dict[str, Any]): sample the systematic variation acts on
+        systematic (Dict[str, Any]): the systematic variation under consideration
         histogram_folder (str): path to folder containing histograms
 
     Returns:
-        list[dict]: a list with a pyhf normsys modifier and a histosys modifier
+        List[Dict[str, Any]]: a list with a pyhf normsys modifier and a histosys modifier
     """
     # load the systematic variation histogram
     histogram_up = histo.Histogram.from_config(
@@ -196,13 +211,18 @@ def get_NormPlusShape_modifiers(region, sample, systematic, histogram_folder):
     return modifiers
 
 
-def get_sys_modifiers(config, region, sample, histogram_folder):
+def get_sys_modifiers(
+    config: Dict[str, Any],
+    region: Dict[str, Any],
+    sample: Dict[str, Any],
+    histogram_folder: str,
+) -> List[Dict[str, Any]]:
     """get the list of all systematic modifiers acting on a sample
 
     Args:
-        config (dict): cabinetry configuration
-        region (dict): region considered
-        sample (dict): specific sample to get modifiers for
+        config (Dict[str, Any]): cabinetry configuration
+        region (Dict[str, Any]): region considered
+        sample (Dict[str, Any]): specific sample to get modifiers for
         histogram_folder (str): path to folder containing histograms
 
     Raises:
@@ -234,15 +254,15 @@ def get_sys_modifiers(config, region, sample, histogram_folder):
     return modifiers
 
 
-def get_channels(config, histogram_folder):
+def get_channels(config: Dict[str, Any], histogram_folder: str) -> List[Dict[str, Any]]:
     """construct the channel information: yields per sample and modifiers
 
     Args:
-        config (dict): cabinetry configuration
+        config (Dict[str, Any]): cabinetry configuration
         histogram_folder (str): path to folder containing histograms
 
     Returns:
-        list: channels for pyhf-style workspace
+        List[Dict[str, Any]]: channels for pyhf-style workspace
     """
     channels = []
     for region in config["Regions"]:
@@ -288,16 +308,16 @@ def get_channels(config, histogram_folder):
     return channels
 
 
-def get_measurements(config: dict) -> List[dict]:
+def get_measurements(config: Dict[str, Any]) -> List[Dict[str, Any]]:
     """construct the measurements, including POI setting and parameter bounds,
     initial values and whether they are set to constant
     only supporting a single measurement so far
 
     Args:
-        config (dict): cabinetry configuration
+        config (Dict[str, Any]): cabinetry configuration
 
     Returns:
-        list: measurements for pyhf-style workspace
+        List[Dict[str, Any]]: measurements for pyhf-style workspace
     """
     measurements = []
     measurement = {}
@@ -331,15 +351,17 @@ def get_measurements(config: dict) -> List[dict]:
     return measurements
 
 
-def get_observations(config, histogram_folder):
+def get_observations(
+    config: Dict[str, Any], histogram_folder: str
+) -> List[Dict[str, Any]]:
     """build the observations
 
     Args:
-        config (dict): cabinetry configuration
+        config (Dict[str, Any]): cabinetry configuration
         histogram_folder (str): path to folder containing histograms
 
     Returns:
-        list: observations for pyhf-style workspace
+        List[Dict[str, Any]]: observations for pyhf-style workspace
     """
     data_sample = _get_data_sample(config)
     observations = []
@@ -352,20 +374,22 @@ def get_observations(config, histogram_folder):
     return observations
 
 
-def build(config, histogram_folder, with_validation=True):
+def build(
+    config: Dict[str, Any], histogram_folder: str, with_validation: bool = True
+) -> Dict[str, Any]:
     """build a HistFactory workspace, pyhf style
 
     Args:
-        config (dict): cabinetry configuration
+        config (Dict[str, Any]): cabinetry configuration
         histogram_folder (str): path to folder containing histograms
         with_validation (bool, optional): validate workspace validity with pyhf, defaults to True
 
     Returns:
-        dict: pyhf-compatible HistFactory workspace
+        Dict[str, Any]: pyhf-compatible HistFactory workspace
     """
     log.info("building workspace")
 
-    ws = {}  # the workspace
+    ws: Dict[str, Any] = {}  # the workspace
 
     # channels
     channels = get_channels(config, histogram_folder)
@@ -388,20 +412,20 @@ def build(config, histogram_folder, with_validation=True):
     return ws
 
 
-def validate(ws):
+def validate(ws: Dict[str, Any]) -> None:
     """validate a workspace
 
     Args:
-        ws (dict): pyhf-compatible HistFactory workspace
+        ws (Dict[str, Any]): pyhf-compatible HistFactory workspace
     """
     pyhf.Workspace(ws)
 
 
-def save(ws, file_path_string):
+def save(ws: Dict[str, Any], file_path_string: str) -> None:
     """save the workspace to a file
 
     Args:
-        ws (dict): pyhf-compatible HistFactory workspace
+        ws (Dict[str, Any]): pyhf-compatible HistFactory workspace
         file_path_string (str): path to the file to save the workspace in
     """
     file_path = Path(file_path_string)
@@ -413,14 +437,14 @@ def save(ws, file_path_string):
     file_path.write_text(json.dumps(ws, sort_keys=True, indent=4))
 
 
-def load(file_path_string):
+def load(file_path_string: str) -> Dict[str, Any]:
     """load a workspace from file
 
     Args:
         file_path_string (str): path to the file to load the workspace from
 
     Returns:
-        dict: pyhf-compatible HistFactory workspace
+        Dict[str, Any]: pyhf-compatible HistFactory workspace
     """
     file_path = Path(file_path_string)
     ws = json.loads(file_path.read_text())

@@ -1,5 +1,6 @@
 import logging
 from pathlib import Path
+from typing import Any, Dict, List, Union
 
 import yaml
 
@@ -11,14 +12,14 @@ OPTIONAL_CONFIG_KEYS = ["Systematics"]
 log = logging.getLogger(__name__)
 
 
-def read(file_path_string):
+def read(file_path_string: str) -> Dict[str, Any]:
     """read a config file from a provided path and return it
 
     Args:
         file_path_string (str): path to config file
 
     Returns:
-        dict: cabinetry configuration
+        Dict[str, Any]: cabinetry configuration
     """
     file_path = Path(file_path_string)
     log.info(f"opening config file {file_path}")
@@ -27,11 +28,11 @@ def read(file_path_string):
     return config
 
 
-def validate(config: dict) -> bool:
+def validate(config: Dict[str, Any]) -> bool:
     """test whether the config is valid
 
     Args:
-        config (dict): cabinetry configuration
+        config (Dict[str, Any]): cabinetry configuration
 
     Raises:
         ValueError: when missing required keys
@@ -73,11 +74,11 @@ def validate(config: dict) -> bool:
     return True
 
 
-def print_overview(config):
+def print_overview(config: Dict[str, Any]) -> None:
     """output a compact summary of a config file
 
     Args:
-        config (dict): cabinetry configuration
+        config (Dict[str, Any]): cabinetry configuration
     """
     log.info("the config contains:")
     log.info(f"  {len(config['Samples'])} Sample(s)")
@@ -87,7 +88,7 @@ def print_overview(config):
         log.info(f"  {len(config['Systematics'])} Systematic(s)")
 
 
-def _convert_samples_to_list(samples):
+def _convert_samples_to_list(samples: Union[str, List[str]]) -> List[str]:
     """the config can allow for two ways of specifying samples, a single sample:
     "Samples": "ABC"
     or a list of samples:
@@ -95,7 +96,7 @@ def _convert_samples_to_list(samples):
     for consistent treatment, convert the single sample into a single-element list
 
     Args:
-        samples (string/list): name of single sample or list of sample names
+        samples (Union[str, List[str]]): name of single sample or list of sample names
 
     Returns:
         list: name(s) of sample(s)
@@ -105,12 +106,14 @@ def _convert_samples_to_list(samples):
     return samples
 
 
-def sample_affected_by_modifier(sample, modifier):
+def sample_affected_by_modifier(
+    sample: Dict[str, Any], modifier: Dict[str, Any]
+) -> bool:
     """check if a sample is affected by a given modifier (Systematic, NormFactor)
 
     Args:
-        sample (dict): containing all sample information
-        modifier (dict): containing all modifier information (a Systematic of a NormFactor)
+        sample (Dict[str, Any]): containing all sample information
+        modifier (Dict[str, Any]): containing all modifier information (a Systematic of a NormFactor)
 
     Returns:
         bool: True if sample is affected, False otherwise
@@ -121,15 +124,18 @@ def sample_affected_by_modifier(sample, modifier):
 
 
 def histogram_is_needed(
-    region: dict, sample: dict, systematic: dict, template: str
+    region: Dict[str, Any],
+    sample: Dict[str, Any],
+    systematic: Dict[str, Any],
+    template: str,
 ) -> bool:
     """determine whether for a given sample-region-systematic pairing, there is
     an associated histogram
 
     Args:
-        region (dict): containing all region information
-        sample (dict): containing all sample information
-        systematic (dict): containing all systematic information
+        region (Dict[str, Any]): containing all region information
+        sample (Dict[str, Any]): containing all sample information
+        systematic (Dict[str, Any]): containing all systematic information
         template (str): which template is considered: "Nominal", "Up", "Down"
 
     Raises:

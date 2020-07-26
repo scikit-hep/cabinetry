@@ -1,6 +1,6 @@
 import logging
 from pathlib import Path
-from typing import List
+from typing import Any, Dict, List
 
 import numpy as np
 
@@ -10,17 +10,17 @@ from . import histo
 log = logging.getLogger(__name__)
 
 
-def _build_figure_name(region, is_prefit):
+def _build_figure_name(region_name: str, is_prefit: bool) -> str:
     """construct a name for the file a figure is saved as
 
     Args:
-        region (dict): the region shown in the figure
+        region_name (str): name of the region shown in the figure
         is_prefit (bool): whether the figure shows the pre- or post-fit model
 
     Returns:
         str: name of the file the figure should be saved to
     """
-    figure_name = region.replace(" ", "-")
+    figure_name = region_name.replace(" ", "-")
     if is_prefit:
         figure_name += "_" + "prefit"
     else:
@@ -29,11 +29,17 @@ def _build_figure_name(region, is_prefit):
     return figure_name
 
 
-def data_MC(config, histogram_folder, figure_folder, prefit=True, method="matplotlib"):
+def data_MC(
+    config: Dict[str, Any],
+    histogram_folder: str,
+    figure_folder: str,
+    prefit: bool = True,
+    method: str = "matplotlib",
+) -> None:
     """draw a data/MC histogram, control whether it is pre- or postfit with a flag
 
     Args:
-        config (dict): cabinetry configuration
+        config (Dict[str, Any]): cabinetry configuration
         histogram_folder (str): path to the folder containing template histograms
         figure_folder (str): path to the folder to save figures in
         prefit (bool, optional): show the pre- or post-fit model, defaults to True

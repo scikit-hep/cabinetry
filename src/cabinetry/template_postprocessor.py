@@ -1,6 +1,7 @@
 import copy
 import logging
 from pathlib import Path
+from typing import Any, Dict
 
 import numpy as np
 
@@ -11,7 +12,7 @@ from . import histo
 log = logging.getLogger(__name__)
 
 
-def _fix_stat_unc(histogram, name):
+def _fix_stat_unc(histogram: histo.H, name: str) -> None:
     """replace nan stat. unc. by zero for a histogram, modifies the
     histogram handed over in the argument
 
@@ -25,7 +26,7 @@ def _fix_stat_unc(histogram, name):
         histogram.stdev = np.nan_to_num(histogram.stdev, nan=0.0)
 
 
-def apply_postprocessing(histogram, name):
+def apply_postprocessing(histogram: histo.H, name: str) -> histo.H:
     """Create a new modified histogram, currently only calling the
     stat. uncertainty fix. The histogram in the function argument
     stays unchanged.
@@ -43,12 +44,12 @@ def apply_postprocessing(histogram, name):
     return adjusted_histogram
 
 
-def run(config, histogram_folder):
+def run(config: Dict[str, Any], histogram_folder: str) -> None:
     """apply post-processing as needed for all histograms
     this is very similar to template_builder.create_histograms() and should be refactored
 
     Args:
-        config (dict): cabinetry configuration
+        config (Dict[str, Any]): cabinetry configuration
         histogram_folder (str): folder containing the histograms
     """
     log.info("applying post-processing to histograms")

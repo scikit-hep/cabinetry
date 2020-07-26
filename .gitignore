@@ -11,6 +11,9 @@ coverage.xml
 dist
 build
 
+# typing
+.pytype
+
 # editors
 .vscode
 *.swp

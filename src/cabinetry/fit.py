@@ -1,5 +1,5 @@
 import logging
-from typing import Tuple
+from typing import Any, Dict, List, Tuple
 
 import iminuit
 import numpy as np
@@ -9,7 +9,7 @@ import pyhf
 log = logging.getLogger(__name__)
 
 
-def get_parameter_names(model):
+def get_parameter_names(model: pyhf.pdf.Model) -> List[str]:
     """get the labels of all fit parameters, expanding vectors that act on
     one bin per vector entry (gammas)
 
@@ -17,7 +17,7 @@ def get_parameter_names(model):
         model (pyhf.pdf.Model): a HistFactory-style model in pyhf format
 
     Returns:
-        list: names of fit parameters
+        List[str]: names of fit parameters
     """
     labels = []
     for parname in model.config.par_order:
@@ -30,13 +30,15 @@ def get_parameter_names(model):
     return labels
 
 
-def print_results(bestfit, uncertainty, labels):
+def print_results(
+    bestfit: np.ndarray, uncertainty: np.ndarray, labels: List[str]
+) -> None:
     """print the best-fit parameter results and associated uncertainties
 
     Args:
         bestfit (numpy.ndarray): best-fit results of parameters
         uncertainty (numpy.ndarray): uncertainties of best-fit parameter results
-        labels (list): parameter labels
+        labels (List[str]): parameter labels
     """
     max_label_length = max([len(label) for label in labels])
     for i, label in enumerate(labels):
@@ -44,19 +46,19 @@ def print_results(bestfit, uncertainty, labels):
         log.info(f"{l_with_spacer}: {bestfit[i]:.6f} +/- {uncertainty[i]:.6f}")
 
 
-def fit(spec):
+def fit(spec: Dict[str, Any]) -> Tuple[np.ndarray, np.ndarray, List[str], float]:
     """perform an unconstrained maximum likelihood fit with pyhf and report
     the results of the fit
 
     Args:
-        spec (dict): a pyhf workspace
+        spec (Dict[str, Any]): a pyhf workspace specificaton
 
     Returns:
-        tuple: a tuple containing
-            - numpy.ndarray: best-fit positions of parameters
-            - numpy.ndarray: parameter uncertainties
-            - list: parameter names
-            - float: -2 log(likelihood) at best-fit point
+        Tuple[np.ndarray, np.ndarray, List[str], float]:
+            - best-fit positions of parameters
+            - parameter uncertainties
+            - parameter names
+            - -2 log(likelihood) at best-fit point
     """
     log.info("performing unconstrained fit")
 
@@ -77,21 +79,23 @@ def fit(spec):
     return bestfit, uncertainty, labels, best_twice_nll
 
 
-def custom_fit(spec: dict,) -> Tuple[np.ndarray, np.ndarray, list, float, np.ndarray]:
+def custom_fit(
+    spec: Dict[str, Any]
+) -> Tuple[np.ndarray, np.ndarray, List[str], float, np.ndarray]:
     """Perform an unconstrained maximum likelihood fit with iminuit and report
     the result. Compared to fit(), this does not use the pyhf.infer API for more
     control over the minimization, and it returns the correlation matrix.
 
     Args:
-        spec (dict): a pyhf workspace
+        spec (Dict[str, Any]): a pyhf workspace specificaton
 
     Returns:
-        tuple: a tuple containing
-            - numpy.ndarray: best-fit positions of parameters
-            - numpy.ndarray: parameter uncertainties
-            - list: parameter names
-            - float: -2 log(likelihood) at best-fit point
-            - numpy.ndarray: correlation matrix
+        Tuple[np.ndarray, np.ndarray, List[str], float, numpy.ndarray]:
+            - best-fit positions of parameters
+            - parameter uncertainties
+            - parameter names
+            - -2 log(likelihood) at best-fit point
+            - correlation matrix
     """
     pyhf.set_backend("numpy", pyhf.optimize.minuit_optimizer(verbose=True))
 
@@ -106,7 +110,7 @@ def custom_fit(spec: dict,) -> Tuple[np.ndarray, np.ndarray, list, float, np.nda
 
     labels = get_parameter_names(model)
 
-    def twice_nll_func(pars):
+    def twice_nll_func(pars: np.ndarray) -> np.float64:
         twice_nll = -2 * model.logpdf(pars, data)
         return twice_nll[0]
 
