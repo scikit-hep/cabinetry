@@ -41,6 +41,8 @@ jobs:
     - name: Run example
       run: |
         ls -al
+        pwd
+        ls -al src/cabinetry/schemas
         python -c "import cabinetry; print(cabinetry.__path__)"
         python util/create_ntuples.py
         python example.py
