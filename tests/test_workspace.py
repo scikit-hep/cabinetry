@@ -12,6 +12,10 @@ def test__get_data_sample():
     config_example = {"Samples": [mc_sample, data_sample]}
     assert workspace._get_data_sample(config_example) == data_sample
 
+    config_two_data_samples = {"Samples": [data_sample, data_sample]}
+    with pytest.raises(ValueError, match="did not find exactly one data sample"):
+        workspace._get_data_sample(config_two_data_samples)
+
 
 @mock.patch(
     "cabinetry.workspace.histo.Histogram.from_config",
