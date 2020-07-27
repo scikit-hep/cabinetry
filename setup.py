@@ -12,6 +12,7 @@ extras_require["test"] = sorted(
             "flake8",
             "flake8-bugbear",
             "flake8-import-order",
+            "mypy",
             "black;python_version>='3.6'",  # Black is Python3 only
         ]
     )
@@ -36,6 +37,7 @@ setup(
     url="https://github.com/alexander-held/cabinetry",
     packages=find_packages(where="src"),
     package_dir={"": "src"},
+    package_data={"cabinetry": ["py.typed"]},
     classifiers=[
         "Development Status :: 2 - Pre-Alpha",
         "Programming Language :: Python :: 3.6",

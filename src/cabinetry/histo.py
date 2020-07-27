@@ -1,12 +1,15 @@
 import logging
 import os
 from pathlib import Path
+from typing import Any, Dict, List, Type, TypeVar, Union
 
 import boost_histogram as bh
 import numpy as np
 
 
 log = logging.getLogger(__name__)
+
+H = TypeVar("H", bound="Histogram")
 
 
 class Histogram(bh.Histogram):
@@ -15,14 +18,19 @@ class Histogram(bh.Histogram):
     """
 
     @classmethod
-    def from_arrays(cls, bins, yields, stdev):
+    def from_arrays(
+        cls: Type[H],
+        bins: Union[List[float], np.ndarray],
+        yields: Union[List[float], np.ndarray],
+        stdev: Union[List[float], np.ndarray],
+    ) -> H:
         """construct a histogram from arrays of yields and uncertainties, the input
-        can be lists or numpy.ndarrays
+        can be lists of ints or floats, or numpy.ndarrays
 
         Args:
-            bins (Union[list, numpy.ndarray]): edges of histogram bins
-            yields (Union[list, numpy.ndarray]): yield per histogram bin
-            stdev (Union[list, numpy.ndarray]): statistical uncertainty of yield per bin
+            bins (Union[List[float], np.ndarray]): edges of histogram bins
+            yields (Union[List[float], np.ndarray]): yield per histogram bin
+            stdev (Union[List[float], np.ndarray]): statistical uncertainty of yield per bin
 
         Raises:
             ValueError: when amount of bins specified via bin edges and bin contents do not match
@@ -46,7 +54,7 @@ class Histogram(bh.Histogram):
         return out
 
     @classmethod
-    def from_path(cls, histo_path, modified=True):
+    def from_path(cls: Type[H], histo_path: Path, modified: bool = True) -> H:
         """build a histogram from disk
         try to load the "modified" version of the histogram by default
         (which received post-processing)
@@ -75,16 +83,22 @@ class Histogram(bh.Histogram):
 
     @classmethod
     def from_config(
-        cls, histo_folder, region, sample, systematic, modified=True, template="Nominal"
-    ):
+        cls: Type[H],
+        histo_folder: str,
+        region: Dict[str, Any],
+        sample: Dict[str, Any],
+        systematic: Dict[str, Any],
+        modified: bool = True,
+        template: str = "Nominal",
+    ) -> H:
         """load a histogram, given a folder the histogram is located in and the
         relevant information from the config: region, sample, systematic
 
         Args:
             histo_folder (str): folder containing all histograms
-            region (dict): containing all region information
-            sample (dict): containing all sample information
-            systematic (dict): containing all systematic information
+            region (Dict[str, Any]): containing all region information
+            sample (Dict[str, Any]): containing all sample information
+            systematic (Dict[str, Any]): containing all systematic information
             modified (bool, optional): whether to load the modified histogram (after post-processing), defaults to True
             template (str): which template (nominal/up/down) to consider, defaults to "Nominal"
 
@@ -97,7 +111,7 @@ class Histogram(bh.Histogram):
         return cls.from_path(histo_path, modified)
 
     @property
-    def yields(self):
+    def yields(self) -> np.ndarray:
         """get the yields per histogram bin
 
         Returns:
@@ -106,7 +120,7 @@ class Histogram(bh.Histogram):
         return self.view().value
 
     @property
-    def stdev(self):
+    def stdev(self) -> np.ndarray:
         """get the stat. uncertainty per histogram bin
 
         Returns:
@@ -115,7 +129,7 @@ class Histogram(bh.Histogram):
         return np.sqrt(self.view().variance)
 
     @stdev.setter
-    def stdev(self, value):
+    def stdev(self, value: np.ndarray) -> None:
         """update the variance (by specifying the standard deviation)
 
         Args:
@@ -124,7 +138,7 @@ class Histogram(bh.Histogram):
         self.view().variance = value ** 2
 
     @property
-    def bins(self):
+    def bins(self) -> np.ndarray:
         """get the bin edges
 
         Returns:
@@ -132,7 +146,7 @@ class Histogram(bh.Histogram):
         """
         return self.axes[0].edges
 
-    def save(self, histo_path):
+    def save(self, histo_path: Path) -> None:
         """save a histogram to disk
 
         Args:
@@ -150,7 +164,7 @@ class Histogram(bh.Histogram):
             bins=self.bins,
         )
 
-    def validate(self, name):
+    def validate(self, name: str) -> None:
         """run consistency checks on a histogram, checking for empty bins
         and ill-defined statistical uncertainties
 
@@ -177,7 +191,7 @@ class Histogram(bh.Histogram):
                 f"{name} has non-empty bins with ill-defined stat. unc.: {not_empty_but_nan}",
             )
 
-    def normalize_to_yield(self, reference_histogram):
+    def normalize_to_yield(self, reference_histogram: H) -> np.float64:
         """normalize a histogram to match the yield of a reference, and return the
         normalization factor
 
@@ -196,14 +210,17 @@ class Histogram(bh.Histogram):
 
 
 def build_name(
-    region: dict, sample: dict, systematic: dict, template: str = "Nominal"
+    region: Dict[str, Any],
+    sample: Dict[str, Any],
+    systematic: Dict[str, Any],
+    template: str = "Nominal",
 ) -> str:
     """construct a unique name for each histogram
 
     Args:
-        region (dict): containing all region information
-        sample (dict): containing all sample information
-        systematic (dict): containing all systematic information
+        region (Dict[str, Any]): containing all region information
+        sample (Dict[str, Any]): containing all sample information
+        systematic (Dict[str, Any]): containing all systematic information
         template (str): which template (nominal/up/down) to consider, defaults to "Nominal"
 
     Returns:

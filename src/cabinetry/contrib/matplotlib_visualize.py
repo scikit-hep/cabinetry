@@ -1,7 +1,7 @@
 import logging
 import os
 from pathlib import Path
-from typing import List
+from typing import Any, Dict, List
 
 import matplotlib as mpl
 import matplotlib.pyplot as plt
@@ -11,12 +11,12 @@ import numpy as np
 log = logging.getLogger(__name__)
 
 
-def _total_yield_uncertainty(stdev_list):
+def _total_yield_uncertainty(stdev_list: List[np.ndarray]) -> np.ndarray:
     """calculate the absolute statistical uncertainty of a stack of MC
     via sum in quadrature
 
     Args:
-        stdev_list (list): list of absolute stat. uncertainty per sample
+        stdev_list (List[np.ndarray]): list of absolute stat. uncertainty per sample
 
     Returns:
         np.array: absolute stat. uncertainty of stack of samples
@@ -25,11 +25,11 @@ def _total_yield_uncertainty(stdev_list):
     return tot_unc
 
 
-def data_MC(histogram_dict_list, figure_path):
+def data_MC(histogram_dict_list: List[Dict[str, Any]], figure_path: Path) -> None:
     """draw a data/MC histogram
 
     Args:
-        histogram_dict_list (list[dict]): list of samples (with info stored in one dict per sample)
+        histogram_dict_list (List[Dict[str, Any]]): list of samples (with info stored in one dict per sample)
         figure_path (pathlib.Path): path where figure should be saved
     """
     mc_histograms_yields = []

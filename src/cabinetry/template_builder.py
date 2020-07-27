@@ -1,6 +1,6 @@
 import logging
 from pathlib import Path
-from typing import Optional
+from typing import Any, Dict, Optional
 
 import numpy as np
 
@@ -11,13 +11,15 @@ from . import histo
 log = logging.getLogger(__name__)
 
 
-def _check_for_override(systematic: dict, template: str, option: str) -> Optional[str]:
+def _check_for_override(
+    systematic: Dict[str, Any], template: str, option: str
+) -> Optional[str]:
     """Given a systematic and a string specifying which template is currently under consideration,
     check whether the systematic defines an override for an option. Return the override if it
     exists, otherwise return None.
 
     Args:
-        systematic (dict): containing all systematic information
+        systematic (Dict[str, Any]): containing all systematic information
         template (str): template to consider: "Nominal", "Up", "Down"
         option (str): the option for which the presence of an override is checked
 
@@ -28,16 +30,19 @@ def _check_for_override(systematic: dict, template: str, option: str) -> Optiona
 
 
 def _get_ntuple_path(
-    region: dict, sample: dict, systematic: dict, template: str
+    region: Dict[str, Any],
+    sample: Dict[str, Any],
+    systematic: Dict[str, Any],
+    template: str,
 ) -> Path:
     """determine the path to ntuples from which a histogram has to be built
     for non-nominal templates, override the nominal path if an alternative is
     specified for the template
 
     Args:
-        region (dict): containing all region information
-        sample (dict): containing all sample information
-        systematic (dict): containing all systematic information
+        region (Dict[str, Any]): containing all region information
+        sample (Dict[str, Any]): containing all sample information
+        systematic (Dict[str, Any]): containing all systematic information
         template (str): which template is considered: "Nominal", "Up", "Down"
 
     Returns:
@@ -54,11 +59,11 @@ def _get_ntuple_path(
     return path
 
 
-def _get_variable(region: dict) -> str:
+def _get_variable(region: Dict[str, Any]) -> str:
     """construct the variable the histogram will be binned in
 
     Args:
-        region (dict): containing all region information
+        region (Dict[str, Any]): containing all region information
 
     Returns:
         str: name of variable to bin histogram in
@@ -68,16 +73,19 @@ def _get_variable(region: dict) -> str:
 
 
 def _get_filter(
-    region: dict, sample: dict, systematic: dict, template: str
+    region: Dict[str, Any],
+    sample: Dict[str, Any],
+    systematic: Dict[str, Any],
+    template: str,
 ) -> Optional[str]:
     """construct the filter to be applied for event selection
     for non-nominal templates, override the nominal filter if an alternative is
     specified for the template
 
     Args:
-        region (dict): containing all region information
-        sample (dict): containing all sample information
-        systematic (dict): containing all systematic information
+        region (Dict[str, Any]): containing all region information
+        sample (Dict[str, Any]): containing all sample information
+        systematic (Dict[str, Any]): containing all systematic information
         template (str): which template is considered: "Nominal", "Up", "Down"
 
     Returns:
@@ -93,19 +101,24 @@ def _get_filter(
     return selection_filter
 
 
-def _get_weight(region: dict, sample: dict, systematic: dict, template: str) -> str:
+def _get_weight(
+    region: Dict[str, Any],
+    sample: Dict[str, Any],
+    systematic: Dict[str, Any],
+    template: str,
+) -> Optional[str]:
     """find the weight to be used for the events in the histogram
     for non-nominal templates, override the nominal weight if an alternative is
     specified for the template
 
     Args:
-        region (dict): containing all region information
-        sample (dict): containing all sample information
-        systematic (dict): containing all systematic information
+        region (Dict[str, Any]): containing all region information
+        sample (Dict[str, Any]): containing all sample information
+        systematic (Dict[str, Any]): containing all systematic information
         template (str): which template is considered: "Nominal", "Up", "Down"
 
     Returns:
-        str: weight used for events when filled into histograms
+        Optional[str]: weight used for events when filled into histograms, or None for no weight
     """
     weight = sample.get("Weight", None)
     # check whether a systematic is being processed
@@ -117,15 +130,17 @@ def _get_weight(region: dict, sample: dict, systematic: dict, template: str) -> 
     return weight
 
 
-def _get_position_in_file(sample: dict, systematic: dict, template: str) -> str:
+def _get_position_in_file(
+    sample: Dict[str, Any], systematic: Dict[str, Any], template: str
+) -> str:
     """the file might have some substructure, this specifies where in the file
     the data is
     for non-nominal templates, override the nominal position if an alternative is
     specified for the template
 
     Args:
-        sample (dict): containing all sample information
-        systematic (dict): containing all systematic information
+        sample (Dict[str, Any]): containing all sample information
+        systematic (Dict[str, Any]): containing all systematic information
         template (str): which template is considered: "Nominal", "Up", "Down"
 
     Returns:
@@ -141,13 +156,13 @@ def _get_position_in_file(sample: dict, systematic: dict, template: str) -> str:
     return position
 
 
-def _get_binning(region: dict) -> np.ndarray:
+def _get_binning(region: Dict[str, Any]) -> np.ndarray:
     """determine the binning to be used in a given region
     should eventually also support other ways of specifying bins,
     such as the amount of bins and the range to bin in
 
     Args:
-        region (dict): containing all region information
+        region (Dict[str, Any]): containing all region information
 
     Raises:
         NotImplementedError: when the binning is not explicitly defined
@@ -162,14 +177,14 @@ def _get_binning(region: dict) -> np.ndarray:
 
 
 def create_histograms(
-    config: dict, folder_path_str: str, method: str = "uproot"
+    config: Dict[str, Any], folder_path_str: str, method: str = "uproot"
 ) -> None:
     """generate all required histograms specified by a configuration file
     a tool providing histograms should provide bin yields and statistical
     uncertainties, as well as the bin edges
 
     Args:
-        config (dict): cabinetry configuration
+        config (Dict[str, Any]): cabinetry configuration
         folder_path_str (str): folder to save the histograms to
         method (str, optional): backend to use for histogram production, defaults to "uproot"
 
