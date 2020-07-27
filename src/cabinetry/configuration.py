@@ -7,11 +7,6 @@ from typing import Any, Dict, List, Union
 import jsonschema
 import yaml
 
-
-REQUIRED_CONFIG_KEYS = ["General", "Samples", "Regions", "NormFactors"]
-
-OPTIONAL_CONFIG_KEYS = ["Systematics"]
-
 log = logging.getLogger(__name__)
 
 
