@@ -1,7 +1,10 @@
+import json
 import logging
 from pathlib import Path
+import pkgutil
 from typing import Any, Dict, List, Union
 
+import jsonschema
 import yaml
 
 
@@ -29,7 +32,8 @@ def read(file_path_string: str) -> Dict[str, Any]:
 
 
 def validate(config: Dict[str, Any]) -> bool:
-    """test whether the config is valid
+    """check whether the config satisfies the json schema, and perform additional
+    checks to validate it
 
     Args:
         config (Dict[str, Any]): cabinetry configuration
@@ -44,6 +48,13 @@ def validate(config: Dict[str, Any]) -> bool:
     Returns:
         bool: whether the validation was successful
     """
+    # load json schema for config and validate against it
+    schema_text = pkgutil.get_data(__name__, "schemas/config.json")
+    if schema_text is None:
+        raise FileNotFoundError("could not load config schema")
+    config_schema = json.loads(schema_text)
+    jsonschema.validate(instance=config, schema=config_schema)
+
     config_keys = config.keys()
 
     # check whether all required keys exist

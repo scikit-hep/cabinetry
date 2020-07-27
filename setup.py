@@ -54,6 +54,7 @@ setup(
         "pyhf>=0.3.2",
         "iminuit>1.4.0",
         "boost_histogram",
+        "jsonschema",
     ],
     extras_require=extras_require,
 )
