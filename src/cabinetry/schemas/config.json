@@ -1,0 +1,245 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "$id": "https://github.com/alexander-held/cabinetry/blob/master/src/cabinetry/schemas/config.json",
+    "title": "cabinetry config schema",
+    "description": "full schema for the cabinetry configuration file",
+    "type": "object",
+    "required": ["General", "Regions", "Samples", "NormFactors"],
+    "properties": {
+        "General": {
+            "$ref": "#/definitions/general"
+        },
+        "Regions": {
+            "description": "list of regions",
+            "type": "array",
+            "minItems": 1,
+            "items": {
+                "$ref": "#/definitions/region"
+            },
+            "uniqueItems": true
+        },
+        "Samples": {
+            "description": "list of samples",
+            "type": "array",
+            "minItems": 1,
+            "items": {
+                "$ref": "#/definitions/sample"
+            },
+            "uniqueItems": true
+        },
+        "NormFactors": {
+            "description": "list of normalization factors",
+            "type": "array",
+            "minItems": 1,
+            "items": {
+                "$ref": "#/definitions/normfactor"
+            },
+            "uniqueItems": true
+        },
+        "Systematics": {
+            "description": "list of systematics",
+            "type": "array",
+            "minItems": 0,
+            "items": {
+                "$ref": "#/definitions/systematic"
+            },
+            "uniqueItems": true
+        }
+    },
+    "definitions": {
+        "general": {
+            "title": "General",
+            "$$target": "#/definitions/general",
+            "description": "general settings",
+            "type": "object",
+            "required": ["Measurement", "POI"],
+            "properties": {
+                "Measurement": {
+                    "description": "name of measurement",
+                    "type": "string"
+                },
+                "POI": {
+                    "description": "name of parameter of interest",
+                    "type": "string"
+                }
+            },
+            "additionalProperties": false
+        },
+        "region": {
+            "title": "Region",
+            "description": "a region of phase space",
+            "$$target": "#/definitions/region",
+            "type": "object",
+            "required": ["Name", "Filter", "Variable", "Binning"],
+            "properties": {
+                "Name": {
+                    "description": "name of the region",
+                    "type": "string"
+                },
+                "Filter": {
+                    "description": "selection criteria to apply",
+                    "type": "string"
+                },
+                "Variable": {
+                    "description": "variable to bin in",
+                    "type": "string"
+                },
+                "Binning": {
+                    "description": "binning to use in histograms",
+                    "type": "array",
+                    "minItems": 2,
+                    "items": {
+                        "description": "bins",
+                        "type": "number"
+                    },
+                    "uniqueItems": true
+                }
+            },
+            "additionalProperties": false
+        },
+        "sample": {
+            "title": "Sample",
+            "description": "a sample of a specific process or data",
+            "$$target": "#/definitions/sample",
+            "type": "object",
+            "required": ["Name", "Path", "Tree"],
+            "properties": {
+                "Name": {
+                    "description": "name of the sample",
+                    "type": "string"
+                },
+                "Path": {
+                    "description": "path to file containing sample",
+                    "type": "string"
+                },
+                "Tree": {
+                    "description": "name of tree",
+                    "type": "string"
+                },
+                "Weight": {
+                    "description": "weight to apply to events",
+                    "type": "string"
+                },
+                "Data": {
+                    "description": "if it is a data sample",
+                    "type": "boolean"
+                }
+            },
+            "additionalProperties": false
+        },
+        "normfactor": {
+            "title": "NormFactor",
+            "description": "a normalization factor affecting one or more samples",
+            "$$target": "#/definitions/normfactor",
+            "type": "object",
+            "required": ["Name", "Samples"],
+            "properties": {
+                "Name": {
+                    "description": "name of the normalization factor",
+                    "type": "string"
+                },
+                "Samples": {
+                    "$ref": "#/definitions/samples_setting"
+                },
+                "Nominal": {
+                    "description": "nominal value",
+                    "type": "number"
+                },
+                "Bounds": {
+                    "description": "lower and upper bound",
+                    "type": "array",
+                    "minItems": 2,
+                    "maxItems": 2,
+                    "items": {
+                        "description": "bounds",
+                        "type": "number"
+                    },
+                    "uniqueItems": true
+                },
+                "Fixed": {
+                    "description": "if the normalization factor is a constant",
+                    "type": "boolean"
+                }
+            },
+            "additionalProperties": false
+        },
+        "systematic": {
+            "title": "Systematic",
+            "description": "a systematic uncertainty",
+            "$$target": "#/definitions/systematic",
+            "type": "object",
+            "required": ["Name", "Samples", "Type"],
+            "properties": {
+                "Name": {
+                    "description": "name of the systematic uncertainty",
+                    "type": "string"
+                },
+                "Samples": {
+                    "$ref": "#/definitions/samples_setting"
+                },
+                "Type": {
+                    "description": "type of systematic uncertainty",
+                    "type": "string",
+                    "enum": ["Normalization", "NormPlusShape"]
+                },
+                "Up": {
+                    "$ref": "#/definitions/template"
+                },
+                "Down": {
+                    "$ref": "#/definitions/template"
+                }
+            },
+            "additionalProperties": false
+        },
+        "template": {
+            "title": "Template",
+            "$$target": "#/definitions/template",
+            "description": "a systematics template (up/down)",
+            "type": "object",
+            "properties": {
+                "Path": {
+                    "description": "path to file",
+                    "type": "string"
+                },
+                "Tree": {
+                    "description": "name of tree",
+                    "type": "string"
+                },
+                "Weight": {
+                    "description": "weight to apply",
+                    "type": "string"
+                },
+                "Normalization": {
+                    "description": "normalization uncertainty to apply",
+                    "type": "number"
+                },
+                "Symmetrize": {
+                    "description": "whether to apply symmetrization",
+                    "type": "boolean"
+                }
+            },
+            "additionalProperties": false
+        },
+        "samples_setting": {
+            "title": "Sample setting",
+            "$$target": "#/definitions/samples_setting",
+            "oneOf": [
+                {
+                    "description": "single affected sample",
+                    "type": "string"
+                },
+                {
+                    "description": "multiple affected samples",
+                    "type": "array",
+                    "minItems": 1,
+                    "items": {
+                        "description": "single affected sample",
+                        "type": "string"
+                    },
+                    "uniqueItems": true
+                }
+            ]
+        }
+    },
+    "additionalProperties": false
+}
