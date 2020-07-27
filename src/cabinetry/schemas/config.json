@@ -1,6 +1,6 @@
 {
     "$schema": "http://json-schema.org/draft-07/schema#",
-    "$id": "https://github.com/alexander-held/cabinetry/blob/master/src/cabinetry/schemas/config.json",
+    "$id": "https://raw.githubusercontent.com/alexander-held/cabinetry/master/src/cabinetry/schemas/config.json",
     "title": "cabinetry config schema",
     "description": "full schema for the cabinetry configuration file",
     "type": "object",
