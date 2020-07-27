@@ -1,3 +1,4 @@
+from collections import namedtuple
 from pathlib import Path
 from unittest import mock
 
@@ -7,10 +8,7 @@ import pytest
 from cabinetry import visualize
 
 
-class MockHistogram:
-    bins = []
-    yields = []
-    stdev = []
+MockHistogram = namedtuple("MockHistogram", ["bins", "yields", "stdev"])
 
 
 @pytest.mark.parametrize(
@@ -28,7 +26,7 @@ def test__build_figure_name(test_input, expected):
 
 @mock.patch("cabinetry.contrib.matplotlib_visualize.data_MC")
 @mock.patch(
-    "cabinetry.histo.Histogram.from_config", return_value=MockHistogram(),
+    "cabinetry.histo.Histogram.from_config", return_value=MockHistogram([], [], []),
 )
 def test_data_MC(mock_load, mock_draw, tmp_path):
     """contrib.matplotlib_visualize is only imported depending on the keyword argument,
