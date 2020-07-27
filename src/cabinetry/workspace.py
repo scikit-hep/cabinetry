@@ -23,7 +23,8 @@ def _get_data_sample(config: Dict[str, Any]) -> Dict[str, Any]:
         Dict[str, Any]: the data sample
     """
     data_samples = [sample for sample in config["Samples"] if sample.get("Data", False)]
-    assert len(data_samples) == 1
+    if len(data_samples) != 1:
+        raise ValueError("did not find exactly one data sample")
     return data_samples[0]
 
 
