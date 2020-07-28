@@ -44,9 +44,9 @@ Systematics:
 
   - Name: "WeightBasedModeling"
     Up:
-      Weight: "weight_up"
+      Weight: "1.0*weight_up"
     Down:
-      Weight: "weight_down"
+      Weight: "1.0*weight_down"
     Samples: "Background"
     Type: "NormPlusShape"
 
