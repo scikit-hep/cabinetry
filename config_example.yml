@@ -44,7 +44,7 @@ Systematics:
 
   - Name: "WeightBasedModeling"
     Up:
-      Weight: "1.0*weight_up"
+      Weight: "weight_up"
     Down:
       Weight: "0.7*weight"
     Samples: "Background"
