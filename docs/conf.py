@@ -5,6 +5,8 @@ extensions = [
     "sphinx.ext.autodoc",
     "sphinx.ext.napoleon",
     "sphinx_rtd_theme",
+    "sphinx_copybutton",
+    "sphinx-jsonschema",
 ]
 
 import sphinx_rtd_theme

@@ -5,7 +5,7 @@
    :hidden:
    :maxdepth: 1
 
-
+   config
    api
    license
 
