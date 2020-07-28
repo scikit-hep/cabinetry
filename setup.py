@@ -18,7 +18,7 @@ extras_require["test"] = sorted(
     )
 )
 extras_require["docs"] = sorted(
-    set("sphinx", "sphinx-copybutton", "sphinx-jsonschema", "sphinx-rtd-theme")
+    set(["sphinx", "sphinx-copybutton", "sphinx-jsonschema", "sphinx-rtd-theme"])
 )
 
 extras_require["develop"] = sorted(
