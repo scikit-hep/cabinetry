@@ -1,0 +1,33 @@
+Config schema
+=============
+
+The config schema is given below.
+The "General" block holds general settings, followed by blocks that take lists of objects: regions, samples, normalization factors, and systematics.
+
+.. jsonschema:: ../src/cabinetry/schemas/config.json#/properties/General
+.. jsonschema:: ../src/cabinetry/schemas/config.json#/properties/Regions
+.. jsonschema:: ../src/cabinetry/schemas/config.json#/properties/Samples
+.. jsonschema:: ../src/cabinetry/schemas/config.json#/properties/NormFactors
+.. jsonschema:: ../src/cabinetry/schemas/config.json#/properties/Systematics
+
+Details about the setting blocks:
+---------------------------------
+
+.. jsonschema:: ../src/cabinetry/schemas/config.json#/definitions/general
+
+.. jsonschema:: ../src/cabinetry/schemas/config.json#/definitions/region
+
+.. jsonschema:: ../src/cabinetry/schemas/config.json#/definitions/sample
+
+.. jsonschema:: ../src/cabinetry/schemas/config.json#/definitions/normfactor
+
+.. jsonschema:: ../src/cabinetry/schemas/config.json#/definitions/systematic
+
+Common options:
+---------------
+
+.. jsonschema:: ../src/cabinetry/schemas/config.json#/definitions/template
+
+.. jsonschema:: ../src/cabinetry/schemas/config.json#/definitions/samples_setting
+
+
