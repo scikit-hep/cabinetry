@@ -240,8 +240,8 @@ def create_histograms(
                             pos_in_file,
                             variable,
                             bins,
-                            weight,
-                            selection_filter,
+                            weight=weight,
+                            selection_filter=selection_filter,
                         )
 
                     elif method == "ServiceX":
