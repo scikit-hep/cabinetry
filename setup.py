@@ -37,7 +37,7 @@ setup(
     url="https://github.com/alexander-held/cabinetry",
     packages=find_packages(where="src"),
     package_dir={"": "src"},
-    package_data={"cabinetry": ["py.typed"]},
+    package_data={"cabinetry": ["py.typed", "schemas/config.json"]},
     classifiers=[
         "Development Status :: 2 - Pre-Alpha",
         "Programming Language :: Python :: 3.6",
@@ -54,6 +54,7 @@ setup(
         "pyhf>=0.3.2",
         "iminuit>1.4.0",
         "boost_histogram",
+        "jsonschema",
     ],
     extras_require=extras_require,
 )

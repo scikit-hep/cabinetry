@@ -1,6 +1,7 @@
 import logging
 from unittest import mock
 
+import jsonschema
 import pytest
 
 from cabinetry import configuration
@@ -15,55 +16,39 @@ def test_read(mock_validation):
 
 def test_validate():
     config_valid = {
-        "General": [],
-        "Regions": [],
-        "NormFactors": [{"Name": "NF", "Samples": "signal"}],
-        "Samples": [{"Data": True}],
+        "General": {"Measurement": "", "POI": ""},
+        "Regions": [{"Name": "", "Filter": "", "Variable": "", "Binning": [0, 1]}],
+        "Samples": [{"Name": "", "Path": "", "Tree": "", "Data": True}],
+        "NormFactors": [{"Name": "", "Samples": ""}],
     }
     assert configuration.validate(config_valid)
 
-    config_missing_key = {"General": []}
-    with pytest.raises(ValueError, match="missing required key in config"):
-        configuration.validate(config_missing_key)
-
-    config_unknown_key = {
-        "General": [],
-        "Regions": [],
-        "NormFactors": [],
-        "Samples": [],
-        "unknown": [],
-    }
-    with pytest.raises(ValueError, match="unknown key found"):
-        configuration.validate(config_unknown_key)
-
-    config_multiple_data_samples = {
-        "General": [],
-        "Regions": [],
-        "NormFactors": [],
-        "Samples": [{"Data": True}, {"Data": True}],
+    # not exactly one data sample
+    config_multiple_data_samples = config_valid = {
+        "General": {"Measurement": "", "POI": ""},
+        "Regions": [{"Name": "", "Filter": "", "Variable": "", "Binning": [0, 1]}],
+        "Samples": [{"Name": "", "Path": "", "Tree": ""}],
+        "NormFactors": [{"Name": "", "Samples": ""}],
     }
     with pytest.raises(
         NotImplementedError, match="can only handle cases with exactly one data sample"
     ):
         configuration.validate(config_multiple_data_samples)
 
-    config_missing_NF_name = {
-        "General": [],
-        "Regions": [],
-        "NormFactors": [{"Samples": []}],
-        "Samples": [{"Data": True}],
-    }
-    with pytest.raises(ValueError, match="need to specify Name for NormFactor"):
-        configuration.validate(config_missing_NF_name)
+    # config doesn't adhere to schema
+    config_schema_mismatch = {}
+    with pytest.raises(
+        jsonschema.exceptions.ValidationError, match="'General' is a required property"
+    ):
+        configuration.validate(config_schema_mismatch)
 
-    config_missing_NF_samples = {
-        "General": [],
-        "Regions": [],
-        "NormFactors": [{"Name": "NF"}],
-        "Samples": [{"Data": True}],
-    }
-    with pytest.raises(ValueError, match="need to specify Samples for NormFactor"):
-        configuration.validate(config_missing_NF_samples)
+    # schema cannot be loaded
+    with mock.patch(
+        "cabinetry.configuration.pkgutil.get_data", return_value=None
+    ) as mock_get:
+        with pytest.raises(FileNotFoundError, match="could not load config schema"):
+            configuration.validate({})
+        mock_get.assert_called_once()
 
 
 def test_print_overview(caplog):

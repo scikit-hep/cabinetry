@@ -29,5 +29,8 @@ build
 # sphinx
 docs/_build
 
+# json schemas
+!src/cabinetry/schemas/*json
+
 # reference for tests
 !tests/contrib/reference/*pdf
