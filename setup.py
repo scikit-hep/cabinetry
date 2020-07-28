@@ -17,8 +17,12 @@ extras_require["test"] = sorted(
         ]
     )
 )
+extras_require["docs"] = sorted(
+    set("sphinx", "sphinx-copybutton", "sphinx-jsonschema", "sphinx-rtd-theme")
+)
+
 extras_require["develop"] = sorted(
-    set(extras_require["test"] + ["pre-commit", "twine"])
+    set(extras_require["test"] + extras_require["docs"] + ["pre-commit", "twine"])
 )
 extras_require["complete"] = sorted(set(sum(extras_require.values(), [])))
 
