@@ -8,11 +8,13 @@ def test_from_uproot(tmp_path, utils):
     treename = "tree"
     varname = "var"
     var_array = [1.1, 2.3, 3.0, 3.2]
-    weightname = "weight"
+    weightname_write = "weight"
     weight_array = [1.0, 1.0, 2.0, 1.0]
     bins = [1, 2, 3, 4]
     # create something to read
-    utils.create_ntuple(fname, treename, varname, var_array, weightname, weight_array)
+    utils.create_ntuple(
+        fname, treename, varname, var_array, weightname_write, weight_array
+    )
 
     # read - no weights or selection
     yields, stdev = histogram_creation.from_uproot(fname, treename, varname, bins)
@@ -28,11 +30,20 @@ def test_from_uproot(tmp_path, utils):
     assert np.allclose(stdev, [1, 1, 1])
 
     # read - with weight
+    weightname_apply = "weight*2"
     yields, stdev = histogram_creation.from_uproot(
-        fname, treename, varname, bins, weight=weightname
+        fname, treename, varname, bins, weight=weightname_apply
     )
-    assert np.allclose(yields, [1, 1, 3])
-    assert np.allclose(stdev, [1, 1, 2.23606798])
+    assert np.allclose(yields, [2, 2, 6])
+    assert np.allclose(stdev, [2, 2, 4.47213595])
+
+    # read - with weight that is only a float
+    weight_float = "2.0"
+    yields, stdev = histogram_creation.from_uproot(
+        fname, treename, varname, bins, weight=weight_float
+    )
+    assert np.allclose(yields, [2, 2, 4])
+    assert np.allclose(stdev, [2, 2, 2.82842712])
 
 
 def test__bin_data():
