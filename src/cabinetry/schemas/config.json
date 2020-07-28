@@ -168,7 +168,7 @@
             "description": "a systematic uncertainty",
             "$$target": "#/definitions/systematic",
             "type": "object",
-            "required": ["Name", "Samples", "Type"],
+            "required": ["Name", "Samples", "Type", "Up", "Down"],
             "properties": {
                 "Name": {
                     "description": "name of the systematic uncertainty",
