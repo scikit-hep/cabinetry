@@ -89,6 +89,7 @@ def correlation_matrix(
     corr_mat: np.ndarray,
     labels: List[str],
     figure_folder: str,
+    pruning_threshold: float = 0.0,
     method: str = "matplotlib",
 ) -> None:
     """plot a correlation matrix
@@ -97,11 +98,24 @@ def correlation_matrix(
         corr_mat (np.ndarray): the correlation matrix to plot
         labels (List[str]): names of parameters in the correlation matrix
         figure_folder (str): path to the folder to save figures in
+        pruning_threshold (float): minimum correlation for a parameter to have with any
+            other parameters to not get pruned
         method (str, optional): what backend to use for plotting, defaults to "matplotlib"
 
     Raises:
         NotImplementedError: when trying to plot with a method that is not supported
     """
+    # create a matrix that's True if a correlation is below threshold, and True on the diagonal
+    below_threshold = np.where(np.abs(corr_mat) < pruning_threshold, True, False)
+    np.fill_diagonal(below_threshold, True)
+    # get indices of rows/columns where everything is below threshold
+    delete_indices = np.where(np.all(below_threshold, axis=0))
+    # delete rows and columns where all correlations are below threshold
+    corr_mat = np.delete(
+        np.delete(corr_mat, delete_indices, axis=1), delete_indices, axis=0
+    )
+    labels = np.delete(labels, delete_indices)
+
     figure_path = Path(figure_folder) / "correlation_matrix.pdf"
     if method == "matplotlib":
         from cabinetry.contrib import matplotlib_visualize
@@ -126,8 +140,8 @@ def pulls(
         uncertainty (np.ndarray): parameter uncertainties
         labels (List[str]): parameter names
         figure_folder (str): path to the folder to save figures in
-        exclude_list (Optional[List[str]], optional): list of parameters to exclude from plot, defaults to None
-            (nothing excluded)
+        exclude_list (Optional[List[str]], optional): list of parameters to exclude from plot,
+            defaults to None (nothing excluded)
         method (str, optional): what backend to use for plotting, defaults to "matplotlib"
 
     Raises:
