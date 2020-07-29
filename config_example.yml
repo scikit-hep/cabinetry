@@ -46,7 +46,7 @@ Systematics:
     Up:
       Weight: "weight_up"
     Down:
-      Weight: "weight_down"
+      Weight: "0.7*weight"
     Samples: "Background"
     Type: "NormPlusShape"
 
