@@ -98,8 +98,8 @@ def correlation_matrix(
         corr_mat (np.ndarray): the correlation matrix to plot
         labels (List[str]): names of parameters in the correlation matrix
         figure_folder (str): path to the folder to save figures in
-        pruning_threshold (float): minimum correlation for a parameter to have with any
-            other parameters to not get pruned
+        pruning_threshold (float, optional): minimum correlation for a parameter to
+            have with any other parameters to not get pruned, defaults to 0.0
         method (str, optional): what backend to use for plotting, defaults to "matplotlib"
 
     Raises:
