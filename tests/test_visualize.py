@@ -104,23 +104,41 @@ def test_pulls(mock_draw):
     exclude_list = ["a"]
     folder_path = "tmp"
 
-    expected_bestfit = np.asarray([1.0, 1.1])
-    expected_uncertainty = np.asarray([1.0, 0.7])
-    expected_labels = np.asarray(["b", "c"])
+    filtered_bestfit = np.asarray([1.0, 1.1])
+    filtered_uncertainty = np.asarray([1.0, 0.7])
+    filtered_labels = np.asarray(["b", "c"])
     figure_path = Path(folder_path) / "pulls.pdf"
 
+    # with filtering
     visualize.pulls(
-        bestfit, uncertainty, labels, exclude_list, folder_path, method="matplotlib"
+        bestfit,
+        uncertainty,
+        labels,
+        folder_path,
+        exclude_list=exclude_list,
+        method="matplotlib",
     )
 
     mock_draw.assert_called_once()
-    assert np.allclose(mock_draw.call_args[0][0], expected_bestfit)
-    assert np.allclose(mock_draw.call_args[0][1], expected_uncertainty)
+    assert np.allclose(mock_draw.call_args[0][0], filtered_bestfit)
+    assert np.allclose(mock_draw.call_args[0][1], filtered_uncertainty)
     assert np.any(
         [
-            mock_draw.call_args[0][2][i] == expected_labels[i]
-            for i in range(len(expected_labels))
+            mock_draw.call_args[0][2][i] == filtered_labels[i]
+            for i in range(len(filtered_labels))
         ]
+    )
+    assert mock_draw.call_args[0][3] == figure_path
+    assert mock_draw.call_args[1] == {}
+
+    # without filtering
+    visualize.pulls(
+        bestfit, uncertainty, labels, folder_path, method="matplotlib",
+    )
+    assert np.allclose(mock_draw.call_args[0][0], bestfit)
+    assert np.allclose(mock_draw.call_args[0][1], uncertainty)
+    assert np.any(
+        [mock_draw.call_args[0][2][i] == labels[i] for i in range(len(labels))]
     )
     assert mock_draw.call_args[0][3] == figure_path
     assert mock_draw.call_args[1] == {}
@@ -128,5 +146,10 @@ def test_pulls(mock_draw):
     # unknown plotting method
     with pytest.raises(NotImplementedError, match="unknown backend: unknown"):
         visualize.pulls(
-            bestfit, uncertainty, labels, exclude_list, folder_path, method="unknown"
+            bestfit,
+            uncertainty,
+            labels,
+            folder_path,
+            exclude_list=exclude_list,
+            method="unknown",
         )

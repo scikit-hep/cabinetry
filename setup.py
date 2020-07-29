@@ -55,9 +55,9 @@ setup(
     install_requires=[
         "numpy",
         "pyyaml",
-        "pyhf>=0.3.2",
+        "pyhf>=0.5.0",
         "iminuit>1.4.0",
-        "boost_histogram",
+        "boost_histogram!=0.10.1",
         "jsonschema",
     ],
     extras_require=extras_require,
