@@ -1,6 +1,6 @@
 import logging
 from pathlib import Path
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Optional
 
 import numpy as np
 
@@ -115,8 +115,8 @@ def pulls(
     bestfit: np.ndarray,
     uncertainty: np.ndarray,
     labels: List[str],
-    exclude_list: List[str],
     figure_folder: str,
+    exclude_list: Optional[List[str]] = None,
     method: str = "matplotlib",
 ) -> None:
     """produce a pull plot of parameter results and uncertainties
@@ -125,24 +125,27 @@ def pulls(
         bestfit (np.ndarray): best-fit results for parameters
         uncertainty (np.ndarray): parameter uncertainties
         labels (List[str]): parameter names
-        exclude_list (List[str]): list of parameters to exclude from plot
         figure_folder (str): path to the folder to save figures in
+        exclude_list (Optional[List[str]], optional): list of parameters to exclude from plot, defaults to None
+            (nothing excluded)
         method (str, optional): what backend to use for plotting, defaults to "matplotlib"
 
     Raises:
         NotImplementedError: when trying to plot with a method that is not supported
     """
     figure_path = Path(figure_folder) / "pulls.pdf"
+    labels_np = np.asarray(labels)
 
     # filter out parameters
-    mask = [True if label not in exclude_list else False for label in labels]
-    bestfit = bestfit[mask]
-    uncertainty = uncertainty[mask]
-    labels = np.asarray(labels)[mask]
+    if exclude_list is not None:
+        mask = [True if label not in exclude_list else False for label in labels_np]
+        bestfit = bestfit[mask]
+        uncertainty = uncertainty[mask]
+        labels_np = labels_np[mask]
 
     if method == "matplotlib":
         from cabinetry.contrib import matplotlib_visualize
 
-        matplotlib_visualize.pulls(bestfit, uncertainty, labels, figure_path)
+        matplotlib_visualize.pulls(bestfit, uncertainty, labels_np, figure_path)
     else:
         raise NotImplementedError(f"unknown backend: {method}")
