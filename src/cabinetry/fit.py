@@ -46,7 +46,9 @@ def print_results(
         log.info(f"{l_with_spacer}: {bestfit[i]:.6f} +/- {uncertainty[i]:.6f}")
 
 
-def fit(spec: Dict[str, Any]) -> Tuple[np.ndarray, np.ndarray, List[str], float]:
+def fit(
+    spec: Dict[str, Any]
+) -> Tuple[np.ndarray, np.ndarray, List[str], float, np.ndarray]:
     """perform an unconstrained maximum likelihood fit with pyhf and report
     the results of the fit
 
@@ -54,11 +56,12 @@ def fit(spec: Dict[str, Any]) -> Tuple[np.ndarray, np.ndarray, List[str], float]
         spec (Dict[str, Any]): a pyhf workspace specificaton
 
     Returns:
-        Tuple[np.ndarray, np.ndarray, List[str], float]:
+        Tuple[np.ndarray, np.ndarray, List[str], float, np.ndarray]:
             - best-fit positions of parameters
             - parameter uncertainties
             - parameter names
             - -2 log(likelihood) at best-fit point
+            - correlation matrix
     """
     log.info("performing unconstrained fit")
 
@@ -74,11 +77,12 @@ def fit(spec: Dict[str, Any]) -> Tuple[np.ndarray, np.ndarray, List[str], float]
     bestfit = result[:, 0]
     uncertainty = result[:, 1]
     best_twice_nll = float(result_obj.fun)  # convert 0-dim np.ndarray to float
+    corr_mat = result_obj.minuit.np_matrix(correlation=True)
     labels = get_parameter_names(model)
 
     print_results(bestfit, uncertainty, labels)
     log.debug(f"-2 log(L) = {best_twice_nll:.6f} at the best-fit point")
-    return bestfit, uncertainty, labels, best_twice_nll
+    return bestfit, uncertainty, labels, best_twice_nll, corr_mat
 
 
 def custom_fit(
@@ -86,13 +90,13 @@ def custom_fit(
 ) -> Tuple[np.ndarray, np.ndarray, List[str], float, np.ndarray]:
     """Perform an unconstrained maximum likelihood fit with iminuit and report
     the result. Compared to fit(), this does not use the pyhf.infer API for more
-    control over the minimization, and it returns the correlation matrix.
+    control over the minimization.
 
     Args:
         spec (Dict[str, Any]): a pyhf workspace specificaton
 
     Returns:
-        Tuple[np.ndarray, np.ndarray, List[str], float, numpy.ndarray]:
+        Tuple[np.ndarray, np.ndarray, List[str], float, np.ndarray]:
             - best-fit positions of parameters
             - parameter uncertainties
             - parameter names
