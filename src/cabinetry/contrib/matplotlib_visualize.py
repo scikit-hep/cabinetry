@@ -144,12 +144,10 @@ def correlation_matrix(
     fig.tight_layout()
 
     # add correlation as text
-    for (j, i), label in np.ndenumerate(corr_mat):
-        if abs(corr_mat[j, i]) > 0.75:
-            text_color = "white"
-        else:
-            text_color = "black"
-        ax.text(i, j, f"{label:.2f}", ha="center", va="center", color=text_color)
+    for (j, i), corr in np.ndenumerate(corr_mat):
+        text_color = "white" if abs(corr_mat[j, i]) > 0.75 else "black"
+        if abs(corr) > 0.005:
+            ax.text(i, j, f"{corr:.2f}", ha="center", va="center", color=text_color)
 
     if not os.path.exists(figure_path.parent):
         os.mkdir(figure_path.parent)
