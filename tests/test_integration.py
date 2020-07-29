@@ -135,4 +135,4 @@ def test_integration(tmp_path, ntuple_creator):
     assert np.allclose(bestfit, bestfit_expected)
     assert np.allclose(uncertainty, uncertainty_expected)
     assert np.allclose(best_twice_nll, best_twice_nll_expected)
-    assert np.allclose(corr_mat, corr_mat_expected)
+    assert np.allclose(corr_mat, corr_mat_expected, rtol=5e-5)
