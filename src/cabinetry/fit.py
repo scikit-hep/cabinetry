@@ -67,11 +67,13 @@ def fit(spec: Dict[str, Any]) -> Tuple[np.ndarray, np.ndarray, List[str], float]
     data = workspace.data(model)
 
     pyhf.set_backend("numpy", pyhf.optimize.minuit_optimizer(verbose=True))
-    result, best_twice_nll = pyhf.infer.mle.fit(
-        data, model, return_uncertainties=True, return_fitted_val=True
+    result, result_obj = pyhf.infer.mle.fit(
+        data, model, return_uncertainties=True, return_result_obj=True
     )
+
     bestfit = result[:, 0]
     uncertainty = result[:, 1]
+    best_twice_nll = float(result_obj.fun)  # convert 0-dim np.ndarray to float
     labels = get_parameter_names(model)
 
     print_results(bestfit, uncertainty, labels)
