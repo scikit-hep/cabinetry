@@ -220,7 +220,7 @@ def apply_to_all_templates(
 
                     log.debug(
                         f"      variation {systematic['Name']}"
-                        f" {template if template != 'Nominal' else ''}"
+                        f"{' ' + template if template != 'Nominal' else ''}"
                     )
 
                     func_override = None

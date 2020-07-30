@@ -184,10 +184,6 @@ def test_create_histograms(tmp_path, caplog, utils):
     }
     template_builder.create_histograms(config, tmp_path, method="uproot")
 
-    # ServiceX is not yet implemented
-    with pytest.raises(NotImplementedError, match="ServiceX not yet implemented"):
-        assert template_builder.create_histograms(config, tmp_path, method="ServiceX")
-
     # other backends
     with pytest.raises(NotImplementedError, match="unknown backend"):
         assert template_builder.create_histograms(config, tmp_path, method="unknown")
@@ -217,8 +213,8 @@ def test_create_histograms(tmp_path, caplog, utils):
     assert np.allclose(saved_histo_sys.stdev, [2, 0, 0])
     assert np.allclose(saved_histo_sys.bins, bins)
 
-    assert "  reading sample sample" in [rec.message for rec in caplog.records]
     assert "  in region test_region" in [rec.message for rec in caplog.records]
-    assert "  variation nominal" in [rec.message for rec in caplog.records]
-    assert "  variation var" in [rec.message for rec in caplog.records]
+    assert "    reading sample sample" in [rec.message for rec in caplog.records]
+    assert "      variation nominal" in [rec.message for rec in caplog.records]
+    assert "      variation var Up" in [rec.message for rec in caplog.records]
     caplog.clear()
