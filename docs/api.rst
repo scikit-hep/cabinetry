@@ -14,7 +14,7 @@ cabinetry.configuration
 
 
 cabinetry.route
--------------------
+---------------
 
 .. automodule:: cabinetry.route
    :members:
