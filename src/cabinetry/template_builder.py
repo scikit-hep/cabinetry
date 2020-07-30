@@ -4,8 +4,8 @@ from typing import Any, Dict, Optional, Union
 
 import numpy as np
 
-from . import configuration
 from . import histo
+from . import route
 
 
 log = logging.getLogger(__name__)
@@ -176,93 +176,113 @@ def _get_binning(region: Dict[str, Any]) -> np.ndarray:
     return np.asarray(region["Binning"])
 
 
+class Builder:
+    """class to handle the instructions for backends to create histograms
+    """
+
+    def __init__(self, folder_path_str: str, method: str) -> None:
+        """create an instance, set folder and method
+
+        Args:
+            folder_path_str (str): folder to save the histograms to
+            method (str): backend to use for histogram production
+        """
+        self.folder_path_str = folder_path_str
+        self.method = method
+
+    def create_histogram(
+        self,
+        region: Dict[str, Any],
+        sample: Dict[str, Any],
+        systematic: Dict[str, Any],
+        template: str,
+    ) -> None:
+        """function to create a histogram and write it to a file for the template
+        specified via the region-sample-systematic-template information
+
+        Args:
+            region (Dict[str, Any]): specifying region information
+            sample (Dict[str, Any]): specifying sample information
+            systematic (Dict[str, Any]): specifying systematic information
+            template (str): name of the template: "Nominal", "Up", "Down"
+
+        Raises:
+            NotImplementedError: when requesting an unknown backend
+        """
+        ntuple_path = _get_ntuple_path(region, sample, systematic, template)
+        pos_in_file = _get_position_in_file(sample, systematic, template)
+        variable = _get_variable(region)
+        bins = _get_binning(region)
+        weight = _get_weight(region, sample, systematic, template)
+        selection_filter = _get_filter(region, sample, systematic, template)
+
+        # obtain the histogram
+        if self.method == "uproot":
+            from cabinetry.contrib import histogram_creation
+
+            yields, stdev = histogram_creation.from_uproot(
+                ntuple_path,
+                pos_in_file,
+                variable,
+                bins,
+                weight=weight,
+                selection_filter=selection_filter,
+            )
+
+        else:
+            raise NotImplementedError("unknown backend")
+
+        # store information in a Histogram instance and save it
+        histogram = histo.Histogram.from_arrays(bins, yields, stdev)
+        self.name_and_save(histogram, region, sample, systematic, template)
+
+    def name_and_save(
+        self,
+        histogram: histo.Histogram,
+        region: Dict[str, Any],
+        sample: Dict[str, Any],
+        systematic: Dict[str, Any],
+        template: str,
+    ) -> None:
+        """generate a unique name for the histogram and save it
+
+        Args:
+            histogram (histo.Histogram): histogram to save
+            region (Dict[str, Any]): dict with region information
+            sample (Dict[str, Any]): dict with sample information
+            systematic (Dict[str, Any]): dict with systematic information
+            template (str): template name
+        """
+        # generate a name for the histogram
+        histogram_name = histo.build_name(region, sample, systematic, template)
+
+        # check the histogram for common issues
+        histogram.validate(histogram_name)
+
+        # save it
+        histo_path = Path(self.folder_path_str) / histogram_name
+        histogram.save(histo_path)
+
+
 def create_histograms(
     config: Dict[str, Any],
     folder_path_str: Union[str, pathlib.Path],
     method: str = "uproot",
+    router: Optional[route.Router] = None,
 ) -> None:
-    """generate all required histograms specified by a configuration file
-    a tool providing histograms should provide bin yields and statistical
-    uncertainties, as well as the bin edges
+    """generate all required histograms specified by the configuration file,
+    calling either a default method specified via `method`, or a custom
+    user-defined override through `router`
 
     Args:
         config (Dict[str, Any]): cabinetry configuration
         folder_path_str (Union[str, pathlib.Path]): folder to save the histograms to
         method (str, optional): backend to use for histogram production, defaults to "uproot"
-
-    Raises:
-        NotImplementedError: when requesting the ServiceX backend
-        NotImplementedError: when requesting another unknown backend
+        router (Optional[route.Router], optional): instance of cabinetry.route.Router
+            that contains user-defined overrides, defaults to None
     """
-    log.info("creating histograms")
-
-    for region in config["Regions"]:
-        log.debug(f"  in region {region['Name']}")
-
-        for sample in config["Samples"]:
-            log.debug(f"  reading sample {sample['Name']}")
-
-            for systematic in [{"Name": "nominal"}] + config["Systematics"]:
-
-                log.debug(f"  variation {systematic['Name']}")
-
-                # determine how many templates need to be considered
-                if systematic["Name"] == "nominal":
-                    # only nominal template is needed
-                    templates = ["Nominal"]
-                else:
-                    # systematics can have up and down template
-                    templates = ["Up", "Down"]
-
-                for template in templates:
-
-                    # determine whether a histogram is needed for this
-                    # specific combination of sample-region-systematic-template
-                    histo_needed = configuration.histogram_is_needed(
-                        region, sample, systematic, template
-                    )
-
-                    if not histo_needed:
-                        # no further action is needed, continue with the next region-sample-systematic combination
-                        continue
-
-                    ntuple_path = _get_ntuple_path(region, sample, systematic, template)
-                    pos_in_file = _get_position_in_file(sample, systematic, template)
-                    variable = _get_variable(region)
-                    selection_filter = _get_filter(region, sample, systematic, template)
-                    weight = _get_weight(region, sample, systematic, template)
-                    bins = _get_binning(region)
-
-                    # obtain the histogram
-                    if method == "uproot":
-                        from cabinetry.contrib import histogram_creation
-
-                        yields, stdev = histogram_creation.from_uproot(
-                            ntuple_path,
-                            pos_in_file,
-                            variable,
-                            bins,
-                            weight=weight,
-                            selection_filter=selection_filter,
-                        )
-
-                    elif method == "ServiceX":
-                        raise NotImplementedError("ServiceX not yet implemented")
-
-                    else:
-                        raise NotImplementedError("unknown backend")
-
-                    # store information in a Histogram instance
-                    histogram = histo.Histogram.from_arrays(bins, yields, stdev)
-
-                    # generate a name for the histogram
-                    histogram_name = histo.build_name(
-                        region, sample, systematic, template
-                    )
-
-                    # check the histogram for common issues
-                    histogram.validate(histogram_name)
-
-                    # save it
-                    histo_path = pathlib.Path(folder_path_str) / histogram_name
-                    histogram.save(histo_path)
+    builder = Builder(folder_path_str, method=method)
+    match_func = None if router is None else router._find_template_builder_match
+    route.apply_to_all_templates(
+        config, builder.create_histogram, match_func=match_func
+    )
