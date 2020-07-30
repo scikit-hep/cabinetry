@@ -6,7 +6,8 @@ from . import configuration
 
 log = logging.getLogger(__name__)
 
-# type of a function processing templates
+# type of a function processing templates, takes sample-region-systematic-template,
+# returns None
 ProcessorFunc = Callable[[Dict[str, Any], Dict[str, Any], Dict[str, Any], str], None]
 
 # type of a function called with names of region-sample-systematic-template,
@@ -173,7 +174,7 @@ def apply_to_all_templates(
     default_func: ProcessorFunc,
     match_func: Optional[MatchFunc] = None,
 ) -> None:
-    """Apply the supplied function `func` to all templates specified by the
+    """Apply the supplied function `default_func` to all templates specified by the
     configuration file. This function takes four arguments in this order:
 
     - the dict specifying region information
@@ -183,11 +184,9 @@ def apply_to_all_templates(
 
     Args:
         config (Dict[str, Any]): cabinetry configuration
-        default_func (ProcessorFunc):
-            function to be called for every template by default
-        match_func: (MatchFunc, optional):
-            function that provides user-defined functions to override the call to `default_func`,
-            defaults to None (then it is not used)
+        default_func (ProcessorFunc): function to be called for every template by default
+        match_func: (MatchFunc, optional): function that returns user-defined functions
+            to override the call to `default_func`, defaults to None (then it is not used)
     """
     for region in config["Regions"]:
         log.debug(f"  in region {region['Name']}")
