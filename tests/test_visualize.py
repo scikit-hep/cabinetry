@@ -82,14 +82,24 @@ def test_data_MC(mock_load, mock_draw, tmp_path):
 
 @mock.patch("cabinetry.contrib.matplotlib_visualize.correlation_matrix")
 def test_correlation_matrix(mock_draw):
-    corr_mat = np.asarray([[1.0, 0.2], [0.2, 1.0]])
-    labels = ["a", "b"]
+    corr_mat = np.asarray([[1.0, 0.2, 0.1], [0.2, 1.0, 0.1], [0.1, 0.1, 1.0]])
+    corr_mat_pruned = np.asarray([[1.0, 0.2], [0.2, 1.0]])
+    labels = ["a", "b", "c"]
+    labels_pruned = ["a", "b"]
     folder_path = "tmp"
     figure_path = Path(folder_path) / "correlation_matrix.pdf"
 
-    visualize.correlation_matrix(corr_mat, labels, folder_path, method="matplotlib")
+    visualize.correlation_matrix(
+        corr_mat, labels, folder_path, pruning_threshold=0.15, method="matplotlib"
+    )
 
-    assert mock_draw.call_args_list == [((corr_mat, labels, figure_path),)]
+    mock_draw.assert_called_once()
+    assert np.allclose(mock_draw.call_args[0][0], corr_mat_pruned)
+    assert np.any(
+        [mock_draw.call_args[0][1][i] == labels[i] for i in range(len(labels_pruned))]
+    )
+    assert mock_draw.call_args[0][2] == figure_path
+    assert mock_draw.call_args[1] == {}
 
     # unknown plotting method
     with pytest.raises(NotImplementedError, match="unknown backend: unknown"):

@@ -1,7 +1,7 @@
 import logging
 import os
 from pathlib import Path
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Union
 
 import matplotlib as mpl
 import matplotlib.pyplot as plt
@@ -115,13 +115,13 @@ def data_MC(histogram_dict_list: List[Dict[str, Any]], figure_path: Path) -> Non
 
 
 def correlation_matrix(
-    corr_mat: np.ndarray, labels: List[str], figure_path: Path
+    corr_mat: np.ndarray, labels: Union[List[str], np.ndarray], figure_path: Path
 ) -> None:
     """draw a correlation matrix
 
     Args:
         corr_mat (np.ndarray): the correlation matrix to plot
-        labels (List[str]): names of parameters in the correlation matrix
+        labels (Union[List[str], np.ndarray]): names of parameters in the correlation matrix
         figure_path (pathlib.Path): path where figure should be saved
     """
     # rounding for test in CI to match reference
@@ -144,12 +144,10 @@ def correlation_matrix(
     fig.tight_layout()
 
     # add correlation as text
-    for (j, i), label in np.ndenumerate(corr_mat):
-        if abs(corr_mat[j, i]) > 0.75:
-            text_color = "white"
-        else:
-            text_color = "black"
-        ax.text(i, j, f"{label:.2f}", ha="center", va="center", color=text_color)
+    for (j, i), corr in np.ndenumerate(corr_mat):
+        text_color = "white" if abs(corr_mat[j, i]) > 0.75 else "black"
+        if abs(corr) > 0.005:
+            ax.text(i, j, f"{corr:.2f}", ha="center", va="center", color=text_color)
 
     if not os.path.exists(figure_path.parent):
         os.mkdir(figure_path.parent)
@@ -158,14 +156,17 @@ def correlation_matrix(
 
 
 def pulls(
-    bestfit: np.ndarray, uncertainty: np.ndarray, labels: np.ndarray, figure_path: Path
+    bestfit: np.ndarray,
+    uncertainty: np.ndarray,
+    labels: Union[List[str], np.ndarray],
+    figure_path: Path,
 ) -> None:
     """draw a pull plot
 
     Args:
         bestfit (np.ndarray): [description]
         uncertainty (np.ndarray): parameter uncertainties
-        labels (np.ndarray): parameter names
+        labels (Union[List[str], np.ndarray]): parameter names
         figure_path (pathlib.Path): path where figure should be saved
     """
     num_pars = len(bestfit)

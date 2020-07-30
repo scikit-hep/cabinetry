@@ -44,7 +44,8 @@ def test_data_MC(figure_extension, tmp_path):
 @pytest.mark.parametrize("figure_extension", ["fig.pdf", "subdir/fig.pdf"])
 def test_correlation_matrix(figure_extension, tmp_path):
     fname = tmp_path / figure_extension
-    corr_mat = np.asarray([[1.0, 0.35, 0.1], [0.35, 1.0, -0.2], [0.1, -0.2, 1.0]])
+    # one parameter is below threshold so no text is shown for it on the plot
+    corr_mat = np.asarray([[1.0, 0.35, 0.002], [0.35, 1.0, -0.2], [0.002, -0.2, 1.0]])
     labels = ["a", "b", "c"]
     matplotlib_visualize.correlation_matrix(corr_mat, labels, fname)
     assert (
