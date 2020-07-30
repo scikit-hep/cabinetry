@@ -120,7 +120,7 @@ class Router:
 
         Returns:
             Optional[ProcessorFunc]: processor function matching the description,
-                or None if no matches are found
+            or None if no matches are found
         """
         matches = []
         for processor in processor_list:
@@ -161,7 +161,7 @@ class Router:
 
         Returns:
             Optional[ProcessorFunc]: template builder function matching the description,
-                or None if no matches are found
+            or None if no matches are found
         """
         return self._find_match(
             self.template_builders, region_name, sample_name, systematic_name, template
