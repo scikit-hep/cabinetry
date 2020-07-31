@@ -128,7 +128,7 @@ def test_get_sys_modifiers():
     sample = {"Name": "Signal"}
     region = {}
     # needs to be expanded to include histogram loading
-    modifiers = workspace.get_sys_modifiers(config_example, region, sample, None)
+    modifiers = workspace.get_sys_modifiers(config_example, region, sample, "")
     expected_modifiers = [
         {"name": "sys", "type": "normsys", "data": {"hi": 1.1, "lo": 0.95}}
     ]
@@ -143,7 +143,7 @@ def test_get_sys_modifiers():
     with pytest.raises(
         NotImplementedError, match="not supporting other systematic types yet"
     ):
-        workspace.get_sys_modifiers(config_example_unsupported, region, sample, None)
+        workspace.get_sys_modifiers(config_example_unsupported, region, sample, "")
 
 
 @mock.patch("cabinetry.workspace.get_unc_for_sample", return_value=[0.1, 0.1])

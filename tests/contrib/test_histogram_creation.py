@@ -10,7 +10,7 @@ def test_from_uproot(tmp_path, utils):
     var_array = [1.1, 2.3, 3.0, 3.2]
     weightname_write = "weight"
     weight_array = [1.0, 1.0, 2.0, 1.0]
-    bins = [1, 2, 3, 4]
+    bins = np.asarray([1, 2, 3, 4])
     # create something to read
     utils.create_ntuple(
         fname, treename, varname, var_array, weightname_write, weight_array
@@ -47,9 +47,9 @@ def test_from_uproot(tmp_path, utils):
 
 
 def test__bin_data():
-    data = [1.1, 2.2, 2.9, 2.5, 1.4]
-    weights = [1.0, 1.1, 0.9, 0.8, 1.5]
-    bins = [1, 2, 3]
+    data = np.asarray([1.1, 2.2, 2.9, 2.5, 1.4])
+    weights = np.asarray([1.0, 1.1, 0.9, 0.8, 1.5])
+    bins = np.asarray([1, 2, 3])
     yields, stdev = histogram_creation._bin_data(data, weights, bins)
     assert np.allclose(yields, [2.5, 2.8])
     assert np.allclose(stdev, [1.80277564, 1.63095064])

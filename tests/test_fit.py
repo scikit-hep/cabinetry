@@ -51,8 +51,8 @@ def test_get_parameter_names(example_spec):
 def test_print_results(caplog):
     caplog.set_level(logging.DEBUG)
 
-    bestfit = [1.0, 2.0]
-    uncertainty = [0.1, 0.3]
+    bestfit = np.asarray([1.0, 2.0])
+    uncertainty = np.asarray([0.1, 0.3])
     labels = ["param_A", "param_B"]
     fit.print_results(bestfit, uncertainty, labels)
     assert "param_A: 1.000000 +/- 0.100000" in [rec.message for rec in caplog.records]
