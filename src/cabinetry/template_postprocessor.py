@@ -44,7 +44,9 @@ def apply_postprocessing(histogram: histo.Histogram, name: str) -> histo.Histogr
     return adjusted_histogram
 
 
-def get_postprocessor(histogram_folder: Union[str, pathlib.Path]) -> route.ProcessorFunc:
+def _get_postprocessor(
+    histogram_folder: Union[str, pathlib.Path]
+) -> route.ProcessorFunc:
     """return the postprocessing function to be applied to template histograms, for
     example via `cabinetry.route.apply_to_all_templates`
     could alternatively create a `Postprocessor` class that contains processors
@@ -81,7 +83,7 @@ def get_postprocessor(histogram_folder: Union[str, pathlib.Path]) -> route.Proce
         histogram_name = histo.build_name(region, sample, systematic, template)
         new_histogram = apply_postprocessing(histogram, histogram_name)
         histogram.validate(histogram_name)
-        new_histo_path = Path(histogram_folder) / (histogram_name + "_modified")
+        new_histo_path = pathlib.Path(histogram_folder) / (histogram_name + "_modified")
         new_histogram.save(new_histo_path)
 
     return process_template

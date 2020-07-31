@@ -181,11 +181,11 @@ class _Builder:
     """class to handle the instructions for backends to create histograms
     """
 
-    def __init__(self, folder_path_str: str, method: str) -> None:
+    def __init__(self, folder_path_str: Union[str, pathlib.Path], method: str) -> None:
         """create an instance, set folder and method
 
         Args:
-            folder_path_str (str): folder to save the histograms to
+            folder_path_str (Union[str, pathlib.Path]): folder to save the histograms to
             method (str): backend to use for histogram production
         """
         self.folder_path_str = folder_path_str
@@ -261,7 +261,7 @@ class _Builder:
         histogram.validate(histogram_name)
 
         # save it
-        histo_path = Path(self.folder_path_str) / histogram_name
+        histo_path = pathlib.Path(self.folder_path_str) / histogram_name
         histogram.save(histo_path)
 
     def _wrap_custom_template_builder(
