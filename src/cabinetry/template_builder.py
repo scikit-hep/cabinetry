@@ -1,3 +1,4 @@
+from functools import wraps
 import logging
 import pathlib
 from typing import Any, Dict, Optional, Union
@@ -251,7 +252,7 @@ class Builder:
             region (Dict[str, Any]): dict with region information
             sample (Dict[str, Any]): dict with sample information
             systematic (Dict[str, Any]): dict with systematic information
-            template (str): template name
+            template (str): name of the template: "Nominal", "Up", "Down"
         """
         # generate a name for the histogram
         histogram_name = histo.build_name(region, sample, systematic, template)
@@ -262,6 +263,42 @@ class Builder:
         # save it
         histo_path = Path(self.folder_path_str) / histogram_name
         histogram.save(histo_path)
+
+
+def wrap_custom_template_builder(func: route.UserTemplateFunc) -> route.ProcessorFunc:
+    """Wrapper for custom template builder functions that return a `boost_histogram.Histogram`.
+    Returns a function that executes the custom template builder and saves the resulting
+    histogram.
+
+    Args:
+        func (cabinetry.route.UserTemplateFunc): user-defined template builder
+
+    Returns:
+        cabinetry.route.ProcessorFunc: wrapped template builder
+    """
+    # decorating this with functools.wraps will keep the name of the wrapped function the same
+    @wraps(func)
+    def wrapper(
+        region: Dict[str, Any],
+        sample: Dict[str, Any],
+        systematic: Dict[str, Any],
+        template: str,
+    ) -> None:
+        """Takes a user-defined function that returns a histogram, runs that function and
+        saves the histogram. Returns None, to turn the user-defined function into a
+        ProcessorFunc when wrapped by this.
+
+        Args:
+            region (Dict[str, Any]): dict with region information
+            sample (Dict[str, Any]): dict with sample information
+            systematic (Dict[str, Any]): dict with systematic information
+            template (str): name of the template: "Nominal", "Up", "Down"
+        """
+        histo = func(region, sample, systematic, template)
+        log.info(f"saving {histo} for {sample['Name']}")
+        # TODO actually save here
+
+    return wrapper
 
 
 def create_histograms(
@@ -281,8 +318,15 @@ def create_histograms(
         router (Optional[route.Router], optional): instance of cabinetry.route.Router
             that contains user-defined overrides, defaults to None
     """
+    match_func: Optional[route.MatchFunc] = None
+    if router is not None:
+        # specify the wrapper for user-defined functions
+        router.template_builder_wrapper = wrap_custom_template_builder
+        # get a function that can be queried to return a user-defined template builder
+        match_func = router._find_template_builder_match
+
+    # create an instance of the class doing the default template building
     builder = Builder(folder_path_str, method=method)
-    match_func = None if router is None else router._find_template_builder_match
     route.apply_to_all_templates(
         config, builder.create_histogram, match_func=match_func
     )
