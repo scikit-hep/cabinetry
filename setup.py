@@ -58,7 +58,7 @@ setup(
         "pyyaml",
         "pyhf>=0.5.0",
         "iminuit>1.4.0",
-        "boost_histogram!=0.10.1",
+        "boost_histogram",
         "jsonschema",
     ],
     extras_require=extras_require,
