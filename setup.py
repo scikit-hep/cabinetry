@@ -33,8 +33,8 @@ with open("README.md", "r") as f:
 
 setup(
     name="cabinetry",
-    version="0.0.4",
-    author="cabinetry developers",
+    version="0.0.5",
+    author="Alexander Held",
     description="design and steer profile likelihood fits",
     long_description=long_description,
     long_description_content_type="text/markdown",
@@ -58,7 +58,7 @@ setup(
         "pyyaml",
         "pyhf>=0.5.0",
         "iminuit>1.4.0",
-        "boost_histogram!=0.10.1",
+        "boost_histogram",
         "jsonschema",
     ],
     extras_require=extras_require,
