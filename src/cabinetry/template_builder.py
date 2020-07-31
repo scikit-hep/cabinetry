@@ -1,6 +1,6 @@
 import logging
-from pathlib import Path
-from typing import Any, Dict, Optional
+import pathlib
+from typing import Any, Dict, Optional, Union
 
 import numpy as np
 
@@ -34,7 +34,7 @@ def _get_ntuple_path(
     sample: Dict[str, Any],
     systematic: Dict[str, Any],
     template: str,
-) -> Path:
+) -> pathlib.Path:
     """determine the path to ntuples from which a histogram has to be built
     for non-nominal templates, override the nominal path if an alternative is
     specified for the template
@@ -55,7 +55,7 @@ def _get_ntuple_path(
         path_str_override = _check_for_override(systematic, template, "Path")
         if path_str_override is not None:
             path_str = path_str_override
-    path = Path(path_str)
+    path = pathlib.Path(path_str)
     return path
 
 
@@ -177,7 +177,9 @@ def _get_binning(region: Dict[str, Any]) -> np.ndarray:
 
 
 def create_histograms(
-    config: Dict[str, Any], folder_path_str: str, method: str = "uproot"
+    config: Dict[str, Any],
+    folder_path_str: Union[str, pathlib.Path],
+    method: str = "uproot",
 ) -> None:
     """generate all required histograms specified by a configuration file
     a tool providing histograms should provide bin yields and statistical
@@ -185,7 +187,7 @@ def create_histograms(
 
     Args:
         config (Dict[str, Any]): cabinetry configuration
-        folder_path_str (str): folder to save the histograms to
+        folder_path_str (Union[str, pathlib.Path]): folder to save the histograms to
         method (str, optional): backend to use for histogram production, defaults to "uproot"
 
     Raises:
@@ -262,5 +264,5 @@ def create_histograms(
                     histogram.validate(histogram_name)
 
                     # save it
-                    histo_path = Path(folder_path_str) / histogram_name
+                    histo_path = pathlib.Path(folder_path_str) / histogram_name
                     histogram.save(histo_path)

@@ -1,5 +1,5 @@
 from collections import namedtuple
-from pathlib import Path
+import pathlib
 from unittest import mock
 
 import numpy as np
@@ -87,7 +87,7 @@ def test_correlation_matrix(mock_draw):
     labels = ["a", "b", "c"]
     labels_pruned = ["a", "b"]
     folder_path = "tmp"
-    figure_path = Path(folder_path) / "correlation_matrix.pdf"
+    figure_path = pathlib.Path(folder_path) / "correlation_matrix.pdf"
 
     visualize.correlation_matrix(
         corr_mat, labels, folder_path, pruning_threshold=0.15, method="matplotlib"
@@ -117,7 +117,7 @@ def test_pulls(mock_draw):
     filtered_bestfit = np.asarray([1.0, 1.1])
     filtered_uncertainty = np.asarray([1.0, 0.7])
     filtered_labels = np.asarray(["b", "c"])
-    figure_path = Path(folder_path) / "pulls.pdf"
+    figure_path = pathlib.Path(folder_path) / "pulls.pdf"
 
     # with filtering
     visualize.pulls(

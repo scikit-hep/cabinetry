@@ -1,5 +1,5 @@
 import logging
-from pathlib import Path
+import pathlib
 
 import numpy as np
 import pytest
@@ -37,7 +37,7 @@ def test__get_ntuple_path():
     # no override
     assert template_builder._get_ntuple_path(
         {}, {"Path": "path.root"}, {"Name": "nominal"}, ""
-    ) == Path("path.root")
+    ) == pathlib.Path("path.root")
 
     # systematic with override
     assert template_builder._get_ntuple_path(
@@ -45,12 +45,12 @@ def test__get_ntuple_path():
         {"Path": "path.root"},
         {"Name": "variation", "Up": {"Path": "variation.root"}},
         "Up",
-    ) == Path("variation.root")
+    ) == pathlib.Path("variation.root")
 
     # systematic without override
     assert template_builder._get_ntuple_path(
         {}, {"Path": "path.root"}, {"Name": "variation"}, "Up"
-    ) == Path("path.root")
+    ) == pathlib.Path("path.root")
 
 
 def test__get_variable():
@@ -178,7 +178,7 @@ def test_create_histograms(tmp_path, caplog, utils):
                 "Name": "var",
                 "Type": "NormPlusShape",
                 "Samples": "sample",
-                "Up": {"Path": fname_sys},
+                "Up": {"Path": str(fname_sys)},
             },
         ],
     }

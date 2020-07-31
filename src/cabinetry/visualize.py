@@ -1,6 +1,6 @@
 import logging
-from pathlib import Path
-from typing import Any, Dict, List, Optional
+import pathlib
+from typing import Any, Dict, List, Optional, Union
 
 import numpy as np
 
@@ -31,8 +31,8 @@ def _build_figure_name(region_name: str, is_prefit: bool) -> str:
 
 def data_MC(
     config: Dict[str, Any],
-    histogram_folder: str,
-    figure_folder: str,
+    histogram_folder: Union[str, pathlib.Path],
+    figure_folder: Union[str, pathlib.Path],
     prefit: bool = True,
     method: str = "matplotlib",
 ) -> None:
@@ -40,8 +40,8 @@ def data_MC(
 
     Args:
         config (Dict[str, Any]): cabinetry configuration
-        histogram_folder (str): path to the folder containing template histograms
-        figure_folder (str): path to the folder to save figures in
+        histogram_folder (Union[str, pathlib.Path]): path to the folder containing template histograms
+        figure_folder (Union[str, pathlib.Path]): path to the folder to save figures in
         prefit (bool, optional): show the pre- or post-fit model, defaults to True
         method (str, optional): what backend to use for plotting, defaults to "matplotlib"
 
@@ -77,7 +77,7 @@ def data_MC(
             if method == "matplotlib":
                 from cabinetry.contrib import matplotlib_visualize
 
-                figure_path = Path(figure_folder) / figure_name
+                figure_path = pathlib.Path(figure_folder) / figure_name
                 matplotlib_visualize.data_MC(histogram_dict_list, figure_path)
             else:
                 raise NotImplementedError(f"unknown backend: {method}")
@@ -88,7 +88,7 @@ def data_MC(
 def correlation_matrix(
     corr_mat: np.ndarray,
     labels: List[str],
-    figure_folder: str,
+    figure_folder: Union[str, pathlib.Path],
     pruning_threshold: float = 0.0,
     method: str = "matplotlib",
 ) -> None:
@@ -97,7 +97,7 @@ def correlation_matrix(
     Args:
         corr_mat (np.ndarray): the correlation matrix to plot
         labels (List[str]): names of parameters in the correlation matrix
-        figure_folder (str): path to the folder to save figures in
+        figure_folder (Union[str, pathlib.Path]): path to the folder to save figures in
         pruning_threshold (float, optional): minimum correlation for a parameter to
             have with any other parameters to not get pruned, defaults to 0.0
         method (str, optional): what backend to use for plotting, defaults to "matplotlib"
@@ -116,7 +116,7 @@ def correlation_matrix(
     )
     labels = np.delete(labels, delete_indices)
 
-    figure_path = Path(figure_folder) / "correlation_matrix.pdf"
+    figure_path = pathlib.Path(figure_folder) / "correlation_matrix.pdf"
     if method == "matplotlib":
         from cabinetry.contrib import matplotlib_visualize
 
@@ -129,7 +129,7 @@ def pulls(
     bestfit: np.ndarray,
     uncertainty: np.ndarray,
     labels: List[str],
-    figure_folder: str,
+    figure_folder: Union[str, pathlib.Path],
     exclude_list: Optional[List[str]] = None,
     method: str = "matplotlib",
 ) -> None:
@@ -139,7 +139,7 @@ def pulls(
         bestfit (np.ndarray): best-fit results for parameters
         uncertainty (np.ndarray): parameter uncertainties
         labels (List[str]): parameter names
-        figure_folder (str): path to the folder to save figures in
+        figure_folder (Union[str, pathlib.Path]): path to the folder to save figures in
         exclude_list (Optional[List[str]], optional): list of parameters to exclude from plot,
             defaults to None (nothing excluded)
         method (str, optional): what backend to use for plotting, defaults to "matplotlib"
@@ -147,7 +147,7 @@ def pulls(
     Raises:
         NotImplementedError: when trying to plot with a method that is not supported
     """
-    figure_path = Path(figure_folder) / "pulls.pdf"
+    figure_path = pathlib.Path(figure_folder) / "pulls.pdf"
     labels_np = np.asarray(labels)
 
     # filter out parameters

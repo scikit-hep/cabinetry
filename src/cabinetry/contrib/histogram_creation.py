@@ -1,4 +1,4 @@
-from pathlib import Path
+import pathlib
 from typing import Optional, Tuple
 
 import boost_histogram as bh
@@ -7,7 +7,7 @@ import uproot4 as uproot
 
 
 def from_uproot(
-    ntuple_path: Path,
+    ntuple_path: pathlib.Path,
     pos_in_file: str,
     variable: str,
     bins: np.ndarray,

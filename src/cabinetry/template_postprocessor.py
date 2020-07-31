@@ -1,7 +1,7 @@
 import copy
 import logging
-from pathlib import Path
-from typing import Any, Dict
+import pathlib
+from typing import Any, Dict, Union
 
 import numpy as np
 
@@ -44,13 +44,13 @@ def apply_postprocessing(histogram: histo.H, name: str) -> histo.H:
     return adjusted_histogram
 
 
-def run(config: Dict[str, Any], histogram_folder: str) -> None:
+def run(config: Dict[str, Any], histogram_folder: Union[str, pathlib.Path]) -> None:
     """apply post-processing as needed for all histograms
     this is very similar to template_builder.create_histograms() and should be refactored
 
     Args:
         config (Dict[str, Any]): cabinetry configuration
-        histogram_folder (str): folder containing the histograms
+        histogram_folder (Union[str, pathlib.Path]): folder containing the histograms
     """
     log.info("applying post-processing to histograms")
     # loop over all histograms
@@ -88,7 +88,7 @@ def run(config: Dict[str, Any], histogram_folder: str) -> None:
                     )
                     new_histogram = apply_postprocessing(histogram, histogram_name)
                     histogram.validate(histogram_name)
-                    new_histo_path = Path(histogram_folder) / (
+                    new_histo_path = pathlib.Path(histogram_folder) / (
                         histogram_name + "_modified"
                     )
                     new_histogram.save(new_histo_path)

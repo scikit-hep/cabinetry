@@ -1,6 +1,6 @@
 import logging
 import os
-from pathlib import Path
+import pathlib
 from typing import Any, Dict, List, Union
 
 import matplotlib as mpl
@@ -25,7 +25,9 @@ def _total_yield_uncertainty(stdev_list: List[np.ndarray]) -> np.ndarray:
     return tot_unc
 
 
-def data_MC(histogram_dict_list: List[Dict[str, Any]], figure_path: Path) -> None:
+def data_MC(
+    histogram_dict_list: List[Dict[str, Any]], figure_path: pathlib.Path
+) -> None:
     """draw a data/MC histogram
 
     Args:
@@ -115,7 +117,9 @@ def data_MC(histogram_dict_list: List[Dict[str, Any]], figure_path: Path) -> Non
 
 
 def correlation_matrix(
-    corr_mat: np.ndarray, labels: Union[List[str], np.ndarray], figure_path: Path
+    corr_mat: np.ndarray,
+    labels: Union[List[str], np.ndarray],
+    figure_path: pathlib.Path,
 ) -> None:
     """draw a correlation matrix
 
@@ -159,7 +163,7 @@ def pulls(
     bestfit: np.ndarray,
     uncertainty: np.ndarray,
     labels: Union[List[str], np.ndarray],
-    figure_path: Path,
+    figure_path: pathlib.Path,
 ) -> None:
     """draw a pull plot
 

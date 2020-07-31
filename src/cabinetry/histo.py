@@ -1,6 +1,6 @@
 import logging
 import os
-from pathlib import Path
+import pathlib
 from typing import Any, Dict, List, Type, TypeVar, Union
 
 import boost_histogram as bh
@@ -54,7 +54,7 @@ class Histogram(bh.Histogram):
         return out
 
     @classmethod
-    def from_path(cls: Type[H], histo_path: Path, modified: bool = True) -> H:
+    def from_path(cls: Type[H], histo_path: pathlib.Path, modified: bool = True) -> H:
         """build a histogram from disk
         try to load the "modified" version of the histogram by default
         (which received post-processing)
@@ -84,7 +84,7 @@ class Histogram(bh.Histogram):
     @classmethod
     def from_config(
         cls: Type[H],
-        histo_folder: str,
+        histo_folder: Union[str, pathlib.Path],
         region: Dict[str, Any],
         sample: Dict[str, Any],
         systematic: Dict[str, Any],
@@ -95,7 +95,7 @@ class Histogram(bh.Histogram):
         relevant information from the config: region, sample, systematic
 
         Args:
-            histo_folder (str): folder containing all histograms
+            histo_folder (Union[str, patlib.Path]): folder containing all histograms
             region (Dict[str, Any]): containing all region information
             sample (Dict[str, Any]): containing all sample information
             systematic (Dict[str, Any]): containing all systematic information
@@ -107,7 +107,7 @@ class Histogram(bh.Histogram):
         """
         # find the histogram name given config information, and then load the histogram
         histo_name = build_name(region, sample, systematic, template)
-        histo_path = Path(histo_folder) / histo_name
+        histo_path = pathlib.Path(histo_folder) / histo_name
         return cls.from_path(histo_path, modified)
 
     @property
@@ -146,7 +146,7 @@ class Histogram(bh.Histogram):
         """
         return self.axes[0].edges
 
-    def save(self, histo_path: Path) -> None:
+    def save(self, histo_path: pathlib.Path) -> None:
         """save a histogram to disk
 
         Args:
