@@ -1,8 +1,8 @@
 import json
 import logging
 import os
-from pathlib import Path
-from typing import Any, Dict, List, Optional
+import pathlib
+from typing import Any, Dict, List, Optional, Union
 
 import pyhf
 
@@ -31,7 +31,7 @@ def _get_data_sample(config: Dict[str, Any]) -> Dict[str, Any]:
 def get_yield_for_sample(
     region: Dict[str, Any],
     sample: Dict[str, Any],
-    histogram_folder: str,
+    histogram_folder: Union[str, pathlib.Path],
     systematic: Optional[Dict[str, Any]] = None,
 ) -> List[float]:
     """get the yield for a specific sample, by figuring out its name and then
@@ -40,7 +40,7 @@ def get_yield_for_sample(
     Args:
         region (Dict[str, Any]): specific region to use
         sample (Dict[str, Any]): specific sample to use
-        histogram_folder (str): path to folder containing histograms
+        histogram_folder (Union[str, pathlib.Path]): path to folder containing histograms
         systematic (Optional[Dict[str, Any]], optional): specific systematic variation to use,
             defaults to None -> {"Name": "nominal"}
 
@@ -60,7 +60,7 @@ def get_yield_for_sample(
 def get_unc_for_sample(
     region: Dict[str, Any],
     sample: Dict[str, Any],
-    histogram_folder: str,
+    histogram_folder: Union[str, pathlib.Path],
     systematic: Optional[Dict[str, Any]] = None,
 ) -> List[float]:
     """get the uncertainty of a specific sample, by figuring out its name and then
@@ -69,7 +69,7 @@ def get_unc_for_sample(
     Args:
         region (Dict[str, Any]): specific region to use
         sample (Dict[str, Any]): specific sample to use
-        histogram_folder (str): path to folder containing histograms
+        histogram_folder (Union[str, pathlib.Path]): path to folder containing histograms
         systematic (Optional[Dict[str, Any]], optional): specific systematic variation to use,
             defaults to None -> {"Name": "nominal"}
 
@@ -139,7 +139,7 @@ def get_NormPlusShape_modifiers(
     region: Dict[str, Any],
     sample: Dict[str, Any],
     systematic: Dict[str, Any],
-    histogram_folder: str,
+    histogram_folder: Union[str, pathlib.Path],
 ) -> List[Dict[str, Any]]:
     """For a variation including a correlated shape + normalization effect, this
     provides the histosys and normsys modifiers for pyhf (in HistFactory language,
@@ -151,7 +151,7 @@ def get_NormPlusShape_modifiers(
         region (Dict[str, Any]): region the systematic variation acts in
         sample (Dict[str, Any]): sample the systematic variation acts on
         systematic (Dict[str, Any]): the systematic variation under consideration
-        histogram_folder (str): path to folder containing histograms
+        histogram_folder (Union[str, pathlib.Path]): path to folder containing histograms
 
     Returns:
         List[Dict[str, Any]]: a list with a pyhf normsys modifier and a histosys modifier
@@ -216,7 +216,7 @@ def get_sys_modifiers(
     config: Dict[str, Any],
     region: Dict[str, Any],
     sample: Dict[str, Any],
-    histogram_folder: str,
+    histogram_folder: Union[str, pathlib.Path],
 ) -> List[Dict[str, Any]]:
     """get the list of all systematic modifiers acting on a sample
 
@@ -224,7 +224,7 @@ def get_sys_modifiers(
         config (Dict[str, Any]): cabinetry configuration
         region (Dict[str, Any]): region considered
         sample (Dict[str, Any]): specific sample to get modifiers for
-        histogram_folder (str): path to folder containing histograms
+        histogram_folder (Union[str, pathlib.Path]): path to folder containing histograms
 
     Raises:
         NotImplementedError: when unsupported modifiers act on sample
@@ -255,12 +255,14 @@ def get_sys_modifiers(
     return modifiers
 
 
-def get_channels(config: Dict[str, Any], histogram_folder: str) -> List[Dict[str, Any]]:
+def get_channels(
+    config: Dict[str, Any], histogram_folder: Union[str, pathlib.Path]
+) -> List[Dict[str, Any]]:
     """construct the channel information: yields per sample and modifiers
 
     Args:
         config (Dict[str, Any]): cabinetry configuration
-        histogram_folder (str): path to folder containing histograms
+        histogram_folder (Union[str, pathlib.Path]): path to folder containing histograms
 
     Returns:
         List[Dict[str, Any]]: channels for pyhf-style workspace
@@ -353,13 +355,13 @@ def get_measurements(config: Dict[str, Any]) -> List[Dict[str, Any]]:
 
 
 def get_observations(
-    config: Dict[str, Any], histogram_folder: str
+    config: Dict[str, Any], histogram_folder: Union[str, pathlib.Path]
 ) -> List[Dict[str, Any]]:
     """build the observations
 
     Args:
         config (Dict[str, Any]): cabinetry configuration
-        histogram_folder (str): path to folder containing histograms
+        histogram_folder (Union[str, pathlib.Path]): path to folder containing histograms
 
     Returns:
         List[Dict[str, Any]]: observations for pyhf-style workspace
@@ -376,13 +378,15 @@ def get_observations(
 
 
 def build(
-    config: Dict[str, Any], histogram_folder: str, with_validation: bool = True
+    config: Dict[str, Any],
+    histogram_folder: Union[str, pathlib.Path],
+    with_validation: bool = True,
 ) -> Dict[str, Any]:
     """build a HistFactory workspace, pyhf style
 
     Args:
         config (Dict[str, Any]): cabinetry configuration
-        histogram_folder (str): path to folder containing histograms
+        histogram_folder (Union[str, pathlib.Path]): path to folder containing histograms
         with_validation (bool, optional): validate workspace validity with pyhf, defaults to True
 
     Returns:
@@ -422,14 +426,14 @@ def validate(ws: Dict[str, Any]) -> None:
     pyhf.Workspace(ws)
 
 
-def save(ws: Dict[str, Any], file_path_string: str) -> None:
+def save(ws: Dict[str, Any], file_path_string: Union[str, pathlib.Path]) -> None:
     """save the workspace to a file
 
     Args:
         ws (Dict[str, Any]): pyhf-compatible HistFactory workspace
-        file_path_string (str): path to the file to save the workspace in
+        file_path_string (Union[str, pathlib.Path]): path to the file to save the workspace in
     """
-    file_path = Path(file_path_string)
+    file_path = pathlib.Path(file_path_string)
     log.debug(f"saving workspace to {file_path}")
     # create output directory if it does not exist yet
     if not os.path.exists(file_path.parent):
@@ -438,15 +442,15 @@ def save(ws: Dict[str, Any], file_path_string: str) -> None:
     file_path.write_text(json.dumps(ws, sort_keys=True, indent=4))
 
 
-def load(file_path_string: str) -> Dict[str, Any]:
+def load(file_path_string: Union[str, pathlib.Path]) -> Dict[str, Any]:
     """load a workspace from file
 
     Args:
-        file_path_string (str): path to the file to load the workspace from
+        file_path_string (Union[str, pathlib.Path]): path to the file to load the workspace from
 
     Returns:
         Dict[str, Any]: pyhf-compatible HistFactory workspace
     """
-    file_path = Path(file_path_string)
+    file_path = pathlib.Path(file_path_string)
     ws = json.loads(file_path.read_text())
     return ws

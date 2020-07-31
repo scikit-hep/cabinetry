@@ -1,6 +1,6 @@
 import json
 import logging
-from pathlib import Path
+import pathlib
 import pkgutil
 from typing import Any, Dict, List, Union
 
@@ -10,16 +10,16 @@ import yaml
 log = logging.getLogger(__name__)
 
 
-def read(file_path_string: str) -> Dict[str, Any]:
+def read(file_path_string: Union[str, pathlib.Path]) -> Dict[str, Any]:
     """read a config file from a provided path and return it
 
     Args:
-        file_path_string (str): path to config file
+        file_path_string (Union[str, pathlib.Path]): path to config file
 
     Returns:
         Dict[str, Any]: cabinetry configuration
     """
-    file_path = Path(file_path_string)
+    file_path = pathlib.Path(file_path_string)
     log.info(f"opening config file {file_path}")
     config = yaml.safe_load(file_path.read_text())
     validate(config)
