@@ -33,8 +33,8 @@ with open("README.md", "r") as f:
 
 setup(
     name="cabinetry",
-    version="0.0.4",
-    author="cabinetry developers",
+    version="0.0.5",
+    author="Alexander Held",
     description="design and steer profile likelihood fits",
     long_description=long_description,
     long_description_content_type="text/markdown",
