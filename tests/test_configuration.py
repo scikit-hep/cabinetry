@@ -89,7 +89,7 @@ def test__convert_samples_to_list(samples, converted):
     "sample_and_modifier, affected",
     [
         (({"Name": "Signal"}, {"Samples": ["Signal", "Background"]}), True),
-        (({"Name": "Signal"}, {"Samples": {"Background"}}), False),
+        (({"Name": "Signal"}, {"Samples": "Background"}), False),
     ],
 )
 def test_sample_affected_by_modifier(sample_and_modifier, affected):

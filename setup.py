@@ -14,6 +14,7 @@ extras_require["test"] = sorted(
             "flake8-import-order",
             "flake8-print",
             "mypy",
+            "typeguard",
             "black;python_version>='3.6'",  # Black is Python3 only
         ]
     )
