@@ -6,7 +6,7 @@ from cabinetry.contrib import matplotlib_visualize
 
 
 def test__total_yield_uncertainty():
-    stdev_list = np.asarray([np.asarray([0.1, 0.2, 0.1]), np.asarray([0.3, 0.2, 0.1])])
+    stdev_list = [np.asarray([0.1, 0.2, 0.1]), np.asarray([0.3, 0.2, 0.1])]
     expected_uncertainties = [0.31622777, 0.28284271, 0.14142136]
     assert np.allclose(
         matplotlib_visualize._total_yield_uncertainty(stdev_list),
