@@ -190,7 +190,7 @@ class Router:
             or None if no matches are found
         """
         if self.template_builder_wrapper is None:
-            # a wrapper needs to be defined to convert the user-defined UserTemplateFunc
+            # a wrapper needs to be defined already to convert the user-defined UserTemplateFunc
             # into a ProcessorFunc
             raise ValueError("no template builder wrapper defined")
 
@@ -216,6 +216,9 @@ def apply_to_all_templates(
     - the dict specifying sample information
     - the dict specifying systematic information
     - name of the template being considered: "Nominal", "Up", "Down"
+
+    In addition it is possible to specify a function that returns custom overrides. If one
+    is found for a given template, it is used instead of the default.
 
     Args:
         config (Dict[str, Any]): cabinetry configuration

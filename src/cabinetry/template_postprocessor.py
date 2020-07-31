@@ -95,5 +95,5 @@ def run(config: Dict[str, Any], histogram_folder: Union[str, pathlib.Path]) -> N
         config (Dict[str, Any]): cabinetry configuration
         histogram_folder (Union[str, pathlib.Path]): folder containing histograms
     """
-    postprocessor = get_postprocessor(histogram_folder)
+    postprocessor = _get_postprocessor(histogram_folder)
     route.apply_to_all_templates(config, postprocessor)
