@@ -44,8 +44,8 @@ class Router:
             Callable[[UserTemplateFunc], ProcessorFunc]
         ] = None
 
+    @staticmethod
     def _register_processor(
-        self,
         processor_list: List[Dict[str, Any]],
         region_name: Optional[str],
         sample_name: Optional[str],
@@ -123,8 +123,8 @@ class Router:
             self.template_builders, region_name, sample_name, systematic_name, template
         )
 
+    @staticmethod
     def _find_match(
-        self,
         processor_list: List[Dict[str, Any]],
         region_name: str,
         sample_name: str,

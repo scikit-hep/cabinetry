@@ -24,7 +24,7 @@ def test_validate():
     assert configuration.validate(config_valid)
 
     # not exactly one data sample
-    config_multiple_data_samples = config_valid = {
+    config_multiple_data_samples = {
         "General": {"Measurement": "", "POI": ""},
         "Regions": [{"Name": "", "Filter": "", "Variable": "", "Binning": [0, 1]}],
         "Samples": [{"Name": "", "Path": "", "Tree": ""}],
