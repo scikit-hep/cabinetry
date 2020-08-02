@@ -6,6 +6,7 @@ import click
 from .. import configuration as cabinetry_configuration
 from .. import fit as cabinetry_fit
 from .. import template_builder as cabinetry_template_builder
+from .. import template_postprocessor as cabinetry_template_postprocessor
 from .. import visualize as cabinetry_visualize
 from .. import workspace as cabinetry_workspace
 
@@ -54,6 +55,21 @@ def templates(config_path: str, histofolder: str, method: str) -> None:
 
 @click.command()
 @click.argument("config_path", type=click.Path(exists=True))
+@click.option(
+    "--histofolder", default="histograms/", help="folder to save histograms to"
+)
+def postprocess(config_path: str, histofolder: str) -> None:
+    """Post-process template histograms.
+
+    CONFIG_PATH: path to cabinetry configuration file
+    """
+    set_logging()
+    cabinetry_config = cabinetry_configuration.read(config_path)
+    cabinetry_template_postprocessor.run(cabinetry_config, histofolder)
+
+
+@click.command()
+@click.argument("config_path", type=click.Path(exists=True))
 @click.argument("ws_path", type=click.Path(exists=False))
 @click.option(
     "--histofolder", default="histograms/", help="folder containing histograms"
@@ -91,5 +107,6 @@ def fit(ws_path: str, pulls: bool, corrmat: bool, figfolder: str) -> None:
 
 
 cabinetry.add_command(templates)
+cabinetry.add_command(postprocess)
 cabinetry.add_command(workspace)
 cabinetry.add_command(fit)
