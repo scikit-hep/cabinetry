@@ -6,6 +6,7 @@
    :maxdepth: 1
 
    config
+   cli
    advanced
    api
    license
