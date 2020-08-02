@@ -32,7 +32,7 @@ def set_logging() -> None:
 def cabinetry() -> None:
     """Entrypoint to the cabinetry CLI.
     """
-    pass  # NOQA
+    ...
 
 
 @click.command()
