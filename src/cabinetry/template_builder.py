@@ -3,6 +3,7 @@ import logging
 import pathlib
 from typing import Any, Dict, Optional, Union
 
+import boost_histogram as bh
 import numpy as np
 
 from . import histo
@@ -295,8 +296,14 @@ class _Builder:
                 systematic (Dict[str, Any]): dict with systematic information
                 template (str): name of the template: "Nominal", "Up", "Down"
             """
-            histogram = histo.Histogram(func(region, sample, systematic, template))
-            self._name_and_save(histogram, region, sample, systematic, template)
+            histogram = func(region, sample, systematic, template)
+            if not isinstance(histogram, bh.Histogram):
+                raise TypeError(
+                    f"histogram produced by {func.__name__} must be a boost_histogram.Histogram"
+                )
+            self._name_and_save(
+                histo.Histogram(histogram), region, sample, systematic, template
+            )
 
         return wrapper
 
