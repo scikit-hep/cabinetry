@@ -29,47 +29,57 @@ def set_logging() -> None:
 
 @click.group(cls=OrderedGroup)
 def cabinetry() -> None:
-    """entrypoint to the cabinetry CLI
+    """Entrypoint to the cabinetry CLI.
     """
     pass
 
 
 @click.command()
-@click.argument("config_path")
+@click.argument("config_path", type=click.Path(exists=True))
 @click.option(
     "--histofolder", default="histograms/", help="folder to save histograms to"
 )
 @click.option("--method", default="uproot", help="backend for histogram production")
 def templates(config_path: str, histofolder: str, method: str) -> None:
-    """produce template histograms
+    """Produce template histograms.
+
+    CONFIG_PATH: path to cabinetry configuration file
     """
     set_logging()
-    config = cabinetry_configuration.read(config_path)
-    cabinetry_template_builder.create_histograms(config, histofolder, method=method)
+    cabinetry_config = cabinetry_configuration.read(config_path)
+    cabinetry_template_builder.create_histograms(
+        cabinetry_config, histofolder, method=method
+    )
 
 
 @click.command()
-@click.argument("config_path")
-@click.argument("ws_path")
+@click.argument("config_path", type=click.Path(exists=True))
+@click.argument("ws_path", type=click.Path(exists=False))
 @click.option(
     "--histofolder", default="histograms/", help="folder containing histograms"
 )
 def workspace(config_path: str, ws_path: str, histofolder: str) -> None:
-    """produce a `pyhf` workspace
+    """Produce a `pyhf` workspace.
+
+    CONFIG_PATH: path to cabinetry configuration file
+
+    WS_PATH: where to save the workspace containing the fit model
     """
     set_logging()
-    config = cabinetry_configuration.read(config_path)
-    ws = cabinetry_workspace.build(config, histofolder)
+    cabinetry_config = cabinetry_configuration.read(config_path)
+    ws = cabinetry_workspace.build(cabinetry_config, histofolder)
     cabinetry_workspace.save(ws, ws_path)
 
 
 @click.command()
-@click.argument("ws_path")
+@click.argument("ws_path", type=click.Path(exists=True))
 @click.option("--pulls", is_flag=True, help="produce pull plot")
 @click.option("--corrmat", is_flag=True, help="produce correlation matrix")
 @click.option("--figfolder", default="figures/", help="folder to save figures to")
 def fit(ws_path: str, pulls: bool, corrmat: bool, figfolder: str) -> None:
-    """fit a workspace and optionally visualize the results
+    """Fit a workspace and optionally visualize the results.
+
+    WS_PATH: path to workspace used in fit
     """
     set_logging()
     ws = cabinetry_workspace.load(ws_path)
