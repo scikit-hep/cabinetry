@@ -380,6 +380,9 @@ def get_measurements(config: Dict[str, Any]) -> List[Dict[str, Any]]:
         parameters_list.append(parameter)
 
     for sys in config.get("Systematics", []):
+        # when there are many more systematics than NormFactors, it would be more
+        # efficient to loop over fixed parameters and exclude all NormFactor related
+        # ones to set all the remaining ones to constant (which are systematics)
         sys_name = sys["Name"]  # every systematic has a name
         fixed = _get_constant_parameter_setting(config, sys_name)
         if fixed is not None:
