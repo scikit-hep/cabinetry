@@ -61,6 +61,28 @@
                 "POI": {
                     "description": "name of parameter of interest",
                     "type": "string"
+                },
+                "Fixed": {
+                    "description": "list of parameters to treat as constant in fits",
+                    "type": "array",
+                    "minItems": 1,
+                    "items": {
+                        "description": "a fixed parameter",
+                        "type": "object",
+                        "required": ["Name", "Value"],
+                        "properties": {
+                            "Name": {
+                                "description": "name of fixed parameter",
+                                "type": "string"
+                            },
+                            "Value": {
+                                "description": "value to fix parameter to",
+                                "type": "number"
+                            }
+                        },
+                        "additionalProperties": false
+                    },
+                    "uniqueItems": true
                 }
             },
             "additionalProperties": false
