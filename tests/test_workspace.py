@@ -197,14 +197,7 @@ def test_get_measurement():
             "name": "fit",
             "config": {
                 "poi": "mu",
-                "parameters": [
-                    {
-                        "name": "NF",
-                        "inits": [1.0],
-                        "bounds": [[0.0, 5.0]],
-                        "fixed": False,
-                    }
-                ],
+                "parameters": [{"name": "NF", "inits": [1.0], "bounds": [[0.0, 5.0]]}],
             },
         }
     ]
