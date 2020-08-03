@@ -177,10 +177,6 @@
                         "type": "number"
                     },
                     "uniqueItems": true
-                },
-                "Fixed": {
-                    "description": "if the normalization factor is a constant",
-                    "type": "boolean"
                 }
             },
             "additionalProperties": false

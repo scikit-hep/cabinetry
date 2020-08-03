@@ -28,6 +28,33 @@ def _get_data_sample(config: Dict[str, Any]) -> Dict[str, Any]:
     return data_samples[0]
 
 
+def _find_constant_parameter_setting(
+    config: Dict[str, Any], par_name: str
+) -> Optional[float]:
+    """for a given parameter, determine if it is supposed to be set to constant, and if yes,
+    to what value it should be fixed
+    this only looks for the first occurrence of the parameter in the list
+
+    Args:
+        config (Dict[str, Any]): cabinetry configuration
+        par_name (str): name of parameter to check
+
+    Returns:
+        Optional[Tuple[str, float]]: returns None if parameter is not supposed to be held constant,
+        or the value it has to be fixed to
+    """
+    fixed_parameters = config["General"].get("Fixed", [])
+    fixed_value = next(
+        (
+            fixed_par["Value"]
+            for fixed_par in fixed_parameters
+            if fixed_par["Name"] == par_name
+        ),
+        None,
+    )
+    return fixed_value
+
+
 def get_yield_for_sample(
     region: Dict[str, Any],
     sample: Dict[str, Any],
@@ -327,13 +354,13 @@ def get_measurements(config: Dict[str, Any]) -> List[Dict[str, Any]]:
     measurement.update({"name": config["General"]["Measurement"]})
     config_dict = {}
 
-    # get the norm factor intial values / bounds / constant setting
+    # get the norm factor initial values / bounds / constant setting
     parameters_list = []
     for nf in config.get("NormFactors", []):
-        nf_name = nf["Name"]  # every NormFactor needs to have a name
+        nf_name = nf["Name"]  # every NormFactor has a name
         init = nf.get("Nominal", None)
         bounds = nf.get("Bounds", None)
-        fixed = nf.get("Fixed", None)
+        fixed = _find_constant_parameter_setting(config, nf_name)
 
         parameter = {"name": nf_name}
         if init is not None:
@@ -341,10 +368,24 @@ def get_measurements(config: Dict[str, Any]) -> List[Dict[str, Any]]:
         if bounds is not None:
             parameter.update({"bounds": [bounds]})
         if fixed is not None:
-            log.warning("fixed parameters are not yet propagated through pyhf to fits")
+            log.warning(
+                "fixed parameters are currently only respected in fit.custom_fit"
+            )
             parameter.update({"fixed": fixed})
 
         parameters_list.append(parameter)
+
+    for sys in config.get("Systematics", []):
+        sys_name = sys["Name"]  # every systematic has a name
+        fixed = _find_constant_parameter_setting(config, sys_name)
+        if fixed is not None:
+            log.warning(
+                "fixed parameters are currently only respected in fit.custom_fit"
+            )
+            parameter = {"name": sys_name}
+            parameter.update({"inits": [fixed]})
+            parameter.update({"fixed": True})
+            parameters_list.append(parameter)
 
     parameters = {"parameters": parameters_list}
     config_dict.update(parameters)
