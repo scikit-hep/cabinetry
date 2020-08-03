@@ -17,17 +17,17 @@ def test__get_data_sample():
         workspace._get_data_sample(config_two_data_samples)
 
 
-def test__find_constant_parameter_setting():
+def test__get_constant_parameter_setting():
     config_no_fixed = {"General": {}}
-    assert workspace._find_constant_parameter_setting(config_no_fixed, "par") is None
+    assert workspace._get_constant_parameter_setting(config_no_fixed, "par") is None
 
     config_others_fixed = {"General": {"Fixed": [{"Name": "par_a", "Value": 1.2}]}}
     assert (
-        workspace._find_constant_parameter_setting(config_others_fixed, "par_b") is None
+        workspace._get_constant_parameter_setting(config_others_fixed, "par_b") is None
     )
 
     config_par_fixed = {"General": {"Fixed": [{"Name": "par_a", "Value": 1.2}]}}
-    assert workspace._find_constant_parameter_setting(config_par_fixed, "par_a") == 1.2
+    assert workspace._get_constant_parameter_setting(config_par_fixed, "par_a") == 1.2
 
 
 @mock.patch(
@@ -231,7 +231,7 @@ def test_get_measurement():
 
     # constant normfactor
     with mock.patch(
-        "cabinetry.workspace._find_constant_parameter_setting", return_value=1.2
+        "cabinetry.workspace._get_constant_parameter_setting", return_value=1.2
     ) as mock_find_const:
         expected_measurement_const_NF = [
             {
@@ -252,7 +252,7 @@ def test_get_measurement():
 
     # constant systematic
     with mock.patch(
-        "cabinetry.workspace._find_constant_parameter_setting", return_value=1.2
+        "cabinetry.workspace._get_constant_parameter_setting", return_value=1.2
     ) as mock_find_const:
         example_config_const_sys = {
             "General": {
@@ -281,7 +281,7 @@ def test_get_measurement():
 
     # no constant systematic
     with mock.patch(
-        "cabinetry.workspace._find_constant_parameter_setting", return_value=None
+        "cabinetry.workspace._get_constant_parameter_setting", return_value=None
     ) as mock_find_const:
         example_config_sys = {
             "General": {"Measurement": "fit", "POI": "mu"},

@@ -28,7 +28,7 @@ def _get_data_sample(config: Dict[str, Any]) -> Dict[str, Any]:
     return data_samples[0]
 
 
-def _find_constant_parameter_setting(
+def _get_constant_parameter_setting(
     config: Dict[str, Any], par_name: str
 ) -> Optional[float]:
     """for a given parameter, determine if it is supposed to be set to constant, and if yes,
@@ -360,7 +360,7 @@ def get_measurements(config: Dict[str, Any]) -> List[Dict[str, Any]]:
         nf_name = nf["Name"]  # every NormFactor has a name
         init = nf.get("Nominal", None)
         bounds = nf.get("Bounds", None)
-        fixed = _find_constant_parameter_setting(config, nf_name)
+        fixed = _get_constant_parameter_setting(config, nf_name)
         if (init is None) and (fixed is not None):
             # if no initial value is specified, but a constant setting
             # is requested, set the initial value to the constant value
@@ -381,7 +381,7 @@ def get_measurements(config: Dict[str, Any]) -> List[Dict[str, Any]]:
 
     for sys in config.get("Systematics", []):
         sys_name = sys["Name"]  # every systematic has a name
-        fixed = _find_constant_parameter_setting(config, sys_name)
+        fixed = _get_constant_parameter_setting(config, sys_name)
         if fixed is not None:
             log.warning(
                 "fixed parameters are currently only respected in fit.custom_fit"
