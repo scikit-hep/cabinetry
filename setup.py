@@ -57,7 +57,7 @@ setup(
     install_requires=[
         "numpy",
         "pyyaml",
-        "pyhf>=0.5.0",
+        "pyhf>=0.5.1",  # fixed parameter bookkeeping #989
         "iminuit>1.4.0",
         "boost_histogram",
         "jsonschema",

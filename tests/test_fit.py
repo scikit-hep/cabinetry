@@ -34,7 +34,13 @@ def example_spec():
             }
         ],
         "measurements": [
-            {"config": {"parameters": [], "poi": "Signal strength"}, "name": "My fit"}
+            {
+                "config": {
+                    "parameters": [{"name": "staterror_Signal-Region", "fixed": True}],
+                    "poi": "Signal strength",
+                },
+                "name": "My fit",
+            }
         ],
         "observations": [{"data": [475], "name": "Signal Region"}],
         "version": "1.0.0",
@@ -77,10 +83,9 @@ def test_custom_fit(example_spec):
     bestfit, uncertainty, labels, best_twice_nll, corr_mat = fit.custom_fit(
         example_spec
     )
-    # the results match those from fit.fit(),
-    # unless the tolerance is decreased significantly
-    assert np.allclose(bestfit, [0.99998772, 9.16255687])
-    assert np.allclose(uncertainty, [0.04954955, 0.61348804])
+    # compared to fit(), the gamma is fixed
+    assert np.allclose(bestfit, [1.0, 9.16273912])
+    assert np.allclose(uncertainty, [0.1, 0.41879022])
     assert labels == ["staterror_Signal-Region", "Signal strength"]
-    assert np.allclose(best_twice_nll, 3.83054341)
-    assert np.allclose(corr_mat, [[1.0, -0.73366055], [-0.73366055, 1.0]])
+    assert np.allclose(best_twice_nll, 3.83054248)
+    assert np.allclose(corr_mat, [[1.0]])

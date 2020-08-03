@@ -111,8 +111,9 @@ def custom_fit(
 
     init_pars = model.config.suggested_init()
     par_bounds = model.config.suggested_bounds()
+    fix_pars = model.config.suggested_fixed()
+
     step_size = [0.1 for _ in init_pars]
-    fix_pars = [False for _ in init_pars]
 
     labels = get_parameter_names(model)
 
