@@ -361,6 +361,10 @@ def get_measurements(config: Dict[str, Any]) -> List[Dict[str, Any]]:
         init = nf.get("Nominal", None)
         bounds = nf.get("Bounds", None)
         fixed = _find_constant_parameter_setting(config, nf_name)
+        if (init is None) and (fixed is not None):
+            # if no initial value is specified, but a constant setting
+            # is requested, set the initial value to the constant value
+            init = fixed
 
         parameter = {"name": nf_name}
         if init is not None:
@@ -371,7 +375,7 @@ def get_measurements(config: Dict[str, Any]) -> List[Dict[str, Any]]:
             log.warning(
                 "fixed parameters are currently only respected in fit.custom_fit"
             )
-            parameter.update({"fixed": fixed})
+            parameter.update({"fixed": True})
 
         parameters_list.append(parameter)
 

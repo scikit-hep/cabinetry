@@ -17,6 +17,19 @@ def test__get_data_sample():
         workspace._get_data_sample(config_two_data_samples)
 
 
+def test__find_constant_parameter_setting():
+    config_no_fixed = {"General": {}}
+    assert workspace._find_constant_parameter_setting(config_no_fixed, "par") is None
+
+    config_others_fixed = {"General": {"Fixed": [{"Name": "par_a", "Value": 1.2}]}}
+    assert (
+        workspace._find_constant_parameter_setting(config_others_fixed, "par_b") is None
+    )
+
+    config_par_fixed = {"General": {"Fixed": [{"Name": "par_a", "Value": 1.2}]}}
+    assert workspace._find_constant_parameter_setting(config_par_fixed, "par_a") == 1.2
+
+
 @mock.patch(
     "cabinetry.workspace.histo.Histogram.from_config",
     return_value=histo.Histogram.from_arrays([0, 1, 2], [1.0, 2.0], [0.1, 0.1]),
@@ -215,6 +228,72 @@ def test_get_measurement():
         workspace.get_measurements(example_config_no_NF_settings)
         == expected_measurement_no_NF_settings
     )
+
+    # constant normfactor
+    with mock.patch(
+        "cabinetry.workspace._find_constant_parameter_setting", return_value=1.2
+    ) as mock_find_const:
+        expected_measurement_const_NF = [
+            {
+                "name": "fit",
+                "config": {
+                    "poi": "mu",
+                    "parameters": [{"name": "NF", "fixed": True, "inits": [1.2]}],
+                },
+            }
+        ]
+        assert (
+            workspace.get_measurements(example_config_no_NF_settings)
+            == expected_measurement_const_NF
+        )
+        assert mock_find_const.call_args_list == [
+            ((example_config_no_NF_settings, "NF"), {})
+        ]
+
+    # constant systematic
+    with mock.patch(
+        "cabinetry.workspace._find_constant_parameter_setting", return_value=1.2
+    ) as mock_find_const:
+        example_config_const_sys = {
+            "General": {
+                "Measurement": "fit",
+                "POI": "mu",
+                "Fixed": [{"Name": "par_A", "Value": 1.2}],
+            },
+            "Systematics": [{"Name": "par_A"}],
+        }
+        expected_measurement_const_sys = [
+            {
+                "name": "fit",
+                "config": {
+                    "poi": "mu",
+                    "parameters": [{"name": "par_A", "fixed": True, "inits": [1.2]}],
+                },
+            }
+        ]
+        assert (
+            workspace.get_measurements(example_config_const_sys)
+            == expected_measurement_const_sys
+        )
+        assert mock_find_const.call_args_list == [
+            ((example_config_const_sys, "par_A"), {})
+        ]
+
+    # no constant systematic
+    with mock.patch(
+        "cabinetry.workspace._find_constant_parameter_setting", return_value=None
+    ) as mock_find_const:
+        example_config_sys = {
+            "General": {"Measurement": "fit", "POI": "mu"},
+            "Systematics": [{"Name": "par_A"}],
+        }
+        expected_measurement_sys = [
+            {"name": "fit", "config": {"poi": "mu", "parameters": []}}
+        ]
+        assert (
+            workspace.get_measurements(example_config_sys) == expected_measurement_sys
+        )
+        assert mock_find_const.call_args_list == [((example_config_sys, "par_A"), {})]
 
 
 @mock.patch(
