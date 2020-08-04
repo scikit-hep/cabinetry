@@ -201,4 +201,72 @@ def test_Router__find_template_builder_match(processor_examples):
 
 
 def test_apply_to_all_templates():
-    ...
+    # define a custom override function that logs its arguments when called
+    override_call_args = []
+
+    def match_func(reg: str, sam: str, sys: str, tem: str):
+        def f(reg: dict, sam: dict, sys: dict, tem: str):
+            override_call_args.append((reg, sam, sys, tem))
+
+        return f
+
+    default_func = mock.MagicMock()
+
+    example_config = {
+        "Regions": [{"Name": "test_region"}],
+        "Samples": [{"Name": "sample"}],
+        "Systematics": [
+            {"Name": "norm", "Type": "Normalization"},
+            {"Name": "var", "Type": "NormPlusShape", "Samples": "sample"},
+        ],
+    }
+
+    # no overrides specified
+    route.apply_to_all_templates(example_config, default_func, match_func=None)
+
+    # check that the default function was called for all templates
+    assert len(default_func.call_args_list) == 3
+    assert default_func.call_args_list[0] == (
+        ({"Name": "test_region"}, {"Name": "sample"}, {"Name": "nominal"}, "Nominal"),
+        {},
+    )
+    assert default_func.call_args_list[1] == (
+        (
+            {"Name": "test_region"},
+            {"Name": "sample"},
+            {"Name": "var", "Type": "NormPlusShape", "Samples": "sample"},
+            "Up",
+        ),
+        {},
+    )
+    assert default_func.call_args_list[2] == (
+        (
+            {"Name": "test_region"},
+            {"Name": "sample"},
+            {"Name": "var", "Type": "NormPlusShape", "Samples": "sample"},
+            "Down",
+        ),
+        {},
+    )
+
+    # apply the override instead to all templates
+    route.apply_to_all_templates(example_config, default_func, match_func=match_func)
+    assert len(override_call_args) == 3
+    assert override_call_args[0] == (
+        {"Name": "test_region"},
+        {"Name": "sample"},
+        {"Name": "nominal"},
+        "Nominal",
+    )
+    assert override_call_args[1] == (
+        {"Name": "test_region"},
+        {"Name": "sample"},
+        {"Name": "var", "Type": "NormPlusShape", "Samples": "sample"},
+        "Up",
+    )
+    assert override_call_args[2] == (
+        {"Name": "test_region"},
+        {"Name": "sample"},
+        {"Name": "var", "Type": "NormPlusShape", "Samples": "sample"},
+        "Down",
+    )
