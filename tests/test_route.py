@@ -1,4 +1,6 @@
+import functools
 import logging
+from unittest import mock
 
 import boost_histogram as bh
 import numpy as np
@@ -23,7 +25,7 @@ class ProcessorExamples:
 
 
 @pytest.fixture
-def example_callables():
+def processor_examples():
     return ProcessorExamples
 
 
@@ -33,9 +35,9 @@ def test_Router():
     assert router.template_builder_wrapper is None
 
 
-def test_Router__register_processor(example_callables):
+def test_Router__register_processor(processor_examples):
     example_router = route.Router()
-    example_template_builder = example_callables.get_example_template_builder()
+    example_template_builder = processor_examples.get_example_template_builder()
 
     example_router._register_processor(
         example_router.template_builders,
@@ -75,9 +77,9 @@ def test_Router__register_processor(example_callables):
     }
 
 
-def test_Router_register_template_builder(example_callables):
+def test_Router_register_template_builder(processor_examples):
     example_router = route.Router()
-    example_template_builder = example_callables.get_example_template_builder()
+    example_template_builder = processor_examples.get_example_template_builder()
 
     example_router.register_template_builder(
         region_name="reg", sample_name="signal", systematic_name="sys", template="Up",
@@ -95,10 +97,10 @@ def test_Router_register_template_builder(example_callables):
     ]
 
 
-def test_Router__find_match(example_callables, caplog):
+def test_Router__find_match(processor_examples, caplog):
     caplog.set_level(logging.DEBUG)
     example_router = route.Router()
-    example_template_builder = example_callables.get_example_template_builder()
+    example_template_builder = processor_examples.get_example_template_builder()
 
     def other_processor():
         pass
@@ -158,3 +160,45 @@ def test_Router__find_match(example_callables, caplog):
         in [rec.message for rec in caplog.records]
     )
     caplog.clear()
+
+
+def test_Router__find_template_builder_match(processor_examples):
+    example_router = route.Router()
+    example_template_builder = processor_examples.get_example_template_builder()
+
+    # no wrapper defined
+    with pytest.raises(ValueError, match="no template builder wrapper defined"):
+        example_router._find_template_builder_match("", "", "", "")
+
+    def example_wrapper(func):
+        @functools.wraps(func)
+        def wrapper(reg, sam, sys, tem):
+            # return the bin yield of the histogram to have something to compare
+            return func(reg, sam, sys, tem).view().value
+
+        return wrapper
+
+    # wrapper defined, but no match available
+    example_router.template_builder_wrapper = example_wrapper
+    assert example_router._find_template_builder_match("", "", "", "") is None
+
+    # match exists
+    with mock.patch(
+        "cabinetry.route.Router._find_match", return_value=example_template_builder
+    ) as mock_find:
+        wrapped_builder = example_router._find_template_builder_match("reg", "", "", "")
+        assert mock_find.call_args_list == [(([], "reg", "", "", ""), {})]
+
+        # need to verify that the wrapped template builder is wrapped with the right function
+        expected_wrap = example_wrapper(example_template_builder)
+        assert wrapped_builder.__name__ == expected_wrap.__name__
+
+        # a direct assert of equality fails
+        # assert wrapped_builder == expected_wrap
+
+        # compare instead the behavior for an example call
+        assert wrapped_builder({}, {}, {}, {}) == expected_wrap({}, {}, {}, {})
+
+
+def test_apply_to_all_templates():
+    ...

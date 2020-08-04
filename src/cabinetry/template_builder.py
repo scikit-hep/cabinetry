@@ -1,4 +1,4 @@
-from functools import wraps
+import functools
 import logging
 import pathlib
 from typing import Any, Dict, Optional, Union
@@ -279,7 +279,7 @@ class _Builder:
             cabinetry.route.ProcessorFunc: wrapped template builder
         """
         # decorating this with functools.wraps will keep the name of the wrapped function the same
-        @wraps(func)
+        @functools.wraps(func)
         def wrapper(
             region: Dict[str, Any],
             sample: Dict[str, Any],
