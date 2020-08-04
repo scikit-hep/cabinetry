@@ -278,7 +278,9 @@ class _Builder:
         Returns:
             cabinetry.route.ProcessorFunc: wrapped template builder
         """
-        # decorating this with functools.wraps will keep the name of the wrapped function the same
+        # decorating this with functools.wraps will keep the name of the wrapped function the same,
+        # however the signature of the wrapped function is slightly different (the return value
+        # becomes None)
         @functools.wraps(func)
         def wrapper(
             region: Dict[str, Any],

@@ -28,11 +28,18 @@ MatchFunc = Callable[[str, str, str, str], Optional[ProcessorFunc]]
 
 
 class Router:
-    """holds user-defined processing functions, and provides functions matching
-    a pattern to apply the right function to each template
+    """Holds user-defined processing functions, and provides functions for matching
+    a pattern to apply the right function to each template.
+
+    Attributes:
+        template_builders (List[Dict[str, Any]]): user-defined processors for template building
+        template_builder_wrapper (Optional[Callable[[UserTemplateFunc], ProcessorFunc]]):
+            wrapper to apply on user-defined template builders
     """
 
     def __init__(self) -> None:
+        """Initialize a Router instance, with no processors or wrappers defined.
+        """
         # initialize all lists of processor types the user can specify
         self.template_builders: List[Dict[str, Any]] = []
 
