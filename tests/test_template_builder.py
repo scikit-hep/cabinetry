@@ -242,7 +242,7 @@ def test__Builder__wrap_custom_template_builder(mock_save):
     wrapped_func_wrong_return = builder._wrap_custom_template_builder(
         test_func_wrong_return
     )
-    with pytest.raises(TypeError, match="must be a boost_histogram.Histogram"):
+    with pytest.raises(TypeError, match="must return a boost_histogram.Histogram"):
         wrapped_func_wrong_return(region, sample, systematic, "Up")
 
 

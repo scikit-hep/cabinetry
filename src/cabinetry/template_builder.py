@@ -301,7 +301,7 @@ class _Builder:
             histogram = func(region, sample, systematic, template)
             if not isinstance(histogram, bh.Histogram):
                 raise TypeError(
-                    f"histogram produced by {func.__name__} must be a boost_histogram.Histogram"
+                    f"{func.__name__} must return a boost_histogram.Histogram"
                 )
             self._name_and_save(
                 histo.Histogram(histogram), region, sample, systematic, template
