@@ -1,10 +1,10 @@
-import logging
 import pathlib
+from unittest import mock
 
+import boost_histogram as bh
 import numpy as np
 import pytest
 
-from cabinetry import histo
 from cabinetry import template_builder
 
 
@@ -150,75 +150,135 @@ def test__get_binning():
         assert template_builder._get_binning({})
 
 
-def test_create_histograms(tmp_path, caplog, utils):
-    caplog.set_level(logging.DEBUG)
-    fname = tmp_path / "test.root"
-    treename = "tree"
-    varname = "var"
-    var_array = [1.1, 2.3, 3.0, 3.2]
-    weightname = "weight"
-    weight_array = [1.0, 1.0, 2.0, 1.0]
-    bins = [1, 2, 3, 4]
-    # create something to read
-    utils.create_ntuple(fname, treename, varname, var_array, weightname, weight_array)
+def test__Builder():
+    builder = template_builder._Builder("path", "uproot")
+    assert builder.folder_path_str == "path"
+    assert builder.method == "uproot"
 
-    # create a systematic uncertainty to read
-    var_array_sys = [1.1, 1.1, 1.1, 1.1]
-    fname_sys = tmp_path / "test_sys.root"
-    utils.create_ntuple(
-        fname_sys, treename, varname, var_array_sys, weightname, weight_array
-    )
 
-    config = {
-        "Regions": [{"Name": "test_region", "Variable": varname, "Binning": bins}],
-        "Samples": [{"Name": "sample", "Tree": treename, "Path": fname}],
-        "Systematics": [
-            {"Name": "norm", "Type": "Normalization"},
-            {
-                "Name": "var",
-                "Type": "NormPlusShape",
-                "Samples": "sample",
-                "Up": {"Path": str(fname_sys)},
-            },
-        ],
+@mock.patch("cabinetry.template_builder._Builder._name_and_save")
+@mock.patch("cabinetry.histo.Histogram.from_arrays", return_value="histogram")
+@mock.patch(
+    "cabinetry.contrib.histogram_creation.from_uproot", return_value=([1], [0.1])
+)
+def test__Builder_create_histogram(mock_uproot_builder, mock_histo, mock_save):
+    # the binning [0] is not a proper binning, but simplifies the comparison
+    region = {"Name": "test_region", "Variable": "x", "Binning": [0], "Filter": "x>3"}
+    sample = {
+        "Name": "sample",
+        "Tree": "tree",
+        "Path": "path_to_sample",
+        "Weight": "weight_mc",
     }
-    template_builder.create_histograms(config, tmp_path, method="uproot")
+    systematic = {"Name": "nominal"}
 
-    # ServiceX is not yet implemented
-    with pytest.raises(NotImplementedError, match="ServiceX not yet implemented"):
-        assert template_builder.create_histograms(config, tmp_path, method="ServiceX")
+    builder = template_builder._Builder("path", "uproot")
+    builder._create_histogram(region, sample, systematic, "Nominal")
+
+    # verify the backend call happened properly
+    assert mock_uproot_builder.call_args_list == [
+        (
+            (pathlib.Path("path_to_sample"), "tree", "x", [0]),
+            {"weight": "weight_mc", "selection_filter": "x>3"},
+        )
+    ]
+
+    # verify the histogram conversion call
+    assert mock_histo.call_args_list == [(([0], [1], [0.1]), {})]
+
+    # verify the call for saving
+    assert mock_save.call_args_list == [
+        (("histogram", region, sample, systematic, "Nominal"), {})
+    ]
 
     # other backends
+    builder_unknown = template_builder._Builder("path", "unknown")
     with pytest.raises(NotImplementedError, match="unknown backend"):
-        assert template_builder.create_histograms(config, tmp_path, method="unknown")
+        builder_unknown._create_histogram(region, sample, systematic, "Nominal")
 
-    saved_histo = histo.Histogram.from_config(
-        tmp_path,
-        config["Regions"][0],
-        config["Samples"][0],
-        {"Name": "nominal"},
-        modified=False,
+
+@mock.patch("cabinetry.histo.build_name", return_value="name")
+def test__Builder__name_and_save(mock_name):
+    region = {"Name": "test_region"}
+    sample = {"Name": "sample"}
+    systematic = {"Name": "nominal"}
+
+    histogram = mock.MagicMock()
+
+    builder = template_builder._Builder("path", "uproot")
+    builder._name_and_save(histogram, region, sample, systematic, "Up")
+
+    # check that the naming function was called, the histogram was validated and saved
+    assert mock_name.call_args_list == [((region, sample, systematic, "Up"), {})]
+    assert histogram.validate.call_args_list == [mock.call("name")]
+    assert histogram.save.call_args_list == [mock.call(pathlib.Path("path/name"))]
+
+
+@mock.patch("cabinetry.template_builder._Builder._name_and_save")
+def test__Builder__wrap_custom_template_builder(mock_save):
+    histogram = bh.Histogram(bh.axis.Variable([0, 1]))
+    region = {"Name": "test_region"}
+    sample = {"Name": "sample"}
+    systematic = {"Name": "nominal"}
+
+    def test_func(reg, sam, sys, tem):
+        return histogram
+
+    builder = template_builder._Builder("path", "uproot")
+    wrapped_func = builder._wrap_custom_template_builder(test_func)
+
+    # check the behavior of the wrapped function
+    # when called, it should save the returned histogram
+    wrapped_func(region, sample, systematic, "Up")
+
+    assert mock_save.call_args_list == [
+        ((histogram, region, sample, systematic, "Up"), {})
+    ]
+
+    # wrapped function returns wrong type
+    def test_func_wrong_return(reg, sam, sys, tem):
+        return None
+
+    wrapped_func_wrong_return = builder._wrap_custom_template_builder(
+        test_func_wrong_return
     )
+    with pytest.raises(TypeError, match="must return a boost_histogram.Histogram"):
+        wrapped_func_wrong_return(region, sample, systematic, "Up")
 
-    assert np.allclose(saved_histo.yields, [1, 1, 2])
-    assert np.allclose(saved_histo.stdev, [1, 1, 1.41421356])
-    assert np.allclose(saved_histo.bins, bins)
 
-    saved_histo_sys = histo.Histogram.from_config(
-        tmp_path,
-        config["Regions"][0],
-        config["Samples"][0],
-        {"Name": "var"},
-        modified=False,
-        template="Up",
-    )
+def test_create_histograms():
+    config = {}
+    folder_path_str = "path"
+    method = "uproot"
 
-    assert np.allclose(saved_histo_sys.yields, [4, 0, 0])
-    assert np.allclose(saved_histo_sys.stdev, [2, 0, 0])
-    assert np.allclose(saved_histo_sys.bins, bins)
+    # no router
+    with mock.patch("cabinetry.route.apply_to_all_templates") as mock_apply:
+        template_builder.create_histograms(config, folder_path_str, method)
+        assert len(mock_apply.call_args_list) == 1
+        config_call, func_call = mock_apply.call_args_list[0][0]
+        assert config_call == config
+        assert (
+            func_call.__name__ == "_create_histogram"
+        )  # could also compare to function
+        assert mock_apply.call_args_list[0][1] == {"match_func": None}
 
-    assert "  reading sample sample" in [rec.message for rec in caplog.records]
-    assert "  in region test_region" in [rec.message for rec in caplog.records]
-    assert "  variation nominal" in [rec.message for rec in caplog.records]
-    assert "  variation var" in [rec.message for rec in caplog.records]
-    caplog.clear()
+    # including a router
+    mock_router = mock.MagicMock()
+    with mock.patch("cabinetry.route.apply_to_all_templates") as mock_apply:
+        template_builder.create_histograms(
+            config, folder_path_str, method, router=mock_router
+        )
+
+        # verify wrapper was set
+        assert (
+            mock_router.template_builder_wrapper.__name__
+            == "_wrap_custom_template_builder"
+        )
+
+        assert len(mock_apply.call_args_list) == 1
+        config_call, func_call = mock_apply.call_args_list[0][0]
+        assert config_call == config
+        assert func_call.__name__ == "_create_histogram"
+        assert mock_apply.call_args_list[0][1] == {
+            "match_func": mock_router._find_template_builder_match
+        }

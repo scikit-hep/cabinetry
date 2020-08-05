@@ -201,7 +201,11 @@ def test_build_name():
     region = {"Name": "Region"}
     sample = {"Name": "Sample"}
     systematic = {"Name": "Systematic"}
-    assert histo.build_name(region, sample, systematic) == "Region_Sample_Systematic"
+    template = "Up"
+    assert (
+        histo.build_name(region, sample, systematic, template)
+        == "Region_Sample_Systematic_Up"
+    )
 
     region = {"Name": "Region 1"}
     sample = {"Name": "Sample 1"}

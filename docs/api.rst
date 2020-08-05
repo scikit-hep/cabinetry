@@ -13,10 +13,10 @@ cabinetry.configuration
    :members:
 
 
-cabinetry.fit
--------------
+cabinetry.route
+---------------
 
-.. automodule:: cabinetry.fit
+.. automodule:: cabinetry.route
    :members:
 
 
@@ -41,17 +41,24 @@ cabinetry.template_postprocessor
    :members:
 
 
-cabinetry.visualize
--------------------
-
-.. automodule:: cabinetry.visualize
-   :members:
-
-
 cabinetry.workspace
 -------------------
 
 .. automodule:: cabinetry.workspace
+   :members:
+
+
+cabinetry.fit
+-------------
+
+.. automodule:: cabinetry.fit
+   :members:
+
+
+cabinetry.visualize
+-------------------
+
+.. automodule:: cabinetry.visualize
    :members:
 
 
