@@ -288,7 +288,7 @@ class _Builder:
             systematic: Dict[str, Any],
             template: str,
         ) -> None:
-            """Takes a user-defined function that returns a histogram, runs that function and
+            """Takes a user-defined function that returns a histogram, executes that function and
             saves the histogram. Returns None, to turn the user-defined function into a
             ProcessorFunc when wrapped by this.
 
