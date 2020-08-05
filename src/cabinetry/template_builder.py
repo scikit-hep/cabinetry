@@ -290,7 +290,7 @@ class _Builder:
         ) -> None:
             """Takes a user-defined function that returns a histogram, executes that function and
             saves the histogram. Returns None, to turn the user-defined function into a
-            ProcessorFunc when wrapped by this.
+            ProcessorFunc when wrapped with this.
 
             Args:
                 region (Dict[str, Any]): dict with region information
