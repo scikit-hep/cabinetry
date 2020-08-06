@@ -232,7 +232,7 @@ class _Builder:
             )
 
         else:
-            raise NotImplementedError("unknown backend")
+            raise NotImplementedError(f"unknown backend {self.method}")
 
         # store information in a Histogram instance and save it
         histogram = histo.Histogram.from_arrays(bins, yields, stdev)
