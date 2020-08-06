@@ -216,7 +216,7 @@ def apply_to_all_templates(
     default_func: ProcessorFunc,
     match_func: Optional[MatchFunc] = None,
 ) -> None:
-    """Apply the supplied function `default_func` to all templates specified by the
+    """Apply the supplied function ``default_func`` to all templates specified by the
     configuration file. This function takes four arguments in this order:
 
     - the dict specifying region information
@@ -231,7 +231,7 @@ def apply_to_all_templates(
         config (Dict[str, Any]): cabinetry configuration
         default_func (ProcessorFunc): function to be called for every template by default
         match_func: (Optional[MatchFunc], optional): function that returns user-defined functions
-            to override the call to `default_func`, defaults to None (then it is not used)
+            to override the call to ``default_func``, defaults to None (then it is not used)
     """
     for region in config["Regions"]:
         log.debug(f"  in region {region['Name']}")

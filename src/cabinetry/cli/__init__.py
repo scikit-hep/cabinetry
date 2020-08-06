@@ -75,7 +75,7 @@ def postprocess(config_path: str, histofolder: str) -> None:
     "--histofolder", default="histograms/", help="folder containing histograms"
 )
 def workspace(config_path: str, ws_path: str, histofolder: str) -> None:
-    """Produce a `pyhf` workspace.
+    """Produce a ``pyhf`` workspace.
 
     CONFIG_PATH: path to cabinetry configuration file
 
