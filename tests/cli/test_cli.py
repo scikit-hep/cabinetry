@@ -124,14 +124,18 @@ def test_workspace(mock_read, mock_build, mock_save, cli_helpers, tmp_path):
 @mock.patch("cabinetry.visualize.pulls")
 @mock.patch("cabinetry.fit.fit", return_value=([1.0], [0.1], "label", None, [[1.0]]))
 @mock.patch("cabinetry.workspace.load", return_value={"workspace": "mock"})
-def test_fit(mock_load, mock_fit, mock_pulls, mock_corrmat):
+def test_fit(mock_load, mock_fit, mock_pulls, mock_corrmat, tmp_path):
     workspace = {"workspace": "mock"}
     bestfit = [1.0]
     uncertainty = [0.1]
     labels = "label"
     corr_mat = [[1.0]]
 
-    workspace_path = "workspace.json"
+    workspace_path = str(tmp_path / "workspace.json")
+
+    # need to save workspace to file since click looks for it
+    with open(workspace_path, "w") as f:
+        f.write("{'workspace': 'mock'}")
 
     runner = CliRunner()
 
