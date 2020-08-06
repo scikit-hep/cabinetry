@@ -32,7 +32,6 @@ def set_logging() -> None:
 def cabinetry() -> None:
     """Entrypoint to the cabinetry CLI.
     """
-    ...
 
 
 @click.command()
