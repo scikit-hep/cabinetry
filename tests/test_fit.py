@@ -85,7 +85,7 @@ def test_custom_fit(example_spec):
     )
     # compared to fit(), the gamma is fixed
     assert np.allclose(bestfit, [1.0, 9.16273912])
-    assert np.allclose(uncertainty, [0.1, 0.41879022])
+    assert np.allclose(uncertainty, [0.1, 0.41879343])
     assert labels == ["staterror_Signal-Region", "Signal strength"]
     assert np.allclose(best_twice_nll, 3.83054248)
     assert np.allclose(corr_mat, [[1.0]])

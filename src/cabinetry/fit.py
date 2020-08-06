@@ -134,6 +134,7 @@ def custom_fit(
     # decrease tolerance (goal: EDM < 0.002*tol*errordef), default tolerance is 0.1
     m.tol /= 10
     m.migrad()
+    m.hesse()
 
     corr_mat = m.np_matrix(correlation=True)
     bestfit = m.np_values()
