@@ -6,44 +6,53 @@ from cabinetry import histo
 from cabinetry import workspace
 
 
-def test__get_data_sample():
+def test_WorkspaceBuilder():
+    ws_builder = workspace.WorkspaceBuilder({}, "path")
+    assert ws_builder.config == {}
+    assert ws_builder.histogram_folder == "path"
+
+
+def test_WorkspaceBuilder__get_data_sample():
     mc_sample = {"Name": "MC"}
     data_sample = {"Name": "Data", "Data": True}
-    config_example = {"Samples": [mc_sample, data_sample]}
-    assert workspace._get_data_sample(config_example) == data_sample
+
+    example_config = {"Samples": [mc_sample, data_sample]}
+    ws_builder = workspace.WorkspaceBuilder(example_config, "path")
+    assert ws_builder._get_data_sample() == data_sample
 
     config_two_data_samples = {"Samples": [data_sample, data_sample]}
+    ws_builder = workspace.WorkspaceBuilder(config_two_data_samples, "path")
     with pytest.raises(ValueError, match="did not find exactly one data sample"):
-        workspace._get_data_sample(config_two_data_samples)
+        ws_builder._get_data_sample()
 
 
-def test__get_constant_parameter_setting():
+def test_WorkspaceBuilder__get_constant_parameter_setting():
     config_no_fixed = {"General": {}}
-    assert workspace._get_constant_parameter_setting(config_no_fixed, "par") is None
+    ws_builder = workspace.WorkspaceBuilder(config_no_fixed, "path")
+    assert ws_builder._get_constant_parameter_setting("par") is None
 
     config_others_fixed = {"General": {"Fixed": [{"Name": "par_a", "Value": 1.2}]}}
-    assert (
-        workspace._get_constant_parameter_setting(config_others_fixed, "par_b") is None
-    )
+    ws_builder = workspace.WorkspaceBuilder(config_others_fixed, "path")
+    assert ws_builder._get_constant_parameter_setting("par_b") is None
 
     config_par_fixed = {"General": {"Fixed": [{"Name": "par_a", "Value": 1.2}]}}
-    assert workspace._get_constant_parameter_setting(config_par_fixed, "par_a") == 1.2
+    ws_builder = workspace.WorkspaceBuilder(config_par_fixed, "path")
+    assert ws_builder._get_constant_parameter_setting("par_a") == 1.2
 
 
 @mock.patch(
     "cabinetry.workspace.histo.Histogram.from_config",
     return_value=histo.Histogram.from_arrays([0, 1, 2], [1.0, 2.0], [0.1, 0.1]),
 )
-def test_get_yield_for_sample(mock_histogram):
+def test_WorkspaceBuilder_get_yield_for_sample(mock_histogram):
     expected_yields = [1.0, 2.0]
-    yields = workspace.get_yield_for_sample(
-        {"Name": "region"}, {"Name": "signal"}, "path"
-    )
+    ws_builder = workspace.WorkspaceBuilder({}, "path")
+    yields = ws_builder.get_yield_for_sample({"Name": "region"}, {"Name": "signal"})
     assert yields == expected_yields
 
     # non-nominal
-    yields_non_nominal = workspace.get_yield_for_sample(
-        {"Name": "region"}, {"Name": "signal"}, "path", systematic={"Name": "variation"}
+    yields_non_nominal = ws_builder.get_yield_for_sample(
+        {"Name": "region"}, {"Name": "signal"}, systematic={"Name": "variation"}
     )
     assert yields_non_nominal == expected_yields
 
@@ -63,14 +72,15 @@ def test_get_yield_for_sample(mock_histogram):
     "cabinetry.workspace.histo.Histogram.from_config",
     return_value=histo.Histogram.from_arrays([0, 1, 2], [1.0, 2.0], [0.1, 0.1]),
 )
-def test_get_unc_for_sample(mock_histogram):
+def test_WorkspaceBuilder_get_unc_for_sample(mock_histogram):
     expected_unc = [0.1, 0.1]
-    unc = workspace.get_unc_for_sample({"Name": "region"}, {"Name": "signal"}, "path")
+    ws_builder = workspace.WorkspaceBuilder({}, "path")
+    unc = ws_builder.get_unc_for_sample({"Name": "region"}, {"Name": "signal"})
     assert unc == expected_unc
 
     # non-nominal
-    unc_non_nominal = workspace.get_unc_for_sample(
-        {"Name": "region"}, {"Name": "signal"}, "path", systematic={"Name": "variation"}
+    unc_non_nominal = ws_builder.get_unc_for_sample(
+        {"Name": "region"}, {"Name": "signal"}, systematic={"Name": "variation"}
     )
     assert unc_non_nominal == expected_unc
 
@@ -86,16 +96,17 @@ def test_get_unc_for_sample(mock_histogram):
     ]
 
 
-def test_get_NF_modifiers():
+def test_WorkspaceBuilder_get_NF_modifiers():
     # one NF affects sample
     example_config = {"NormFactors": [{"Name": "mu", "Samples": ["ABC", "DEF"]}]}
     sample = {"Name": "DEF"}
     expected_modifier = [{"data": None, "name": "mu", "type": "normfactor"}]
-    assert workspace.get_NF_modifiers(example_config, sample) == expected_modifier
+    ws_builder = workspace.WorkspaceBuilder(example_config, "path")
+    assert ws_builder.get_NF_modifiers(sample) == expected_modifier
 
     # no NF affects sample
     sample = {"Name": "GHI"}
-    assert workspace.get_NF_modifiers(example_config, sample) == []
+    assert ws_builder.get_NF_modifiers(sample) == []
 
     # multiple NFs affect sample
     example_config = {
@@ -109,10 +120,11 @@ def test_get_NF_modifiers():
         {"data": None, "name": "mu", "type": "normfactor"},
         {"data": None, "name": "k", "type": "normfactor"},
     ]
-    assert workspace.get_NF_modifiers(example_config, sample) == expected_modifier
+    ws_builder = workspace.WorkspaceBuilder(example_config, "path")
+    assert ws_builder.get_NF_modifiers(sample) == expected_modifier
 
 
-def test_get_Normalization_modifier():
+def test_WorkspaceBuilder_get_Normalization_modifier():
     systematic = {
         "Name": "sys",
         "Up": {"Normalization": 0.1},
@@ -123,11 +135,16 @@ def test_get_Normalization_modifier():
         "type": "normsys",
         "data": {"hi": 1.1, "lo": 0.95},
     }
-    assert workspace.get_Normalization_modifier(systematic) == expected_modifier
+    ws_builder = workspace.WorkspaceBuilder({}, "path")
+    assert ws_builder.get_Normalization_modifier(systematic) == expected_modifier
 
 
-def test_get_sys_modifiers():
-    config_example = {
+def test_WorkspaceBuilder_get_NormPlusShape_modifiers():
+    ...
+
+
+def test_WorkspaceBuilder_get_sys_modifiers():
+    example_config = {
         "Systematics": [
             {
                 "Name": "sys",
@@ -141,36 +158,45 @@ def test_get_sys_modifiers():
     sample = {"Name": "Signal"}
     region = {}
     # needs to be expanded to include histogram loading
-    modifiers = workspace.get_sys_modifiers(config_example, region, sample, "")
+    ws_builder = workspace.WorkspaceBuilder(example_config, "path")
+    modifiers = ws_builder.get_sys_modifiers(region, sample)
     expected_modifiers = [
         {"name": "sys", "type": "normsys", "data": {"hi": 1.1, "lo": 0.95}}
     ]
     assert modifiers == expected_modifiers
 
     # unsupported systematics type
-    config_example_unsupported = {
+    example_config_unsupported = {
         "Systematics": [
             {"Name": "Normalization", "Type": "unknown", "Samples": "Signal"}
         ]
     }
+    ws_builder = workspace.WorkspaceBuilder(example_config_unsupported, "path")
     with pytest.raises(
         NotImplementedError, match="not supporting other systematic types yet"
     ):
-        workspace.get_sys_modifiers(config_example_unsupported, region, sample, "")
+        ws_builder.get_sys_modifiers(region, sample)
+
+    # need an extra test for NormPlusShape
+    ...
 
 
-@mock.patch("cabinetry.workspace.get_unc_for_sample", return_value=[0.1, 0.1])
 @mock.patch(
-    "cabinetry.workspace.get_yield_for_sample", return_value=[1.0, 2.0],
+    "cabinetry.workspace.WorkspaceBuilder.get_unc_for_sample", return_value=[0.1, 0.1]
 )
-def test_get_channels(mock_get_yield, mock_get_unc):
+@mock.patch(
+    "cabinetry.workspace.WorkspaceBuilder.get_yield_for_sample",
+    return_value=[1.0, 2.0],
+)
+def test_WorkspaceBuilder_get_channels(mock_get_yield, mock_get_unc):
     example_config = {
         "Regions": [{"Name": "region_1"}],
         "Samples": [{"Name": "signal"}, {"Data": True}],
         "NormFactors": [],
     }
 
-    channels = workspace.get_channels(example_config, "path")
+    ws_builder = workspace.WorkspaceBuilder(example_config, "path")
+    channels = ws_builder.get_channels()
     expected_channels = [
         {
             "name": "region_1",
@@ -191,14 +217,14 @@ def test_get_channels(mock_get_yield, mock_get_unc):
     ]
     assert channels == expected_channels
     assert mock_get_yield.call_args_list == [
-        ((example_config["Regions"][0], example_config["Samples"][0], "path"),)
+        ((example_config["Regions"][0], example_config["Samples"][0]), {})
     ]
     assert mock_get_unc.call_args_list == [
-        ((example_config["Regions"][0], example_config["Samples"][0], "path"),)
+        ((example_config["Regions"][0], example_config["Samples"][0]), {})
     ]
 
 
-def test_get_measurement():
+def test_WorkspaceBuilder_get_measurement():
     example_config = {
         "General": {"Measurement": "fit", "POI": "mu"},
         "NormFactors": [
@@ -214,7 +240,8 @@ def test_get_measurement():
             },
         }
     ]
-    assert workspace.get_measurements(example_config) == expected_measurement
+    ws_builder = workspace.WorkspaceBuilder(example_config, "path")
+    assert ws_builder.get_measurements() == expected_measurement
 
     # no norm factor settings
     example_config_no_NF_settings = {
@@ -224,14 +251,13 @@ def test_get_measurement():
     expected_measurement_no_NF_settings = [
         {"name": "fit", "config": {"poi": "mu", "parameters": [{"name": "NF"}]}}
     ]
-    assert (
-        workspace.get_measurements(example_config_no_NF_settings)
-        == expected_measurement_no_NF_settings
-    )
+    ws_builder = workspace.WorkspaceBuilder(example_config_no_NF_settings, "path")
+    assert ws_builder.get_measurements() == expected_measurement_no_NF_settings
 
     # constant normfactor
     with mock.patch(
-        "cabinetry.workspace._get_constant_parameter_setting", return_value=1.2
+        "cabinetry.workspace.WorkspaceBuilder._get_constant_parameter_setting",
+        return_value=1.2,
     ) as mock_find_const:
         expected_measurement_const_NF = [
             {
@@ -242,17 +268,15 @@ def test_get_measurement():
                 },
             }
         ]
-        assert (
-            workspace.get_measurements(example_config_no_NF_settings)
-            == expected_measurement_const_NF
-        )
-        assert mock_find_const.call_args_list == [
-            ((example_config_no_NF_settings, "NF"), {})
-        ]
+        # same config, but patched function to treat NF as fixed
+        ws_builder = workspace.WorkspaceBuilder(example_config_no_NF_settings, "path")
+        assert ws_builder.get_measurements() == expected_measurement_const_NF
+        assert mock_find_const.call_args_list == [(("NF",), {})]
 
     # constant systematic
     with mock.patch(
-        "cabinetry.workspace._get_constant_parameter_setting", return_value=1.2
+        "cabinetry.workspace.WorkspaceBuilder._get_constant_parameter_setting",
+        return_value=1.2,
     ) as mock_find_const:
         example_config_const_sys = {
             "General": {
@@ -271,17 +295,14 @@ def test_get_measurement():
                 },
             }
         ]
-        assert (
-            workspace.get_measurements(example_config_const_sys)
-            == expected_measurement_const_sys
-        )
-        assert mock_find_const.call_args_list == [
-            ((example_config_const_sys, "par_A"), {})
-        ]
+        ws_builder = workspace.WorkspaceBuilder(example_config_const_sys, "path")
+        assert ws_builder.get_measurements() == expected_measurement_const_sys
+        assert mock_find_const.call_args_list == [(("par_A",), {})]
 
     # no constant systematic
     with mock.patch(
-        "cabinetry.workspace._get_constant_parameter_setting", return_value=None
+        "cabinetry.workspace.WorkspaceBuilder._get_constant_parameter_setting",
+        return_value=None,
     ) as mock_find_const:
         example_config_sys = {
             "General": {"Measurement": "fit", "POI": "mu"},
@@ -290,57 +311,81 @@ def test_get_measurement():
         expected_measurement_sys = [
             {"name": "fit", "config": {"poi": "mu", "parameters": []}}
         ]
-        assert (
-            workspace.get_measurements(example_config_sys) == expected_measurement_sys
-        )
-        assert mock_find_const.call_args_list == [((example_config_sys, "par_A"), {})]
+        ws_builder = workspace.WorkspaceBuilder(example_config_sys, "path")
+        assert ws_builder.get_measurements() == expected_measurement_sys
+        assert mock_find_const.call_args_list == [(("par_A",), {})]
 
 
 @mock.patch(
-    "cabinetry.workspace.get_yield_for_sample", return_value=[1.0, 2.0],
+    "cabinetry.workspace.WorkspaceBuilder.get_yield_for_sample",
+    return_value=[1.0, 2.0],
 )
-def test_get_observations(mock_get_yield):
+def test_WorkspaceBuilder_get_observations(mock_get_yield):
     # create observations list from config
-    config = {
+    example_config = {
         "Samples": [{"Name": "data", "Data": True}],
         "Regions": [{"Name": "test_region"}],
     }
-    obs = workspace.get_observations(config, "path")
+    ws_builder = workspace.WorkspaceBuilder(example_config, "path")
+    obs = ws_builder.get_observations()
     expected_obs = [{"name": "test_region", "data": [1.0, 2.0]}]
     assert obs == expected_obs
     assert mock_get_yield.call_args_list == [
-        ((config["Regions"][0], config["Samples"][0], "path"),)
+        ((example_config["Regions"][0], example_config["Samples"][0]), {})
     ]
 
 
-def test_build(tmp_path):
-    minimal_config = {
-        "General": {"Measurement": "test", "POI": "test_POI"},
-        "Regions": [],
-        "Samples": [{"Name": "data", "Data": True}],
-    }
-    ws = workspace.build(minimal_config, tmp_path, with_validation=False)
+@mock.patch(
+    "cabinetry.workspace.WorkspaceBuilder.get_observations",
+    return_value=[{"name: observations"}],
+)
+@mock.patch(
+    "cabinetry.workspace.WorkspaceBuilder.get_measurements",
+    return_value=[{"name: measurement"}],
+)
+@mock.patch(
+    "cabinetry.workspace.WorkspaceBuilder.get_channels",
+    return_value=[{"name: channel"}],
+)
+def test_WorkspaceBuilder_build(mock_channels, mock_measuremets, mock_observations):
+    ws_builder = workspace.WorkspaceBuilder({}, "path")
+    ws = ws_builder.build()
     ws_expected = {
-        "channels": [],
-        "measurements": [
-            {"config": {"parameters": [], "poi": "test_POI"}, "name": "test"}
-        ],
-        "observations": [],
+        "channels": [{"name: channel"}],
+        "measurements": [{"name: measurement"}],
+        "observations": [{"name: observations"}],
         "version": "1.0.0",
     }
     assert ws == ws_expected
 
-    with mock.patch("cabinetry.workspace.validate") as mock_validate:
-        ws = workspace.build(minimal_config, tmp_path, with_validation=True)
+
+def test_build():
+    minimal_config = {"General": {"Measurement": "test"}}
+
+    mock_builder_instance = mock.MagicMock()
+    mock_builder_instance.build.return_value = {"name": "workspace"}
+
+    with mock.patch(
+        "cabinetry.workspace.WorkspaceBuilder", return_value=mock_builder_instance
+    ) as mock_builder:
+        # without validation
+        ws = workspace.build(minimal_config, "path", with_validation=False)
+        ws_expected = {"name": "workspace"}
         assert ws == ws_expected
-        assert mock_validate.call_args_list == [((ws,),)]
+        assert mock_builder.call_args_list == [((minimal_config, "path"), {})]
+
+        # including validation
+        with mock.patch("cabinetry.workspace.validate") as mock_validate:
+            ws = workspace.build(minimal_config, "path", with_validation=True)
+            assert ws == ws_expected
+            assert mock_validate.call_args_list == [((ws,), {})]
 
 
 @mock.patch("cabinetry.workspace.pyhf.Workspace")
 def test_validate(mock_validate):
     test_ws = {"workspace": "test"}
     workspace.validate(test_ws)
-    assert mock_validate.call_args_list == [((test_ws,),)]
+    assert mock_validate.call_args_list == [((test_ws,), {})]
 
 
 def test_save(tmp_path):
