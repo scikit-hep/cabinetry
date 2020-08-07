@@ -20,7 +20,7 @@ class OrderedGroup(click.Group):
 
 
 def set_logging() -> None:
-    """setup log levels and format for CLI
+    """set log levels and format for CLI
     """
     logging.basicConfig(
         level=logging.INFO, format="%(levelname)s - %(name)s - %(message)s"
