@@ -48,8 +48,8 @@ def _get_postprocessor(
     histogram_folder: Union[str, pathlib.Path]
 ) -> route.ProcessorFunc:
     """return the postprocessing function to be applied to template histograms, for
-    example via `cabinetry.route.apply_to_all_templates`
-    could alternatively create a `Postprocessor` class that contains processors
+    example via ``cabinetry.route.apply_to_all_templates``
+    could alternatively create a ``Postprocessor`` class that contains processors
 
     Args:
         histogram_folder (Union[str, pathlib.Path]): folder containing histograms

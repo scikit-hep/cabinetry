@@ -232,7 +232,7 @@ class _Builder:
             )
 
         else:
-            raise NotImplementedError("unknown backend")
+            raise NotImplementedError(f"unknown backend {self.method}")
 
         # store information in a Histogram instance and save it
         histogram = histo.Histogram.from_arrays(bins, yields, stdev)
@@ -268,7 +268,7 @@ class _Builder:
     def _wrap_custom_template_builder(
         self, func: route.UserTemplateFunc,
     ) -> route.ProcessorFunc:
-        """Wrapper for custom template builder functions that return a `boost_histogram.Histogram`.
+        """Wrapper for custom template builder functions that return a ``boost_histogram.Histogram``.
         Returns a function that executes the custom template builder and saves the resulting
         histogram.
 
@@ -317,8 +317,8 @@ def create_histograms(
     router: Optional[route.Router] = None,
 ) -> None:
     """generate all required histograms specified by the configuration file,
-    calling either a default method specified via `method`, or a custom
-    user-defined override through `router`
+    calling either a default method specified via ``method``, or a custom
+    user-defined override through ``router``
 
     Args:
         config (Dict[str, Any]): cabinetry configuration

@@ -7,6 +7,7 @@ extensions = [
     "sphinx_rtd_theme",
     "sphinx_copybutton",
     "sphinx-jsonschema",
+    "sphinx_click",
 ]
 
 import sphinx_rtd_theme

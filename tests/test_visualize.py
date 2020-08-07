@@ -32,7 +32,7 @@ def test_data_MC(mock_load, mock_draw, tmp_path):
     """contrib.matplotlib_visualize is only imported depending on the keyword argument,
     so cannot patch via cabinetry.visualize.matplotlib_visualize
     Generally it seems like following the path to the module is preferred, but that
-    does not work for the `data_MC` case. For some information see also
+    does not work for the ``data_MC`` case. For some information see also
     https://docs.python.org/3/library/unittest.mock.html#where-to-patch
     """
     config = {

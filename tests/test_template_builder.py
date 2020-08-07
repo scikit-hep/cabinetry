@@ -193,7 +193,7 @@ def test__Builder_create_histogram(mock_uproot_builder, mock_histo, mock_save):
 
     # other backends
     builder_unknown = template_builder._Builder("path", "unknown")
-    with pytest.raises(NotImplementedError, match="unknown backend"):
+    with pytest.raises(NotImplementedError, match="unknown backend unknown"):
         builder_unknown._create_histogram(region, sample, systematic, "Nominal")
 
 

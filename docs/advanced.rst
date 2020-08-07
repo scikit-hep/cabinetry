@@ -7,24 +7,24 @@ Overrides for template building
 Introduction
 ^^^^^^^^^^^^
 
-It is possible to define functions that are called when `cabinetry` tries to construct a template histogram.
+It is possible to define functions that are called when ``cabinetry`` tries to construct a template histogram.
 Such functions need to accept four arguments in the following order:
 
 - a dictionary with information about the region being processed,
 - a dictionary with information about the sample being processed,
 - a dictionary with information about the systematic being processed,
-- a string with the name of the template being processed: `Nominal`, `Up` or `Down`.
+- a string with the name of the template being processed: ``Nominal``, ``Up`` or ``Down``.
 
 The function needs to return a `boost-histogram Histogram <https://boost-histogram.readthedocs.io/en/latest/usage/histogram.html>`_.
-This histogram is then further processed in `cabinetry`.
+This histogram is then further processed in ``cabinetry``.
 
 Example
 ^^^^^^^
 
-The example below defines a function `build_data_hist`.
-The decorator specifies that this function should be applied to all histograms for samples with name `Data`.
-It is also possible to specify `region_name`, `systematic_name` and `template` for the names of the region, systematic and template.
-When no user-defined function matches a given histogram that has to be produced, `cabinetry` falls back to use the default histogram creation methods.
+The example below defines a function ``build_data_hist``.
+The decorator specifies that this function should be applied to all histograms for samples with name ``Data``.
+It is also possible to specify ``region_name``, ``systematic_name`` and ``template`` for the names of the region, systematic and template.
+When no user-defined function matches a given histogram that has to be produced, ``cabinetry`` falls back to use the default histogram creation methods.
 
 .. code-block:: python
 
@@ -52,9 +52,9 @@ When no user-defined function matches a given histogram that has to be produced,
         cabinetry_config, histo_folder, method="uproot", router=my_router
     )
 
-The instance of `cabinetry.route.Router` is handed to `cabinetry.template_builder.create_histograms` to enable the use of `build_data_hist`.
+The instance of ``cabinetry.route.Router`` is handed to ``cabinetry.template_builder.create_histograms`` to enable the use of ``build_data_hist``.
 
-The function `build_data_hist` in this example always returns the same histogram.
+The function ``build_data_hist`` in this example always returns the same histogram.
 Given that the dictionaries in the function signature provide additional information, it is for example possible to return different yields per region:
 
 .. code-block:: python
@@ -89,4 +89,4 @@ All conditions need to be fulfilled to apply a user-defined function, so
     )
 
 means that for the decorated function to be executed, the region name needs to be `signal_region`, the sample needs to be called `signal`, the systematic needs to be `alpha_S`, but there is no restriction to the template name.
-Omitting `template` from the arguments, or using the default `template=None` has the same result.
+Omitting ``template`` from the arguments, or using the default ``template=None`` has the same result.
