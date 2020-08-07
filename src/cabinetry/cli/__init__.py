@@ -19,7 +19,7 @@ class OrderedGroup(click.Group):
         return self.commands.keys()
 
 
-def set_logging() -> None:
+def _set_logging() -> None:
     """set log levels and format for CLI
     """
     logging.basicConfig(
@@ -45,7 +45,7 @@ def templates(config_path: str, histofolder: str, method: str) -> None:
 
     CONFIG_PATH: path to cabinetry configuration file
     """
-    set_logging()
+    _set_logging()
     cabinetry_config = cabinetry_configuration.read(config_path)
     cabinetry_template_builder.create_histograms(
         cabinetry_config, histofolder, method=method
@@ -62,7 +62,7 @@ def postprocess(config_path: str, histofolder: str) -> None:
 
     CONFIG_PATH: path to cabinetry configuration file
     """
-    set_logging()
+    _set_logging()
     cabinetry_config = cabinetry_configuration.read(config_path)
     cabinetry_template_postprocessor.run(cabinetry_config, histofolder)
 
@@ -80,7 +80,7 @@ def workspace(config_path: str, ws_path: str, histofolder: str) -> None:
 
     WS_PATH: where to save the workspace containing the fit model
     """
-    set_logging()
+    _set_logging()
     cabinetry_config = cabinetry_configuration.read(config_path)
     ws = cabinetry_workspace.build(cabinetry_config, histofolder)
     cabinetry_workspace.save(ws, ws_path)
@@ -96,7 +96,7 @@ def fit(ws_path: str, pulls: bool, corrmat: bool, figfolder: str) -> None:
 
     WS_PATH: path to workspace used in fit
     """
-    set_logging()
+    _set_logging()
     ws = cabinetry_workspace.load(ws_path)
     bestfit, uncertainty, labels, _, corr_mat = cabinetry_fit.fit(ws)
     if pulls:
