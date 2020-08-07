@@ -460,13 +460,10 @@ def build(
     """
     log.info("building workspace")
 
-    ws: Dict[str, Any] = {}  # the workspace
-
     ws_builder = WorkspaceBuilder(config, histogram_folder)
     ws = ws_builder.build()
 
     if with_validation:
-        # validate the workspace
         validate(ws)
     return ws
 
