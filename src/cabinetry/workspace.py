@@ -53,7 +53,7 @@ class WorkspaceBuilder:
             par_name (str): name of parameter to check
 
         Returns:
-            Optional[Tuple[str, float]]: returns None if parameter is not supposed to be
+            Optional[float]: returns None if parameter is not supposed to be
             held constant, or the value it has to be fixed to
         """
         fixed_parameters = self.config["General"].get("Fixed", [])
@@ -82,7 +82,7 @@ class WorkspaceBuilder:
                 defaults to None -> {"Name": "nominal"}
 
         Returns:
-            list: yields per bin for the sample
+            List[float]: yields per bin for the sample
         """
         if systematic is None:
             systematic = {"Name": "nominal"}
@@ -108,7 +108,7 @@ class WorkspaceBuilder:
                 defaults to None -> {"Name": "nominal"}
 
         Returns:
-            list: statistical uncertainty of yield per bin for the sample
+            List[float]: statistical uncertainty of yield per bin for the sample
         """
         if systematic is None:
             systematic = {"Name": "nominal"}
@@ -421,7 +421,7 @@ class WorkspaceBuilder:
         """Constructs a `HistFactory` workspace in ``pyhf`` format.
 
         Returns:
-            Dict[str, Any]: ``pyhf``-compatible HistFactory` workspace
+            Dict[str, Any]: ``pyhf``-compatible `HistFactory` workspace
         """
         ws: Dict[str, Any] = {}  # the workspace
 
