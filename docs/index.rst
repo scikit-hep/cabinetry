@@ -27,4 +27,4 @@ See the `README on github <https://github.com/alexander-held/cabinetry/blob/mast
 
 Acknowledgements
 ----------------
-This work was supported by the U.S. National Science Foundation (NSF) cooperative agreement OAC-1836650 (IRIS-HEP).
+This work was supported by the U.S. National Science Foundation (NSF) cooperative agreement `OAC-1836650 (IRIS-HEP) <https://nsf.gov/awardsearch/showAward?AWD_ID=1836650>`_.
