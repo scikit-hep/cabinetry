@@ -152,7 +152,7 @@ def test__get_binning():
 
 def test__Builder():
     builder = template_builder._Builder(pathlib.Path("path"), "uproot")
-    assert builder.histo_folder == pathlib.Path("path")
+    assert builder.histogram_folder == pathlib.Path("path")
     assert builder.method == "uproot"
 
 
@@ -172,7 +172,7 @@ def test__Builder_create_histogram(mock_uproot_builder, mock_histo, mock_save):
     }
     systematic = {"Name": "nominal"}
 
-    builder = template_builder._Builder("path", "uproot")
+    builder = template_builder._Builder(pathlib.Path("path"), "uproot")
     builder._create_histogram(region, sample, systematic, "Nominal")
 
     # verify the backend call happened properly
@@ -192,7 +192,7 @@ def test__Builder_create_histogram(mock_uproot_builder, mock_histo, mock_save):
     ]
 
     # other backends
-    builder_unknown = template_builder._Builder("path", "unknown")
+    builder_unknown = template_builder._Builder(pathlib.Path("path"), "unknown")
     with pytest.raises(NotImplementedError, match="unknown backend unknown"):
         builder_unknown._create_histogram(region, sample, systematic, "Nominal")
 
@@ -205,7 +205,7 @@ def test__Builder__name_and_save(mock_name):
 
     histogram = mock.MagicMock()
 
-    builder = template_builder._Builder("path", "uproot")
+    builder = template_builder._Builder(pathlib.Path("path"), "uproot")
     builder._name_and_save(histogram, region, sample, systematic, "Up")
 
     # check that the naming function was called, the histogram was validated and saved
@@ -224,7 +224,7 @@ def test__Builder__wrap_custom_template_builder(mock_save):
     def test_func(reg, sam, sys, tem):
         return histogram
 
-    builder = template_builder._Builder("path", "uproot")
+    builder = template_builder._Builder(pathlib.Path("path"), "uproot")
     wrapped_func = builder._wrap_custom_template_builder(test_func)
 
     # check the behavior of the wrapped function
@@ -247,7 +247,7 @@ def test__Builder__wrap_custom_template_builder(mock_save):
 
 
 def test_create_histograms():
-    config = {}
+    config = {"General": {"HistogramFolder": "path/"}}
     method = "uproot"
 
     # no router
