@@ -36,11 +36,12 @@ def test_data_MC(mock_load, mock_draw, tmp_path):
     https://docs.python.org/3/library/unittest.mock.html#where-to-patch
     """
     config = {
+        "General": {"HistogramFolder": tmp_path},
         "Regions": [{"Name": "reg_1", "Variable": "x"}],
         "Samples": [{"Name": "sample_1"}],
     }
 
-    visualize.data_MC(config, tmp_path, tmp_path, prefit=True, method="matplotlib")
+    visualize.data_MC(config, tmp_path, prefit=True, method="matplotlib")
 
     # the call_args_list contains calls (outer round brackets), first filled with
     # arguments (inner round brackets) and then keyword arguments
@@ -73,11 +74,11 @@ def test_data_MC(mock_load, mock_draw, tmp_path):
 
     # other plotting method
     with pytest.raises(NotImplementedError, match="unknown backend: unknown"):
-        visualize.data_MC(config, tmp_path, tmp_path, prefit=True, method="unknown")
+        visualize.data_MC(config, tmp_path, prefit=True, method="unknown")
 
     # postfit
     with pytest.raises(NotImplementedError, match="only prefit implemented so far"):
-        visualize.data_MC(config, tmp_path, tmp_path, prefit=False, method="matplotlib")
+        visualize.data_MC(config, tmp_path, prefit=False, method="matplotlib")
 
 
 @mock.patch("cabinetry.contrib.matplotlib_visualize.correlation_matrix")
