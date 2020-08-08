@@ -36,44 +36,33 @@ def cabinetry() -> None:
 
 @click.command()
 @click.argument("config_path", type=click.Path(exists=True))
-@click.option(
-    "--histofolder", default="histograms/", help="folder to save histograms to"
-)
 @click.option("--method", default="uproot", help="backend for histogram production")
-def templates(config_path: str, histofolder: str, method: str) -> None:
+def templates(config_path: str, method: str) -> None:
     """Produce template histograms.
 
     CONFIG_PATH: path to cabinetry configuration file
     """
     _set_logging()
     cabinetry_config = cabinetry_configuration.read(config_path)
-    cabinetry_template_builder.create_histograms(
-        cabinetry_config, histofolder, method=method
-    )
+    cabinetry_template_builder.create_histograms(cabinetry_config, method=method)
 
 
 @click.command()
 @click.argument("config_path", type=click.Path(exists=True))
-@click.option(
-    "--histofolder", default="histograms/", help="folder to save histograms to"
-)
-def postprocess(config_path: str, histofolder: str) -> None:
+def postprocess(config_path: str) -> None:
     """Post-process template histograms.
 
     CONFIG_PATH: path to cabinetry configuration file
     """
     _set_logging()
     cabinetry_config = cabinetry_configuration.read(config_path)
-    cabinetry_template_postprocessor.run(cabinetry_config, histofolder)
+    cabinetry_template_postprocessor.run(cabinetry_config)
 
 
 @click.command()
 @click.argument("config_path", type=click.Path(exists=True))
 @click.argument("ws_path", type=click.Path(exists=False))
-@click.option(
-    "--histofolder", default="histograms/", help="folder containing histograms"
-)
-def workspace(config_path: str, ws_path: str, histofolder: str) -> None:
+def workspace(config_path: str, ws_path: str) -> None:
     """Produce a ``pyhf`` workspace.
 
     CONFIG_PATH: path to cabinetry configuration file
@@ -82,7 +71,7 @@ def workspace(config_path: str, ws_path: str, histofolder: str) -> None:
     """
     _set_logging()
     cabinetry_config = cabinetry_configuration.read(config_path)
-    ws = cabinetry_workspace.build(cabinetry_config, histofolder)
+    ws = cabinetry_workspace.build(cabinetry_config)
     cabinetry_workspace.save(ws, ws_path)
 
 
