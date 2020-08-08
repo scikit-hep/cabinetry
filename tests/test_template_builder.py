@@ -151,8 +151,8 @@ def test__get_binning():
 
 
 def test__Builder():
-    builder = template_builder._Builder("path", "uproot")
-    assert builder.folder_path_str == "path"
+    builder = template_builder._Builder(pathlib.Path("path"), "uproot")
+    assert builder.histo_folder == pathlib.Path("path")
     assert builder.method == "uproot"
 
 
@@ -248,12 +248,11 @@ def test__Builder__wrap_custom_template_builder(mock_save):
 
 def test_create_histograms():
     config = {}
-    folder_path_str = "path"
     method = "uproot"
 
     # no router
     with mock.patch("cabinetry.route.apply_to_all_templates") as mock_apply:
-        template_builder.create_histograms(config, folder_path_str, method)
+        template_builder.create_histograms(config, method)
         assert len(mock_apply.call_args_list) == 1
         config_call, func_call = mock_apply.call_args_list[0][0]
         assert config_call == config
@@ -265,9 +264,7 @@ def test_create_histograms():
     # including a router
     mock_router = mock.MagicMock()
     with mock.patch("cabinetry.route.apply_to_all_templates") as mock_apply:
-        template_builder.create_histograms(
-            config, folder_path_str, method, router=mock_router
-        )
+        template_builder.create_histograms(config, method, router=mock_router)
 
         # verify wrapper was set
         assert (

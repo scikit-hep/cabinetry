@@ -52,7 +52,7 @@
             "$$target": "#/definitions/general",
             "description": "general settings",
             "type": "object",
-            "required": ["Measurement", "POI"],
+            "required": ["Measurement", "POI", "HistogramFolder"],
             "properties": {
                 "Measurement": {
                     "description": "name of measurement",
@@ -60,6 +60,10 @@
                 },
                 "POI": {
                     "description": "name of parameter of interest",
+                    "type": "string"
+                },
+                "HistogramFolder": {
+                    "description": "folder to save histograms to and read histograms from",
                     "type": "string"
                 },
                 "Fixed": {

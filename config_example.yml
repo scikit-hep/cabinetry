@@ -1,6 +1,7 @@
 General:
   Measurement: "minimal_example"
   POI: "Signal_norm"
+  HistogramFolder: "histograms/"
 
 Regions:
   - Name: "Signal_region"
