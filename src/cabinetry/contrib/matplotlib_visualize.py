@@ -61,7 +61,12 @@ def data_MC(
     )
 
     mpl.style.use("seaborn-colorblind")
-    fig, ax = plt.subplots()
+    mpl.rcParams.update({"font.size": 14})
+
+    fig = plt.figure(figsize=(7, 7))
+    gs = fig.add_gridspec(nrows=2, ncols=1, hspace=0, height_ratios=[3, 1])
+    ax1 = fig.add_subplot(gs[0])
+    ax2 = fig.add_subplot(gs[1])
 
     # plot MC stacked together
     total_yield = np.zeros_like(mc_histograms_yields[0])
@@ -71,7 +76,7 @@ def data_MC(
     bin_width = bin_right_edges - bin_left_edges
     bin_centers = 0.5 * (bin_left_edges + bin_right_edges)
     for i_sample, mc_sample_yield in enumerate(mc_histograms_yields):
-        ax.bar(
+        ax1.bar(
             bin_centers,
             mc_sample_yield,
             width=bin_width,
@@ -82,7 +87,7 @@ def data_MC(
 
     # add total MC uncertainty
     mc_stack_unc = _total_yield_uncertainty(mc_histograms_stdev)
-    ax.bar(
+    ax1.bar(
         bin_centers,
         2 * mc_stack_unc,
         width=bin_width,
@@ -95,7 +100,7 @@ def data_MC(
     )
 
     # plot data
-    ax.errorbar(
+    ax1.errorbar(
         bin_centers,
         data_histogram_yields,
         yerr=data_histogram_stdev,
@@ -104,11 +109,53 @@ def data_MC(
         label=data_label,
     )
 
-    ax.legend(frameon=False)
-    ax.set_xlabel(histogram_dict_list[0]["variable"])
-    ax.set_ylabel("events")
-    ax.set_xlim(bin_left_edges[0], bin_right_edges[-1])
-    ax.set_ylim([0, y_max * 1.1])  # 10% headroom
+    # ratio plot
+    ax2.plot(
+        [bin_left_edges[0], bin_right_edges[-1]],
+        [1, 1],
+        "--",
+        color="black",
+        linewidth=1,
+    )  # reference line along y=1
+
+    # add uncertainty band around y=1
+    rel_mc_unc = mc_stack_unc / total_yield
+    ax2.bar(
+        bin_centers,
+        2 * rel_mc_unc,
+        width=bin_width,
+        bottom=1 - rel_mc_unc,
+        fill=False,
+        linewidth=0,
+        edgecolor="gray",
+        hatch=3 * "/",
+    )
+
+    # data in ratio plot
+    data_model_ratio = data_histogram_yields / total_yield
+    data_model_ratio_unc = data_histogram_stdev / total_yield
+    ax2.errorbar(
+        bin_centers, data_model_ratio, yerr=data_model_ratio_unc, fmt="o", color="k",
+    )
+
+    ax1.legend(frameon=False)
+    ax1.set_xlim(bin_left_edges[0], bin_right_edges[-1])
+    ax1.set_ylim([0, y_max * 1.5])  # 50% headroom
+    ax1.set_ylabel("events")
+    ax1.set_xticklabels([])
+    ax1.tick_params(axis="both", which="major", pad=8)  # tick label - axis padding
+    ax1.tick_params(direction="in", top=True, right=True)
+
+    ax2.set_xlim(bin_left_edges[0], bin_right_edges[-1])
+    ax2.set_ylim([0.5, 1.5])
+    ax2.set_xlabel(histogram_dict_list[0]["variable"])
+    ax2.set_ylabel("data / model")
+    ax2.set_yticks([0.5, 0.75, 1.0, 1.25, 1.5])
+    ax2.set_yticklabels([0.5, 0.75, 1.0, 1.25, ""])
+    ax2.tick_params(axis="both", which="major", pad=8)
+    ax2.tick_params(direction="in", top=True, right=True)
+
+    fig.tight_layout()
 
     if not os.path.exists(figure_path.parent):
         os.mkdir(figure_path.parent)
