@@ -42,7 +42,7 @@ with open("README.md", "r") as f:
 
 setup(
     name="cabinetry",
-    version="0.0.5",
+    version="0.1.0",
     author="Alexander Held",
     description="design and steer profile likelihood fits",
     long_description=long_description,
@@ -53,7 +53,7 @@ setup(
     package_dir={"": "src"},
     package_data={"cabinetry": ["py.typed", "schemas/config.json"]},
     classifiers=[
-        "Development Status :: 2 - Pre-Alpha",
+        "Development Status :: 3 - Alpha",
         "Programming Language :: Python :: 3.6",
         "Programming Language :: Python :: 3.7",
         "Programming Language :: Python :: 3.8",
