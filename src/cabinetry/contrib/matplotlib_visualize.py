@@ -61,12 +61,19 @@ def data_MC(
     )
 
     mpl.style.use("seaborn-colorblind")
-    mpl.rcParams.update({"font.size": 14})
 
-    fig = plt.figure(figsize=(7, 7))
+    fig = plt.figure(figsize=(6, 6))
     gs = fig.add_gridspec(nrows=2, ncols=1, hspace=0, height_ratios=[3, 1])
     ax1 = fig.add_subplot(gs[0])
     ax2 = fig.add_subplot(gs[1])
+
+    for item in (
+        [ax1.yaxis.label, ax2.xaxis.label, ax2.yaxis.label]
+        + ax1.get_yticklabels()
+        + ax2.get_xticklabels()
+        + ax2.get_yticklabels()
+    ):
+        item.set_fontsize("large")
 
     # plot MC stacked together
     total_yield = np.zeros_like(mc_histograms_yields[0])
@@ -138,7 +145,7 @@ def data_MC(
         bin_centers, data_model_ratio, yerr=data_model_ratio_unc, fmt="o", color="k",
     )
 
-    ax1.legend(frameon=False)
+    ax1.legend(frameon=False, fontsize="large")
     ax1.set_xlim(bin_left_edges[0], bin_right_edges[-1])
     ax1.set_ylim([0, y_max * 1.5])  # 50% headroom
     ax1.set_ylabel("events")
