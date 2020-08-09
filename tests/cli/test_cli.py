@@ -26,10 +26,12 @@ def test_cabinetry():
     assert "Entrypoint to the cabinetry CLI." in result.output
 
 
-@mock.patch("cabinetry.template_builder.create_histograms")
+# using autospec to catch changes in public API
+@mock.patch("cabinetry.template_builder.create_histograms", autospec=True)
 @mock.patch(
     "cabinetry.configuration.read",
     return_value={"General": {"Measurement": "test_config"}},
+    autospec=True,
 )
 def test_templates(mock_read, mock_create_histograms, cli_helpers, tmp_path):
     config = {"General": {"Measurement": "test_config"}}
@@ -39,35 +41,26 @@ def test_templates(mock_read, mock_create_histograms, cli_helpers, tmp_path):
 
     runner = CliRunner()
 
-    # default histogram folder
+    # default method
     result = runner.invoke(cli.templates, [config_path])
     assert result.exit_code == 0
     assert mock_read.call_args_list == [((config_path,), {})]
-    assert mock_create_histograms.call_args_list == [
-        ((config, "histograms/"), {"method": "uproot"})
-    ]
-
-    # specified histogram folder
-    result = runner.invoke(cli.templates, ["--histofolder", "path/", config_path])
-    assert result.exit_code == 0
-    assert mock_create_histograms.call_args_list[-1] == (
-        (config, "path/"),
-        {"method": "uproot"},
-    )
+    assert mock_create_histograms.call_args_list == [((config,), {"method": "uproot"})]
 
     # different method
     result = runner.invoke(cli.templates, ["--method", "unknown", config_path])
     assert result.exit_code == 0
     assert mock_create_histograms.call_args_list[-1] == (
-        (config, "histograms/"),
+        (config,),
         {"method": "unknown"},
     )
 
 
-@mock.patch("cabinetry.template_postprocessor.run")
+@mock.patch("cabinetry.template_postprocessor.run", autospec=True)
 @mock.patch(
     "cabinetry.configuration.read",
     return_value={"General": {"Measurement": "test_config"}},
+    autospec=True,
 )
 def test_postprocess(mock_read, mock_postprocess, cli_helpers, tmp_path):
     config = {"General": {"Measurement": "test_config"}}
@@ -77,23 +70,20 @@ def test_postprocess(mock_read, mock_postprocess, cli_helpers, tmp_path):
 
     runner = CliRunner()
 
-    # default histogram folder
     result = runner.invoke(cli.postprocess, [config_path])
     assert result.exit_code == 0
     assert mock_read.call_args_list == [((config_path,), {})]
-    assert mock_postprocess.call_args_list == [((config, "histograms/"), {})]
-
-    # specified histogram folder
-    result = runner.invoke(cli.postprocess, ["--histofolder", "path/", config_path])
-    assert result.exit_code == 0
-    assert mock_postprocess.call_args_list[-1] == ((config, "path/"), {})
+    assert mock_postprocess.call_args_list == [((config,), {})]
 
 
-@mock.patch("cabinetry.workspace.save")
-@mock.patch("cabinetry.workspace.build", return_value={"workspace": "mock"})
+@mock.patch("cabinetry.workspace.save", autospec=True)
+@mock.patch(
+    "cabinetry.workspace.build", return_value={"workspace": "mock"}, autospec=True
+)
 @mock.patch(
     "cabinetry.configuration.read",
     return_value={"General": {"Measurement": "test_config"}},
+    autospec=True,
 )
 def test_workspace(mock_read, mock_build, mock_save, cli_helpers, tmp_path):
     config = {"General": {"Measurement": "test_config"}}
@@ -109,21 +99,20 @@ def test_workspace(mock_read, mock_build, mock_save, cli_helpers, tmp_path):
     result = runner.invoke(cli.workspace, [config_path, workspace_path])
     assert result.exit_code == 0
     assert mock_read.call_args_list == [((config_path,), {})]
-    assert mock_build.call_args_list == [((config, "histograms/"), {})]
+    assert mock_build.call_args_list == [((config,), {})]
     assert mock_save.call_args_list == [(({"workspace": "mock"}, workspace_path), {})]
 
-    # specified histogram folder
-    result = runner.invoke(
-        cli.workspace, ["--histofolder", "path/", config_path, workspace_path]
-    )
-    assert result.exit_code == 0
-    assert mock_build.call_args_list[-1] == ((config, "path/"), {})
 
-
-@mock.patch("cabinetry.visualize.correlation_matrix")
-@mock.patch("cabinetry.visualize.pulls")
-@mock.patch("cabinetry.fit.fit", return_value=([1.0], [0.1], "label", None, [[1.0]]))
-@mock.patch("cabinetry.workspace.load", return_value={"workspace": "mock"})
+@mock.patch("cabinetry.visualize.correlation_matrix", autospec=True)
+@mock.patch("cabinetry.visualize.pulls", autospec=True)
+@mock.patch(
+    "cabinetry.fit.fit",
+    return_value=([1.0], [0.1], "label", None, [[1.0]]),
+    autospec=True,
+)
+@mock.patch(
+    "cabinetry.workspace.load", return_value={"workspace": "mock"}, autospec=True
+)
 def test_fit(mock_load, mock_fit, mock_pulls, mock_corrmat, tmp_path):
     workspace = {"workspace": "mock"}
     bestfit = [1.0]

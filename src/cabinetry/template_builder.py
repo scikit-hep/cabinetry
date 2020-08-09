@@ -1,7 +1,7 @@
 import functools
 import logging
 import pathlib
-from typing import Any, Dict, Optional, Union
+from typing import Any, Dict, Optional
 
 import boost_histogram as bh
 import numpy as np
@@ -182,14 +182,14 @@ class _Builder:
     """class to handle the instructions for backends to create histograms
     """
 
-    def __init__(self, folder_path_str: Union[str, pathlib.Path], method: str) -> None:
+    def __init__(self, histogram_folder: pathlib.Path, method: str) -> None:
         """create an instance, set folder and method
 
         Args:
-            folder_path_str (Union[str, pathlib.Path]): folder to save the histograms to
+            histogram_folder (pathlib.Path): folder to save the histograms to
             method (str): backend to use for histogram production
         """
-        self.folder_path_str = folder_path_str
+        self.histogram_folder = histogram_folder
         self.method = method
 
     def _create_histogram(
@@ -262,7 +262,7 @@ class _Builder:
         histogram.validate(histogram_name)
 
         # save it
-        histo_path = pathlib.Path(self.folder_path_str) / histogram_name
+        histo_path = self.histogram_folder / histogram_name
         histogram.save(histo_path)
 
     def _wrap_custom_template_builder(
@@ -312,7 +312,6 @@ class _Builder:
 
 def create_histograms(
     config: Dict[str, Any],
-    folder_path_str: Union[str, pathlib.Path],
     method: str = "uproot",
     router: Optional[route.Router] = None,
 ) -> None:
@@ -322,13 +321,13 @@ def create_histograms(
 
     Args:
         config (Dict[str, Any]): cabinetry configuration
-        folder_path_str (Union[str, pathlib.Path]): folder to save the histograms to
         method (str, optional): backend to use for histogram production, defaults to "uproot"
         router (Optional[route.Router], optional): instance of cabinetry.route.Router
             that contains user-defined overrides, defaults to None
     """
     # create an instance of the class doing the template building
-    builder = _Builder(folder_path_str, method=method)
+    histogram_folder = pathlib.Path(config["General"]["HistogramFolder"])
+    builder = _Builder(histogram_folder, method=method)
 
     match_func: Optional[route.MatchFunc] = None
     if router is not None:

@@ -18,13 +18,10 @@ def test_integration(tmp_path, ntuple_creator):
     ntuple_creator(str(tmp_path) + "/")
 
     cabinetry_config = cabinetry.configuration.read("config_example.yml")
-    histo_folder = str(tmp_path) + "/histograms/"
-    cabinetry.template_builder.create_histograms(
-        cabinetry_config, histo_folder, method="uproot"
-    )
-    cabinetry.template_postprocessor.run(cabinetry_config, histo_folder)
+    cabinetry.template_builder.create_histograms(cabinetry_config, method="uproot")
+    cabinetry.template_postprocessor.run(cabinetry_config)
     workspace_path = "workspaces/example_workspace.json"
-    ws = cabinetry.workspace.build(cabinetry_config, histo_folder)
+    ws = cabinetry.workspace.build(cabinetry_config)
     cabinetry.workspace.save(ws, workspace_path)
     ws = cabinetry.workspace.load(workspace_path)
     bestfit, uncertainty, _, best_twice_nll, corr_mat = cabinetry.fit.fit(ws)

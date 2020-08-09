@@ -40,7 +40,7 @@ def test_apply_postprocessing():
 )
 @mock.patch("cabinetry.histo.build_name", return_value="histo_name")
 def test__get_postprocessor(mock_name, mock_apply):
-    postprocessor = template_postprocessor._get_postprocessor("path")
+    postprocessor = template_postprocessor._get_postprocessor(pathlib.Path("path"))
 
     region = {"Name": "region"}
     sample = {"Name": "sample"}
@@ -62,7 +62,7 @@ def test__get_postprocessor(mock_name, mock_apply):
             # check that the relevant functions were called
             assert mock_from_config.call_args_list == [
                 (
-                    ("path", region, sample, systematic),
+                    (pathlib.Path("path"), region, sample, systematic),
                     {"modified": False, "template": template},
                 )
             ]  # histogram was created
@@ -79,9 +79,8 @@ def test__get_postprocessor(mock_name, mock_apply):
 @mock.patch("cabinetry.route.apply_to_all_templates")
 @mock.patch("cabinetry.template_postprocessor._get_postprocessor", return_value="func")
 def test_run(mock_postprocessor, mock_apply):
-    config = {}
-    path = "path"
-    template_postprocessor.run(config, path)
+    config = {"General": {"HistogramFolder": "path/"}}
+    template_postprocessor.run(config)
 
-    assert mock_postprocessor.call_args_list == [((path,), {})]
+    assert mock_postprocessor.call_args_list == [((pathlib.Path("path/"),), {})]
     assert mock_apply.call_args_list == [((config, "func"), {})]

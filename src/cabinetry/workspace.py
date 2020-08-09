@@ -17,17 +17,14 @@ class WorkspaceBuilder:
     """Collects functionality to build a ``pyhf`` workspace.
     """
 
-    def __init__(
-        self, config: Dict[str, Any], histogram_folder: Union[str, pathlib.Path]
-    ) -> None:
+    def __init__(self, config: Dict[str, Any]) -> None:
         """Creates a workspace corresponding to a cabinetry configuration.
 
         Args:
             config (Dict[str, Any]): ``cabinetry`` configuration
-            histogram_folder (Union[str, pathlib.Path]): path to folder containing histograms
         """
         self.config = config
-        self.histogram_folder = histogram_folder
+        self.histogram_folder = pathlib.Path(config["General"]["HistogramFolder"])
 
     def _get_data_sample(self) -> Dict[str, Any]:
         """Returns the data sample dictionary.
@@ -443,16 +440,11 @@ class WorkspaceBuilder:
         return ws
 
 
-def build(
-    config: Dict[str, Any],
-    histogram_folder: Union[str, pathlib.Path],
-    with_validation: bool = True,
-) -> Dict[str, Any]:
+def build(config: Dict[str, Any], with_validation: bool = True) -> Dict[str, Any]:
     """Returns a `HistFactory` workspace in ``pyhf`` format.
 
     Args:
         config (Dict[str, Any]): cabinetry configuration
-        histogram_folder (Union[str, pathlib.Path]): path to folder containing histograms
         with_validation (bool, optional): validate workspace validity with pyhf, defaults to True
 
     Returns:
@@ -460,7 +452,7 @@ def build(
     """
     log.info("building workspace")
 
-    ws_builder = WorkspaceBuilder(config, histogram_folder)
+    ws_builder = WorkspaceBuilder(config)
     ws = ws_builder.build()
 
     if with_validation:

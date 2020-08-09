@@ -31,7 +31,6 @@ def _build_figure_name(region_name: str, is_prefit: bool) -> str:
 
 def data_MC(
     config: Dict[str, Any],
-    histogram_folder: Union[str, pathlib.Path],
     figure_folder: Union[str, pathlib.Path],
     prefit: bool = True,
     method: str = "matplotlib",
@@ -40,7 +39,6 @@ def data_MC(
 
     Args:
         config (Dict[str, Any]): cabinetry configuration
-        histogram_folder (Union[str, pathlib.Path]): path to the folder containing template histograms
         figure_folder (Union[str, pathlib.Path]): path to the folder to save figures in
         prefit (bool, optional): show the pre- or post-fit model, defaults to True
         method (str, optional): what backend to use for plotting, defaults to "matplotlib"
@@ -50,6 +48,7 @@ def data_MC(
         NotImplementedError: when trying to visualize post-fit distributions, not supported yet
     """
     log.info("visualizing histogram")
+    histogram_folder = pathlib.Path(config["General"]["HistogramFolder"])
     for region in config["Regions"]:
         histogram_dict_list = []
         for sample in config["Samples"]:
