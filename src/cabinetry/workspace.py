@@ -406,8 +406,8 @@ class WorkspaceBuilder:
         """
         data_sample = self._get_data_sample()
         observations = []
-        observation = {}
         for region in self.config["Regions"]:
+            observation = {}
             histo_yield = self.get_yield_for_sample(region, data_sample)
             observation.update({"name": region["Name"]})
             observation.update({"data": histo_yield})

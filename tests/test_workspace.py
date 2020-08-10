@@ -364,7 +364,7 @@ def test_WorkspaceBuilder_get_measurement():
 
 @mock.patch(
     "cabinetry.workspace.WorkspaceBuilder.get_yield_for_sample",
-    return_value=[1.0, 2.0],
+    side_effect=[[1.0, 2.0], [5.0], [3.0]],
 )
 def test_WorkspaceBuilder_get_observations(mock_get_yield):
     # create observations list from config
@@ -379,6 +379,26 @@ def test_WorkspaceBuilder_get_observations(mock_get_yield):
     assert obs == expected_obs
     assert mock_get_yield.call_args_list == [
         ((example_config["Regions"][0], example_config["Samples"][0]), {})
+    ]
+
+    mock_get_yield.call_args_list = []  # rest call arguments list
+
+    # multiple channels
+    multi_channel_config = {
+        "General": {"HistogramFolder": "path"},
+        "Samples": [{"Name": "data", "Data": True}],
+        "Regions": [{"Name": "test_region"}, {"Name": "other_region"}],
+    }
+    ws_builder = workspace.WorkspaceBuilder(multi_channel_config)
+    obs = ws_builder.get_observations()
+    expected_obs = [
+        {"name": "test_region", "data": [5.0]},
+        {"name": "other_region", "data": [3.0]},
+    ]
+    assert obs == expected_obs
+    assert mock_get_yield.call_args_list == [
+        ((multi_channel_config["Regions"][0], multi_channel_config["Samples"][0]), {}),
+        ((multi_channel_config["Regions"][1], multi_channel_config["Samples"][0]), {}),
     ]
 
 
