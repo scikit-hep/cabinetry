@@ -43,7 +43,7 @@ def print_results(
     max_label_length = max([len(label) for label in labels])
     for i, label in enumerate(labels):
         l_with_spacer = label + " " * (max_label_length - len(label))
-        log.info(f"{l_with_spacer}: {bestfit[i]:.6f} +/- {uncertainty[i]:.6f}")
+        log.info(f"{l_with_spacer}: {bestfit[i]: .6f} +/- {uncertainty[i]:.6f}")
 
 
 def fit(
