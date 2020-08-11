@@ -20,7 +20,7 @@ def test_integration(tmp_path, ntuple_creator):
     cabinetry_config = cabinetry.configuration.read("config_example.yml")
     cabinetry.template_builder.create_histograms(cabinetry_config, method="uproot")
     cabinetry.template_postprocessor.run(cabinetry_config)
-    workspace_path = "workspaces/example_workspace.json"
+    workspace_path = tmp_path / "example_workspace.json"
     ws = cabinetry.workspace.build(cabinetry_config)
     cabinetry.workspace.save(ws, workspace_path)
     ws = cabinetry.workspace.load(workspace_path)
