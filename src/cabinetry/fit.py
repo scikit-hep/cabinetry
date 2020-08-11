@@ -66,7 +66,12 @@ def fit(
     log.info("performing unconstrained fit")
 
     workspace = pyhf.Workspace(spec)
-    model = workspace.model()
+    model = workspace.model(
+        modifier_settings={
+            "normsys": {"interpcode": "code4"},
+            "histosys": {"interpcode": "code4p"},
+        }
+    )  # use HistFactory InterpCode=4
     data = workspace.data(model)
 
     pyhf.set_backend("numpy", pyhf.optimize.minuit_optimizer(verbose=True))
@@ -106,7 +111,12 @@ def custom_fit(
     pyhf.set_backend("numpy", pyhf.optimize.minuit_optimizer(verbose=True))
 
     workspace = pyhf.Workspace(spec)
-    model = workspace.model()
+    model = workspace.model(
+        modifier_settings={
+            "normsys": {"interpcode": "code4"},
+            "histosys": {"interpcode": "code4p"},
+        }
+    )  # use HistFactory InterpCode=4
     data = workspace.data(model)
 
     init_pars = model.config.suggested_init()
