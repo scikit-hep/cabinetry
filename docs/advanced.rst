@@ -1,6 +1,14 @@
 Advanced topics
 ===============
 
+Accessing vector branches
+-------------------------
+
+The transverse momentum of the first jet in a vector branch ``jet_pT`` is obtained via ``jet_pT[0]`` in ``ROOT``.
+The ``uproot4`` backend for ntuple reading treats expressions (such as what is written in ``Filter`` and ``Weight`` configuration file options) as Python code.
+The correct way to access the same information through ``cabinetry`` is ``jet_pT[:,0]``, where the first index runs over events.
+
+
 Overrides for template building
 -------------------------------
 
