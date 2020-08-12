@@ -61,8 +61,8 @@ def test_print_results(caplog):
     uncertainty = np.asarray([0.1, 0.3])
     labels = ["param_A", "param_B"]
     fit.print_results(bestfit, uncertainty, labels)
-    assert "param_A: 1.000000 +/- 0.100000" in [rec.message for rec in caplog.records]
-    assert "param_B: 2.000000 +/- 0.300000" in [rec.message for rec in caplog.records]
+    assert "param_A:  1.000000 +/- 0.100000" in [rec.message for rec in caplog.records]
+    assert "param_B:  2.000000 +/- 0.300000" in [rec.message for rec in caplog.records]
     caplog.clear()
 
 

@@ -109,9 +109,9 @@ def test_correlation_matrix(mock_draw):
 
 @mock.patch("cabinetry.contrib.matplotlib_visualize.pulls")
 def test_pulls(mock_draw):
-    bestfit = np.asarray([0.8, 1.0, 1.1])
-    uncertainty = np.asarray([0.9, 1.0, 0.7])
-    labels = ["a", "b", "c"]
+    bestfit = np.asarray([0.8, 1.0, 1.05, 1.1])
+    uncertainty = np.asarray([0.9, 1.0, 0.03, 0.7])
+    labels = ["a", "b", "staterror_region[bin_0]", "c"]
     exclude_list = ["a"]
     folder_path = "tmp"
 
@@ -142,14 +142,20 @@ def test_pulls(mock_draw):
     assert mock_draw.call_args[0][3] == figure_path
     assert mock_draw.call_args[1] == {}
 
-    # without filtering
+    # without filtering via list, but with staterror removal
+    bestfit_expected = np.asarray([0.8, 1.0, 1.1])
+    uncertainty_expected = np.asarray([0.9, 1.0, 0.7])
+    labels_expected = ["a", "b", "c"]
     visualize.pulls(
         bestfit, uncertainty, labels, folder_path, method="matplotlib",
     )
-    assert np.allclose(mock_draw.call_args[0][0], bestfit)
-    assert np.allclose(mock_draw.call_args[0][1], uncertainty)
+    assert np.allclose(mock_draw.call_args[0][0], bestfit_expected)
+    assert np.allclose(mock_draw.call_args[0][1], uncertainty_expected)
     assert np.any(
-        [mock_draw.call_args[0][2][i] == labels[i] for i in range(len(labels))]
+        [
+            mock_draw.call_args[0][2][i] == labels_expected[i]
+            for i in range(len(labels_expected))
+        ]
     )
     assert mock_draw.call_args[0][3] == figure_path
     assert mock_draw.call_args[1] == {}

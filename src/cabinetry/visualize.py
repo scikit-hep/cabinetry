@@ -149,12 +149,17 @@ def pulls(
     figure_path = pathlib.Path(figure_folder) / "pulls.pdf"
     labels_np = np.asarray(labels)
 
+    if exclude_list is None:
+        exclude_list = []
+
+    # exclude staterror parameters from pull plot (they are centered at 1)
+    exclude_list += [label for label in labels_np if label[0:10] == "staterror_"]
+
     # filter out parameters
-    if exclude_list is not None:
-        mask = [True if label not in exclude_list else False for label in labels_np]
-        bestfit = bestfit[mask]
-        uncertainty = uncertainty[mask]
-        labels_np = labels_np[mask]
+    mask = [True if label not in exclude_list else False for label in labels_np]
+    bestfit = bestfit[mask]
+    uncertainty = uncertainty[mask]
+    labels_np = labels_np[mask]
 
     if method == "matplotlib":
         from cabinetry.contrib import matplotlib_visualize
