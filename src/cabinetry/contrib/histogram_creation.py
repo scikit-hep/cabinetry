@@ -35,7 +35,7 @@ def from_uproot(
     # extract observable and weights
     # need the last [variable] to select the right entry out of the dict
     # this only reads the observable branch and branches needed for the cut into memory
-    observables = tree.arrays(variable, cut=selection_filter, library="np")[variable]
+    observables = np.asarray(tree.arrays(variable, cut=selection_filter)[variable])
 
     if weight is not None:
         try:
@@ -43,7 +43,7 @@ def from_uproot(
             weights = np.ones_like(observables) * float(weight)
         except ValueError:
             # evaluate the expression with uproot4
-            weights = tree.arrays(weight, cut=selection_filter, library="np")[weight]
+            weights = np.asarray(tree.arrays(weight, cut=selection_filter)[weight])
 
     else:
         weights = np.ones_like(observables)
