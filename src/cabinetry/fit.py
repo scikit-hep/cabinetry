@@ -14,7 +14,7 @@ def get_parameter_names(model: pyhf.pdf.Model) -> List[str]:
     one bin per vector entry (gammas)
 
     Args:
-        model (pyhf.pdf.Model): a HistFactory-style model in pyhf format
+        model (pyhf.pdf.Model): a HistFactory-style model in ``pyhf`` format
 
     Returns:
         List[str]: names of fit parameters
@@ -46,14 +46,33 @@ def print_results(
         log.info(f"{l_with_spacer}: {bestfit[i]: .6f} +/- {uncertainty[i]:.6f}")
 
 
-def fit(
-    spec: Dict[str, Any]
-) -> Tuple[np.ndarray, np.ndarray, List[str], float, np.ndarray]:
-    """perform an unconstrained maximum likelihood fit with pyhf and report
-    the results of the fit
+def build_Asimov_data(model: pyhf.Model) -> np.ndarray:
+    """Returns the Asimov dataset (with auxdata) for a model.
 
     Args:
-        spec (Dict[str, Any]): a pyhf workspace specificaton
+        model (pyhf.Model): the model from which to construct the
+            dataset
+
+    Returns:
+        np.ndarray: the Asimov dataset
+    """
+    asimov_data = np.sum(model.nominal_rates, axis=1)[0][0]
+    asimov_aux = model.config.auxdata
+    return np.hstack((asimov_data, asimov_aux))
+
+
+def fit(
+    spec: Dict[str, Any], asimov: bool = False
+) -> Tuple[np.ndarray, np.ndarray, List[str], float, np.ndarray]:
+    """Performs an unconstrained maximum likelihood fit with ``pyhf``.
+
+    Reports and returns the results of the fit. The ``asimov`` flag
+    allows to fit the Asimov dataset instead of observed data.
+
+    Args:
+        spec (Dict[str, Any]): a ``pyhf`` workspace specification
+        asimov (bool, optional): whether to fit the Asimov dataset, defaults
+            to False
 
     Returns:
         Tuple[np.ndarray, np.ndarray, List[str], float, np.ndarray]:
@@ -72,7 +91,11 @@ def fit(
             "histosys": {"interpcode": "code4p"},
         }
     )  # use HistFactory InterpCode=4
-    data = workspace.data(model)
+
+    if not asimov:
+        data = workspace.data(model)
+    else:
+        data = build_Asimov_data(model)
 
     pyhf.set_backend("numpy", pyhf.optimize.minuit_optimizer(verbose=True))
     result, result_obj = pyhf.infer.mle.fit(
@@ -91,14 +114,19 @@ def fit(
 
 
 def custom_fit(
-    spec: Dict[str, Any]
+    spec: Dict[str, Any], asimov: bool = False
 ) -> Tuple[np.ndarray, np.ndarray, List[str], float, np.ndarray]:
-    """Perform an unconstrained maximum likelihood fit with iminuit and report
-    the result. Compared to fit(), this does not use the pyhf.infer API for more
-    control over the minimization.
+    """Performs an unconstrained maximum likelihood fit with ``iminuit``.
+
+    Reports and returns the results of the fit. The ``asimov`` flag
+    allows to fit the Asimov dataset instead of observed data. Compared to
+    ``fit()``, this does not use the ``pyhf.infer`` API for more control
+    over the minimization.
 
     Args:
-        spec (Dict[str, Any]): a pyhf workspace specificaton
+        spec (Dict[str, Any]): a ``pyhf`` workspace specification
+        asimov (bool, optional): whether to fit the Asimov dataset, defaults
+            to False
 
     Returns:
         Tuple[np.ndarray, np.ndarray, List[str], float, np.ndarray]:
@@ -117,11 +145,15 @@ def custom_fit(
             "histosys": {"interpcode": "code4p"},
         }
     )  # use HistFactory InterpCode=4
-    data = workspace.data(model)
 
     init_pars = model.config.suggested_init()
     par_bounds = model.config.suggested_bounds()
     fix_pars = model.config.suggested_fixed()
+
+    if not asimov:
+        data = workspace.data(model)
+    else:
+        data = build_Asimov_data(model)
 
     step_size = [0.1 for _ in init_pars]
 
