@@ -14,7 +14,7 @@ def get_parameter_names(model: pyhf.pdf.Model) -> List[str]:
     one bin per vector entry (gammas)
 
     Args:
-        model (pyhf.pdf.Model): a HistFactory-style model in pyhf format
+        model (pyhf.pdf.Model): a HistFactory-style model in ``pyhf`` format
 
     Returns:
         List[str]: names of fit parameters
@@ -47,13 +47,17 @@ def print_results(
 
 
 def fit(
-    spec: Dict[str, Any]
+    spec: Dict[str, Any], asimov: bool = False
 ) -> Tuple[np.ndarray, np.ndarray, List[str], float, np.ndarray]:
-    """perform an unconstrained maximum likelihood fit with pyhf and report
-    the results of the fit
+    """Performs an unconstrained maximum likelihood fit with ``pyhf``.
+
+    Reports and returns the results of the fit. The ``asimov`` flag
+    allows to fit the Asimov dataset instead of observed data.
 
     Args:
-        spec (Dict[str, Any]): a pyhf workspace specification
+        spec (Dict[str, Any]): a ``pyhf`` workspace specification
+        asimov (bool, optional): whether to fit the Asimov dataset, defaults
+            to False
 
     Returns:
         Tuple[np.ndarray, np.ndarray, List[str], float, np.ndarray]:
@@ -72,7 +76,11 @@ def fit(
             "histosys": {"interpcode": "code4p"},
         }
     )  # use HistFactory InterpCode=4
-    data = workspace.data(model)
+
+    if not asimov:
+        data = workspace.data(model)
+    else:
+        data = model.expected_data(model.config.suggested_init())
 
     pyhf.set_backend("numpy", pyhf.optimize.minuit_optimizer(verbose=True))
     result, result_obj = pyhf.infer.mle.fit(
@@ -93,12 +101,15 @@ def fit(
 def custom_fit(
     spec: Dict[str, Any], asimov: bool = False
 ) -> Tuple[np.ndarray, np.ndarray, List[str], float, np.ndarray]:
-    """Perform an unconstrained maximum likelihood fit with iminuit and report
-    the result. Compared to fit(), this does not use the pyhf.infer API for more
-    control over the minimization.
+    """Performs an unconstrained maximum likelihood fit with ``iminuit``.
+
+    Reports and returns the results of the fit. The ``asimov`` flag
+    allows to fit the Asimov dataset instead of observed data. Compared to
+    ``fit()``, this does not use the ``pyhf.infer`` API for more control
+    over the minimization.
 
     Args:
-        spec (Dict[str, Any]): a pyhf workspace specification
+        spec (Dict[str, Any]): a ``pyhf`` workspace specification
         asimov (bool, optional): whether to fit the Asimov dataset, defaults
             to False
 
