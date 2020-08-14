@@ -87,11 +87,11 @@ def test_fit(example_spec):
     bestfit, uncertainty, labels, best_twice_nll, corr_mat = fit.fit(
         example_spec, asimov=True
     )
-    assert np.allclose(bestfit, [1.1, 1.0])
-    assert np.allclose(uncertainty, [0.04956467, 0.13983193])
+    assert np.allclose(bestfit, [1.0, 1.0], rtol=1e-4)
+    assert np.allclose(uncertainty, [0.04956413, 0.1474005])
     assert labels == ["staterror_Signal-Region", "Signal strength"]
-    assert np.allclose(best_twice_nll, 1.71326699)
-    assert np.allclose(corr_mat, [[1.0, -0.3221417], [-0.3221417, 1.0]])
+    assert np.allclose(best_twice_nll, 1.61824936)
+    assert np.allclose(corr_mat, [[1.0, -0.33610697], [-0.33610697, 1.0]])
 
 
 @pytest.mark.filterwarnings("ignore::RuntimeWarning")
@@ -106,12 +106,14 @@ def test_custom_fit(example_spec):
     assert np.allclose(best_twice_nll, 7.90080378)
     assert np.allclose(corr_mat, [[1.0]])
 
-    # Asimov fit
+    # Asimov fit, with fixed gamma (fixed not to Asimov MLE)
     bestfit, uncertainty, labels, best_twice_nll, corr_mat = fit.custom_fit(
         example_spec, asimov=True
     )
-    assert np.allclose(bestfit, [1.1, 1.0])
-    assert np.allclose(uncertainty, [0.1, 0.13238269])
+    # the gamma factor is multiplicative and fixed to 1.1, so the
+    # signal strength needs to be 1/1.1 to compensate
+    assert np.allclose(bestfit, [1.1, 0.90917877])
+    assert np.allclose(uncertainty, [0.1, 0.12623172])
     assert labels == ["staterror_Signal-Region", "Signal strength"]
-    assert np.allclose(best_twice_nll, 1.71326699)
+    assert np.allclose(best_twice_nll, 5.68851093)
     assert np.allclose(corr_mat, [[1.0]])
