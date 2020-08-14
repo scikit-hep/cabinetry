@@ -77,6 +77,16 @@ def test_fit(example_spec):
     assert np.allclose(best_twice_nll, 3.83054341)
     assert np.allclose(corr_mat, [[1.0, -0.73366055], [-0.73366055, 1.0]])
 
+    # Asimov fit
+    bestfit, uncertainty, labels, best_twice_nll, corr_mat = fit.fit(
+        example_spec, asimov=True
+    )
+    assert np.allclose(bestfit, [1.0, 1.0])
+    assert np.allclose(uncertainty, [0.04956451, 0.14741004])
+    assert labels == ["staterror_Signal-Region", "Signal strength"]
+    assert np.allclose(best_twice_nll, 1.61824907)
+    assert np.allclose(corr_mat, [[1.0, -0.33612583], [-0.33612583, 1.0]])
+
 
 @pytest.mark.filterwarnings("ignore::RuntimeWarning")
 def test_custom_fit(example_spec):
@@ -88,4 +98,14 @@ def test_custom_fit(example_spec):
     assert np.allclose(uncertainty, [0.1, 0.41879343])
     assert labels == ["staterror_Signal-Region", "Signal strength"]
     assert np.allclose(best_twice_nll, 3.83054248)
+    assert np.allclose(corr_mat, [[1.0]])
+
+    # Asimov fit
+    bestfit, uncertainty, labels, best_twice_nll, corr_mat = fit.custom_fit(
+        example_spec, asimov=True
+    )
+    assert np.allclose(bestfit, [1.0, 1.0])
+    assert np.allclose(uncertainty, [0.1, 0.13883476])
+    assert labels == ["staterror_Signal-Region", "Signal strength"]
+    assert np.allclose(best_twice_nll, 1.61824907)
     assert np.allclose(corr_mat, [[1.0]])
