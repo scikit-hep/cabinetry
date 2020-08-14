@@ -72,6 +72,12 @@ def test_print_results(caplog):
     caplog.clear()
 
 
+def test_build_Asimov_data(example_spec):
+    ws = pyhf.Workspace(example_spec)
+    model = ws.model()
+    assert np.allclose(fit.build_Asimov_data(model), [51.839756, 1])
+
+
 # skip a "RuntimeWarning: numpy.ufunc size changed" warning
 # due to different numpy versions used in dependencies
 @pytest.mark.filterwarnings("ignore::RuntimeWarning")
