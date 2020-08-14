@@ -46,6 +46,21 @@ def print_results(
         log.info(f"{l_with_spacer}: {bestfit[i]: .6f} +/- {uncertainty[i]:.6f}")
 
 
+def build_Asimov_data(model: pyhf.Model) -> np.ndarray:
+    """Returns the Asimov dataset (with auxdata) for a model.
+
+    Args:
+        model (pyhf.Model): the model from which to construct the
+            dataset
+
+    Returns:
+        np.ndarray: the Asimov dataset
+    """
+    asimov_data = np.sum(model.nominal_rates, axis=1)[0][0]
+    asimov_aux = model.config.auxdata
+    return np.hstack((asimov_data, asimov_aux))
+
+
 def fit(
     spec: Dict[str, Any], asimov: bool = False
 ) -> Tuple[np.ndarray, np.ndarray, List[str], float, np.ndarray]:
@@ -80,7 +95,7 @@ def fit(
     if not asimov:
         data = workspace.data(model)
     else:
-        data = model.expected_data(model.config.suggested_init())
+        data = build_Asimov_data(model)
 
     pyhf.set_backend("numpy", pyhf.optimize.minuit_optimizer(verbose=True))
     result, result_obj = pyhf.infer.mle.fit(
@@ -138,7 +153,7 @@ def custom_fit(
     if not asimov:
         data = workspace.data(model)
     else:
-        data = model.expected_data(init_pars)
+        data = build_Asimov_data(model)
 
     step_size = [0.1 for _ in init_pars]
 
