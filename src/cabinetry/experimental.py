@@ -250,7 +250,7 @@ def data_MC(
         )
 
         if method == "matplotlib":
-            from cabinetry.contrib import matplotlib_visualize
+            from .contrib import matplotlib_visualize
 
             figure_path = pathlib.Path(figure_folder) / (
                 "test_" + channel_name + ".pdf"

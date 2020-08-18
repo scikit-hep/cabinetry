@@ -75,7 +75,7 @@ def data_MC(
 
         if prefit:
             if method == "matplotlib":
-                from cabinetry.contrib import matplotlib_visualize
+                from .contrib import matplotlib_visualize
 
                 figure_path = pathlib.Path(figure_folder) / figure_name
                 matplotlib_visualize.data_MC(histogram_dict_list, figure_path)
@@ -118,7 +118,7 @@ def correlation_matrix(
 
     figure_path = pathlib.Path(figure_folder) / "correlation_matrix.pdf"
     if method == "matplotlib":
-        from cabinetry.contrib import matplotlib_visualize
+        from .contrib import matplotlib_visualize
 
         matplotlib_visualize.correlation_matrix(corr_mat, labels, figure_path)
     else:
@@ -168,7 +168,7 @@ def pulls(
     labels_np = labels_np[mask]
 
     if method == "matplotlib":
-        from cabinetry.contrib import matplotlib_visualize
+        from .contrib import matplotlib_visualize
 
         matplotlib_visualize.pulls(bestfit, uncertainty, labels_np, figure_path)
     else:
