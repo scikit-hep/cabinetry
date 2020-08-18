@@ -1,7 +1,7 @@
 import logging
 import os
 import pathlib
-from typing import Any, Dict, List, Union
+from typing import Any, Dict, List, Optional, Union
 
 import matplotlib as mpl
 import matplotlib.pyplot as plt
@@ -26,13 +26,19 @@ def _total_yield_uncertainty(stdev_list: List[np.ndarray]) -> np.ndarray:
 
 
 def data_MC(
-    histogram_dict_list: List[Dict[str, Any]], figure_path: pathlib.Path
+    histogram_dict_list: List[Dict[str, Any]],
+    figure_path: pathlib.Path,
+    total_unc: Optional[np.ndarray] = None,
 ) -> None:
     """draw a data/MC histogram
 
     Args:
-        histogram_dict_list (List[Dict[str, Any]]): list of samples (with info stored in one dict per sample)
+        histogram_dict_list (List[Dict[str, Any]]): list of samples (with info
+            stored in one dict per sample)
         figure_path (pathlib.Path): path where figure should be saved
+        total_unc (Optional[np.ndarray]): total model uncertainty, if specified
+            this is used instead of calculating it via sum in quadrature,
+            defaults to None
     """
     mc_histograms_yields = []
     mc_histograms_stdev = []
@@ -93,7 +99,10 @@ def data_MC(
         total_yield += mc_sample_yield
 
     # add total MC uncertainty
-    mc_stack_unc = _total_yield_uncertainty(mc_histograms_stdev)
+    if total_unc is None:
+        mc_stack_unc = _total_yield_uncertainty(mc_histograms_stdev)
+    else:
+        mc_stack_unc = total_unc
     ax1.bar(
         bin_centers,
         2 * mc_stack_unc,
