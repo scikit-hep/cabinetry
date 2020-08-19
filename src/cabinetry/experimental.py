@@ -6,7 +6,6 @@ import awkward1 as ak
 import numpy as np
 import pyhf
 
-from . import fit
 from . import template_builder
 
 
@@ -79,7 +78,10 @@ def get_asimov_parameters(model: pyhf.pdf.Model) -> Tuple[List[float], List[floa
 
 
 def calculate_stdev(
-    model: pyhf.pdf.Model, parameters: np.ndarray, uncertainty: np.ndarray
+    model: pyhf.pdf.Model,
+    parameters: np.ndarray,
+    uncertainty: np.ndarray,
+    corr_mat: np.ndarray,
 ) -> ak.highlevel.Array:
     """Calculate the yield standard deviation of a model.
 
@@ -88,6 +90,7 @@ def calculate_stdev(
             deviations for all bins
         parameters (np.ndarray): central values of model parameters
         uncertainty (np.ndarray): uncertainty of model parameters
+        corr_mat (np.ndarray): correlation matrix
 
     Returns:
         ak.highlevel.Array: array of channels, each channel
@@ -137,15 +140,24 @@ def calculate_stdev(
     total_variance = ak.from_iter(total_variance_list)
 
     # loop over parameters to sum up total variance
-    all_labels = fit.get_parameter_names(model)  # just for debugging
+    # first do the diagonal of the correlation matrix
     for i_par in range(model.config.npars):
-        if "staterror" not in all_labels[i_par]:
-            log.debug("skipping non-staterror")
-            continue
-        else:
-            log.debug("including", all_labels[i_par])
-        symmetric_uncertainty = abs(up_variations[i_par] - down_variations[i_par]) / 2
+        symmetric_uncertainty = (up_variations[i_par] - down_variations[i_par]) / 2
         total_variance = total_variance + symmetric_uncertainty ** 2
+
+    # off-diagonal contributions
+    # could optimize here: no need to loop over staterrors, since they
+    # contribute nothing (bin effects are orthogonal)
+    for i_par in range(model.config.npars):
+        for j_par in range(model.config.npars):
+            if i_par == j_par:
+                continue
+            corr = corr_mat[i_par, j_par]
+            if corr == 0:
+                continue
+            sym_unc_i = (up_variations[i_par] - down_variations[i_par]) / 2
+            sym_unc_j = (up_variations[j_par] - down_variations[j_par]) / 2
+            total_variance = total_variance + (corr * sym_unc_i * sym_unc_j)
 
     # convert to standard deviation
     total_stdev = np.sqrt(total_variance)
@@ -159,6 +171,7 @@ def data_MC(
     spec: Dict[str, Any],
     bestfit: np.ndarray,
     uncertainty: np.ndarray,
+    corr_mat: np.ndarray,
     prefit: bool = True,
     method: str = "matplotlib",
 ) -> None:
@@ -170,6 +183,7 @@ def data_MC(
         spec (Dict[str, Any]): ``pyhf`` workspace specification
         bestfit (np.ndarray): best-fit parameter values
         uncertainty (np.ndarray): parameter uncertainties
+        corr_mat (np.ndarray): correlation matrix
         prefit (bool, optional): draws the pre-fit model if True, else post-fit,
             defaults to True
         method (str, optional): what backend to use for plotting, defaults to "matplotlib"
@@ -194,6 +208,8 @@ def data_MC(
             asimov_pars
         )  # the np.asarray is due to https://github.com/scikit-hep/pyhf/issues/1027
         uncertainty = np.asarray(pre_fit_unc)
+        corr_mat = np.zeros(shape=(len(bestfit), len(bestfit)))
+        np.fill_diagonal(corr_mat, 1.0)
 
     yields_combined = model.main_model.expected_data(
         bestfit, return_by_sample=True
@@ -209,7 +225,7 @@ def data_MC(
     data = np.split(data_combined, region_split_indices)  # data just indexed by channel
 
     # calculate the total standard deviation of the model prediction, index: channel
-    total_stdev_model = calculate_stdev(model, bestfit, uncertainty)
+    total_stdev_model = calculate_stdev(model, bestfit, uncertainty, corr_mat)
 
     for i_chan, channel_name in enumerate(
         model.config.channels
