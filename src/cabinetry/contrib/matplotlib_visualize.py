@@ -73,6 +73,7 @@ def data_MC(
     ax1 = fig.add_subplot(gs[0])
     ax2 = fig.add_subplot(gs[1])
 
+    # increase font sizes
     for item in (
         [ax1.yaxis.label, ax2.xaxis.label, ax2.yaxis.label]
         + ax1.get_yticklabels()
@@ -80,6 +81,10 @@ def data_MC(
         + ax2.get_yticklabels()
     ):
         item.set_fontsize("large")
+
+    # minor ticks on all axes
+    for axis in [ax1.xaxis, ax1.yaxis, ax2.xaxis, ax2.yaxis]:
+        axis.set_minor_locator(mpl.ticker.AutoMinorLocator())
 
     # plot MC stacked together
     total_yield = np.zeros_like(mc_histograms_yields[0])
@@ -96,6 +101,12 @@ def data_MC(
             bottom=total_yield,
             label=mc_labels[i_sample],
         )
+
+        # add a black line on top of each sample
+        line_x = [y for y in bins for _ in range(2)][1:-1]
+        line_y = [y for y in (mc_sample_yield + total_yield) for _ in range(2)]
+        ax1.plot(line_x, line_y, "-", color="black", linewidth=0.5)
+
         total_yield += mc_sample_yield
 
     # add total MC uncertainty
@@ -160,7 +171,7 @@ def data_MC(
     ax1.set_ylabel("events")
     ax1.set_xticklabels([])
     ax1.tick_params(axis="both", which="major", pad=8)  # tick label - axis padding
-    ax1.tick_params(direction="in", top=True, right=True)
+    ax1.tick_params(direction="in", top=True, right=True, which="both")
 
     ax2.set_xlim(bin_left_edges[0], bin_right_edges[-1])
     ax2.set_ylim([0.5, 1.5])
@@ -169,7 +180,7 @@ def data_MC(
     ax2.set_yticks([0.5, 0.75, 1.0, 1.25, 1.5])
     ax2.set_yticklabels([0.5, 0.75, 1.0, 1.25, ""])
     ax2.tick_params(axis="both", which="major", pad=8)
-    ax2.tick_params(direction="in", top=True, right=True)
+    ax2.tick_params(direction="in", top=True, right=True, which="both")
 
     fig.tight_layout()
 
