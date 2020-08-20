@@ -239,9 +239,121 @@ def pulls(
     ax.set_xlim([-3, 3])
     ax.set_xlabel(r"$\left(\hat{\theta} - \theta_0\right) / \Delta \theta$")
     ax.set_ylim([-0.5, num_pars - 0.5])
-    ax.set_yticks(np.arange(num_pars))
+    ax.set_yticks(y_positions)
     ax.set_yticklabels(labels[::-1])
     fig.tight_layout()
+
+    if not os.path.exists(figure_path.parent):
+        os.mkdir(figure_path.parent)
+    log.debug(f"saving figure as {figure_path}")
+    fig.savefig(figure_path)
+
+
+def ranking(
+    bestfit: np.ndarray,
+    uncertainty: np.ndarray,
+    labels: Union[List[str], np.ndarray],
+    impact_prefit_up: np.ndarray,
+    impact_prefit_down: np.ndarray,
+    impact_postfit_up: np.ndarray,
+    impact_postfit_down: np.ndarray,
+    figure_path: pathlib.Path,
+) -> None:
+    """Draws a ranking plot.
+
+    Args:
+        bestfit (np.ndarray): best-fit parameter results
+        uncertainty (np.ndarray): parameter uncertainties
+        labels (Union[List[str], np.ndarray]): parameter labels
+        impact_prefit_up (np.ndarray): pre-fit impact in "up" direction per parameter
+        impact_prefit_down (np.ndarray): pre-fit impact in "down" direction per parameter
+        impact_postfit_up (np.ndarray): post-fit impact in "up" direction per parameter
+        impact_postfit_down (np.ndarray): post-fit impact in "down" direction per parameter
+        figure_path (pathlib.Path): path where figure should be saved
+    """
+    num_pars = len(bestfit)
+
+    mpl.style.use("seaborn-colorblind")
+    fig, ax_pulls = plt.subplots(figsize=(8, 3 + num_pars * 0.4), dpi=100)
+    ax_impact = ax_pulls.twiny()  # second x-axis with shared y-axis, used for pulls
+
+    # since pull axis is below impact axis, flip them so pulls show up on top
+    ax_pulls.set_zorder(1)  # pulls axis on top
+    ax_pulls.patch.set_visible(False)  # pulls axis does not hide impact axis
+
+    # increase font sizes
+    for item in (
+        [ax_pulls.yaxis.label, ax_pulls.xaxis.label, ax_impact.xaxis.label]
+        + ax_pulls.get_yticklabels()
+        + ax_pulls.get_xticklabels()
+        + ax_impact.get_xticklabels()
+    ):
+        item.set_fontsize("large")
+
+    y_pos = np.arange(num_pars)[::-1]
+
+    # lines through pulls of -1, 0, 1 for orientation
+    # line does not go all the way up to the top x-axis, since it
+    # belongs to the bottom x-axis
+    ax_pulls.vlines(
+        -1, -1, num_pars - 0.5, linestyles="dashed", color="black", linewidth=0.75
+    )
+    ax_pulls.vlines(
+        0, -1, num_pars - 0.5, linestyles="dashed", color="black", linewidth=0.75
+    )
+    ax_pulls.vlines(
+        1, -1, num_pars - 0.5, linestyles="dashed", color="black", linewidth=0.75
+    )
+
+    ax_impact.barh(
+        y_pos,
+        impact_prefit_up,
+        label="pre-fit impact up",
+        fill=False,
+        linewidth=1,
+        edgecolor="C0",
+    )  # pre-fit up
+    ax_impact.barh(
+        y_pos,
+        impact_prefit_down,
+        label="pre-fit impact down",
+        fill=False,
+        linewidth=1,
+        edgecolor="C5",
+    )  # pre-fit down
+    ax_impact.barh(
+        y_pos, impact_postfit_up, label="post-fit impact up", color="C0",
+    )  # post-fit up
+    ax_impact.barh(
+        y_pos, impact_postfit_down, label="post-fit impact down", color="C5",
+    )  # post-fit down
+    ax_pulls.errorbar(
+        bestfit, y_pos, xerr=uncertainty, label="pulls", fmt="o", color="k"
+    )  # nuisance parameter pulls
+
+    ax_pulls.set_xlabel(r"$\left(\hat{\theta} - \theta_0\right) / \Delta \theta$")
+    ax_impact.set_xlabel(r"$\Delta \mu$")
+    ax_pulls.set_xlim([-2, 2])
+    ax_impact.set_xlim([-5, 5])
+    ax_pulls.set_ylim([-1, num_pars])
+
+    # impact axis limits: need largest pre-fit impact
+    impact_max = np.max(np.abs(impact_prefit_up, impact_prefit_down))
+    ax_impact.set_xlim([-impact_max * 1.1, impact_max * 1.1])
+
+    # minor ticks
+    for axis in [ax_pulls.xaxis, ax_impact.xaxis]:
+        axis.set_minor_locator(mpl.ticker.AutoMinorLocator())
+
+    ax_pulls.set_yticks(y_pos)
+    ax_pulls.set_yticklabels(labels[::-1])
+
+    ax_pulls.tick_params(direction="in", which="both")
+    ax_impact.tick_params(direction="in", which="both")
+
+    fig.legend(frameon=False, loc="upper left", ncol=2, fontsize="large")
+    leg_space = 0.05 + 0.15 / num_pars
+    fig.tight_layout(rect=[0, 0, 1.0, 1 - leg_space])  # make space for legend on top
 
     if not os.path.exists(figure_path.parent):
         os.mkdir(figure_path.parent)

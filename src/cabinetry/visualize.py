@@ -167,3 +167,88 @@ def pulls(
         matplotlib_visualize.pulls(bestfit, uncertainty, labels_np, figure_path)
     else:
         raise NotImplementedError(f"unknown backend: {method}")
+
+
+def ranking(
+    bestfit: np.ndarray,
+    uncertainty: np.ndarray,
+    labels: List[str],
+    impact_prefit_up: np.ndarray,
+    impact_prefit_down: np.ndarray,
+    impact_postfit_up: np.ndarray,
+    impact_postfit_down: np.ndarray,
+    poi_index: int,
+    figure_folder: Union[str, pathlib.Path],
+    max_pars: Optional[int] = None,
+    method: str = "matplotlib",
+) -> None:
+    """Produces a ranking plot showing the impact of parameters on the POI.
+
+    Args:
+        bestfit (np.ndarray): best-fit parameter results
+        uncertainty (np.ndarray): parameter uncertainties
+        labels (List[str]): parameter labels
+        impact_prefit_up (np.ndarray): pre-fit impact in "up" direction per parameter
+        impact_prefit_down (np.ndarray): pre-fit impact in "down" direction per parameter
+        impact_postfit_up (np.ndarray): post-fit impact in "up" direction per parameter
+        impact_postfit_down (np.ndarray): post-fit impact in "down" direction per parameter
+        poi_index (int): index of POI in parameter list
+        figure_folder (Union[str, pathlib.Path]): path to the folder to save figures in
+        max_pars (Optional[int], optional): number of parameters to include, defaults to None
+            (which means all parameters are included)
+        method (str, optional): what backend to use for plotting, defaults to "matplotlib"
+
+    Raises:
+        NotImplementedError: when trying to plot with a method that is not supported
+    """
+    figure_path = pathlib.Path(figure_folder) / "ranking.pdf"
+
+    # need to remove the POI results from bestfit / uncertainty
+    bestfit = np.delete(bestfit, poi_index)
+    uncertainty = np.delete(uncertainty, poi_index)
+    labels = np.delete(labels, poi_index)
+
+    # normalize staterrors - subtract 1
+    # should also normalize width of staterrors here
+    for i_par, label in enumerate(labels):
+        if "staterror_" in label:
+            bestfit[i_par] -= 1
+
+    # sort parameters by decreasing average post-fit impact
+    avg_postfit_impact = (np.abs(impact_postfit_up) + np.abs(impact_postfit_down)) / 2
+
+    # get indices to sort by decreasing impact
+    idx = np.argsort(avg_postfit_impact)[::-1]
+    bestfit = bestfit[idx]
+    uncertainty = uncertainty[idx]
+    labels = labels[idx]
+    impact_prefit_up = impact_prefit_up[idx]
+    impact_prefit_down = impact_prefit_down[idx]
+    impact_postfit_up = impact_postfit_up[idx]
+    impact_postfit_down = impact_postfit_down[idx]
+
+    if max_pars:
+        # only plot leading parameters in ranking
+        bestfit = bestfit[:max_pars]
+        uncertainty = uncertainty[:max_pars]
+        labels = labels[:max_pars]
+        impact_prefit_up = impact_prefit_up[:max_pars]
+        impact_prefit_down = impact_prefit_down[:max_pars]
+        impact_postfit_up = impact_postfit_up[:max_pars]
+        impact_postfit_down = impact_postfit_down[:max_pars]
+
+    if method == "matplotlib":
+        from .contrib import matplotlib_visualize
+
+        matplotlib_visualize.ranking(
+            bestfit,
+            uncertainty,
+            labels,
+            impact_prefit_up,
+            impact_prefit_down,
+            impact_postfit_up,
+            impact_postfit_down,
+            figure_path,
+        )
+    else:
+        raise NotImplementedError(f"unknown backend: {method}")
