@@ -240,7 +240,7 @@ def pulls(
     ax.set_xlabel(r"$\left(\hat{\theta} - \theta_0\right) / \Delta \theta$")
     ax.set_ylim([-0.5, num_pars - 0.5])
     ax.set_yticks(y_positions)
-    ax.set_yticklabels(labels[::-1])
+    ax.set_yticklabels(labels)
     fig.tight_layout()
 
     if not os.path.exists(figure_path.parent):
@@ -346,7 +346,7 @@ def ranking(
         axis.set_minor_locator(mpl.ticker.AutoMinorLocator())
 
     ax_pulls.set_yticks(y_pos)
-    ax_pulls.set_yticklabels(labels[::-1])
+    ax_pulls.set_yticklabels(labels)
 
     ax_pulls.tick_params(direction="in", which="both")
     ax_impact.tick_params(direction="in", which="both")
