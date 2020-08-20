@@ -6,26 +6,10 @@ import awkward1 as ak
 import numpy as np
 import pyhf
 
+from . import configuration
 from . import template_builder
 
-
 log = logging.getLogger(__name__)
-
-
-def region_dict_from_config(config: Dict[str, Any], region_name: str) -> Dict[str, Any]:
-    """Returns the dictionary describing a region with the given name.
-
-    Args:
-        config (Dict[str, Any]): cabinetry configuration file
-        region_name (str): name of region
-
-    Returns:
-        Dict[str, Any]: dictionary describing region
-    """
-    regions = [reg for reg in config["Regions"] if reg["Name"] == region_name]
-    if len(regions) > 1:
-        log.error(f"found more than one region with name {region_name}")
-    return regions[0]
 
 
 def get_asimov_parameters(model: pyhf.pdf.Model) -> Tuple[List[float], List[float]]:
@@ -233,7 +217,7 @@ def data_MC(
         histogram_dict_list = []  # one dict per region/channel
 
         # get the region dictionary from the config for binning / variable name
-        region_dict = region_dict_from_config(config, channel_name)
+        region_dict = configuration.get_region_dict(config, channel_name)
         bins = template_builder._get_binning(region_dict)
         variable = region_dict["Variable"]
 
