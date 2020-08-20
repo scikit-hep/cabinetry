@@ -7,59 +7,6 @@ import pytest
 from cabinetry import fit
 
 
-@pytest.fixture
-def example_spec():
-    spec = {
-        "channels": [
-            {
-                "name": "Signal Region",
-                "samples": [
-                    {
-                        "data": [51.839756],
-                        "modifiers": [
-                            {
-                                "data": [2.5695188],
-                                "name": "staterror_Signal-Region",
-                                "type": "staterror",
-                            },
-                            {
-                                "data": None,
-                                "name": "Signal strength",
-                                "type": "normfactor",
-                            },
-                        ],
-                        "name": "Signal",
-                    }
-                ],
-            }
-        ],
-        "measurements": [
-            {
-                "config": {
-                    "parameters": [
-                        {
-                            "name": "staterror_Signal-Region",
-                            "fixed": True,
-                            "inits": [1.1],
-                        }
-                    ],
-                    "poi": "Signal strength",
-                },
-                "name": "My fit",
-            }
-        ],
-        "observations": [{"data": [475], "name": "Signal Region"}],
-        "version": "1.0.0",
-    }
-    return spec
-
-
-def test_get_parameter_names(example_spec):
-    model = pyhf.Workspace(example_spec).model()
-    labels = fit.get_parameter_names(model)
-    assert labels == ["staterror_Signal-Region", "Signal strength"]
-
-
 def test_print_results(caplog):
     caplog.set_level(logging.DEBUG)
 

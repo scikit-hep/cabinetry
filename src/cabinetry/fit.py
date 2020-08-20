@@ -5,29 +5,9 @@ import iminuit
 import numpy as np
 import pyhf
 
+from . import model_utils
 
 log = logging.getLogger(__name__)
-
-
-def get_parameter_names(model: pyhf.pdf.Model) -> List[str]:
-    """get the labels of all fit parameters, expanding vectors that act on
-    one bin per vector entry (gammas)
-
-    Args:
-        model (pyhf.pdf.Model): a HistFactory-style model in ``pyhf`` format
-
-    Returns:
-        List[str]: names of fit parameters
-    """
-    labels = []
-    for parname in model.config.par_order:
-        for i_par in range(model.config.param_set(parname).n_parameters):
-            labels.append(
-                "{}[bin_{}]".format(parname, i_par)
-                if model.config.param_set(parname).n_parameters > 1
-                else parname
-            )
-    return labels
 
 
 def print_results(
@@ -106,7 +86,7 @@ def fit(
     uncertainty = result[:, 1]
     best_twice_nll = float(result_obj.fun)  # convert 0-dim np.ndarray to float
     corr_mat = result_obj.minuit.np_matrix(correlation=True, skip_fixed=False)
-    labels = get_parameter_names(model)
+    labels = model_utils.get_parameter_names(model)
 
     print_results(bestfit, uncertainty, labels)
     log.debug(f"-2 log(L) = {best_twice_nll:.6f} at the best-fit point")
@@ -159,7 +139,7 @@ def custom_fit(
     # this will cause the associated parameter uncertainties to be 0 post-fit
     step_size = [0.1 if not fix_pars[i_par] else 0.0 for i_par in range(len(init_pars))]
 
-    labels = get_parameter_names(model)
+    labels = model_utils.get_parameter_names(model)
 
     def twice_nll_func(pars: np.ndarray) -> np.float64:
         twice_nll = -2 * model.logpdf(pars, data)
