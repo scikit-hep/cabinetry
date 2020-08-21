@@ -32,24 +32,21 @@ def data_MC(
     mc_labels = []
     for h in histogram_dict_list:
         if h["isData"]:
-            data_histogram_yields = h["hist"]["yields"]
+            data_histogram_yields = h["yields"]
             data_histogram_stdev = np.sqrt(data_histogram_yields)
             data_label = h["label"]
         else:
-            mc_histograms_yields.append(h["hist"]["yields"])
+            mc_histograms_yields.append(h["yields"])
             mc_labels.append(h["label"])
 
     # get the highest single bin from the sum of MC
     y_max = np.max(
-        np.sum(
-            [h["hist"]["yields"] for h in histogram_dict_list if not h["isData"]],
-            axis=0,
-        )
+        np.sum([h["yields"] for h in histogram_dict_list if not h["isData"]], axis=0)
     )
 
     # if data is higher in any bin, the maximum y axis range should take that into account
     y_max = max(
-        y_max, np.max([h["hist"]["yields"] for h in histogram_dict_list if h["isData"]])
+        y_max, np.max([h["yields"] for h in histogram_dict_list if h["isData"]])
     )
 
     mpl.style.use("seaborn-colorblind")

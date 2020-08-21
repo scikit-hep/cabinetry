@@ -8,19 +8,25 @@ from cabinetry.contrib import matplotlib_visualize
 @pytest.mark.parametrize("figure_extension", ["fig.pdf", "subdir/fig.pdf"])
 def test_data_MC(figure_extension, tmp_path):
     fname = tmp_path / figure_extension
-    bg_hist = {
-        "yields": np.asarray([12.5, 14]),
-    }
-    sig_hist = {
-        "yields": np.asarray([2, 5]),
-    }
-    data_hist = {
-        "yields": np.asarray([13, 15]),
-    }
     histo_dict_list = [
-        {"label": "Background", "isData": False, "hist": bg_hist, "variable": "x"},
-        {"label": "Signal", "isData": False, "hist": sig_hist, "variable": "x"},
-        {"label": "Data", "isData": True, "hist": data_hist, "variable": "x"},
+        {
+            "label": "Background",
+            "isData": False,
+            "yields": np.asarray([12.5, 14]),
+            "variable": "x",
+        },
+        {
+            "label": "Signal",
+            "isData": False,
+            "yields": np.asarray([2, 5]),
+            "variable": "x",
+        },
+        {
+            "label": "Data",
+            "isData": True,
+            "yields": np.asarray([13, 15]),
+            "variable": "x",
+        },
     ]
     total_model_unc = np.sqrt([0.17, 0.29])
     bin_edges = np.asarray([1, 2, 3])

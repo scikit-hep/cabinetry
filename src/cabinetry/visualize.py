@@ -79,7 +79,7 @@ def data_MC_from_histograms(
                 {
                     "label": sample["Name"],
                     "isData": is_data,
-                    "hist": {"yields": histogram.yields},
+                    "yields": histogram.yields,
                     "variable": region["Variable"],
                 }
             )
@@ -179,7 +179,7 @@ def data_MC(
                 {
                     "label": sample_name,
                     "isData": False,
-                    "hist": {"yields": model_yields[i_chan][i_sam]},
+                    "yields": model_yields[i_chan][i_sam],
                     "variable": variable,
                 }
             )
@@ -189,7 +189,7 @@ def data_MC(
             {
                 "label": "Data",
                 "isData": True,
-                "hist": {"yields": data[i_chan]},
+                "yields": data[i_chan],
                 "variable": variable,
             }
         )
