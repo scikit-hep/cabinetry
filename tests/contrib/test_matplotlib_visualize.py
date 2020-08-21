@@ -5,15 +5,6 @@ import pytest
 from cabinetry.contrib import matplotlib_visualize
 
 
-def test__total_yield_uncertainty():
-    stdev_list = [np.asarray([0.1, 0.2, 0.1]), np.asarray([0.3, 0.2, 0.1])]
-    expected_uncertainties = [0.31622777, 0.28284271, 0.14142136]
-    assert np.allclose(
-        matplotlib_visualize._total_yield_uncertainty(stdev_list),
-        expected_uncertainties,
-    )
-
-
 @pytest.mark.parametrize("figure_extension", ["fig.pdf", "subdir/fig.pdf"])
 def test_data_MC(figure_extension, tmp_path):
     fname = tmp_path / figure_extension
@@ -37,7 +28,8 @@ def test_data_MC(figure_extension, tmp_path):
         {"label": "Signal", "isData": False, "hist": sig_hist, "variable": "x"},
         {"label": "Data", "isData": True, "hist": data_hist, "variable": "x"},
     ]
-    matplotlib_visualize.data_MC(histo_dict_list, fname)
+    total_model_unc = np.sqrt([0.4 ** 2 + 0.1 ** 2, 0.5 ** 2 + 0.2 ** 2])
+    matplotlib_visualize.data_MC(histo_dict_list, total_model_unc, fname)
     assert compare_images("tests/contrib/reference/data_MC.pdf", str(fname), 0) is None
 
 

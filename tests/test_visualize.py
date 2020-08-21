@@ -25,11 +25,21 @@ def test__build_figure_name(test_input, expected):
     assert visualize._build_figure_name(*test_input) == expected
 
 
+def test__total_yield_uncertainty():
+    stdev_list = [np.asarray([0.1, 0.2, 0.1]), np.asarray([0.3, 0.2, 0.1])]
+    expected_uncertainties = [0.31622777, 0.28284271, 0.14142136]
+    assert np.allclose(
+        visualize._total_yield_uncertainty(stdev_list), expected_uncertainties,
+    )
+
+
+@mock.patch("cabinetry.visualize._total_yield_uncertainty", return_value=[0.2])
 @mock.patch("cabinetry.contrib.matplotlib_visualize.data_MC")
 @mock.patch(
-    "cabinetry.histo.Histogram.from_config", return_value=MockHistogram([], [], [])
+    "cabinetry.histo.Histogram.from_config",
+    return_value=MockHistogram([0.0, 1.0], [1.0], [0.1]),
 )
-def test_data_MC_from_histograms(mock_load, mock_draw, tmp_path):
+def test_data_MC_from_histograms(mock_load, mock_draw, mock_stdev, tmp_path):
     """contrib.matplotlib_visualize is only imported depending on the keyword argument,
     so cannot patch via cabinetry.visualize.matplotlib_visualize
     Generally it seems like following the path to the module is preferred, but that
@@ -57,6 +67,7 @@ def test_data_MC_from_histograms(mock_load, mock_draw, tmp_path):
             {"modified": True},
         )
     ]
+    assert mock_stdev.call_args_list == [(([[0.1]],), {})]
     assert mock_draw.call_args_list == [
         (
             (
@@ -64,10 +75,11 @@ def test_data_MC_from_histograms(mock_load, mock_draw, tmp_path):
                     {
                         "label": "sample_1",
                         "isData": False,
-                        "hist": {"bins": [], "yields": [], "stdev": []},
+                        "hist": {"bins": [0.0, 1.0], "yields": [1.0], "stdev": [0.1]},
                         "variable": "x",
-                    }
+                    },
                 ],
+                [0.2],
                 tmp_path / "reg_1_prefit.pdf",
             ),
         )

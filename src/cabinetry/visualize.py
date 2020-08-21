@@ -17,7 +17,7 @@ log = logging.getLogger(__name__)
 
 
 def _build_figure_name(region_name: str, is_prefit: bool) -> str:
-    """construct a name for the file a figure is saved as
+    """Constructs a name filename for a figure.
 
     Args:
         region_name (str): name of the region shown in the figure
@@ -33,6 +33,19 @@ def _build_figure_name(region_name: str, is_prefit: bool) -> str:
         figure_name += "_" + "postfit"
     figure_name += ".pdf"
     return figure_name
+
+
+def _total_yield_uncertainty(stdev_list: List[np.ndarray]) -> np.ndarray:
+    """Calculates the absolute statistical uncertainty of a stack of MC.
+
+    Args:
+        stdev_list (List[np.ndarray]): list of absolute stat. uncertainty per sample
+
+    Returns:
+        np.array: absolute stat. uncertainty of stack of samples
+    """
+    tot_unc = np.sqrt(np.sum(np.power(stdev_list, 2), axis=0))
+    return tot_unc
 
 
 def data_MC_from_histograms(
@@ -56,32 +69,37 @@ def data_MC_from_histograms(
     histogram_folder = pathlib.Path(config["General"]["HistogramFolder"])
     for region in config["Regions"]:
         histogram_dict_list = []
+        model_stdevs = []
         for sample in config["Samples"]:
-            for systematic in [{"Name": "nominal"}]:
-                is_data = sample.get("Data", False)
-                histogram = histo.Histogram.from_config(
-                    histogram_folder, region, sample, systematic, modified=True
-                )
-                histogram_dict_list.append(
-                    {
-                        "label": sample["Name"],
-                        "isData": is_data,
-                        "hist": {
-                            "bins": histogram.bins,
-                            "yields": histogram.yields,
-                            "stdev": histogram.stdev,
-                        },
-                        "variable": region["Variable"],
-                    }
-                )
+            is_data = sample.get("Data", False)
+            histogram = histo.Histogram.from_config(
+                histogram_folder, region, sample, {"Name": "nominal"}, modified=True
+            )
+            histogram_dict_list.append(
+                {
+                    "label": sample["Name"],
+                    "isData": is_data,
+                    "hist": {
+                        "bins": histogram.bins,
+                        "yields": histogram.yields,
+                        "stdev": histogram.stdev,
+                    },
+                    "variable": region["Variable"],
+                }
+            )
+            if not is_data:
+                model_stdevs.append(histogram.stdev)
 
         figure_name = _build_figure_name(region["Name"], True)
+        total_model_unc = _total_yield_uncertainty(model_stdevs)
 
         if method == "matplotlib":
             from .contrib import matplotlib_visualize
 
             figure_path = pathlib.Path(figure_folder) / figure_name
-            matplotlib_visualize.data_MC(histogram_dict_list, figure_path)
+            matplotlib_visualize.data_MC(
+                histogram_dict_list, total_model_unc, figure_path
+            )
         else:
             raise NotImplementedError(f"unknown backend: {method}")
 
@@ -199,9 +217,7 @@ def data_MC(
                     channel_name + "_postfit.pdf"
                 )
             matplotlib_visualize.data_MC(
-                histogram_dict_list,
-                figure_path,
-                total_unc=np.asarray(total_stdev_model[i_chan]),
+                histogram_dict_list, np.asarray(total_stdev_model[i_chan]), figure_path,
             )
         else:
             raise NotImplementedError(f"unknown backend: {method}")
@@ -213,7 +229,7 @@ def correlation_matrix(
     pruning_threshold: float = 0.0,
     method: str = "matplotlib",
 ) -> None:
-    """plot a correlation matrix
+    """Draws a correlation matrix.
 
     Args:
         fit_results (fit.FitResults): fit results, including correlation matrix
@@ -254,7 +270,7 @@ def pulls(
     exclude_list: Optional[List[str]] = None,
     method: str = "matplotlib",
 ) -> None:
-    """produce a pull plot of parameter results and uncertainties
+    """Draws a pull plot of parameter results and uncertainties.
 
     Args:
         bestfit (np.ndarray): best-fit results for parameters

@@ -1,7 +1,7 @@
 import logging
 import os
 import pathlib
-from typing import Any, Dict, List, Optional, Union
+from typing import Any, Dict, List, Union
 
 import matplotlib as mpl
 import matplotlib.pyplot as plt
@@ -11,34 +11,20 @@ import numpy as np
 log = logging.getLogger(__name__)
 
 
-def _total_yield_uncertainty(stdev_list: List[np.ndarray]) -> np.ndarray:
-    """calculate the absolute statistical uncertainty of a stack of MC
-    via sum in quadrature
-
-    Args:
-        stdev_list (List[np.ndarray]): list of absolute stat. uncertainty per sample
-
-    Returns:
-        np.array: absolute stat. uncertainty of stack of samples
-    """
-    tot_unc = np.sqrt(np.sum(np.power(stdev_list, 2), axis=0))
-    return tot_unc
-
-
 def data_MC(
     histogram_dict_list: List[Dict[str, Any]],
+    total_model_unc: np.ndarray,
     figure_path: pathlib.Path,
-    total_unc: Optional[np.ndarray] = None,
 ) -> None:
-    """draw a data/MC histogram
+    """Draws a data/MC histogram with uncertainty bands and ratio panel.
 
     Args:
         histogram_dict_list (List[Dict[str, Any]]): list of samples (with info
             stored in one dict per sample)
-        figure_path (pathlib.Path): path where figure should be saved
-        total_unc (Optional[np.ndarray]): total model uncertainty, if specified
+        total_model_unc (np.ndarray): total model uncertainty, if specified
             this is used instead of calculating it via sum in quadrature,
             defaults to None
+        figure_path (pathlib.Path): path where figure should be saved
     """
     mc_histograms_yields = []
     mc_histograms_stdev = []
@@ -110,15 +96,11 @@ def data_MC(
         total_yield += mc_sample_yield
 
     # add total MC uncertainty
-    if total_unc is None:
-        mc_stack_unc = _total_yield_uncertainty(mc_histograms_stdev)
-    else:
-        mc_stack_unc = total_unc
     ax1.bar(
         bin_centers,
-        2 * mc_stack_unc,
+        2 * total_model_unc,
         width=bin_width,
-        bottom=total_yield - mc_stack_unc,
+        bottom=total_yield - total_model_unc,
         label="Stat. uncertainty",
         fill=False,
         linewidth=0,
@@ -146,7 +128,7 @@ def data_MC(
     )  # reference line along y=1
 
     # add uncertainty band around y=1
-    rel_mc_unc = mc_stack_unc / total_yield
+    rel_mc_unc = total_model_unc / total_yield
     ax2.bar(
         bin_centers,
         2 * rel_mc_unc,
@@ -195,7 +177,7 @@ def correlation_matrix(
     labels: Union[List[str], np.ndarray],
     figure_path: pathlib.Path,
 ) -> None:
-    """draw a correlation matrix
+    """Draws a correlation matrix.
 
     Args:
         corr_mat (np.ndarray): the correlation matrix to plot
@@ -239,7 +221,7 @@ def pulls(
     labels: Union[List[str], np.ndarray],
     figure_path: pathlib.Path,
 ) -> None:
-    """draw a pull plot
+    """Draws a pull plot.
 
     Args:
         bestfit (np.ndarray): [description]
