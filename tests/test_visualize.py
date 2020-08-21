@@ -5,6 +5,7 @@ from unittest import mock
 import numpy as np
 import pytest
 
+from cabinetry import fit
 from cabinetry import visualize
 
 
@@ -89,9 +90,10 @@ def test_correlation_matrix(mock_draw):
     labels_pruned = ["a", "b"]
     folder_path = "tmp"
     figure_path = pathlib.Path(folder_path) / "correlation_matrix.pdf"
+    fit_results = fit.FitResults(np.empty(0), np.empty(0), labels, corr_mat, 1.0)
 
     visualize.correlation_matrix(
-        corr_mat, labels, folder_path, pruning_threshold=0.15, method="matplotlib"
+        fit_results, folder_path, pruning_threshold=0.15, method="matplotlib"
     )
 
     mock_draw.assert_called_once()
@@ -104,7 +106,7 @@ def test_correlation_matrix(mock_draw):
 
     # unknown plotting method
     with pytest.raises(NotImplementedError, match="unknown backend: unknown"):
-        visualize.correlation_matrix(corr_mat, labels, folder_path, method="unknown")
+        visualize.correlation_matrix(fit_results, folder_path, method="unknown")
 
 
 @mock.patch("cabinetry.contrib.matplotlib_visualize.pulls")
@@ -114,6 +116,7 @@ def test_pulls(mock_draw):
     labels = ["a", "b", "staterror_region[bin_0]", "c"]
     exclude_list = ["a"]
     folder_path = "tmp"
+    fit_results = fit.FitResults(bestfit, uncertainty, labels, np.empty(0), 1.0)
 
     filtered_bestfit = np.asarray([1.0, 1.1])
     filtered_uncertainty = np.asarray([1.0, 0.7])
@@ -122,12 +125,7 @@ def test_pulls(mock_draw):
 
     # with filtering
     visualize.pulls(
-        bestfit,
-        uncertainty,
-        labels,
-        folder_path,
-        exclude_list=exclude_list,
-        method="matplotlib",
+        fit_results, folder_path, exclude_list=exclude_list, method="matplotlib",
     )
 
     mock_draw.assert_called_once()
@@ -146,7 +144,8 @@ def test_pulls(mock_draw):
     bestfit_expected = np.asarray([0.8, 1.0, 1.1])
     uncertainty_expected = np.asarray([0.9, 1.0, 0.7])
     labels_expected = ["a", "b", "c"]
-    visualize.pulls(bestfit, uncertainty, labels, folder_path, method="matplotlib")
+    visualize.pulls(fit_results, folder_path, method="matplotlib")
+
     assert np.allclose(mock_draw.call_args[0][0], bestfit_expected)
     assert np.allclose(mock_draw.call_args[0][1], uncertainty_expected)
     assert np.any(
@@ -161,12 +160,7 @@ def test_pulls(mock_draw):
     # unknown plotting method
     with pytest.raises(NotImplementedError, match="unknown backend: unknown"):
         visualize.pulls(
-            bestfit,
-            uncertainty,
-            labels,
-            folder_path,
-            exclude_list=exclude_list,
-            method="unknown",
+            fit_results, folder_path, exclude_list=exclude_list, method="unknown",
         )
 
 
