@@ -24,7 +24,7 @@ def test_integration(tmp_path, ntuple_creator):
     ws = cabinetry.workspace.build(cabinetry_config)
     cabinetry.workspace.save(ws, workspace_path)
     ws = cabinetry.workspace.load(workspace_path)
-    bestfit, uncertainty, _, best_twice_nll, corr_mat = cabinetry.fit.fit(ws)
+    fit_results = cabinetry.fit.fit(ws)
 
     bestfit_expected = [
         1.00097604,
@@ -129,7 +129,7 @@ def test_integration(tmp_path, ntuple_creator):
             1.0,
         ],
     ]
-    assert np.allclose(bestfit, bestfit_expected)
-    assert np.allclose(uncertainty, uncertainty_expected)
-    assert np.allclose(best_twice_nll, best_twice_nll_expected)
-    assert np.allclose(corr_mat, corr_mat_expected, rtol=5e-5)
+    assert np.allclose(fit_results.bestfit, bestfit_expected)
+    assert np.allclose(fit_results.uncertainty, uncertainty_expected)
+    assert np.allclose(fit_results.best_twice_nll, best_twice_nll_expected)
+    assert np.allclose(fit_results.corr_mat, corr_mat_expected, rtol=5e-5)
