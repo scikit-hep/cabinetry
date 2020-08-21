@@ -53,7 +53,7 @@ def data_MC_from_histograms(
     figure_folder: Union[str, pathlib.Path],
     method: str = "matplotlib",
 ) -> None:
-    """Draws a pre-fit data/MC histogram from created histograms.
+    """Draws pre-fit data/MC histograms, using histograms created by cabinetry.
 
     The uncertainty band drawn includes only statistical uncertainties.
 
@@ -79,11 +79,7 @@ def data_MC_from_histograms(
                 {
                     "label": sample["Name"],
                     "isData": is_data,
-                    "hist": {
-                        "bins": histogram.bins,
-                        "yields": histogram.yields,
-                        "stdev": histogram.stdev,
-                    },
+                    "hist": {"bins": histogram.bins, "yields": histogram.yields},
                     "variable": region["Variable"],
                 }
             )
@@ -111,7 +107,7 @@ def data_MC(
     fit_results: Optional[fit.FitResults] = None,
     method: str = "matplotlib",
 ) -> None:
-    """Draws a data/MC histogram.
+    """Draws pre- and post-fit data/MC histograms from a ``pyhf`` workspace.
 
     Args:
         config (Dict[str, Any]): cabinetry configuration
@@ -182,11 +178,7 @@ def data_MC(
                 {
                     "label": sample_name,
                     "isData": False,
-                    "hist": {
-                        "bins": bins,
-                        "yields": model_yields[i_chan][i_sam],
-                        "stdev": np.zeros_like(model_yields[i_chan][i_sam]),
-                    },
+                    "hist": {"bins": bins, "yields": model_yields[i_chan][i_sam]},
                     "variable": variable,
                 }
             )
@@ -196,11 +188,7 @@ def data_MC(
             {
                 "label": "Data",
                 "isData": True,
-                "hist": {
-                    "bins": bins,
-                    "yields": data[i_chan],
-                    "stdev": np.sqrt(data[i_chan]),
-                },
+                "hist": {"bins": bins, "yields": data[i_chan]},
                 "variable": variable,
             }
         )

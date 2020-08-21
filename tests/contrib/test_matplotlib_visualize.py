@@ -10,17 +10,14 @@ def test_data_MC(figure_extension, tmp_path):
     fname = tmp_path / figure_extension
     bg_hist = {
         "yields": np.asarray([12.5, 14]),
-        "stdev": np.asarray([0.4, 0.5]),
         "bins": np.asarray([1, 2, 3]),
     }
     sig_hist = {
         "yields": np.asarray([2, 5]),
-        "stdev": np.asarray([0.1, 0.2]),
         "bins": np.asarray([1, 2, 3]),
     }
     data_hist = {
         "yields": np.asarray([13, 15]),
-        "stdev": np.asarray([3.61, 3.87]),
         "bins": np.asarray([1, 2, 3]),
     }
     histo_dict_list = [
@@ -28,7 +25,7 @@ def test_data_MC(figure_extension, tmp_path):
         {"label": "Signal", "isData": False, "hist": sig_hist, "variable": "x"},
         {"label": "Data", "isData": True, "hist": data_hist, "variable": "x"},
     ]
-    total_model_unc = np.sqrt([0.4 ** 2 + 0.1 ** 2, 0.5 ** 2 + 0.2 ** 2])
+    total_model_unc = np.sqrt([0.17, 0.29])
     matplotlib_visualize.data_MC(histo_dict_list, total_model_unc, fname)
     assert compare_images("tests/contrib/reference/data_MC.pdf", str(fname), 0) is None
 

@@ -27,16 +27,14 @@ def data_MC(
         figure_path (pathlib.Path): path where figure should be saved
     """
     mc_histograms_yields = []
-    mc_histograms_stdev = []
     mc_labels = []
     for h in histogram_dict_list:
         if h["isData"]:
             data_histogram_yields = h["hist"]["yields"]
-            data_histogram_stdev = h["hist"]["stdev"]
+            data_histogram_stdev = np.sqrt(data_histogram_yields)
             data_label = h["label"]
         else:
             mc_histograms_yields.append(h["hist"]["yields"])
-            mc_histograms_stdev.append(h["hist"]["stdev"])
             mc_labels.append(h["label"])
 
     # get the highest single bin from the sum of MC

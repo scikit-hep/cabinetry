@@ -84,13 +84,13 @@ def test_data_MC_from_histograms(mock_load, mock_draw, mock_stdev, tmp_path):
                     {
                         "label": "sample_1",
                         "isData": False,
-                        "hist": {"bins": [0.0, 1.0], "yields": [1.0], "stdev": [0.1]},
+                        "hist": {"bins": [0.0, 1.0], "yields": [1.0]},
                         "variable": "x",
                     },
                     {
                         "label": "data",
                         "isData": True,
-                        "hist": {"bins": [0.0, 1.0], "yields": [1.0], "stdev": [0.1]},
+                        "hist": {"bins": [0.0, 1.0], "yields": [1.0]},
                         "variable": "x",
                     },
                 ],
