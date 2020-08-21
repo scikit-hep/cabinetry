@@ -143,18 +143,22 @@ def calculate_stdev(
         symmetric_uncertainty = (up_variations[i_par] - down_variations[i_par]) / 2
         total_variance = total_variance + symmetric_uncertainty ** 2
 
+    labels = get_parameter_names(model)
     # continue with off-diagonal contributions if there are any
     if np.count_nonzero(corr_mat - np.diag(np.diagonal(corr_mat))) > 0:
-        # off-diagonal contributions
-        # could optimize here: no need to loop over staterrors, since they
-        # contribute nothing (bin effects are orthogonal)
+        # loop over pairs of parameters
         for i_par in range(model.config.npars):
             for j_par in range(model.config.npars):
                 if j_par >= i_par:
                     continue  # only loop over the half the matrix due to symmetry
                 corr = corr_mat[i_par, j_par]
-                if corr == 0:
-                    continue
+                # an approximate calculation could be done here by requiring
+                # e.g. abs(corr) > 1e-5 to continue
+                if (
+                    labels[i_par][0:10] == "staterror_"
+                    and labels[j_par][0:10] == "staterror_"
+                ):
+                    continue  # two different staterrors are orthogonal and will not contribute
                 sym_unc_i = (up_variations[i_par] - down_variations[i_par]) / 2
                 sym_unc_j = (up_variations[j_par] - down_variations[j_par]) / 2
                 # factor of two below is there since loop is only over half the matrix
