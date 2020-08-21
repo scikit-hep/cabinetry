@@ -1,5 +1,5 @@
 import logging
-from typing import Any, Dict, List, Tuple
+from typing import Any, Dict, List, NamedTuple
 
 import iminuit
 import numpy as np
@@ -8,6 +8,24 @@ import pyhf
 from . import model_utils
 
 log = logging.getLogger(__name__)
+
+
+class FitResults(NamedTuple):
+    """Collects fit results in one object.
+
+    Args:
+        bestfit (numpy.ndarray): best-fit results of parameters
+        uncertainty (numpy.ndarray): uncertainties of best-fit parameter results
+        labels (List[str]): parameter labels
+        corr_mat (np.ndarray): parameter correlation matrix
+        best_twice_nll (float): -2 log(likelihood) at best-fit point
+    """
+
+    bestfit: np.ndarray
+    uncertainty: np.ndarray
+    labels: List[str]
+    corr_mat: np.ndarray
+    best_twice_nll: float
 
 
 def print_results(
@@ -41,9 +59,7 @@ def build_Asimov_data(model: pyhf.Model) -> np.ndarray:
     return np.hstack((asimov_data, asimov_aux))
 
 
-def fit(
-    spec: Dict[str, Any], asimov: bool = False
-) -> Tuple[np.ndarray, np.ndarray, List[str], float, np.ndarray]:
+def fit(spec: Dict[str, Any], asimov: bool = False) -> FitResults:
     """Performs an unconstrained maximum likelihood fit with ``pyhf``.
 
     Reports and returns the results of the fit. The ``asimov`` flag
@@ -55,12 +71,7 @@ def fit(
             to False
 
     Returns:
-        Tuple[np.ndarray, np.ndarray, List[str], float, np.ndarray]:
-            - best-fit positions of parameters
-            - parameter uncertainties
-            - parameter names
-            - -2 log(likelihood) at best-fit point
-            - correlation matrix
+        FitResults: fit information stored in one object
     """
     log.info("performing unconstrained fit")
 
@@ -84,18 +95,18 @@ def fit(
 
     bestfit = result[:, 0]
     uncertainty = result[:, 1]
-    best_twice_nll = float(result_obj.fun)  # convert 0-dim np.ndarray to float
-    corr_mat = result_obj.minuit.np_matrix(correlation=True, skip_fixed=False)
     labels = model_utils.get_parameter_names(model)
+    corr_mat = result_obj.minuit.np_matrix(correlation=True, skip_fixed=False)
+    best_twice_nll = float(result_obj.fun)  # convert 0-dim np.ndarray to float
 
     print_results(bestfit, uncertainty, labels)
     log.debug(f"-2 log(L) = {best_twice_nll:.6f} at the best-fit point")
-    return bestfit, uncertainty, labels, best_twice_nll, corr_mat
+
+    fit_result = FitResults(bestfit, uncertainty, labels, corr_mat, best_twice_nll)
+    return fit_result
 
 
-def custom_fit(
-    spec: Dict[str, Any], asimov: bool = False
-) -> Tuple[np.ndarray, np.ndarray, List[str], float, np.ndarray]:
+def custom_fit(spec: Dict[str, Any], asimov: bool = False) -> FitResults:
     """Performs an unconstrained maximum likelihood fit with ``iminuit``.
 
     Reports and returns the results of the fit. The ``asimov`` flag
@@ -109,12 +120,7 @@ def custom_fit(
             to False
 
     Returns:
-        Tuple[np.ndarray, np.ndarray, List[str], float, np.ndarray]:
-            - best-fit positions of parameters
-            - parameter uncertainties
-            - parameter names
-            - -2 log(likelihood) at best-fit point
-            - correlation matrix
+        FitResults: fit information stored in one object
     """
     pyhf.set_backend("numpy", pyhf.optimize.minuit_optimizer(verbose=True))
 
@@ -168,4 +174,5 @@ def custom_fit(
     print_results(bestfit, uncertainty, labels)
     log.debug(f"-2 log(L) = {best_twice_nll:.6f} at the best-fit point")
 
-    return bestfit, uncertainty, labels, best_twice_nll, corr_mat
+    fit_result = FitResults(bestfit, uncertainty, labels, corr_mat, best_twice_nll)
+    return fit_result

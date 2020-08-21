@@ -5,6 +5,7 @@ from typing import Any, Dict, List, Optional, Union
 
 import numpy as np
 
+from . import fit
 from . import histo
 
 
@@ -86,8 +87,7 @@ def data_MC(
 
 
 def correlation_matrix(
-    corr_mat: np.ndarray,
-    labels: List[str],
+    fit_results: fit.FitResults,
     figure_folder: Union[str, pathlib.Path],
     pruning_threshold: float = 0.0,
     method: str = "matplotlib",
@@ -95,8 +95,8 @@ def correlation_matrix(
     """plot a correlation matrix
 
     Args:
-        corr_mat (np.ndarray): the correlation matrix to plot
-        labels (List[str]): names of parameters in the correlation matrix
+        fit_results (fit.FitResults): fit results, including correlation matrix
+            and parameter labels
         figure_folder (Union[str, pathlib.Path]): path to the folder to save figures in
         pruning_threshold (float, optional): minimum correlation for a parameter to
             have with any other parameters to not get pruned, defaults to 0.0
@@ -106,15 +106,17 @@ def correlation_matrix(
         NotImplementedError: when trying to plot with a method that is not supported
     """
     # create a matrix that's True if a correlation is below threshold, and True on the diagonal
-    below_threshold = np.where(np.abs(corr_mat) <= pruning_threshold, True, False)
+    below_threshold = np.where(
+        np.abs(fit_results.corr_mat) <= pruning_threshold, True, False
+    )
     np.fill_diagonal(below_threshold, True)
     # get indices of rows/columns where everything is below threshold
     delete_indices = np.where(np.all(below_threshold, axis=0))
     # delete rows and columns where all correlations are below threshold
     corr_mat = np.delete(
-        np.delete(corr_mat, delete_indices, axis=1), delete_indices, axis=0
+        np.delete(fit_results.corr_mat, delete_indices, axis=1), delete_indices, axis=0
     )
-    labels = np.delete(labels, delete_indices)
+    labels = np.delete(fit_results.labels, delete_indices)
 
     figure_path = pathlib.Path(figure_folder) / "correlation_matrix.pdf"
     if method == "matplotlib":
@@ -126,9 +128,7 @@ def correlation_matrix(
 
 
 def pulls(
-    bestfit: np.ndarray,
-    uncertainty: np.ndarray,
-    labels: List[str],
+    fit_results: fit.FitResults,
     figure_folder: Union[str, pathlib.Path],
     exclude_list: Optional[List[str]] = None,
     method: str = "matplotlib",
@@ -148,7 +148,7 @@ def pulls(
         NotImplementedError: when trying to plot with a method that is not supported
     """
     figure_path = pathlib.Path(figure_folder) / "pulls.pdf"
-    labels_np = np.asarray(labels)
+    labels_np = np.asarray(fit_results.labels)
 
     if exclude_list is None:
         exclude_list = []
@@ -163,8 +163,8 @@ def pulls(
 
     # filter out parameters
     mask = [True if label not in exclude_list else False for label in labels_np]
-    bestfit = bestfit[mask]
-    uncertainty = uncertainty[mask]
+    bestfit = fit_results.bestfit[mask]
+    uncertainty = fit_results.uncertainty[mask]
     labels_np = labels_np[mask]
 
     if method == "matplotlib":

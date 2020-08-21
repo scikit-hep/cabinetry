@@ -1,6 +1,7 @@
 import logging
 from typing import List, Tuple
 
+import numpy as np
 import pyhf
 
 log = logging.getLogger(__name__)
@@ -27,14 +28,14 @@ def get_parameter_names(model: pyhf.pdf.Model) -> List[str]:
     return labels
 
 
-def get_asimov_parameters(model: pyhf.pdf.Model) -> Tuple[List[float], List[float]]:
+def get_asimov_parameters(model: pyhf.pdf.Model) -> Tuple[np.ndarray, np.ndarray]:
     """Returns a list of Asimov parameter values and pre-fit uncertainties for a model.
 
     Args:
         model (pyhf.pdf.Model): model for which to extract the parameters
 
     Returns:
-        Tuple[List[float], List[float]]:
+        Tuple[np.ndarray, np.ndarray]:
             - the Asimov parameters, in the same order as
               ``model.config.suggested_init()``
             - pre-fit uncertainties for the parameters
@@ -74,4 +75,4 @@ def get_asimov_parameters(model: pyhf.pdf.Model) -> Tuple[List[float], List[floa
                 # shapefactor
                 pre_fit_unc += [0.0] * model.config.param_set(parameter).n_parameters
 
-    return asimov_parameters, pre_fit_unc
+    return np.asarray(asimov_parameters), np.asarray(pre_fit_unc)

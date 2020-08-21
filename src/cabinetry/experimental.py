@@ -1,12 +1,13 @@
 import logging
 import pathlib
-from typing import Any, Dict, Union
+from typing import Any, Dict, Optional, Union
 
 import awkward1 as ak
 import numpy as np
 import pyhf
 
 from . import configuration
+from . import fit
 from . import model_utils
 from . import template_builder
 
@@ -105,10 +106,7 @@ def data_MC(
     config: Dict[str, Any],
     figure_folder: Union[str, pathlib.Path],
     spec: Dict[str, Any],
-    bestfit: np.ndarray,
-    uncertainty: np.ndarray,
-    corr_mat: np.ndarray,
-    prefit: bool = True,
+    fit_results: Optional[fit.FitResults] = None,
     method: str = "matplotlib",
 ) -> None:
     """Draws a data/MC histogram.
@@ -117,11 +115,9 @@ def data_MC(
         config (Dict[str, Any]): cabinetry configuration
         figure_folder (Union[str, pathlib.Path]): path to the folder to save figures in
         spec (Dict[str, Any]): ``pyhf`` workspace specification
-        bestfit (np.ndarray): best-fit parameter values
-        uncertainty (np.ndarray): parameter uncertainties
-        corr_mat (np.ndarray): correlation matrix
-        prefit (bool, optional): draws the pre-fit model if True, else post-fit,
-            defaults to True
+        fit_results (Optional[fit.FitResults]): parameter configuration to use for plot,
+            includes best-fit settings and uncertainties, as well as correlation matrix,
+            defaults to None (then the pre-fit configuration is drawn)
         method (str, optional): what backend to use for plotting, defaults to "matplotlib"
 
     Raises:
@@ -136,19 +132,23 @@ def data_MC(
         }
     )
 
-    asimov_pars, pre_fit_unc = model_utils.get_asimov_parameters(model)
+    if fit_results:
+        # fit results specified, draw a post-fit plot with them applied
+        prefit = False
+        param_values = fit_results.bestfit
+        param_uncertainty = fit_results.uncertainty
+        corr_mat = fit_results.corr_mat
 
-    if prefit:
-        # override post-fit quantities by pre-fit settings
-        bestfit = np.asarray(
-            asimov_pars
-        )  # the np.asarray is due to https://github.com/scikit-hep/pyhf/issues/1027
-        uncertainty = np.asarray(pre_fit_unc)
-        corr_mat = np.zeros(shape=(len(bestfit), len(bestfit)))
+    else:
+        # no fit results specified, draw a pre-fit plot
+        prefit = True
+        # use pre-fit parameter values and uncertainties, and diagonal correlation matrix
+        param_values, param_uncertainty = model_utils.get_asimov_parameters(model)
+        corr_mat = np.zeros(shape=(len(param_values), len(param_values)))
         np.fill_diagonal(corr_mat, 1.0)
 
     yields_combined = model.main_model.expected_data(
-        bestfit, return_by_sample=True
+        param_values, return_by_sample=True
     )  # all channels concatenated
     data_combined = workspace.data(model, with_aux=False)
 
@@ -161,7 +161,9 @@ def data_MC(
     data = np.split(data_combined, region_split_indices)  # data just indexed by channel
 
     # calculate the total standard deviation of the model prediction, index: channel
-    total_stdev_model = calculate_stdev(model, bestfit, uncertainty, corr_mat)
+    total_stdev_model = calculate_stdev(
+        model, param_values, param_uncertainty, corr_mat
+    )
 
     for i_chan, channel_name in enumerate(
         model.config.channels

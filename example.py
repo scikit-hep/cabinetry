@@ -38,11 +38,11 @@ if __name__ == "__main__":
 
     # run a fit
     ws = cabinetry.workspace.load(workspace_path)
-    bestfit, uncertainty, labels, _, corr_mat = cabinetry.fit.fit(ws)
+    fit_results = cabinetry.fit.fit(ws)
 
     # visualize pulls and correlation matrix
-    cabinetry.visualize.pulls(bestfit, uncertainty, labels, figure_folder)
-    cabinetry.visualize.correlation_matrix(corr_mat, labels, figure_folder)
+    cabinetry.visualize.pulls(fit_results, figure_folder)
+    cabinetry.visualize.correlation_matrix(fit_results, figure_folder)
 
     # visualize templates and data
     cabinetry.visualize.data_MC(cabinetry_config, figure_folder, prefit=True)
