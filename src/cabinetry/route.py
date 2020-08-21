@@ -6,7 +6,9 @@ import boost_histogram as bh
 
 from . import configuration
 
+
 log = logging.getLogger(__name__)
+
 
 # type of a function processing templates, takes sample-region-systematic-template,
 # returns None

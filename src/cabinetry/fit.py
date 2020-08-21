@@ -7,6 +7,7 @@ import pyhf
 
 from . import model_utils
 
+
 log = logging.getLogger(__name__)
 
 

@@ -45,4 +45,4 @@ if __name__ == "__main__":
     cabinetry.visualize.correlation_matrix(fit_results, figure_folder)
 
     # visualize templates and data
-    cabinetry.visualize.data_MC(cabinetry_config, figure_folder, prefit=True)
+    cabinetry.visualize.data_MC_from_histograms(cabinetry_config, figure_folder)
