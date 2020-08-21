@@ -13,7 +13,7 @@ def test_get_parameter_names(example_spec):
 def test_get_asimov_parameters(example_spec):
     model = pyhf.Workspace(example_spec).model()
     pars, unc = model_utils.get_asimov_parameters(model)
-    assert pars == [1.0, 1.0]
+    assert np.allclose(pars, [1.0, 1.0])
     assert np.allclose(unc, [0.0495665682, 0.0])
 
     spec = {
@@ -52,5 +52,5 @@ def test_get_asimov_parameters(example_spec):
 
     model = pyhf.Workspace(spec).model()
     pars, unc = model_utils.get_asimov_parameters(model)
-    assert pars == [1.0, 1.0, 1.0]
-    assert unc == [0.0, 0.0, 0.0]
+    assert np.allclose(pars, [1.0, 1.0, 1.0])
+    assert np.allclose(unc, [0.0, 0.0, 0.0])
