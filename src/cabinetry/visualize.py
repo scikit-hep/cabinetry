@@ -79,7 +79,7 @@ def data_MC_from_histograms(
                 {
                     "label": sample["Name"],
                     "isData": is_data,
-                    "hist": {"bins": histogram.bins, "yields": histogram.yields},
+                    "hist": {"yields": histogram.yields},
                     "variable": region["Variable"],
                 }
             )
@@ -88,13 +88,14 @@ def data_MC_from_histograms(
 
         figure_name = _build_figure_name(region["Name"], True)
         total_model_unc = _total_yield_uncertainty(model_stdevs)
+        bin_edges = histogram.bins
 
         if method == "matplotlib":
             from .contrib import matplotlib_visualize
 
             figure_path = pathlib.Path(figure_folder) / figure_name
             matplotlib_visualize.data_MC(
-                histogram_dict_list, total_model_unc, figure_path
+                histogram_dict_list, total_model_unc, bin_edges, figure_path
             )
         else:
             raise NotImplementedError(f"unknown backend: {method}")
@@ -170,7 +171,7 @@ def data_MC(
 
         # get the region dictionary from the config for binning / variable name
         region_dict = configuration.get_region_dict(config, channel_name)
-        bins = template_builder._get_binning(region_dict)
+        bin_edges = template_builder._get_binning(region_dict)
         variable = region_dict["Variable"]
 
         for i_sam, sample_name in enumerate(model.config.samples):
@@ -178,7 +179,7 @@ def data_MC(
                 {
                     "label": sample_name,
                     "isData": False,
-                    "hist": {"bins": bins, "yields": model_yields[i_chan][i_sam]},
+                    "hist": {"yields": model_yields[i_chan][i_sam]},
                     "variable": variable,
                 }
             )
@@ -188,7 +189,7 @@ def data_MC(
             {
                 "label": "Data",
                 "isData": True,
-                "hist": {"bins": bins, "yields": data[i_chan]},
+                "hist": {"yields": data[i_chan]},
                 "variable": variable,
             }
         )
@@ -205,7 +206,10 @@ def data_MC(
                     channel_name + "_postfit.pdf"
                 )
             matplotlib_visualize.data_MC(
-                histogram_dict_list, np.asarray(total_stdev_model[i_chan]), figure_path,
+                histogram_dict_list,
+                np.asarray(total_stdev_model[i_chan]),
+                bin_edges,
+                figure_path,
             )
         else:
             raise NotImplementedError(f"unknown backend: {method}")

@@ -14,6 +14,7 @@ log = logging.getLogger(__name__)
 def data_MC(
     histogram_dict_list: List[Dict[str, Any]],
     total_model_unc: np.ndarray,
+    bin_edges: np.ndarray,
     figure_path: pathlib.Path,
 ) -> None:
     """Draws a data/MC histogram with uncertainty bands and ratio panel.
@@ -24,6 +25,7 @@ def data_MC(
         total_model_unc (np.ndarray): total model uncertainty, if specified
             this is used instead of calculating it via sum in quadrature,
             defaults to None
+        bin_edges (np.ndarray): bin edges of histogram
         figure_path (pathlib.Path): path where figure should be saved
     """
     mc_histograms_yields = []
@@ -72,9 +74,8 @@ def data_MC(
 
     # plot MC stacked together
     total_yield = np.zeros_like(mc_histograms_yields[0])
-    bins = histogram_dict_list[0]["hist"]["bins"]
-    bin_right_edges = bins[1:]
-    bin_left_edges = bins[:-1]
+    bin_right_edges = bin_edges[1:]
+    bin_left_edges = bin_edges[:-1]
     bin_width = bin_right_edges - bin_left_edges
     bin_centers = 0.5 * (bin_left_edges + bin_right_edges)
     for i_sample, mc_sample_yield in enumerate(mc_histograms_yields):
@@ -87,7 +88,7 @@ def data_MC(
         )
 
         # add a black line on top of each sample
-        line_x = [y for y in bins for _ in range(2)][1:-1]
+        line_x = [y for y in bin_edges for _ in range(2)][1:-1]
         line_y = [y for y in (mc_sample_yield + total_yield) for _ in range(2)]
         ax1.plot(line_x, line_y, "-", color="black", linewidth=0.5)
 
