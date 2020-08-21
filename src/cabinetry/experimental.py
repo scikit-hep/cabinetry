@@ -2,7 +2,6 @@ import logging
 import pathlib
 from typing import Any, Dict, Optional, Union
 
-import awkward1 as ak
 import numpy as np
 import pyhf
 
@@ -12,94 +11,6 @@ from . import model_utils
 from . import template_builder
 
 log = logging.getLogger(__name__)
-
-
-def calculate_stdev(
-    model: pyhf.pdf.Model,
-    parameters: np.ndarray,
-    uncertainty: np.ndarray,
-    corr_mat: np.ndarray,
-) -> ak.highlevel.Array:
-    """Calculate the yield standard deviation of a model.
-
-    Args:
-        model (pyhf.pdf.Model): the model for which to calculate the standard
-            deviations for all bins
-        parameters (np.ndarray): central values of model parameters
-        uncertainty (np.ndarray): uncertainty of model parameters
-        corr_mat (np.ndarray): correlation matrix
-
-    Returns:
-        ak.highlevel.Array: array of channels, each channel
-        is an array of standard deviations per bin
-    """
-    # indices where to split to separate all bins into regions
-    region_split_indices = [
-        model.config.channel_nbins[chan] for chan in model.config.channels
-    ][
-        :-1
-    ]  # last index dropped since no extra split is needed after the last bin
-
-    # the lists up_variations and down_variations will contain the model distributions
-    # with all parameters varied individually within uncertainties
-    # indices: variation, channel, bin
-    up_variations = []
-    down_variations = []
-
-    # get the model for every parameter varied up and down
-    # within the respective uncertainties
-    for i_par in range(model.config.npars):
-        # best-fit parameter values, but one parameter varied within uncertainties
-        up_pars = parameters.copy()
-        up_pars[i_par] += uncertainty[i_par]
-        down_pars = parameters.copy()
-        down_pars[i_par] -= uncertainty[i_par]
-
-        # total model distribution with this parameter varied up
-        up_combined = model.expected_data(up_pars, include_auxdata=False)
-        up_yields = np.split(up_combined, region_split_indices)
-        up_variations.append(up_yields)
-
-        # total model distribution with this parameter varied down
-        down_combined = model.expected_data(down_pars, include_auxdata=False)
-        down_yields = np.split(down_combined, region_split_indices)
-        down_variations.append(down_yields)
-
-    # convert to awkward arrays for further processing
-    up_variations = ak.from_iter(up_variations)
-    down_variations = ak.from_iter(down_variations)
-
-    # total variance, indices are: channel, bins
-    total_variance_list = [
-        np.zeros(shape=(model.config.channel_nbins[chan]))
-        for chan in model.config.channels
-    ]  # list of arrays, each array has as many entries as there are bins
-    total_variance = ak.from_iter(total_variance_list)
-
-    # loop over parameters to sum up total variance
-    # first do the diagonal of the correlation matrix
-    for i_par in range(model.config.npars):
-        symmetric_uncertainty = (up_variations[i_par] - down_variations[i_par]) / 2
-        total_variance = total_variance + symmetric_uncertainty ** 2
-
-    # off-diagonal contributions
-    # could optimize here: no need to loop over staterrors, since they
-    # contribute nothing (bin effects are orthogonal)
-    for i_par in range(model.config.npars):
-        for j_par in range(model.config.npars):
-            if i_par == j_par:
-                continue
-            corr = corr_mat[i_par, j_par]
-            if corr == 0:
-                continue
-            sym_unc_i = (up_variations[i_par] - down_variations[i_par]) / 2
-            sym_unc_j = (up_variations[j_par] - down_variations[j_par]) / 2
-            total_variance = total_variance + (corr * sym_unc_i * sym_unc_j)
-
-    # convert to standard deviation
-    total_stdev = np.sqrt(total_variance)
-    log.debug(f"total stdev is {total_stdev}")
-    return total_stdev
 
 
 def data_MC(
@@ -161,7 +72,7 @@ def data_MC(
     data = np.split(data_combined, region_split_indices)  # data just indexed by channel
 
     # calculate the total standard deviation of the model prediction, index: channel
-    total_stdev_model = calculate_stdev(
+    total_stdev_model = model_utils.calculate_stdev(
         model, param_values, param_uncertainty, corr_mat
     )
 
