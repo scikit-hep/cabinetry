@@ -1,3 +1,4 @@
+import awkward1 as ak
 import numpy as np
 import pyhf
 
@@ -54,3 +55,41 @@ def test_get_asimov_parameters(example_spec):
     pars, unc = model_utils.get_asimov_parameters(model)
     assert np.allclose(pars, [1.0, 1.0, 1.0])
     assert np.allclose(unc, [0.0, 0.0, 0.0])
+
+
+def test_calculate_stdev(example_spec, example_spec_multibin):
+    model = pyhf.Workspace(example_spec).model()
+    parameters = np.asarray([1.05, 0.95])
+    uncertainty = np.asarray([0.1, 0.1])
+    corr_mat = np.asarray([[1.0, 0.2], [0.2, 1.0]])
+
+    total_stdev = model_utils.calculate_stdev(model, parameters, uncertainty, corr_mat)
+    expected_stdev = [[8.03767016]]
+    assert np.allclose(ak.to_list(total_stdev), expected_stdev)
+
+    # pre-fit
+    parameters = np.asarray([1.0, 1.0])
+    uncertainty = np.asarray([0.0495665682, 0.0])
+    diag_corr_mat = np.diag([1.0, 1.0])
+    total_stdev = model_utils.calculate_stdev(
+        model, parameters, uncertainty, diag_corr_mat
+    )
+    expected_stdev = [[2.56951880]]  # the staterror
+    assert np.allclose(ak.to_list(total_stdev), expected_stdev)
+
+    # multiple channels, bins, staterrors
+    model = pyhf.Workspace(example_spec_multibin).model()
+    parameters = np.asarray([0.9, 1.05, 1.3, 0.95])
+    uncertainty = np.asarray([0.1, 0.05, 0.3, 0.1])
+    corr_mat = np.asarray(
+        [
+            [1.0, 0.1, 0.2, 0.1],
+            [0.1, 1.0, 0.2, 0.3],
+            [0.2, 0.2, 1.0, 0.3],
+            [0.1, 0.3, 0.3, 1.0],
+        ]
+    )
+    total_stdev = model_utils.calculate_stdev(model, parameters, uncertainty, corr_mat)
+    expected_stdev = [[8.056054, 1.670629], [2.775377]]
+    for i_reg in range(2):
+        assert np.allclose(ak.to_list(total_stdev[i_reg]), expected_stdev[i_reg])

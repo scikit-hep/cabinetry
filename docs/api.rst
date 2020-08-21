@@ -62,6 +62,13 @@ cabinetry.visualize
    :members:
 
 
+cabinetry.model_utils
+---------------------
+
+.. automodule:: cabinetry.model_utils
+   :members:
+
+
 cabinetry.contrib
 -----------------
 
