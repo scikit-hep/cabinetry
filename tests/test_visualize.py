@@ -49,7 +49,7 @@ def test_data_MC_from_histograms(mock_load, mock_draw, mock_stdev, tmp_path):
     config = {
         "General": {"HistogramFolder": tmp_path},
         "Regions": [{"Name": "reg_1", "Variable": "x"}],
-        "Samples": [{"Name": "sample_1"}],
+        "Samples": [{"Name": "sample_1"}, {"Name": "data", "Data": True}],
     }
 
     visualize.data_MC_from_histograms(config, tmp_path, method="matplotlib")
@@ -65,7 +65,16 @@ def test_data_MC_from_histograms(mock_load, mock_draw, mock_stdev, tmp_path):
                 {"Name": "nominal"},
             ),
             {"modified": True},
-        )
+        ),
+        (
+            (
+                tmp_path,
+                {"Name": "reg_1", "Variable": "x"},
+                {"Name": "data", "Data": True},
+                {"Name": "nominal"},
+            ),
+            {"modified": True},
+        ),
     ]
     assert mock_stdev.call_args_list == [(([[0.1]],), {})]
     assert mock_draw.call_args_list == [
@@ -75,6 +84,12 @@ def test_data_MC_from_histograms(mock_load, mock_draw, mock_stdev, tmp_path):
                     {
                         "label": "sample_1",
                         "isData": False,
+                        "hist": {"bins": [0.0, 1.0], "yields": [1.0], "stdev": [0.1]},
+                        "variable": "x",
+                    },
+                    {
+                        "label": "data",
+                        "isData": True,
                         "hist": {"bins": [0.0, 1.0], "yields": [1.0], "stdev": [0.1]},
                         "variable": "x",
                     },
