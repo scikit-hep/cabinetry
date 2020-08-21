@@ -84,11 +84,11 @@ def fit(ws_path: str, pulls: bool, corrmat: bool, figfolder: str) -> None:
     """
     _set_logging()
     ws = cabinetry_workspace.load(ws_path)
-    bestfit, uncertainty, labels, _, corr_mat = cabinetry_fit.fit(ws)
+    fit_results = cabinetry_fit.fit(ws)
     if pulls:
-        cabinetry_visualize.pulls(bestfit, uncertainty, labels, figfolder)
+        cabinetry_visualize.pulls(fit_results, figfolder)
     if corrmat:
-        cabinetry_visualize.correlation_matrix(corr_mat, labels, figfolder)
+        cabinetry_visualize.correlation_matrix(fit_results, figfolder)
 
 
 cabinetry.add_command(templates)
