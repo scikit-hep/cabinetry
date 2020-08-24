@@ -62,3 +62,27 @@ def test_pulls(figure_extension, tmp_path):
     labels = np.asarray(["a", "b", "c"])
     matplotlib_visualize.pulls(bestfit, uncertainty, labels, fname)
     assert compare_images("tests/contrib/reference/pulls.pdf", str(fname), 0) is None
+
+
+@pytest.mark.parametrize("figure_extension", ["fig.pdf", "subdir/fig.pdf"])
+def test_ranking(figure_extension, tmp_path):
+    fname = tmp_path / figure_extension
+    bestfit = np.asarray([0.3, -0.1])
+    uncertainty = np.asarray([0.8, 1.0])
+    labels = np.asarray(["jet energy scale", "modeling uncertainty"])
+    impact_prefit_up = np.asarray([0.5, 0.3])
+    impact_prefit_down = np.asarray([-0.4, -0.3])
+    impact_postfit_up = np.asarray([0.4, 0.25])
+    impact_postfit_down = np.asarray([-0.3, -0.25])
+
+    matplotlib_visualize.ranking(
+        bestfit,
+        uncertainty,
+        labels,
+        impact_prefit_up,
+        impact_prefit_down,
+        impact_postfit_up,
+        impact_postfit_down,
+        fname,
+    )
+    assert compare_images("tests/contrib/reference/ranking.pdf", str(fname), 0) is None
