@@ -290,8 +290,6 @@ def ranking(
     ):
         item.set_fontsize("large")
 
-    y_pos = np.arange(num_pars)[::-1]
-
     # lines through pulls of -1, 0, 1 for orientation
     # line does not go all the way up to the top x-axis, since it
     # belongs to the bottom x-axis
@@ -304,6 +302,8 @@ def ranking(
     ax_pulls.vlines(
         1, -1, num_pars - 0.5, linestyles="dashed", color="black", linewidth=0.75
     )
+
+    y_pos = np.arange(num_pars)[::-1]
 
     pre_up = ax_impact.barh(
         y_pos, impact_prefit_up, fill=False, linewidth=1, edgecolor="C0",
