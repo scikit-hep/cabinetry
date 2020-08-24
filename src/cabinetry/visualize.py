@@ -228,7 +228,7 @@ def ranking(
     impact_postfit_down = impact_postfit_down[sorted_indices]
 
     if max_pars:
-        # only plot leading parameters in ranking
+        # only keep leading parameters in ranking
         bestfit = bestfit[:max_pars]
         uncertainty = uncertainty[:max_pars]
         labels = labels[:max_pars]
