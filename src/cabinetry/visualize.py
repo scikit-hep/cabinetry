@@ -203,13 +203,13 @@ def ranking(
     """
     figure_path = pathlib.Path(figure_folder) / "ranking.pdf"
 
-    # need to remove the POI results from bestfit / uncertainty
+    # remove the POI results from bestfit, uncertainty, labels
     bestfit = np.delete(bestfit, poi_index)
     uncertainty = np.delete(uncertainty, poi_index)
     labels = np.delete(labels, poi_index)
 
     # normalize staterrors - subtract 1
-    # should also normalize width of staterrors here
+    # could also normalize width of staterrors here
     for i_par, label in enumerate(labels):
         if "staterror_" in label:
             bestfit[i_par] -= 1
@@ -218,14 +218,14 @@ def ranking(
     avg_postfit_impact = (np.abs(impact_postfit_up) + np.abs(impact_postfit_down)) / 2
 
     # get indices to sort by decreasing impact
-    idx = np.argsort(avg_postfit_impact)[::-1]
-    bestfit = bestfit[idx]
-    uncertainty = uncertainty[idx]
-    labels = labels[idx]
-    impact_prefit_up = impact_prefit_up[idx]
-    impact_prefit_down = impact_prefit_down[idx]
-    impact_postfit_up = impact_postfit_up[idx]
-    impact_postfit_down = impact_postfit_down[idx]
+    sorted_indices = np.argsort(avg_postfit_impact)[::-1]
+    bestfit = bestfit[sorted_indices]
+    uncertainty = uncertainty[sorted_indices]
+    labels = labels[sorted_indices]
+    impact_prefit_up = impact_prefit_up[sorted_indices]
+    impact_prefit_down = impact_prefit_down[sorted_indices]
+    impact_postfit_up = impact_postfit_up[sorted_indices]
+    impact_postfit_down = impact_postfit_down[sorted_indices]
 
     if max_pars:
         # only plot leading parameters in ranking
