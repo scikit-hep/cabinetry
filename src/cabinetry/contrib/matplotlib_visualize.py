@@ -274,7 +274,7 @@ def ranking(
     num_pars = len(bestfit)
 
     mpl.style.use("seaborn-colorblind")
-    fig, ax_pulls = plt.subplots(figsize=(8, 3 + num_pars * 0.4), dpi=100)
+    fig, ax_pulls = plt.subplots(figsize=(8, 2.5 + num_pars * 0.45), dpi=100)
     ax_impact = ax_pulls.twiny()  # second x-axis with shared y-axis, used for pulls
 
     # since pull axis is below impact axis, flip them so pulls show up on top
@@ -305,30 +305,16 @@ def ranking(
         1, -1, num_pars - 0.5, linestyles="dashed", color="black", linewidth=0.75
     )
 
-    ax_impact.barh(
-        y_pos,
-        impact_prefit_up,
-        label="pre-fit impact up",
-        fill=False,
-        linewidth=1,
-        edgecolor="C0",
+    pre_up = ax_impact.barh(
+        y_pos, impact_prefit_up, fill=False, linewidth=1, edgecolor="C0",
     )  # pre-fit up
-    ax_impact.barh(
-        y_pos,
-        impact_prefit_down,
-        label="pre-fit impact down",
-        fill=False,
-        linewidth=1,
-        edgecolor="C5",
+    pre_down = ax_impact.barh(
+        y_pos, impact_prefit_down, fill=False, linewidth=1, edgecolor="C5",
     )  # pre-fit down
-    ax_impact.barh(
-        y_pos, impact_postfit_up, label="post-fit impact up", color="C0",
-    )  # post-fit up
-    ax_impact.barh(
-        y_pos, impact_postfit_down, label="post-fit impact down", color="C5",
-    )  # post-fit down
-    ax_pulls.errorbar(
-        bestfit, y_pos, xerr=uncertainty, label="pulls", fmt="o", color="k"
+    post_up = ax_impact.barh(y_pos, impact_postfit_up, color="C0")  # post-fit up
+    post_down = ax_impact.barh(y_pos, impact_postfit_down, color="C5")  # post-fit down
+    pulls = ax_pulls.errorbar(
+        bestfit, y_pos, xerr=uncertainty, fmt="o", color="k"
     )  # nuisance parameter pulls
 
     ax_pulls.set_xlabel(r"$\left(\hat{\theta} - \theta_0\right) / \Delta \theta$")
@@ -351,8 +337,21 @@ def ranking(
     ax_pulls.tick_params(direction="in", which="both")
     ax_impact.tick_params(direction="in", which="both")
 
-    fig.legend(frameon=False, loc="upper left", ncol=2, fontsize="large")
-    leg_space = 0.05 + 0.15 / num_pars
+    fig.legend(
+        (pre_up, pre_down, post_up, post_down, pulls),
+        (
+            r"pre-fit impact: $\theta = \hat{\theta} + \Delta \theta$",
+            r"pre-fit impact: $\theta = \hat{\theta} - \Delta \theta$",
+            r"post-fit impact: $\theta = \hat{\theta} + \Delta \hat{\theta}$",
+            r"post-fit impact: $\theta = \hat{\theta} - \Delta \hat{\theta}$",
+            "pulls",
+        ),
+        frameon=False,
+        loc="upper left",
+        ncol=3,
+        fontsize="large",
+    )
+    leg_space = 1.0 / (num_pars + 3) + 0.03
     fig.tight_layout(rect=[0, 0, 1.0, 1 - leg_space])  # make space for legend on top
 
     if not os.path.exists(figure_path.parent):
