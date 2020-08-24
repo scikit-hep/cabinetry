@@ -170,3 +170,83 @@ def test_pulls(mock_draw):
             exclude_list=exclude_list,
             method="unknown",
         )
+
+
+@mock.patch("cabinetry.contrib.matplotlib_visualize.ranking")
+def test_ranking(mock_draw):
+    bestfit = np.asarray([1.2, 0.1, 0.9])
+    uncertainty = np.asarray([0.2, 0.8, 0.5])
+    labels = ["staterror_a", "modeling", "mu"]
+    impact_prefit_up = np.asarray([0.1, 0.5])
+    impact_prefit_down = np.asarray([-0.2, -0.4])
+    impact_postfit_up = np.asarray([0.1, 0.4])
+    impact_postfit_down = np.asarray([-0.2, -0.3])
+    poi_index = 2
+    folder_path = "tmp"
+
+    figure_path = pathlib.Path(folder_path) / "ranking.pdf"
+    bestfit_expected = np.asarray([0.1, 0.2])
+    uncertainty_expected = np.asarray([0.8, 0.2])
+    labels_expected = ["modeling", "staterror_a"]
+
+    visualize.ranking(
+        bestfit,
+        uncertainty,
+        labels,
+        impact_prefit_up,
+        impact_prefit_down,
+        impact_postfit_up,
+        impact_postfit_down,
+        poi_index,
+        folder_path,
+    )
+    assert mock_draw.call_count == 1
+    assert np.allclose(mock_draw.call_args[0][0], bestfit_expected)
+    assert np.allclose(mock_draw.call_args[0][1], uncertainty_expected)
+    for i_lab, label in enumerate(mock_draw.call_args[0][2]):
+        assert label == labels_expected[i_lab]
+    assert np.allclose(mock_draw.call_args[0][3], impact_prefit_up[::-1])
+    assert np.allclose(mock_draw.call_args[0][4], impact_prefit_down[::-1])
+    assert np.allclose(mock_draw.call_args[0][5], impact_postfit_up[::-1])
+    assert np.allclose(mock_draw.call_args[0][6], impact_postfit_down[::-1])
+    assert mock_draw.call_args[0][7] == figure_path
+    assert mock_draw.call_args[1] == {}
+
+    # maximum parameter amount specified
+    visualize.ranking(
+        bestfit,
+        uncertainty,
+        labels,
+        impact_prefit_up,
+        impact_prefit_down,
+        impact_postfit_up,
+        impact_postfit_down,
+        poi_index,
+        folder_path,
+        max_pars=1,
+    )
+    assert mock_draw.call_count == 2
+    assert np.allclose(mock_draw.call_args[0][0], bestfit_expected[0])
+    assert np.allclose(mock_draw.call_args[0][1], uncertainty_expected[0])
+    assert mock_draw.call_args[0][2] == labels_expected[0]
+    assert np.allclose(mock_draw.call_args[0][3], impact_prefit_up[1])
+    assert np.allclose(mock_draw.call_args[0][4], impact_prefit_down[1])
+    assert np.allclose(mock_draw.call_args[0][5], impact_postfit_up[1])
+    assert np.allclose(mock_draw.call_args[0][6], impact_postfit_down[1])
+    assert mock_draw.call_args[0][7] == figure_path
+    assert mock_draw.call_args[1] == {}
+
+    # unknown plotting method
+    with pytest.raises(NotImplementedError, match="unknown backend: unknown"):
+        visualize.ranking(
+            bestfit,
+            uncertainty,
+            labels,
+            impact_prefit_up,
+            impact_prefit_down,
+            impact_postfit_up,
+            impact_postfit_down,
+            poi_index,
+            folder_path,
+            method="unknown",
+        )
