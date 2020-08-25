@@ -16,18 +16,18 @@ def test_read(mock_validation):
 
 def test_validate():
     config_valid = {
-        "General": {"Measurement": "", "POI": "", "HistogramFolder": ""},
+        "General": {"Measurement": "", "POI": "", "HistogramFolder": "", "Path": ""},
         "Regions": [{"Name": "", "Filter": "", "Variable": "", "Binning": [0, 1]}],
-        "Samples": [{"Name": "", "Path": "", "Tree": "", "Data": True}],
+        "Samples": [{"Name": "", "Tree": "", "Data": True}],
         "NormFactors": [{"Name": "", "Samples": ""}],
     }
     assert configuration.validate(config_valid)
 
     # not exactly one data sample
     config_multiple_data_samples = {
-        "General": {"Measurement": "", "POI": "", "HistogramFolder": ""},
+        "General": {"Measurement": "", "POI": "", "HistogramFolder": "", "Path": ""},
         "Regions": [{"Name": "", "Filter": "", "Variable": "", "Binning": [0, 1]}],
-        "Samples": [{"Name": "", "Path": "", "Tree": ""}],
+        "Samples": [{"Name": "", "Tree": ""}],
         "NormFactors": [{"Name": "", "Samples": ""}],
     }
     with pytest.raises(
