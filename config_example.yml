@@ -2,6 +2,7 @@ General:
   Measurement: "minimal_example"
   POI: "Signal_norm"
   HistogramFolder: "histograms/"
+  Path: "ntuples/{SamplePath}"
 
 Regions:
   - Name: "Signal_region"
@@ -12,17 +13,17 @@ Regions:
 Samples:
   - Name: "Data"
     Tree: "pseudodata"
-    Path: "ntuples/data.root"
+    SamplePath: "data.root"
     Data: True
 
   - Name: "Background"
     Tree: "background"
-    Path: "ntuples/prediction.root"
+    SamplePath: "prediction.root"
     Weight: "weight"
 
   - Name: "Signal"
     Tree: "signal"
-    Path: "ntuples/prediction.root"
+    SamplePath: "prediction.root"
     Weight: "weight"
 
 Systematics:
@@ -36,7 +37,7 @@ Systematics:
 
   - Name: "Modeling"
     Up:
-      Path: "ntuples/prediction.root"
+      SamplePath: "prediction.root"
       Tree: "background_varied"
     Down:
       Symmetrize: True
