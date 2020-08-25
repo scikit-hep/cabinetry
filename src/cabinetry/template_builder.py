@@ -32,16 +32,23 @@ def _check_for_override(
 
 
 def _get_ntuple_path(
+    general_path: str,
     region: Dict[str, Any],
     sample: Dict[str, Any],
     systematic: Dict[str, Any],
     template: str,
 ) -> pathlib.Path:
-    """determine the path to ntuples from which a histogram has to be built
-    for non-nominal templates, override the nominal path if an alternative is
-    specified for the template
+    """Returns the path to ntuples for a region-sample-systematic-template.
+
+    The path is built starting from the path specified in the general options
+    in the configuration file. This path can contain placeholders for region-
+    and sample-specific overrides, via ``{Region}`` and ``{Sample}``. For
+    non-nominal templates, it is possible to override the sample path if the
+    ``SamplePath`` option is specified for the template.
 
     Args:
+        general_path (str): path specified in general settings, with sections
+            that can be overridden by region / sample settings
         region (Dict[str, Any]): containing all region information
         sample (Dict[str, Any]): containing all sample information
         systematic (Dict[str, Any]): containing all systematic information
@@ -50,14 +57,38 @@ def _get_ntuple_path(
     Returns:
         pathlib.Path: path where the ntuples are located
     """
-    path_str = sample["Path"]
-    # check whether a systematic is being processed
+    # obtain region and sample paths, if they are defined
+    region_path = region.get("RegionPath", None)
+    sample_path = sample.get("SamplePath", None)
+
+    # check whether a systematic is being processed, and whether overrides exist
     if systematic.get("Name", "nominal") != "nominal":
         # determine whether the template has an override specified
-        path_str_override = _check_for_override(systematic, template, "Path")
-        if path_str_override is not None:
-            path_str = path_str_override
-    path = pathlib.Path(path_str)
+        sample_override = _check_for_override(systematic, template, "SamplePath")
+        if sample_override is not None:
+            sample_path = sample_override
+
+    region_template_exists = "{RegionPath}" in general_path
+    if region_path is not None:
+        if not region_template_exists:
+            log.warning(
+                "region override specified, but {RegionPath} not found in default path"
+            )
+        general_path = general_path.replace("{RegionPath}", region_path)
+    elif region_template_exists:
+        raise ValueError(f"no path setting found for region {region['Name']}")
+
+    sample_template_exists = "{SamplePath}" in general_path
+    if sample_path is not None:
+        if not sample_template_exists:
+            log.warning(
+                "sample override specified, but {SamplePath} not found in default path"
+            )
+        general_path = general_path.replace("{SamplePath}", sample_path)
+    elif sample_template_exists:
+        raise ValueError(f"no path setting found for sample {sample['Name']}")
+
+    path = pathlib.Path(general_path)
     return path
 
 
@@ -179,17 +210,21 @@ def _get_binning(region: Dict[str, Any]) -> np.ndarray:
 
 
 class _Builder:
-    """class to handle the instructions for backends to create histograms
+    """Handles the instructions for backends to create histograms.
     """
 
-    def __init__(self, histogram_folder: pathlib.Path, method: str) -> None:
-        """create an instance, set folder and method
+    def __init__(
+        self, histogram_folder: pathlib.Path, general_path: str, method: str
+    ) -> None:
+        """Creates an instance, sets histogram folder, path template and method.
 
         Args:
             histogram_folder (pathlib.Path): folder to save the histograms to
+            general_path (str): template for paths to input files for histogram building
             method (str): backend to use for histogram production
         """
         self.histogram_folder = histogram_folder
+        self.general_path = general_path
         self.method = method
 
     def _create_histogram(
@@ -211,7 +246,9 @@ class _Builder:
         Raises:
             NotImplementedError: when requesting an unknown backend
         """
-        ntuple_path = _get_ntuple_path(region, sample, systematic, template)
+        ntuple_path = _get_ntuple_path(
+            self.general_path, region, sample, systematic, template
+        )
         pos_in_file = _get_position_in_file(sample, systematic, template)
         variable = _get_variable(region)
         bins = _get_binning(region)
@@ -327,7 +364,8 @@ def create_histograms(
     """
     # create an instance of the class doing the template building
     histogram_folder = pathlib.Path(config["General"]["HistogramFolder"])
-    builder = _Builder(histogram_folder, method=method)
+    general_path = config["General"]["Path"]
+    builder = _Builder(histogram_folder, general_path, method)
 
     match_func: Optional[route.MatchFunc] = None
     if router is not None:

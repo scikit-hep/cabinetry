@@ -52,7 +52,7 @@
             "$$target": "#/definitions/general",
             "description": "general settings",
             "type": "object",
-            "required": ["Measurement", "POI", "HistogramFolder"],
+            "required": ["Measurement", "POI", "HistogramFolder", "Path"],
             "properties": {
                 "Measurement": {
                     "description": "name of measurement",
@@ -64,6 +64,10 @@
                 },
                 "HistogramFolder": {
                     "description": "folder to save histograms to and read histograms from",
+                    "type": "string"
+                },
+                "Path": {
+                    "description": "path to input ntuples",
                     "type": "string"
                 },
                 "Fixed": {
@@ -119,6 +123,10 @@
                         "type": "number"
                     },
                     "uniqueItems": true
+                },
+                "RegionPath": {
+                    "description": "(part of) path to file containing region",
+                    "type": "string"
                 }
             },
             "additionalProperties": false
@@ -128,14 +136,10 @@
             "description": "a sample of a specific process or data",
             "$$target": "#/definitions/sample",
             "type": "object",
-            "required": ["Name", "Path", "Tree"],
+            "required": ["Name", "Tree"],
             "properties": {
                 "Name": {
                     "description": "name of the sample",
-                    "type": "string"
-                },
-                "Path": {
-                    "description": "path to file containing sample",
                     "type": "string"
                 },
                 "Tree": {
@@ -144,6 +148,10 @@
                 },
                 "Weight": {
                     "description": "weight to apply to events",
+                    "type": "string"
+                },
+                "SamplePath": {
+                    "description": "(part of) path to file containing sample",
                     "type": "string"
                 },
                 "Data": {
@@ -219,8 +227,8 @@
             "description": "a systematics template (up/down)",
             "type": "object",
             "properties": {
-                "Path": {
-                    "description": "path to file",
+                "SamplePath": {
+                    "description": "(part of) path to file containing template, override for sample path",
                     "type": "string"
                 },
                 "Tree": {
