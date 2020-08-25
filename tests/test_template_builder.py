@@ -294,7 +294,7 @@ def test__Builder__wrap_custom_template_builder(mock_save):
 
 
 def test_create_histograms():
-    config = {"General": {"HistogramFolder": "path/", "Path": "file.root"}}
+    config = {"General": {"HistogramFolder": "path/", "InputPath": "file.root"}}
     method = "uproot"
 
     # no router

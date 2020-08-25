@@ -52,7 +52,7 @@
             "$$target": "#/definitions/general",
             "description": "general settings",
             "type": "object",
-            "required": ["Measurement", "POI", "HistogramFolder", "Path"],
+            "required": ["Measurement", "POI", "InputPath", "HistogramFolder"],
             "properties": {
                 "Measurement": {
                     "description": "name of measurement",
@@ -62,12 +62,12 @@
                     "description": "name of parameter of interest",
                     "type": "string"
                 },
-                "HistogramFolder": {
-                    "description": "folder to save histograms to and read histograms from",
+                "InputPath": {
+                    "description": "path to input ntuples",
                     "type": "string"
                 },
-                "Path": {
-                    "description": "path to input ntuples",
+                "HistogramFolder": {
+                    "description": "folder to save histograms to and read histograms from",
                     "type": "string"
                 },
                 "Fixed": {

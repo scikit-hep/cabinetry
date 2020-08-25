@@ -16,7 +16,12 @@ def test_read(mock_validation):
 
 def test_validate():
     config_valid = {
-        "General": {"Measurement": "", "POI": "", "HistogramFolder": "", "Path": ""},
+        "General": {
+            "Measurement": "",
+            "POI": "",
+            "HistogramFolder": "",
+            "InputPath": "",
+        },
         "Regions": [{"Name": "", "Filter": "", "Variable": "", "Binning": [0, 1]}],
         "Samples": [{"Name": "", "Tree": "", "Data": True}],
         "NormFactors": [{"Name": "", "Samples": ""}],
@@ -25,7 +30,12 @@ def test_validate():
 
     # not exactly one data sample
     config_multiple_data_samples = {
-        "General": {"Measurement": "", "POI": "", "HistogramFolder": "", "Path": ""},
+        "General": {
+            "Measurement": "",
+            "POI": "",
+            "HistogramFolder": "",
+            "InputPath": "",
+        },
         "Regions": [{"Name": "", "Filter": "", "Variable": "", "Binning": [0, 1]}],
         "Samples": [{"Name": "", "Tree": ""}],
         "NormFactors": [{"Name": "", "Samples": ""}],

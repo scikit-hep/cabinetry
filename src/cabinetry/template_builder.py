@@ -364,7 +364,7 @@ def create_histograms(
     """
     # create an instance of the class doing the template building
     histogram_folder = pathlib.Path(config["General"]["HistogramFolder"])
-    general_path = config["General"]["Path"]
+    general_path = config["General"]["InputPath"]
     builder = _Builder(histogram_folder, general_path, method)
 
     match_func: Optional[route.MatchFunc] = None
