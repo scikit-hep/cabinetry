@@ -227,7 +227,7 @@ def ranking(
     impact_postfit_up = impact_postfit_up[sorted_indices]
     impact_postfit_down = impact_postfit_down[sorted_indices]
 
-    if max_pars:
+    if max_pars is not None:
         # only keep leading parameters in ranking
         bestfit = bestfit[:max_pars]
         uncertainty = uncertainty[:max_pars]
