@@ -155,4 +155,4 @@ def test_fit(mock_load, mock_fit, mock_pulls, mock_corrmat, tmp_path):
     )
     assert result.exit_code == 0
     assert mock_corrmat.call_args_list[-1] == ((fit_results, "folder/"), {})
-    assert mock_pulls.call_args_list[-1] == ((fit_results, "folder/"), {},)
+    assert mock_pulls.call_args_list[-1] == ((fit_results, "folder/"), {})

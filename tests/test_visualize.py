@@ -29,7 +29,7 @@ def test__total_yield_uncertainty():
     stdev_list = [np.asarray([0.1, 0.2, 0.1]), np.asarray([0.3, 0.2, 0.1])]
     expected_uncertainties = [0.31622777, 0.28284271, 0.14142136]
     assert np.allclose(
-        visualize._total_yield_uncertainty(stdev_list), expected_uncertainties,
+        visualize._total_yield_uncertainty(stdev_list), expected_uncertainties
     )
 
 
@@ -153,7 +153,7 @@ def test_pulls(mock_draw):
 
     # with filtering
     visualize.pulls(
-        fit_results, folder_path, exclude_list=exclude_list, method="matplotlib",
+        fit_results, folder_path, exclude_list=exclude_list, method="matplotlib"
     )
 
     mock_draw.assert_called_once()
@@ -188,7 +188,7 @@ def test_pulls(mock_draw):
     # unknown plotting method
     with pytest.raises(NotImplementedError, match="unknown backend: unknown"):
         visualize.pulls(
-            fit_results, folder_path, exclude_list=exclude_list, method="unknown",
+            fit_results, folder_path, exclude_list=exclude_list, method="unknown"
         )
 
 
