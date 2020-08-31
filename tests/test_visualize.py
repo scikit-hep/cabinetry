@@ -26,7 +26,7 @@ def test__build_figure_name(test_input, expected):
 
 @mock.patch("cabinetry.contrib.matplotlib_visualize.data_MC")
 @mock.patch(
-    "cabinetry.histo.Histogram.from_config", return_value=MockHistogram([], [], []),
+    "cabinetry.histo.Histogram.from_config", return_value=MockHistogram([], [], [])
 )
 def test_data_MC(mock_load, mock_draw, tmp_path):
     """contrib.matplotlib_visualize is only imported depending on the keyword argument,
@@ -146,9 +146,7 @@ def test_pulls(mock_draw):
     bestfit_expected = np.asarray([0.8, 1.0, 1.1])
     uncertainty_expected = np.asarray([0.9, 1.0, 0.7])
     labels_expected = ["a", "b", "c"]
-    visualize.pulls(
-        bestfit, uncertainty, labels, folder_path, method="matplotlib",
-    )
+    visualize.pulls(bestfit, uncertainty, labels, folder_path, method="matplotlib")
     assert np.allclose(mock_draw.call_args[0][0], bestfit_expected)
     assert np.allclose(mock_draw.call_args[0][1], uncertainty_expected)
     assert np.any(

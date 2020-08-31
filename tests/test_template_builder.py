@@ -41,22 +41,28 @@ def test__get_ntuple_path(caplog):
     ) == pathlib.Path("path.root")
 
     # general path with region and sample templates
-    assert template_builder._get_ntuple_path(
-        "{RegionPath}/{SamplePath}",
-        {"RegionPath": "region"},
-        {"SamplePath": "sample.root"},
-        {},
-        "",
-    ) == pathlib.Path("region/sample.root")
+    assert (
+        template_builder._get_ntuple_path(
+            "{RegionPath}/{SamplePath}",
+            {"RegionPath": "region"},
+            {"SamplePath": "sample.root"},
+            {},
+            "",
+        )
+        == pathlib.Path("region/sample.root")
+    )
 
     # systematic with override
-    assert template_builder._get_ntuple_path(
-        "{SamplePath}",
-        {},
-        {"SamplePath": "path.root"},
-        {"Name": "variation", "Up": {"SamplePath": "variation.root"}},
-        "Up",
-    ) == pathlib.Path("variation.root")
+    assert (
+        template_builder._get_ntuple_path(
+            "{SamplePath}",
+            {},
+            {"SamplePath": "path.root"},
+            {"Name": "variation", "Up": {"SamplePath": "variation.root"}},
+            "Up",
+        )
+        == pathlib.Path("variation.root")
+    )
 
     # systematic without override
     assert template_builder._get_ntuple_path(
@@ -125,7 +131,7 @@ def test__get_filter():
     # systematic without override
     assert (
         template_builder._get_filter(
-            {"Filter": "jet_pt > 0"}, {}, {"Name": "variation"}, "Up",
+            {"Filter": "jet_pt > 0"}, {}, {"Name": "variation"}, "Up"
         )
         == "jet_pt > 0"
     )
@@ -154,7 +160,7 @@ def test__get_weight():
     # systematic without override
     assert (
         template_builder._get_weight(
-            {}, {"Weight": "weight_mc"}, {"Name": "variation"}, "Up",
+            {}, {"Weight": "weight_mc"}, {"Name": "variation"}, "Up"
         )
         == "weight_mc"
     )
@@ -172,7 +178,7 @@ def test__get_position_in_file():
     # systematic with override
     assert (
         template_builder._get_position_in_file(
-            {"Tree": "nominal"}, {"Name": "variation", "Up": {"Tree": "up_tree"}}, "Up",
+            {"Tree": "nominal"}, {"Name": "variation", "Up": {"Tree": "up_tree"}}, "Up"
         )
         == "up_tree"
     )
@@ -180,7 +186,7 @@ def test__get_position_in_file():
     # systematic without override
     assert (
         template_builder._get_position_in_file(
-            {"Tree": "nominal"}, {"Name": "variation"}, "Up",
+            {"Tree": "nominal"}, {"Name": "variation"}, "Up"
         )
         == "nominal"
     )

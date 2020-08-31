@@ -12,16 +12,14 @@ from .. import workspace as cabinetry_workspace
 
 
 class OrderedGroup(click.Group):
-    """a group that shows commands in the order they were added
-    """
+    """a group that shows commands in the order they were added"""
 
     def list_commands(self, _: Any) -> KeysView[str]:
         return self.commands.keys()
 
 
 def _set_logging() -> None:
-    """set log levels and format for CLI
-    """
+    """set log levels and format for CLI"""
     logging.basicConfig(
         level=logging.INFO, format="%(levelname)s - %(name)s - %(message)s"
     )
@@ -30,8 +28,7 @@ def _set_logging() -> None:
 
 @click.group(cls=OrderedGroup)
 def cabinetry() -> None:
-    """Entrypoint to the cabinetry CLI.
-    """
+    """Entrypoint to the cabinetry CLI."""
 
 
 @click.command()

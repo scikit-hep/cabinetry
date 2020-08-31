@@ -210,8 +210,7 @@ def _get_binning(region: Dict[str, Any]) -> np.ndarray:
 
 
 class _Builder:
-    """Handles the instructions for backends to create histograms.
-    """
+    """Handles the instructions for backends to create histograms."""
 
     def __init__(
         self, histogram_folder: pathlib.Path, general_path: str, method: str
@@ -303,7 +302,7 @@ class _Builder:
         histogram.save(histo_path)
 
     def _wrap_custom_template_builder(
-        self, func: route.UserTemplateFunc,
+        self, func: route.UserTemplateFunc
     ) -> route.ProcessorFunc:
         """Wrapper for custom template builder functions that return a ``boost_histogram.Histogram``.
         Returns a function that executes the custom template builder and saves the resulting
