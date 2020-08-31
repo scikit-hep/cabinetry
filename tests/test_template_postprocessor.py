@@ -15,7 +15,7 @@ from cabinetry import template_postprocessor
             histo.Histogram.from_arrays([1, 2, 3], [1, 2], [float("nan"), 0.2]),
             [0.0, 0.2],
         ),
-        (histo.Histogram.from_arrays([1, 2, 3], [1, 2], [0.1, 0.2]), [0.1, 0.2],),
+        (histo.Histogram.from_arrays([1, 2, 3], [1, 2], [0.1, 0.2]), [0.1, 0.2]),
     ],
 )
 def test__fix_stat_unc(test_histo, fixed_stdev):

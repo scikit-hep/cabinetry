@@ -142,7 +142,7 @@ def data_MC(
     data_model_ratio = data_histogram_yields / total_yield
     data_model_ratio_unc = data_histogram_stdev / total_yield
     ax2.errorbar(
-        bin_centers, data_model_ratio, yerr=data_model_ratio_unc, fmt="o", color="k",
+        bin_centers, data_model_ratio, yerr=data_model_ratio_unc, fmt="o", color="k"
     )
 
     ax1.legend(frameon=False, fontsize="large")
@@ -305,17 +305,20 @@ def ranking(
 
     y_pos = np.arange(num_pars)[::-1]
 
+    # pre-fit up
     pre_up = ax_impact.barh(
-        y_pos, impact_prefit_up, fill=False, linewidth=1, edgecolor="C0",
-    )  # pre-fit up
+        y_pos, impact_prefit_up, fill=False, linewidth=1, edgecolor="C0"
+    )
+    # pre-fit down
     pre_down = ax_impact.barh(
-        y_pos, impact_prefit_down, fill=False, linewidth=1, edgecolor="C5",
-    )  # pre-fit down
-    post_up = ax_impact.barh(y_pos, impact_postfit_up, color="C0")  # post-fit up
-    post_down = ax_impact.barh(y_pos, impact_postfit_down, color="C5")  # post-fit down
-    pulls = ax_pulls.errorbar(
-        bestfit, y_pos, xerr=uncertainty, fmt="o", color="k"
-    )  # nuisance parameter pulls
+        y_pos, impact_prefit_down, fill=False, linewidth=1, edgecolor="C5"
+    )
+    # post-fit up
+    post_up = ax_impact.barh(y_pos, impact_postfit_up, color="C0")
+    # post-fit down
+    post_down = ax_impact.barh(y_pos, impact_postfit_down, color="C5")
+    # nuisance parameter pulls
+    pulls = ax_pulls.errorbar(bestfit, y_pos, xerr=uncertainty, fmt="o", color="k")
 
     ax_pulls.set_xlabel(r"$\left(\hat{\theta} - \theta_0\right) / \Delta \theta$")
     ax_impact.set_xlabel(r"$\Delta \mu$")

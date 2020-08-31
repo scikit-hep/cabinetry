@@ -7,8 +7,7 @@ from cabinetry import histo
 
 
 class ExampleHistograms:
-    """a collection of different kinds of histograms
-    """
+    """a collection of different kinds of histograms"""
 
     @staticmethod
     def normal():

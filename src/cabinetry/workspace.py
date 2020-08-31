@@ -14,8 +14,7 @@ log = logging.getLogger(__name__)
 
 
 class WorkspaceBuilder:
-    """Collects functionality to build a ``pyhf`` workspace.
-    """
+    """Collects functionality to build a ``pyhf`` workspace."""
 
     def __init__(self, config: Dict[str, Any]) -> None:
         """Creates a workspace corresponding to a cabinetry configuration.
@@ -251,7 +250,7 @@ class WorkspaceBuilder:
         return modifiers
 
     def get_sys_modifiers(
-        self, region: Dict[str, Any], sample: Dict[str, Any],
+        self, region: Dict[str, Any], sample: Dict[str, Any]
     ) -> List[Dict[str, Any]]:
         """Returns the list of all systematic modifiers acting on a sample.
 

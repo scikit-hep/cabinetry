@@ -38,8 +38,7 @@ class Router:
     """
 
     def __init__(self) -> None:
-        """Initialize a Router instance, with no processors or wrappers defined.
-        """
+        """Initialize a Router instance, with no processors or wrappers defined."""
         # initialize all lists of processor types the user can specify
         self.template_builders: List[Dict[str, Any]] = []
 

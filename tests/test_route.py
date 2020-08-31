@@ -82,7 +82,7 @@ def test_Router_register_template_builder(processor_examples):
     example_template_builder = processor_examples.get_example_template_builder()
 
     example_router.register_template_builder(
-        region_name="reg", sample_name="signal", systematic_name="sys", template="Up",
+        region_name="reg", sample_name="signal", systematic_name="sys", template="Up"
     )(example_template_builder)
 
     assert example_router.template_builders == [
