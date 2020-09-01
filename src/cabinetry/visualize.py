@@ -1,3 +1,4 @@
+import glob
 import logging
 import pathlib
 from typing import Any, Dict, List, Optional, Union
@@ -252,3 +253,91 @@ def ranking(
         )
     else:
         raise NotImplementedError(f"unknown backend: {method}")
+
+
+def templates(
+    config: Dict[str, Any],
+    figure_folder: Union[str, pathlib.Path],
+    method: str = "matplotlib",
+) -> None:
+    """Visualize template histograms for systematic variations.
+
+    Args:
+        config (Dict[str, Any]): cabinetry configuration
+        figure_folder (Union[str, pathlib.Path]): path to the folder to save figures in
+        method (str, optional): what backend to use for plotting, defaults to "matplotlib"
+
+    Raises:
+        NotImplementedError: when trying to plot with a method that is not supported
+    """
+    log.info("visualizing systematics templates")
+    histogram_folder = pathlib.Path(config["General"]["HistogramFolder"])
+    figure_folder = pathlib.Path(figure_folder) / "templates/"
+
+    # could do this via the route module instead
+    for region in config["Regions"]:
+        for sample in config["Samples"]:
+            if sample.get("Data", False):
+                # skip data
+                continue
+
+            for systematic in config["Systematics"]:
+                histo_name = (
+                    region["Name"]
+                    + "_"
+                    + sample["Name"]
+                    + "_"
+                    + systematic["Name"]
+                    + "*_modified*"
+                )
+                # create a list of paths to histograms matching the pattern
+                var_names = [
+                    pathlib.Path(h_name)
+                    for h_name in glob.glob(str(histogram_folder / histo_name))
+                ]
+
+                if len(var_names) == 0:
+                    # no associated templates (normalization systematics)
+                    continue
+
+                # extract nominal histogram
+                nominal_histo = histo.Histogram.from_config(
+                    histogram_folder,
+                    region,
+                    sample,
+                    {"Name": "nominal"},
+                )
+                bins = nominal_histo.bins
+                variable = region["Variable"]
+                nominal = {"yields": nominal_histo.yields, "stdev": nominal_histo.stdev}
+
+                # extract variation histograms if they exist
+                up = {}
+                down = {}
+                for var_name in var_names:
+                    var_histo = histo.Histogram.from_path(var_name)
+                    var = {"yields": var_histo.yields, "stdev": var_histo.stdev}
+                    if "Up_modified" in var_name.parts[-1]:
+                        up.update(var)
+                    elif "Down_modified" in var_name.parts[-1]:
+                        down.update(var)
+
+                figure_name = (
+                    region["Name"]
+                    + "_"
+                    + sample["Name"]
+                    + "_"
+                    + systematic["Name"]
+                    + ".pdf"
+                )
+                figure_path = pathlib.Path(figure_folder) / figure_name
+
+                if method == "matplotlib":
+                    from .contrib import matplotlib_visualize
+
+                    matplotlib_visualize.templates(
+                        nominal, up, down, bins, variable, figure_path
+                    )
+
+                else:
+                    raise NotImplementedError(f"unknown backend: {method}")

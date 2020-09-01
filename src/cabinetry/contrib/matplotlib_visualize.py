@@ -361,3 +361,152 @@ def ranking(
         os.mkdir(figure_path.parent)
     log.debug(f"saving figure as {figure_path}")
     fig.savefig(figure_path)
+
+
+def templates(
+    nominal_histo: Dict[str, np.ndarray],
+    up_histo: Dict[str, np.ndarray],
+    down_histo: Dict[str, np.ndarray],
+    bin_edges: np.ndarray,
+    variable: str,
+    figure_path: pathlib.Path,
+) -> None:
+    """Draws a nominal template and the associated up/down variations.
+
+    Args:
+        nominal_histo (Dict[str, np.ndarray]): the nominal template
+        up_histo (Dict[str, np.ndarray]): the "up" variation
+        down_histo (Dict[str, np.ndarray]): the "down" variation
+        bin_edges (np.ndarray): bin edges of histogram
+        variable (str): variable name for the horizontal axis
+        figure_path (pathlib.Path): path where figure should be saved
+    """
+    bin_width = bin_edges[1:] - bin_edges[:-1]
+    bin_centers = 0.5 * (bin_edges[:-1] + bin_edges[1:])
+
+    mpl.style.use("seaborn-colorblind")
+    fig = plt.figure()
+    gs = fig.add_gridspec(nrows=2, ncols=1, hspace=0, height_ratios=[3, 1])
+    ax1 = fig.add_subplot(gs[0])
+    ax2 = fig.add_subplot(gs[1])
+
+    # ratio plot line through unity and stat. uncertainty of nominal
+    ax2.plot(
+        [bin_edges[0], bin_edges[-1]],
+        [1, 1],
+        "--",
+        color="black",
+        linewidth=1,
+    )
+    rel_nominal_stat_unc = nominal_histo["stdev"] / nominal_histo["yields"]
+    ax2.bar(
+        bin_centers,
+        2 * rel_nominal_stat_unc,
+        width=bin_width,
+        bottom=1 - rel_nominal_stat_unc,
+        fill=False,
+        linewidth=0,
+        edgecolor="gray",
+        hatch=3 * "/",
+    )
+
+    colors = ["black", "C0", "C1"]
+    linestyles = ["-", "--", "-."]
+    all_templates = [nominal_histo, up_histo, down_histo]
+    labels = ["nominal", "up", "down"]
+
+    # x positions for lines drawn showing the template distributions
+    line_x = [y for y in bin_edges for _ in range(2)][1:-1]
+
+    # draw templates
+    for template, color, linestyle, label in zip(
+        all_templates, colors, linestyles, labels
+    ):
+        if not template:
+            # variation not defined
+            continue
+
+        # lines to show each template distribution
+        line_y = [y for y in template["yields"] for _ in range(2)]
+
+        ax1.plot(
+            line_x,
+            line_y,
+            "-",
+            color=color,
+            linestyle=linestyle,
+            label=label,
+        )
+        ax1.errorbar(
+            bin_centers,
+            template["yields"],
+            yerr=template["stdev"],
+            fmt="none",
+            color=color,
+        )
+
+    # templates in ratio plot
+    for template, color, linestyle in zip(
+        [up_histo, down_histo], colors[1:], linestyles[1:]
+    ):
+        if not template:
+            # variation not defined
+            continue
+
+        template_ratio_plot = template["yields"] / nominal_histo["yields"]
+        line_y = [y for y in template_ratio_plot for _ in range(2)]
+
+        ax2.plot(
+            line_x,
+            line_y,
+            "-",
+            color=color,
+            linestyle=linestyle,
+        )
+        ax2.errorbar(
+            bin_centers,
+            template_ratio_plot,
+            yerr=template["stdev"] / nominal_histo["yields"],
+            fmt="none",
+            color=color,
+        )
+
+    # increase font sizes
+    for item in (
+        [ax1.yaxis.label, ax2.xaxis.label, ax2.yaxis.label]
+        + ax1.get_yticklabels()
+        + ax2.get_xticklabels()
+        + ax2.get_yticklabels()
+    ):
+        item.set_fontsize("large")
+
+    # minor ticks on all axes
+    for axis in [ax1.xaxis, ax1.yaxis, ax2.xaxis, ax2.yaxis]:
+        axis.set_minor_locator(mpl.ticker.AutoMinorLocator())
+
+    ax1.legend(frameon=False, fontsize="large")
+
+    max_yield = max([max(template["yields"]) for template in all_templates if template])
+
+    ax1.set_xlim([bin_edges[0], bin_edges[-1]])
+    ax1.set_ylim([0, max_yield * 1.5])
+    ax1.set_ylabel("events")
+    ax1.set_xticklabels([])
+    ax1.tick_params(axis="both", which="major", pad=8)  # tick label - axis padding
+    ax1.tick_params(direction="in", top=True, right=True, which="both")
+
+    ax2.set_xlim([bin_edges[0], bin_edges[-1]])
+    ax2.set_ylim([0.5, 1.5])
+    ax2.set_xlabel(variable)
+    ax2.set_ylabel("variation / nominal")
+    ax2.set_yticks([0.5, 0.75, 1.0, 1.25, 1.5])
+    ax2.set_yticklabels([0.5, 0.75, 1.0, 1.25, ""])
+    ax2.tick_params(axis="both", which="major", pad=8)
+    ax2.tick_params(direction="in", top=True, right=True, which="both")
+
+    fig.tight_layout()
+
+    if not os.path.exists(figure_path.parent):
+        os.mkdir(figure_path.parent)
+    log.debug(f"saving figure as {figure_path}")
+    fig.savefig(figure_path)

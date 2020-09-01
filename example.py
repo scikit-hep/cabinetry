@@ -27,6 +27,10 @@ if __name__ == "__main__":
     # perform histogram post-processing
     cabinetry.template_postprocessor.run(cabinetry_config)
 
+    # visualize systematics templates
+    figure_folder = "figures/"
+    cabinetry.visualize.templates(cabinetry_config, figure_folder)
+
     # build a workspace and save to file
     workspace_path = "workspaces/example_workspace.json"
     ws = cabinetry.workspace.build(cabinetry_config)
@@ -37,9 +41,8 @@ if __name__ == "__main__":
     bestfit, uncertainty, labels, _, corr_mat = cabinetry.fit.fit(ws)
 
     # visualize pulls and correlation matrix
-    figure_folder = "figures/"
-    cabinetry.visualize.pulls(bestfit, uncertainty, labels, "figures/")
-    cabinetry.visualize.correlation_matrix(corr_mat, labels, "figures/")
+    cabinetry.visualize.pulls(bestfit, uncertainty, labels, figure_folder)
+    cabinetry.visualize.correlation_matrix(corr_mat, labels, figure_folder)
 
     # visualize templates and data
     cabinetry.visualize.data_MC(cabinetry_config, figure_folder, prefit=True)
