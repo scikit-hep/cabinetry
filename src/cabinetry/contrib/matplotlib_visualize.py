@@ -506,7 +506,6 @@ def templates(
 
     fig.tight_layout()
 
-    if not os.path.exists(figure_path.parent):
-        os.mkdir(figure_path.parent)
+    figure_path.parent.mkdir(parents=True, exist_ok=True)
     log.debug(f"saving figure as {figure_path}")
     fig.savefig(figure_path)
