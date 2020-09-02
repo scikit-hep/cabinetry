@@ -110,3 +110,13 @@ def test_templates(tmp_path):
     assert (
         compare_images("tests/contrib/reference/templates.pdf", str(fname), 0) is None
     )
+
+    # only single variation specified
+    matplotlib_visualize.templates(
+        nominal_histo,
+        up_histo,
+        {},
+        bin_edges,
+        variable,
+        fname,
+    )

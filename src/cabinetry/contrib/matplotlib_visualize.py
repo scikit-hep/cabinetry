@@ -373,6 +373,8 @@ def templates(
 ) -> None:
     """Draws a nominal template and the associated up/down variations.
 
+    If a variation template is an empty dict, it is not drawn.
+
     Args:
         nominal_histo (Dict[str, np.ndarray]): the nominal template
         up_histo (Dict[str, np.ndarray]): the "up" variation
