@@ -248,3 +248,69 @@ def test_ranking(mock_draw):
             folder_path,
             method="unknown",
         )
+
+
+@mock.patch(
+    "cabinetry.histo.Histogram.from_path",
+    side_effect=[
+        MockHistogram([0.0, 1.0], [2.0], [0.2]),
+        MockHistogram([0.0, 1.0], [3.0], [0.3]),
+    ]
+    * 3,
+)
+@mock.patch(
+    "cabinetry.histo.Histogram.from_config",
+    return_value=MockHistogram([0.0, 1.0], [1.0], [0.1]),
+)
+@mock.patch("cabinetry.contrib.matplotlib_visualize.templates")
+def test_templates(mock_draw, mock_histo_config, mock_histo_path, tmp_path):
+    # the side effects are repeated for the patched Histogram.from_path
+    # to check all relevant behavior (including the unknown backend check)
+    nominal_path = tmp_path / "region_sample_nominal_modified.npz"
+    up_path = tmp_path / "region_sample_sys_Up_modified.npz"
+    down_path = tmp_path / "region_sample_sys_Down_modified.npz"
+    region = {"Name": "region", "Variable": "x"}
+    sample = {"Name": "sample"}
+    config = {
+        "General": {"HistogramFolder": tmp_path},
+        "Regions": [region],
+        "Samples": [sample, {"Name": "data", "Data": True}],
+        "Systematics": [{"Name": "sys"}],
+    }
+
+    folder_path = "tmp"
+    figure_path = pathlib.Path(folder_path) / "templates/region_sample_sys.pdf"
+
+    # add fake histograms for glob
+    nominal_path.touch()
+    up_path.touch()
+    down_path.touch()
+
+    # also add a file that matches pattern but is not needed
+    (tmp_path / "region_sample_sys_unknown_modified.npz").touch()
+
+    visualize.templates(config, folder_path)
+
+    assert mock_histo_config.call_args_list == [
+        [(tmp_path, region, sample, {"Name": "nominal"}), {}]
+    ]
+    assert mock_histo_path.call_args_list == [[(down_path,), {}], [(up_path,), {}]]
+
+    nominal = {"yields": [1.0], "stdev": [0.1]}
+    up = {"yields": [3.0], "stdev": [0.3]}
+    down = {"yields": [2.0], "stdev": [0.2]}
+    bins = [0.0, 1.0]
+    assert mock_draw.call_args_list == [
+        [(nominal, up, down, bins, "x", figure_path), {}]
+    ]
+
+    # unknown plotting method
+    with pytest.raises(NotImplementedError, match="unknown backend: unknown"):
+        visualize.templates(config, folder_path, method="unknown")
+
+    # remove files for variation histograms
+    up_path.unlink()
+    down_path.unlink()
+
+    visualize.templates(config, folder_path)
+    assert mock_draw.call_count == 1  # no new call, since no variations found
