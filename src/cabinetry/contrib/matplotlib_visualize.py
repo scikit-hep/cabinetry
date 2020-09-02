@@ -1,5 +1,4 @@
 import logging
-import os
 import pathlib
 from typing import Any, Dict, List, Union
 
@@ -162,8 +161,7 @@ def data_MC(
 
     fig.tight_layout()
 
-    if not os.path.exists(figure_path.parent):
-        os.mkdir(figure_path.parent)
+    figure_path.parent.mkdir(parents=True, exist_ok=True)
     log.debug(f"saving figure as {figure_path}")
     fig.savefig(figure_path)
 
@@ -205,8 +203,7 @@ def correlation_matrix(
         if abs(corr) > 0.005:
             ax.text(i, j, f"{corr:.2f}", ha="center", va="center", color=text_color)
 
-    if not os.path.exists(figure_path.parent):
-        os.mkdir(figure_path.parent)
+    figure_path.parent.mkdir(parents=True, exist_ok=True)
     log.debug(f"saving figure as {figure_path}")
     fig.savefig(figure_path)
 
@@ -241,8 +238,7 @@ def pulls(
     ax.set_yticklabels(labels)
     fig.tight_layout()
 
-    if not os.path.exists(figure_path.parent):
-        os.mkdir(figure_path.parent)
+    figure_path.parent.mkdir(parents=True, exist_ok=True)
     log.debug(f"saving figure as {figure_path}")
     fig.savefig(figure_path)
 
@@ -355,8 +351,7 @@ def ranking(
     leg_space = 1.0 / (num_pars + 3) + 0.03
     fig.tight_layout(rect=[0, 0, 1.0, 1 - leg_space])  # make space for legend on top
 
-    if not os.path.exists(figure_path.parent):
-        os.mkdir(figure_path.parent)
+    figure_path.parent.mkdir(parents=True, exist_ok=True)
     log.debug(f"saving figure as {figure_path}")
     fig.savefig(figure_path)
 

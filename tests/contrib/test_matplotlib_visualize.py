@@ -1,13 +1,11 @@
 from matplotlib.testing.compare import compare_images
 import numpy as np
-import pytest
 
 from cabinetry.contrib import matplotlib_visualize
 
 
-@pytest.mark.parametrize("figure_extension", ["fig.pdf", "subdir/fig.pdf"])
-def test_data_MC(figure_extension, tmp_path):
-    fname = tmp_path / figure_extension
+def test_data_MC(tmp_path):
+    fname = tmp_path / "fig.pdf"
     histo_dict_list = [
         {
             "label": "Background",
@@ -34,9 +32,8 @@ def test_data_MC(figure_extension, tmp_path):
     assert compare_images("tests/contrib/reference/data_MC.pdf", str(fname), 0) is None
 
 
-@pytest.mark.parametrize("figure_extension", ["fig.pdf", "subdir/fig.pdf"])
-def test_correlation_matrix(figure_extension, tmp_path):
-    fname = tmp_path / figure_extension
+def test_correlation_matrix(tmp_path):
+    fname = tmp_path / "fig.pdf"
     # one parameter is below threshold so no text is shown for it on the plot
     corr_mat = np.asarray([[1.0, 0.35, 0.002], [0.35, 1.0, -0.2], [0.002, -0.2, 1.0]])
     labels = ["a", "b", "c"]
@@ -47,9 +44,8 @@ def test_correlation_matrix(figure_extension, tmp_path):
     )
 
 
-@pytest.mark.parametrize("figure_extension", ["fig.pdf", "subdir/fig.pdf"])
-def test_pulls(figure_extension, tmp_path):
-    fname = tmp_path / figure_extension
+def test_pulls(tmp_path):
+    fname = tmp_path / "fig.pdf"
     bestfit = np.asarray([-0.2, 0.0, 0.1])
     uncertainty = np.asarray([0.9, 1.0, 0.7])
     labels = np.asarray(["a", "b", "c"])
@@ -57,9 +53,8 @@ def test_pulls(figure_extension, tmp_path):
     assert compare_images("tests/contrib/reference/pulls.pdf", str(fname), 0) is None
 
 
-@pytest.mark.parametrize("figure_extension", ["fig.pdf", "subdir/fig.pdf"])
-def test_ranking(figure_extension, tmp_path):
-    fname = tmp_path / figure_extension
+def test_ranking(tmp_path):
+    fname = tmp_path / "fig.pdf"
     bestfit = np.asarray([0.3, -0.1])
     uncertainty = np.asarray([0.8, 1.0])
     labels = np.asarray(["jet energy scale", "modeling uncertainty"])
