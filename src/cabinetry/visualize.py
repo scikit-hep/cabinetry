@@ -295,10 +295,11 @@ def templates(
                     pathlib.Path(h_name)
                     for h_name in glob.glob(str(histogram_folder / histo_name))
                 ]
-                # only keep up/down variations
-                variation_paths = [
-                    v for v in variation_paths if ("Up" in v.name or "Down" in v.name)
-                ]
+                # only keep up/down variations, and sort alphabetically
+                # (sorting to have consistent order, and simplified debugging)
+                variation_paths = sorted(
+                    [v for v in variation_paths if ("Up" in v.name or "Down" in v.name)]
+                )
 
                 if len(variation_paths) == 0:
                     # no associated templates (normalization systematics)

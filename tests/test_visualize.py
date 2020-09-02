@@ -294,11 +294,11 @@ def test_templates(mock_draw, mock_histo_config, mock_histo_path, tmp_path):
     assert mock_histo_config.call_args_list == [
         [(tmp_path, region, sample, {"Name": "nominal"}), {}]
     ]
-    assert mock_histo_path.call_args_list == [[(up_path,), {}], [(down_path,), {}]]
+    assert mock_histo_path.call_args_list == [[(down_path,), {}], [(up_path,), {}]]
 
     nominal = {"yields": [1.0], "stdev": [0.1]}
-    up = {"yields": [2.0], "stdev": [0.2]}
-    down = {"yields": [3.0], "stdev": [0.3]}
+    up = {"yields": [3.0], "stdev": [0.3]}
+    down = {"yields": [2.0], "stdev": [0.2]}
     bins = [0.0, 1.0]
     assert mock_draw.call_args_list == [
         [(nominal, up, down, bins, "x", figure_path), {}]
