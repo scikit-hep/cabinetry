@@ -272,7 +272,7 @@ def templates(
     """
     log.info("visualizing systematics templates")
     histogram_folder = pathlib.Path(config["General"]["HistogramFolder"])
-    figure_folder = pathlib.Path(figure_folder) / "templates/"
+    figure_folder = pathlib.Path(figure_folder) / "templates"
 
     # could do this via the route module instead
     for region in config["Regions"]:
@@ -291,12 +291,16 @@ def templates(
                     + "*_modified*"
                 )
                 # create a list of paths to histograms matching the pattern
-                var_names = [
+                variation_paths = [
                     pathlib.Path(h_name)
                     for h_name in glob.glob(str(histogram_folder / histo_name))
                 ]
+                # only keep up/down variations
+                variation_paths = [
+                    v for v in variation_paths if ("Up" in v.name or "Down" in v.name)
+                ]
 
-                if len(var_names) == 0:
+                if len(variation_paths) == 0:
                     # no associated templates (normalization systematics)
                     continue
 
@@ -314,12 +318,12 @@ def templates(
                 # extract variation histograms if they exist
                 up = {}
                 down = {}
-                for var_name in var_names:
-                    var_histo = histo.Histogram.from_path(var_name)
+                for variation_path in variation_paths:
+                    var_histo = histo.Histogram.from_path(variation_path)
                     var = {"yields": var_histo.yields, "stdev": var_histo.stdev}
-                    if "Up_modified" in var_name.parts[-1]:
+                    if "Up" in variation_path.parts[-1]:
                         up.update(var)
-                    elif "Down_modified" in var_name.parts[-1]:
+                    else:
                         down.update(var)
 
                 figure_name = (
@@ -330,7 +334,7 @@ def templates(
                     + systematic["Name"]
                     + ".pdf"
                 )
-                figure_path = pathlib.Path(figure_folder) / figure_name
+                figure_path = figure_folder / figure_name
 
                 if method == "matplotlib":
                     from .contrib import matplotlib_visualize
