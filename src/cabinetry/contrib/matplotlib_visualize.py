@@ -459,31 +459,24 @@ def templates(
                 color=color,
             )
 
-    # templates in ratio plot
-    for template, color, linestyle in zip(
-        [up_histo, down_histo], colors[1:], linestyles[1:]
-    ):
-        if not template:
-            # variation not defined
-            continue
+            # ratio plot: variation / nominal
+            template_ratio_plot = template["yields"] / nominal_histo["yields"]
+            line_y = [y for y in template_ratio_plot for _ in range(2)]
 
-        template_ratio_plot = template["yields"] / nominal_histo["yields"]
-        line_y = [y for y in template_ratio_plot for _ in range(2)]
-
-        ax2.plot(
-            line_x,
-            line_y,
-            "-",
-            color=color,
-            linestyle=linestyle,
-        )
-        ax2.errorbar(
-            bin_centers,
-            template_ratio_plot,
-            yerr=template["stdev"] / nominal_histo["yields"],
-            fmt="none",
-            color=color,
-        )
+            ax2.plot(
+                line_x,
+                line_y,
+                "-",
+                color=color,
+                linestyle=linestyle,
+            )
+            ax2.errorbar(
+                bin_centers,
+                template_ratio_plot,
+                yerr=template["stdev"] / nominal_histo["yields"],
+                fmt="none",
+                color=color,
+            )
 
     # increase font sizes
     for item in (
