@@ -437,13 +437,27 @@ def templates(
             linestyle=linestyle,
             label=label,
         )
-        ax1.errorbar(
-            bin_centers,
-            template["yields"],
-            yerr=template["stdev"],
-            fmt="none",
-            color=color,
-        )
+        if label == "nominal":
+            # band for stat. uncertainty of nominal prediction
+            ax1.bar(
+                bin_centers,
+                2 * nominal_histo["stdev"],
+                width=bin_width,
+                bottom=nominal_histo["yields"] - nominal_histo["stdev"],
+                fill=False,
+                linewidth=0,
+                edgecolor="gray",
+                hatch=3 * "/",
+            )
+        else:
+            # error bars for up/down variations
+            ax1.errorbar(
+                bin_centers,
+                template["yields"],
+                yerr=template["stdev"],
+                fmt="none",
+                color=color,
+            )
 
     # templates in ratio plot
     for template, color, linestyle in zip(

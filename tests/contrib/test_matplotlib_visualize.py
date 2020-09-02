@@ -86,3 +86,27 @@ def test_ranking(figure_extension, tmp_path):
         fname,
     )
     assert compare_images("tests/contrib/reference/ranking.pdf", str(fname), 0) is None
+
+
+def test_templates(tmp_path):
+    fname = tmp_path / "fig.pdf"
+    nominal_histo = {
+        "yields": np.asarray([1.0, 1.2]),
+        "stdev": np.asarray([0.05, 0.06]),
+    }
+    up_histo = {"yields": np.asarray([1.1, 1.4]), "stdev": np.asarray([0.05, 0.07])}
+    down_histo = {"yields": np.asarray([0.8, 0.9]), "stdev": np.asarray([0.06, 0.07])}
+    bin_edges = np.asarray([0.0, 1.0, 2.0])
+    variable = "x"
+
+    matplotlib_visualize.templates(
+        nominal_histo,
+        up_histo,
+        down_histo,
+        bin_edges,
+        variable,
+        fname,
+    )
+    assert (
+        compare_images("tests/contrib/reference/templates.pdf", str(fname), 0) is None
+    )
