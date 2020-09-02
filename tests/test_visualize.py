@@ -308,7 +308,7 @@ def test_templates(mock_draw, mock_histo_config, mock_histo_path, tmp_path):
     with pytest.raises(NotImplementedError, match="unknown backend: unknown"):
         visualize.templates(config, folder_path, method="unknown")
 
-    # no variations found
+    # remove files for variation histograms
     up_path.unlink()
     down_path.unlink()
 
