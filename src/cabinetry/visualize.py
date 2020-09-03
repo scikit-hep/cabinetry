@@ -265,9 +265,8 @@ def pulls(
     """Draws a pull plot of parameter results and uncertainties.
 
     Args:
-        bestfit (np.ndarray): best-fit results for parameters
-        uncertainty (np.ndarray): parameter uncertainties
-        labels (List[str]): parameter names
+        fit_results (fit.FitResults): fit results, including correlation matrix
+            and parameter labels
         figure_folder (Union[str, pathlib.Path]): path to the folder to save figures in
         exclude_list (Optional[List[str]], optional): list of parameters to exclude from plot,
             defaults to None (nothing excluded)
@@ -284,7 +283,9 @@ def pulls(
 
     # exclude fixed parameters from pull plot
     exclude_list += [
-        label for i_np, label in enumerate(labels_np) if uncertainty[i_np] == 0.0
+        label
+        for i_np, label in enumerate(labels_np)
+        if fit_results.uncertainty[i_np] == 0.0
     ]
 
     # exclude staterror parameters from pull plot (they are centered at 1)
