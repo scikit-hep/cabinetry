@@ -105,7 +105,7 @@ def fit(
     bestfit = result[:, 0]
     uncertainty = result[:, 1]
     best_twice_nll = float(result_obj.fun)  # convert 0-dim np.ndarray to float
-    corr_mat = result_obj.minuit.np_matrix(correlation=True)
+    corr_mat = result_obj.minuit.np_matrix(correlation=True, skip_fixed=False)
     labels = get_parameter_names(model)
 
     print_results(bestfit, uncertainty, labels)
