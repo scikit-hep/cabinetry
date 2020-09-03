@@ -106,7 +106,7 @@ def correlation_matrix(
         NotImplementedError: when trying to plot with a method that is not supported
     """
     # create a matrix that's True if a correlation is below threshold, and True on the diagonal
-    below_threshold = np.where(np.abs(corr_mat) < pruning_threshold, True, False)
+    below_threshold = np.where(np.abs(corr_mat) <= pruning_threshold, True, False)
     np.fill_diagonal(below_threshold, True)
     # get indices of rows/columns where everything is below threshold
     delete_indices = np.where(np.all(below_threshold, axis=0))
@@ -152,6 +152,11 @@ def pulls(
 
     if exclude_list is None:
         exclude_list = []
+
+    # exclude fixed parameters from pull plot
+    exclude_list += [
+        label for i_np, label in enumerate(labels_np) if uncertainty[i_np] == 0.0
+    ]
 
     # exclude staterror parameters from pull plot (they are centered at 1)
     exclude_list += [label for label in labels_np if label[0:10] == "staterror_"]

@@ -155,7 +155,9 @@ def custom_fit(
     else:
         data = build_Asimov_data(model)
 
-    step_size = [0.1 for _ in init_pars]
+    # set initial step size to 0 for fixed parameters
+    # this will cause the associated parameter uncertainties to be 0 post-fit
+    step_size = [0.1 if not fix_pars[i_par] else 0.0 for i_par in range(len(init_pars))]
 
     labels = get_parameter_names(model)
 
@@ -178,9 +180,9 @@ def custom_fit(
     m.migrad()
     m.hesse()
 
-    corr_mat = m.np_matrix(correlation=True)
     bestfit = m.np_values()
     uncertainty = m.np_errors()
+    corr_mat = m.np_matrix(correlation=True, skip_fixed=False)
     best_twice_nll = m.fval
 
     print_results(bestfit, uncertainty, labels)
