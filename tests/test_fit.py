@@ -107,10 +107,10 @@ def test_custom_fit(example_spec):
     )
     # compared to fit(), the gamma is fixed
     assert np.allclose(bestfit, [1.1, 8.32985794])
-    assert np.allclose(uncertainty, [0.1, 0.38153392])
+    assert np.allclose(uncertainty, [0.0, 0.38153392])
     assert labels == ["staterror_Signal-Region", "Signal strength"]
     assert np.allclose(best_twice_nll, 7.90080378)
-    assert np.allclose(corr_mat, [[1.0]])
+    assert np.allclose(corr_mat, [[0.0, 0.0], [0.0, 1.0]])
 
     # Asimov fit, with fixed gamma (fixed not to Asimov MLE)
     bestfit, uncertainty, labels, best_twice_nll, corr_mat = fit.custom_fit(
@@ -119,7 +119,7 @@ def test_custom_fit(example_spec):
     # the gamma factor is multiplicative and fixed to 1.1, so the
     # signal strength needs to be 1/1.1 to compensate
     assert np.allclose(bestfit, [1.1, 0.90917877])
-    assert np.allclose(uncertainty, [0.1, 0.12623172])
+    assert np.allclose(uncertainty, [0.0, 0.12623172])
     assert labels == ["staterror_Signal-Region", "Signal strength"]
     assert np.allclose(best_twice_nll, 5.68851093)
-    assert np.allclose(corr_mat, [[1.0]])
+    assert np.allclose(corr_mat, [[0.0, 0.0], [0.0, 1.0]])
