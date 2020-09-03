@@ -198,12 +198,12 @@ def data_MC(
             from .contrib import matplotlib_visualize
 
             if prefit:
-                figure_path = pathlib.Path(figure_folder) / (
-                    channel_name + "_prefit.pdf"
+                figure_path = pathlib.Path(figure_folder) / _build_figure_name(
+                    channel_name, True
                 )
             else:
-                figure_path = pathlib.Path(figure_folder) / (
-                    channel_name + "_postfit.pdf"
+                figure_path = pathlib.Path(figure_folder) / _build_figure_name(
+                    channel_name, False
                 )
             matplotlib_visualize.data_MC(
                 histogram_dict_list,
