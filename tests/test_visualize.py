@@ -3,6 +3,7 @@ import pathlib
 from unittest import mock
 
 import numpy as np
+import pyhf
 import pytest
 
 from cabinetry import fit
@@ -106,8 +107,102 @@ def test_data_MC_from_histograms(mock_load, mock_draw, mock_stdev, tmp_path):
         visualize.data_MC_from_histograms(config, tmp_path, method="unknown")
 
 
-def test_data_MC():
-    ...
+@mock.patch("cabinetry.contrib.matplotlib_visualize.data_MC")
+@mock.patch("cabinetry.template_builder._get_binning", return_value=np.asarray([1, 2]))
+@mock.patch(
+    "cabinetry.configuration.get_region_dict",
+    return_value={"Name": "region", "Variable": "x"},
+)
+@mock.patch("cabinetry.model_utils.calculate_stdev", return_value=np.asarray([[0.3]]))
+@mock.patch(
+    "cabinetry.model_utils.get_asimov_parameters",
+    return_value=([1.0, 1.0], [0.04956657, 0.0]),
+)
+def test_data_MC(
+    mock_asimov, mock_stdev, mock_dict, mock_bins, mock_draw, example_spec
+):
+    config = {}
+    figure_folder = "tmp"
+    model_spec = pyhf.Workspace(example_spec).model().spec
+
+    # pre-fit plot
+    visualize.data_MC(config, figure_folder, example_spec)
+
+    # Asimov parameter calculation
+    assert mock_stdev.call_count == 1
+    assert mock_asimov.call_args_list[0][0][0].spec == model_spec
+
+    # call to stdev calculation
+    assert mock_stdev.call_count == 1
+    assert mock_stdev.call_args_list[0][0][0].spec == model_spec
+    assert np.allclose(mock_stdev.call_args_list[0][0][1], [1.0, 1.0])
+    assert np.allclose(mock_stdev.call_args_list[0][0][2], [0.04956657, 0.0])
+    assert np.allclose(
+        mock_stdev.call_args_list[0][0][3], np.asarray([[1.0, 0.0], [0.0, 1.0]])
+    )
+    assert mock_stdev.call_args_list[0][1] == {}
+
+    assert mock_dict.call_args_list == [[(config, "Signal Region"), {}]]
+    assert mock_bins.call_args_list == [[({"Name": "region", "Variable": "x"},), {}]]
+
+    expected_histograms = [
+        {
+            "label": "Signal",
+            "isData": False,
+            "yields": np.asarray([51.839756]),
+            "variable": "x",
+        },
+        {
+            "label": "Data",
+            "isData": True,
+            "yields": np.asarray([475]),
+            "variable": "x",
+        },
+    ]
+    assert mock_draw.call_count == 1
+    assert mock_draw.call_args_list[0][0][0] == expected_histograms
+    assert np.allclose(mock_draw.call_args_list[0][0][1], np.asarray([0.3]))
+    assert np.allclose(mock_draw.call_args_list[0][0][2], np.asarray([1, 2]))
+    assert mock_draw.call_args_list[0][0][3] == pathlib.Path(
+        "tmp/Signal-Region_prefit.pdf"
+    )
+    assert mock_draw.call_args_list[0][1] == {}
+
+    # post-fit plot
+    fit_results = fit.FitResults(
+        np.asarray([1.01, 1.1]),
+        np.asarray([0.03, 0.1]),
+        [],
+        np.asarray([[1.0, 0.2], [0.2, 1.0]]),
+        0.0,
+    )
+    visualize.data_MC(config, figure_folder, example_spec, fit_results=fit_results)
+
+    assert mock_asimov.call_count == 1  # no new call
+
+    # call to stdev calculation
+    assert mock_stdev.call_count == 2
+    assert mock_stdev.call_args_list[1][0][0].spec == model_spec
+    assert np.allclose(mock_stdev.call_args_list[1][0][1], [1.01, 1.1])
+    assert np.allclose(mock_stdev.call_args_list[1][0][2], [0.03, 0.1])
+    assert np.allclose(
+        mock_stdev.call_args_list[1][0][3], np.asarray([[1.0, 0.2], [0.2, 1.0]])
+    )
+    assert mock_stdev.call_args_list[1][1] == {}
+
+    assert mock_draw.call_count == 2
+    # yield at best-fit point is different from pre-fit
+    assert np.allclose(mock_draw.call_args_list[1][0][0][0]["yields"], 57.59396892)
+    assert np.allclose(mock_draw.call_args_list[1][0][1], np.asarray([0.3]))
+    assert np.allclose(mock_draw.call_args_list[1][0][2], np.asarray([1, 2]))
+    assert mock_draw.call_args_list[1][0][3] == pathlib.Path(
+        "tmp/Signal-Region_postfit.pdf"
+    )
+    assert mock_draw.call_args_list[1][1] == {}
+
+    # unknown plotting method
+    with pytest.raises(NotImplementedError, match="unknown backend: unknown"):
+        visualize.data_MC(config, figure_folder, example_spec, method="unknown")
 
 
 @mock.patch("cabinetry.contrib.matplotlib_visualize.correlation_matrix")
