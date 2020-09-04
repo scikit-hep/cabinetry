@@ -44,5 +44,6 @@ if __name__ == "__main__":
     cabinetry.visualize.pulls(fit_results, figure_folder)
     cabinetry.visualize.correlation_matrix(fit_results, figure_folder)
 
-    # visualize templates and data
-    cabinetry.visualize.data_MC_from_histograms(cabinetry_config, figure_folder)
+    # visualize pre- and post-fit distributions
+    cabinetry.visualize.data_MC(cabinetry_config, figure_folder, ws)
+    cabinetry.visualize.data_MC(cabinetry_config, figure_folder, ws, fit_results)
