@@ -132,7 +132,7 @@ def calculate_stdev(
     up_variations = ak.from_iter(up_variations)
     down_variations = ak.from_iter(down_variations)
 
-    # total variance, indices are: channel, bins
+    # total variance, indices are: channel, bin
     total_variance_list = [
         np.zeros(shape=(model.config.channel_nbins[ch])) for ch in model.config.channels
     ]  # list of arrays, each array has as many entries as there are bins
