@@ -122,7 +122,6 @@ def data_MC(
     Raises:
         NotImplementedError: when trying to plot with a method that is not supported
     """
-    # relies on https://github.com/scikit-hep/pyhf/pull/731 for return_by_sample
     workspace = pyhf.Workspace(spec)
     model = workspace.model(
         modifier_settings={

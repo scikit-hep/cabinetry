@@ -86,7 +86,7 @@ def calculate_stdev(
     uncertainty: np.ndarray,
     corr_mat: np.ndarray,
 ) -> ak.highlevel.Array:
-    """Calculates the yield standard deviation of a model.
+    """Calculates the symmetrized yield standard deviation of a model.
 
     Args:
         model (pyhf.pdf.Model): the model for which to calculate the standard
