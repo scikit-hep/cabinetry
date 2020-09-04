@@ -264,9 +264,12 @@ def test_pulls(mock_draw):
     assert mock_draw.call_args[1] == {}
 
     # without filtering via list, but with staterror removal
-    bestfit_expected = np.asarray([0.8, 1.0, 1.1])
-    uncertainty_expected = np.asarray([0.9, 1.0, 0.7])
-    labels_expected = ["a", "b", "c"]
+    # and fixed parameter removal
+    fit_results.uncertainty[0] = 0.0
+
+    bestfit_expected = np.asarray([1.0, 1.1])
+    uncertainty_expected = np.asarray([1.0, 0.7])
+    labels_expected = ["b", "c"]
     visualize.pulls(fit_results, folder_path, method="matplotlib")
 
     assert np.allclose(mock_draw.call_args[0][0], bestfit_expected)
