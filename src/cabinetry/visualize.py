@@ -234,14 +234,18 @@ def correlation_matrix(
     Raises:
         NotImplementedError: when trying to plot with a method that is not supported
     """
-    # create a matrix that's True if a correlation is below threshold, and True on the diagonal
+    # create a matrix that is True if a correlation is below threshold, and True on the diagonal
     below_threshold = np.where(
-        np.abs(fit_results.corr_mat) <= pruning_threshold, True, False
+        np.abs(fit_results.corr_mat) < pruning_threshold, True, False
     )
     np.fill_diagonal(below_threshold, True)
-    # get indices of rows/columns where everything is below threshold
-    delete_indices = np.where(np.all(below_threshold, axis=0))
-    # delete rows and columns where all correlations are below threshold
+    # get list of booleans specifying if everything in rows/columns is below threshold
+    all_below_threshold = np.all(below_threshold, axis=0)
+    # get list of booleans specifying if rows/columns correspond to fixed parameter (0 correlations)
+    fixed_parameter = np.all(np.equal(fit_results.corr_mat, 0.0), axis=0)
+    # get indices of rows/columns where everything is below threshold, or the parameter is fixed
+    delete_indices = np.where(np.logical_or(all_below_threshold, fixed_parameter))
+    # delete rows and columns where all correlations are below threshold / parameter is fixed
     corr_mat = np.delete(
         np.delete(fit_results.corr_mat, delete_indices, axis=1), delete_indices, axis=0
     )

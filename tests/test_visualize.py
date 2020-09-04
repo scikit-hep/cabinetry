@@ -215,9 +215,8 @@ def test_correlation_matrix(mock_draw):
     figure_path = pathlib.Path(folder_path) / "correlation_matrix.pdf"
     fit_results = fit.FitResults(np.empty(0), np.empty(0), labels, corr_mat, 1.0)
 
-    visualize.correlation_matrix(
-        fit_results, folder_path, pruning_threshold=0.15, method="matplotlib"
-    )
+    # pruning with threshold
+    visualize.correlation_matrix(fit_results, folder_path, pruning_threshold=0.15)
 
     mock_draw.assert_called_once()
     assert np.allclose(mock_draw.call_args[0][0], corr_mat_pruned)
@@ -226,6 +225,20 @@ def test_correlation_matrix(mock_draw):
     )
     assert mock_draw.call_args[0][2] == figure_path
     assert mock_draw.call_args[1] == {}
+
+    # pruning of fixed parameter
+    corr_mat_fixed = np.asarray([[1.0, 0.2, 0.0], [0.2, 1.0, 0.0], [0.0, 0.0, 0.0]])
+    fit_results_fixed = fit.FitResults(
+        np.empty(0), np.empty(0), labels, corr_mat_fixed, 1.0
+    )
+    visualize.correlation_matrix(fit_results_fixed, folder_path)
+    assert np.allclose(mock_draw.call_args_list[1][0][0], corr_mat_pruned)
+    assert np.any(
+        [
+            mock_draw.call_args_list[1][0][1][i] == labels[i]
+            for i in range(len(labels_pruned))
+        ]
+    )
 
     # unknown plotting method
     with pytest.raises(NotImplementedError, match="unknown backend: unknown"):
