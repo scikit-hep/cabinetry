@@ -96,7 +96,7 @@ def data_MC(
         2 * total_model_unc,
         width=bin_width,
         bottom=total_yield - total_model_unc,
-        label="Stat. uncertainty",
+        label="Uncertainty",
         fill=False,
         linewidth=0,
         edgecolor="gray",
