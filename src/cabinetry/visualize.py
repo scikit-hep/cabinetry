@@ -17,7 +17,7 @@ log = logging.getLogger(__name__)
 
 
 def _build_figure_name(region_name: str, is_prefit: bool) -> str:
-    """Constructs a name filename for a figure.
+    """Constructs a file name for a figure.
 
     Args:
         region_name (str): name of the region shown in the figure
