@@ -112,7 +112,7 @@ def calculate_stdev(
     # calculate the model distribution for every parameter varied up and down
     # within the respective uncertainties
     for i_par in range(model.config.npars):
-        # best-fit parameter values, but one parameter varied within uncertainties
+        # central parameter values, but one parameter varied within uncertainties
         up_pars = parameters.copy()
         up_pars[i_par] += uncertainty[i_par]
         down_pars = parameters.copy()
