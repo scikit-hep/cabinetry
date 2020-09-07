@@ -169,7 +169,7 @@ def plot_distributions(data, weights, labels, pseudodata, bins):
     plt.savefig("stacked.png", dpi=200)
 
 
-def run(output_directory):
+def run(output_directory, visualize=False):
     # configuration
     num_events = 5000
     yield_s = 125
@@ -213,9 +213,10 @@ def run(output_directory):
     np.testing.assert_allclose(w_read, weights)
     np.testing.assert_allclose(pd_read, pseudodata)
 
-    # visualize results
-    bins = np.linspace(0, 1200, 24 + 1)
-    plot_distributions(d_read, w_read, l_read, pseudodata, bins)
+    if visualize:
+        # visualize results
+        bins = np.linspace(0, 1200, 24 + 1)
+        plot_distributions(d_read, w_read, l_read, pseudodata, bins)
 
 
 if __name__ == "__main__":
