@@ -226,7 +226,7 @@ def test_correlation_matrix(mock_draw):
     assert mock_draw.call_args[0][2] == figure_path
     assert mock_draw.call_args[1] == {}
 
-    # pruning of fixed parameter
+    # pruning of fixed parameter (all zeros in correlation matrix row/column)
     corr_mat_fixed = np.asarray([[1.0, 0.2, 0.0], [0.2, 1.0, 0.0], [0.0, 0.0, 0.0]])
     fit_results_fixed = fit.FitResults(
         np.empty(0), np.empty(0), labels, corr_mat_fixed, 1.0
