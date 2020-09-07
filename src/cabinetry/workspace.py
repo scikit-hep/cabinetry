@@ -368,9 +368,6 @@ class WorkspaceBuilder:
             if bounds is not None:
                 parameter.update({"bounds": [bounds]})
             if fixed is not None:
-                log.warning(
-                    "fixed parameters are currently only respected in fit.custom_fit"
-                )
                 parameter.update({"fixed": True})
 
             parameters_list.append(parameter)
@@ -382,9 +379,6 @@ class WorkspaceBuilder:
             sys_name = sys["Name"]  # every systematic has a name
             fixed = self._get_constant_parameter_setting(sys_name)
             if fixed is not None:
-                log.warning(
-                    "fixed parameters are currently only respected in fit.custom_fit"
-                )
                 parameter = {"name": sys_name}
                 parameter.update({"inits": [fixed]})
                 parameter.update({"fixed": True})
