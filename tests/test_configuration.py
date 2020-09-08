@@ -176,3 +176,17 @@ def test_histogram_is_needed_unknown():
         NotImplementedError, match="other systematics not yet implemented"
     ):
         configuration.histogram_is_needed({}, {}, {"Type": "unknown"}, "")
+
+
+def test_get_region_dict(caplog):
+    config = {"Regions": [{"Name": "reg_a"}, {"Name": "reg_b"}]}
+    assert configuration.get_region_dict(config, "reg_a") == {"Name": "reg_a"}
+
+    config = {"Regions": [{"Name": "reg_a"}, {"Name": "reg_a"}]}
+    assert configuration.get_region_dict(config, "reg_a") == {"Name": "reg_a"}
+    assert "found more than one region with name reg_a" in [
+        rec.message for rec in caplog.records
+    ]
+
+    with pytest.raises(ValueError, match="region abc not found in config"):
+        configuration.get_region_dict(config, "abc")

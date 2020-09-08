@@ -1,5 +1,4 @@
 import logging
-import os
 import pathlib
 from typing import Any, Dict, List, Union
 
@@ -11,53 +10,42 @@ import numpy as np
 log = logging.getLogger(__name__)
 
 
-def _total_yield_uncertainty(stdev_list: List[np.ndarray]) -> np.ndarray:
-    """calculate the absolute statistical uncertainty of a stack of MC
-    via sum in quadrature
-
-    Args:
-        stdev_list (List[np.ndarray]): list of absolute stat. uncertainty per sample
-
-    Returns:
-        np.array: absolute stat. uncertainty of stack of samples
-    """
-    tot_unc = np.sqrt(np.sum(np.power(stdev_list, 2), axis=0))
-    return tot_unc
-
-
 def data_MC(
-    histogram_dict_list: List[Dict[str, Any]], figure_path: pathlib.Path
+    histogram_dict_list: List[Dict[str, Any]],
+    total_model_unc: np.ndarray,
+    bin_edges: np.ndarray,
+    figure_path: pathlib.Path,
 ) -> None:
-    """draw a data/MC histogram
+    """Draws a data/MC histogram with uncertainty bands and ratio panel.
 
     Args:
-        histogram_dict_list (List[Dict[str, Any]]): list of samples (with info stored in one dict per sample)
+        histogram_dict_list (List[Dict[str, Any]]): list of samples (with info
+            stored in one dict per sample)
+        total_model_unc (np.ndarray): total model uncertainty, if specified
+            this is used instead of calculating it via sum in quadrature,
+            defaults to None
+        bin_edges (np.ndarray): bin edges of histogram
         figure_path (pathlib.Path): path where figure should be saved
     """
     mc_histograms_yields = []
-    mc_histograms_stdev = []
     mc_labels = []
     for h in histogram_dict_list:
         if h["isData"]:
-            data_histogram_yields = h["hist"]["yields"]
-            data_histogram_stdev = h["hist"]["stdev"]
+            data_histogram_yields = h["yields"]
+            data_histogram_stdev = np.sqrt(data_histogram_yields)
             data_label = h["label"]
         else:
-            mc_histograms_yields.append(h["hist"]["yields"])
-            mc_histograms_stdev.append(h["hist"]["stdev"])
+            mc_histograms_yields.append(h["yields"])
             mc_labels.append(h["label"])
 
     # get the highest single bin from the sum of MC
     y_max = np.max(
-        np.sum(
-            [h["hist"]["yields"] for h in histogram_dict_list if not h["isData"]],
-            axis=0,
-        )
+        np.sum([h["yields"] for h in histogram_dict_list if not h["isData"]], axis=0)
     )
 
     # if data is higher in any bin, the maximum y axis range should take that into account
     y_max = max(
-        y_max, np.max([h["hist"]["yields"] for h in histogram_dict_list if h["isData"]])
+        y_max, np.max([h["yields"] for h in histogram_dict_list if h["isData"]])
     )
 
     mpl.style.use("seaborn-colorblind")
@@ -67,6 +55,7 @@ def data_MC(
     ax1 = fig.add_subplot(gs[0])
     ax2 = fig.add_subplot(gs[1])
 
+    # increase font sizes
     for item in (
         [ax1.yaxis.label, ax2.xaxis.label, ax2.yaxis.label]
         + ax1.get_yticklabels()
@@ -75,11 +64,14 @@ def data_MC(
     ):
         item.set_fontsize("large")
 
+    # minor ticks on all axes
+    for axis in [ax1.xaxis, ax1.yaxis, ax2.xaxis, ax2.yaxis]:
+        axis.set_minor_locator(mpl.ticker.AutoMinorLocator())
+
     # plot MC stacked together
     total_yield = np.zeros_like(mc_histograms_yields[0])
-    bins = histogram_dict_list[0]["hist"]["bins"]
-    bin_right_edges = bins[1:]
-    bin_left_edges = bins[:-1]
+    bin_right_edges = bin_edges[1:]
+    bin_left_edges = bin_edges[:-1]
     bin_width = bin_right_edges - bin_left_edges
     bin_centers = 0.5 * (bin_left_edges + bin_right_edges)
     for i_sample, mc_sample_yield in enumerate(mc_histograms_yields):
@@ -90,16 +82,21 @@ def data_MC(
             bottom=total_yield,
             label=mc_labels[i_sample],
         )
+
+        # add a black line on top of each sample
+        line_x = [y for y in bin_edges for _ in range(2)][1:-1]
+        line_y = [y for y in (mc_sample_yield + total_yield) for _ in range(2)]
+        ax1.plot(line_x, line_y, "-", color="black", linewidth=0.5)
+
         total_yield += mc_sample_yield
 
     # add total MC uncertainty
-    mc_stack_unc = _total_yield_uncertainty(mc_histograms_stdev)
     ax1.bar(
         bin_centers,
-        2 * mc_stack_unc,
+        2 * total_model_unc,
         width=bin_width,
-        bottom=total_yield - mc_stack_unc,
-        label="Stat. uncertainty",
+        bottom=total_yield - total_model_unc,
+        label="Uncertainty",
         fill=False,
         linewidth=0,
         edgecolor="gray",
@@ -126,7 +123,7 @@ def data_MC(
     )  # reference line along y=1
 
     # add uncertainty band around y=1
-    rel_mc_unc = mc_stack_unc / total_yield
+    rel_mc_unc = total_model_unc / total_yield
     ax2.bar(
         bin_centers,
         2 * rel_mc_unc,
@@ -151,7 +148,7 @@ def data_MC(
     ax1.set_ylabel("events")
     ax1.set_xticklabels([])
     ax1.tick_params(axis="both", which="major", pad=8)  # tick label - axis padding
-    ax1.tick_params(direction="in", top=True, right=True)
+    ax1.tick_params(direction="in", top=True, right=True, which="both")
 
     ax2.set_xlim(bin_left_edges[0], bin_right_edges[-1])
     ax2.set_ylim([0.5, 1.5])
@@ -160,12 +157,11 @@ def data_MC(
     ax2.set_yticks([0.5, 0.75, 1.0, 1.25, 1.5])
     ax2.set_yticklabels([0.5, 0.75, 1.0, 1.25, ""])
     ax2.tick_params(axis="both", which="major", pad=8)
-    ax2.tick_params(direction="in", top=True, right=True)
+    ax2.tick_params(direction="in", top=True, right=True, which="both")
 
     fig.tight_layout()
 
-    if not os.path.exists(figure_path.parent):
-        os.mkdir(figure_path.parent)
+    figure_path.parent.mkdir(parents=True, exist_ok=True)
     log.debug(f"saving figure as {figure_path}")
     fig.savefig(figure_path)
 
@@ -175,7 +171,7 @@ def correlation_matrix(
     labels: Union[List[str], np.ndarray],
     figure_path: pathlib.Path,
 ) -> None:
-    """draw a correlation matrix
+    """Draws a correlation matrix.
 
     Args:
         corr_mat (np.ndarray): the correlation matrix to plot
@@ -207,8 +203,7 @@ def correlation_matrix(
         if abs(corr) > 0.005:
             ax.text(i, j, f"{corr:.2f}", ha="center", va="center", color=text_color)
 
-    if not os.path.exists(figure_path.parent):
-        os.mkdir(figure_path.parent)
+    figure_path.parent.mkdir(parents=True, exist_ok=True)
     log.debug(f"saving figure as {figure_path}")
     fig.savefig(figure_path)
 
@@ -219,7 +214,7 @@ def pulls(
     labels: Union[List[str], np.ndarray],
     figure_path: pathlib.Path,
 ) -> None:
-    """draw a pull plot
+    """Draws a pull plot.
 
     Args:
         bestfit (np.ndarray): [description]
@@ -243,8 +238,7 @@ def pulls(
     ax.set_yticklabels(labels)
     fig.tight_layout()
 
-    if not os.path.exists(figure_path.parent):
-        os.mkdir(figure_path.parent)
+    figure_path.parent.mkdir(parents=True, exist_ok=True)
     log.debug(f"saving figure as {figure_path}")
     fig.savefig(figure_path)
 
@@ -357,8 +351,7 @@ def ranking(
     leg_space = 1.0 / (num_pars + 3) + 0.03
     fig.tight_layout(rect=[0, 0, 1.0, 1 - leg_space])  # make space for legend on top
 
-    if not os.path.exists(figure_path.parent):
-        os.mkdir(figure_path.parent)
+    figure_path.parent.mkdir(parents=True, exist_ok=True)
     log.debug(f"saving figure as {figure_path}")
     fig.savefig(figure_path)
 

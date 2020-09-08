@@ -1,49 +1,39 @@
 from matplotlib.testing.compare import compare_images
 import numpy as np
-import pytest
 
 from cabinetry.contrib import matplotlib_visualize
 
 
-def test__total_yield_uncertainty():
-    stdev_list = [np.asarray([0.1, 0.2, 0.1]), np.asarray([0.3, 0.2, 0.1])]
-    expected_uncertainties = [0.31622777, 0.28284271, 0.14142136]
-    assert np.allclose(
-        matplotlib_visualize._total_yield_uncertainty(stdev_list),
-        expected_uncertainties,
-    )
-
-
-@pytest.mark.parametrize("figure_extension", ["fig.pdf", "subdir/fig.pdf"])
-def test_data_MC(figure_extension, tmp_path):
-    fname = tmp_path / figure_extension
-    bg_hist = {
-        "yields": np.asarray([12.5, 14]),
-        "stdev": np.asarray([0.4, 0.5]),
-        "bins": np.asarray([1, 2, 3]),
-    }
-    sig_hist = {
-        "yields": np.asarray([2, 5]),
-        "stdev": np.asarray([0.1, 0.2]),
-        "bins": np.asarray([1, 2, 3]),
-    }
-    data_hist = {
-        "yields": np.asarray([13, 15]),
-        "stdev": np.asarray([3.61, 3.87]),
-        "bins": np.asarray([1, 2, 3]),
-    }
+def test_data_MC(tmp_path):
+    fname = tmp_path / "fig.pdf"
     histo_dict_list = [
-        {"label": "Background", "isData": False, "hist": bg_hist, "variable": "x"},
-        {"label": "Signal", "isData": False, "hist": sig_hist, "variable": "x"},
-        {"label": "Data", "isData": True, "hist": data_hist, "variable": "x"},
+        {
+            "label": "Background",
+            "isData": False,
+            "yields": np.asarray([12.5, 14]),
+            "variable": "x",
+        },
+        {
+            "label": "Signal",
+            "isData": False,
+            "yields": np.asarray([2, 5]),
+            "variable": "x",
+        },
+        {
+            "label": "Data",
+            "isData": True,
+            "yields": np.asarray([13, 15]),
+            "variable": "x",
+        },
     ]
-    matplotlib_visualize.data_MC(histo_dict_list, fname)
+    total_model_unc = np.sqrt([0.17, 0.29])
+    bin_edges = np.asarray([1, 2, 3])
+    matplotlib_visualize.data_MC(histo_dict_list, total_model_unc, bin_edges, fname)
     assert compare_images("tests/contrib/reference/data_MC.pdf", str(fname), 0) is None
 
 
-@pytest.mark.parametrize("figure_extension", ["fig.pdf", "subdir/fig.pdf"])
-def test_correlation_matrix(figure_extension, tmp_path):
-    fname = tmp_path / figure_extension
+def test_correlation_matrix(tmp_path):
+    fname = tmp_path / "fig.pdf"
     # one parameter is below threshold so no text is shown for it on the plot
     corr_mat = np.asarray([[1.0, 0.35, 0.002], [0.35, 1.0, -0.2], [0.002, -0.2, 1.0]])
     labels = ["a", "b", "c"]
@@ -54,9 +44,8 @@ def test_correlation_matrix(figure_extension, tmp_path):
     )
 
 
-@pytest.mark.parametrize("figure_extension", ["fig.pdf", "subdir/fig.pdf"])
-def test_pulls(figure_extension, tmp_path):
-    fname = tmp_path / figure_extension
+def test_pulls(tmp_path):
+    fname = tmp_path / "fig.pdf"
     bestfit = np.asarray([-0.2, 0.0, 0.1])
     uncertainty = np.asarray([0.9, 1.0, 0.7])
     labels = np.asarray(["a", "b", "c"])
@@ -64,9 +53,8 @@ def test_pulls(figure_extension, tmp_path):
     assert compare_images("tests/contrib/reference/pulls.pdf", str(fname), 0) is None
 
 
-@pytest.mark.parametrize("figure_extension", ["fig.pdf", "subdir/fig.pdf"])
-def test_ranking(figure_extension, tmp_path):
-    fname = tmp_path / figure_extension
+def test_ranking(tmp_path):
+    fname = tmp_path / "fig.pdf"
     bestfit = np.asarray([0.3, -0.1])
     uncertainty = np.asarray([0.8, 1.0])
     labels = np.asarray(["jet energy scale", "modeling uncertainty"])

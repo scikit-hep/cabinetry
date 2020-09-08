@@ -53,17 +53,16 @@ import cabinetry
 cabinetry_config = cabinetry.configuration.read("config_example.yml")
 
 # create template histograms
-histo_folder = "histograms/"
-cabinetry.template_builder.create_histograms(cabinetry_config, histo_folder)
+cabinetry.template_builder.create_histograms(cabinetry_config)
 
 # perform histogram post-processing
-cabinetry.template_postprocessor.run(cabinetry_config, histo_folder)
+cabinetry.template_postprocessor.run(cabinetry_config)
 
 # visualize templates and data
-cabinetry.visualize.data_MC(cabinetry_config, histo_folder, "figures/")
+cabinetry.visualize.data_MC_from_histograms(cabinetry_config, "figures/")
 
 # build a workspace
-ws = cabinetry.workspace.build(cabinetry_config, histo_folder)
+ws = cabinetry.workspace.build(cabinetry_config)
 
 # run a fit
 cabinetry.fit.fit(ws)

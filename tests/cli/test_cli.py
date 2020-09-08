@@ -1,10 +1,12 @@
 from unittest import mock
 
 from click.testing import CliRunner
+import numpy as np
 import pytest
 import yaml
 
 from cabinetry import cli
+from cabinetry import fit
 
 
 class CLIHelpers:
@@ -107,7 +109,9 @@ def test_workspace(mock_read, mock_build, mock_save, cli_helpers, tmp_path):
 @mock.patch("cabinetry.visualize.pulls", autospec=True)
 @mock.patch(
     "cabinetry.fit.fit",
-    return_value=([1.0], [0.1], "label", None, [[1.0]]),
+    return_value=fit.FitResults(
+        np.asarray([1.0]), np.asarray([0.1]), ["label"], np.asarray([[1.0]]), 1.0
+    ),
     autospec=True,
 )
 @mock.patch(
@@ -115,10 +119,11 @@ def test_workspace(mock_read, mock_build, mock_save, cli_helpers, tmp_path):
 )
 def test_fit(mock_load, mock_fit, mock_pulls, mock_corrmat, tmp_path):
     workspace = {"workspace": "mock"}
-    bestfit = [1.0]
-    uncertainty = [0.1]
-    labels = "label"
-    corr_mat = [[1.0]]
+    bestfit = np.asarray([1.0])
+    uncertainty = np.asarray([0.1])
+    labels = ["label"]
+    corr_mat = np.asarray([[1.0]])
+    fit_results = fit.FitResults(bestfit, uncertainty, labels, corr_mat, 1.0)
 
     workspace_path = str(tmp_path / "workspace.json")
 
@@ -137,22 +142,17 @@ def test_fit(mock_load, mock_fit, mock_pulls, mock_corrmat, tmp_path):
     # pull plot
     result = runner.invoke(cli.fit, ["--pulls", workspace_path])
     assert result.exit_code == 0
-    assert mock_pulls.call_args_list == [
-        ((bestfit, uncertainty, labels, "figures/"), {})
-    ]
+    assert mock_pulls.call_args_list == [((fit_results, "figures/"), {})]
 
     # correlation matrix plot
     result = runner.invoke(cli.fit, ["--corrmat", workspace_path])
     assert result.exit_code == 0
-    assert mock_corrmat.call_args_list == [((corr_mat, labels, "figures/"), {})]
+    assert mock_corrmat.call_args_list == [((fit_results, "figures/"), {})]
 
     # both plots, different folder
     result = runner.invoke(
         cli.fit, ["--figfolder", "folder/", "--pulls", "--corrmat", workspace_path]
     )
     assert result.exit_code == 0
-    assert mock_corrmat.call_args_list[-1] == ((corr_mat, labels, "folder/"), {})
-    assert mock_pulls.call_args_list[-1] == (
-        (bestfit, uncertainty, labels, "folder/"),
-        {},
-    )
+    assert mock_corrmat.call_args_list[-1] == ((fit_results, "folder/"), {})
+    assert mock_pulls.call_args_list[-1] == ((fit_results, "folder/"), {})

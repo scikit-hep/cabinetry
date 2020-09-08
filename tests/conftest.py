@@ -13,3 +13,109 @@ class Utils:
 @pytest.fixture
 def utils():
     return Utils
+
+
+@pytest.fixture
+def example_spec():
+    spec = {
+        "channels": [
+            {
+                "name": "Signal Region",
+                "samples": [
+                    {
+                        "data": [51.839756],
+                        "modifiers": [
+                            {
+                                "data": [2.5695188],
+                                "name": "staterror_Signal-Region",
+                                "type": "staterror",
+                            },
+                            {
+                                "data": None,
+                                "name": "Signal strength",
+                                "type": "normfactor",
+                            },
+                        ],
+                        "name": "Signal",
+                    }
+                ],
+            }
+        ],
+        "measurements": [
+            {
+                "config": {
+                    "parameters": [
+                        {
+                            "name": "staterror_Signal-Region",
+                            "fixed": True,
+                            "inits": [1.1],
+                        }
+                    ],
+                    "poi": "Signal strength",
+                },
+                "name": "My fit",
+            }
+        ],
+        "observations": [{"data": [475], "name": "Signal Region"}],
+        "version": "1.0.0",
+    }
+    return spec
+
+
+@pytest.fixture
+def example_spec_multibin():
+    spec = {
+        "channels": [
+            {
+                "name": "region_1",
+                "samples": [
+                    {
+                        "data": [25, 5],
+                        "modifiers": [
+                            {
+                                "data": [5, 2],
+                                "name": "staterror_region_1",
+                                "type": "staterror",
+                            },
+                            {
+                                "data": None,
+                                "name": "Signal strength",
+                                "type": "normfactor",
+                            },
+                        ],
+                        "name": "Signal",
+                    }
+                ],
+            },
+            {
+                "name": "region_2",
+                "samples": [
+                    {
+                        "data": [8],
+                        "modifiers": [
+                            {
+                                "data": [1],
+                                "name": "staterror_region_2",
+                                "type": "staterror",
+                            },
+                            {
+                                "data": None,
+                                "name": "Signal strength",
+                                "type": "normfactor",
+                            },
+                        ],
+                        "name": "Signal",
+                    }
+                ],
+            },
+        ],
+        "measurements": [
+            {"config": {"parameters": [], "poi": "Signal strength"}, "name": "My fit"}
+        ],
+        "observations": [
+            {"data": [35, 8], "name": "region_1"},
+            {"data": [10], "name": "region_2"},
+        ],
+        "version": "1.0.0",
+    }
+    return spec

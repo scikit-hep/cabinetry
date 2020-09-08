@@ -256,7 +256,7 @@ class _Builder:
 
         # obtain the histogram
         if self.method == "uproot":
-            from cabinetry.contrib import histogram_creation
+            from .contrib import histogram_creation
 
             yields, stdev = histogram_creation.from_uproot(
                 ntuple_path,

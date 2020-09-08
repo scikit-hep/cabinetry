@@ -7,6 +7,7 @@ from typing import Any, Dict, List, Union
 import jsonschema
 import yaml
 
+
 log = logging.getLogger(__name__)
 
 
@@ -155,3 +156,24 @@ def histogram_is_needed(
                 raise NotImplementedError("other systematics not yet implemented")
 
     return histo_needed
+
+
+def get_region_dict(config: Dict[str, Any], region_name: str) -> Dict[str, Any]:
+    """Returns the dictionary for a region with the given name.
+
+    Args:
+        config (Dict[str, Any]): cabinetry configuration file
+        region_name (str): name of region
+
+    Raises:
+        ValueError: when region is not found in config
+
+    Returns:
+        Dict[str, Any]: dictionary describing region
+    """
+    regions = [reg for reg in config["Regions"] if reg["Name"] == region_name]
+    if len(regions) == 0:
+        raise ValueError(f"region {region_name} not found in config")
+    if len(regions) > 1:
+        log.error(f"found more than one region with name {region_name}")
+    return regions[0]

@@ -30,7 +30,6 @@ def from_uproot(
             - yield per bin
             - stat. uncertainty per bin
     """
-
     tree = uproot.open(str(ntuple_path) + ":" + pos_in_file)
 
     # extract observable and weights

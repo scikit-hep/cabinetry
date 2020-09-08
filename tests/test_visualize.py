@@ -3,8 +3,10 @@ import pathlib
 from unittest import mock
 
 import numpy as np
+import pyhf
 import pytest
 
+from cabinetry import fit
 from cabinetry import visualize
 
 
@@ -24,11 +26,21 @@ def test__build_figure_name(test_input, expected):
     assert visualize._build_figure_name(*test_input) == expected
 
 
+def test__total_yield_uncertainty():
+    stdev_list = [np.asarray([0.1, 0.2, 0.1]), np.asarray([0.3, 0.2, 0.1])]
+    expected_uncertainties = [0.31622777, 0.28284271, 0.14142136]
+    assert np.allclose(
+        visualize._total_yield_uncertainty(stdev_list), expected_uncertainties
+    )
+
+
+@mock.patch("cabinetry.visualize._total_yield_uncertainty", return_value=[0.2])
 @mock.patch("cabinetry.contrib.matplotlib_visualize.data_MC")
 @mock.patch(
-    "cabinetry.histo.Histogram.from_config", return_value=MockHistogram([], [], [])
+    "cabinetry.histo.Histogram.from_config",
+    return_value=MockHistogram([0.0, 1.0], [1.0], [0.1]),
 )
-def test_data_MC(mock_load, mock_draw, tmp_path):
+def test_data_MC_from_histograms(mock_load, mock_draw, mock_stdev, tmp_path):
     """contrib.matplotlib_visualize is only imported depending on the keyword argument,
     so cannot patch via cabinetry.visualize.matplotlib_visualize
     Generally it seems like following the path to the module is preferred, but that
@@ -38,10 +50,10 @@ def test_data_MC(mock_load, mock_draw, tmp_path):
     config = {
         "General": {"HistogramFolder": tmp_path},
         "Regions": [{"Name": "reg_1", "Variable": "x"}],
-        "Samples": [{"Name": "sample_1"}],
+        "Samples": [{"Name": "sample_1"}, {"Name": "data", "Data": True}],
     }
 
-    visualize.data_MC(config, tmp_path, prefit=True, method="matplotlib")
+    visualize.data_MC_from_histograms(config, tmp_path, method="matplotlib")
 
     # the call_args_list contains calls (outer round brackets), first filled with
     # arguments (inner round brackets) and then keyword arguments
@@ -54,8 +66,18 @@ def test_data_MC(mock_load, mock_draw, tmp_path):
                 {"Name": "nominal"},
             ),
             {"modified": True},
-        )
+        ),
+        (
+            (
+                tmp_path,
+                {"Name": "reg_1", "Variable": "x"},
+                {"Name": "data", "Data": True},
+                {"Name": "nominal"},
+            ),
+            {"modified": True},
+        ),
     ]
+    assert mock_stdev.call_args_list == [(([[0.1]],), {})]
     assert mock_draw.call_args_list == [
         (
             (
@@ -63,10 +85,18 @@ def test_data_MC(mock_load, mock_draw, tmp_path):
                     {
                         "label": "sample_1",
                         "isData": False,
-                        "hist": {"bins": [], "yields": [], "stdev": []},
+                        "yields": [1.0],
                         "variable": "x",
-                    }
+                    },
+                    {
+                        "label": "data",
+                        "isData": True,
+                        "yields": [1.0],
+                        "variable": "x",
+                    },
                 ],
+                [0.2],
+                [0.0, 1.0],
                 tmp_path / "reg_1_prefit.pdf",
             ),
         )
@@ -74,11 +104,105 @@ def test_data_MC(mock_load, mock_draw, tmp_path):
 
     # other plotting method
     with pytest.raises(NotImplementedError, match="unknown backend: unknown"):
-        visualize.data_MC(config, tmp_path, prefit=True, method="unknown")
+        visualize.data_MC_from_histograms(config, tmp_path, method="unknown")
 
-    # postfit
-    with pytest.raises(NotImplementedError, match="only prefit implemented so far"):
-        visualize.data_MC(config, tmp_path, prefit=False, method="matplotlib")
+
+@mock.patch("cabinetry.contrib.matplotlib_visualize.data_MC")
+@mock.patch("cabinetry.template_builder._get_binning", return_value=np.asarray([1, 2]))
+@mock.patch(
+    "cabinetry.configuration.get_region_dict",
+    return_value={"Name": "region", "Variable": "x"},
+)
+@mock.patch("cabinetry.model_utils.calculate_stdev", return_value=np.asarray([[0.3]]))
+@mock.patch(
+    "cabinetry.model_utils.get_asimov_parameters",
+    return_value=([1.0, 1.0], [0.04956657, 0.0]),
+)
+def test_data_MC(
+    mock_asimov, mock_stdev, mock_dict, mock_bins, mock_draw, example_spec
+):
+    config = {}
+    figure_folder = "tmp"
+    model_spec = pyhf.Workspace(example_spec).model().spec
+
+    # pre-fit plot
+    visualize.data_MC(config, figure_folder, example_spec)
+
+    # Asimov parameter calculation
+    assert mock_stdev.call_count == 1
+    assert mock_asimov.call_args_list[0][0][0].spec == model_spec
+
+    # call to stdev calculation
+    assert mock_stdev.call_count == 1
+    assert mock_stdev.call_args_list[0][0][0].spec == model_spec
+    assert np.allclose(mock_stdev.call_args_list[0][0][1], [1.0, 1.0])
+    assert np.allclose(mock_stdev.call_args_list[0][0][2], [0.04956657, 0.0])
+    assert np.allclose(
+        mock_stdev.call_args_list[0][0][3], np.asarray([[1.0, 0.0], [0.0, 1.0]])
+    )
+    assert mock_stdev.call_args_list[0][1] == {}
+
+    assert mock_dict.call_args_list == [[(config, "Signal Region"), {}]]
+    assert mock_bins.call_args_list == [[({"Name": "region", "Variable": "x"},), {}]]
+
+    expected_histograms = [
+        {
+            "label": "Signal",
+            "isData": False,
+            "yields": np.asarray([51.839756]),
+            "variable": "x",
+        },
+        {
+            "label": "Data",
+            "isData": True,
+            "yields": np.asarray([475]),
+            "variable": "x",
+        },
+    ]
+    assert mock_draw.call_count == 1
+    assert mock_draw.call_args_list[0][0][0] == expected_histograms
+    assert np.allclose(mock_draw.call_args_list[0][0][1], np.asarray([0.3]))
+    assert np.allclose(mock_draw.call_args_list[0][0][2], np.asarray([1, 2]))
+    assert mock_draw.call_args_list[0][0][3] == pathlib.Path(
+        "tmp/Signal-Region_prefit.pdf"
+    )
+    assert mock_draw.call_args_list[0][1] == {}
+
+    # post-fit plot
+    fit_results = fit.FitResults(
+        np.asarray([1.01, 1.1]),
+        np.asarray([0.03, 0.1]),
+        [],
+        np.asarray([[1.0, 0.2], [0.2, 1.0]]),
+        0.0,
+    )
+    visualize.data_MC(config, figure_folder, example_spec, fit_results=fit_results)
+
+    assert mock_asimov.call_count == 1  # no new call
+
+    # call to stdev calculation
+    assert mock_stdev.call_count == 2
+    assert mock_stdev.call_args_list[1][0][0].spec == model_spec
+    assert np.allclose(mock_stdev.call_args_list[1][0][1], [1.01, 1.1])
+    assert np.allclose(mock_stdev.call_args_list[1][0][2], [0.03, 0.1])
+    assert np.allclose(
+        mock_stdev.call_args_list[1][0][3], np.asarray([[1.0, 0.2], [0.2, 1.0]])
+    )
+    assert mock_stdev.call_args_list[1][1] == {}
+
+    assert mock_draw.call_count == 2
+    # yield at best-fit point is different from pre-fit
+    assert np.allclose(mock_draw.call_args_list[1][0][0][0]["yields"], 57.59396892)
+    assert np.allclose(mock_draw.call_args_list[1][0][1], np.asarray([0.3]))
+    assert np.allclose(mock_draw.call_args_list[1][0][2], np.asarray([1, 2]))
+    assert mock_draw.call_args_list[1][0][3] == pathlib.Path(
+        "tmp/Signal-Region_postfit.pdf"
+    )
+    assert mock_draw.call_args_list[1][1] == {}
+
+    # unknown plotting method
+    with pytest.raises(NotImplementedError, match="unknown backend: unknown"):
+        visualize.data_MC(config, figure_folder, example_spec, method="unknown")
 
 
 @mock.patch("cabinetry.contrib.matplotlib_visualize.correlation_matrix")
@@ -89,10 +213,10 @@ def test_correlation_matrix(mock_draw):
     labels_pruned = ["a", "b"]
     folder_path = "tmp"
     figure_path = pathlib.Path(folder_path) / "correlation_matrix.pdf"
+    fit_results = fit.FitResults(np.empty(0), np.empty(0), labels, corr_mat, 1.0)
 
-    visualize.correlation_matrix(
-        corr_mat, labels, folder_path, pruning_threshold=0.15, method="matplotlib"
-    )
+    # pruning with threshold
+    visualize.correlation_matrix(fit_results, folder_path, pruning_threshold=0.15)
 
     mock_draw.assert_called_once()
     assert np.allclose(mock_draw.call_args[0][0], corr_mat_pruned)
@@ -102,9 +226,23 @@ def test_correlation_matrix(mock_draw):
     assert mock_draw.call_args[0][2] == figure_path
     assert mock_draw.call_args[1] == {}
 
+    # pruning of fixed parameter (all zeros in correlation matrix row/column)
+    corr_mat_fixed = np.asarray([[1.0, 0.2, 0.0], [0.2, 1.0, 0.0], [0.0, 0.0, 0.0]])
+    fit_results_fixed = fit.FitResults(
+        np.empty(0), np.empty(0), labels, corr_mat_fixed, 1.0
+    )
+    visualize.correlation_matrix(fit_results_fixed, folder_path)
+    assert np.allclose(mock_draw.call_args_list[1][0][0], corr_mat_pruned)
+    assert np.any(
+        [
+            mock_draw.call_args_list[1][0][1][i] == labels[i]
+            for i in range(len(labels_pruned))
+        ]
+    )
+
     # unknown plotting method
     with pytest.raises(NotImplementedError, match="unknown backend: unknown"):
-        visualize.correlation_matrix(corr_mat, labels, folder_path, method="unknown")
+        visualize.correlation_matrix(fit_results, folder_path, method="unknown")
 
 
 @mock.patch("cabinetry.contrib.matplotlib_visualize.pulls")
@@ -114,6 +252,7 @@ def test_pulls(mock_draw):
     labels = ["a", "b", "staterror_region[bin_0]", "c"]
     exclude_list = ["a"]
     folder_path = "tmp"
+    fit_results = fit.FitResults(bestfit, uncertainty, labels, np.empty(0), 1.0)
 
     filtered_bestfit = np.asarray([1.0, 1.1])
     filtered_uncertainty = np.asarray([1.0, 0.7])
@@ -122,12 +261,7 @@ def test_pulls(mock_draw):
 
     # with filtering
     visualize.pulls(
-        bestfit,
-        uncertainty,
-        labels,
-        folder_path,
-        exclude_list=exclude_list,
-        method="matplotlib",
+        fit_results, folder_path, exclude_list=exclude_list, method="matplotlib"
     )
 
     mock_draw.assert_called_once()
@@ -143,10 +277,14 @@ def test_pulls(mock_draw):
     assert mock_draw.call_args[1] == {}
 
     # without filtering via list, but with staterror removal
-    bestfit_expected = np.asarray([0.8, 1.0, 1.1])
-    uncertainty_expected = np.asarray([0.9, 1.0, 0.7])
-    labels_expected = ["a", "b", "c"]
-    visualize.pulls(bestfit, uncertainty, labels, folder_path, method="matplotlib")
+    # and fixed parameter removal
+    fit_results.uncertainty[0] = 0.0
+
+    bestfit_expected = np.asarray([1.0, 1.1])
+    uncertainty_expected = np.asarray([1.0, 0.7])
+    labels_expected = ["b", "c"]
+    visualize.pulls(fit_results, folder_path, method="matplotlib")
+
     assert np.allclose(mock_draw.call_args[0][0], bestfit_expected)
     assert np.allclose(mock_draw.call_args[0][1], uncertainty_expected)
     assert np.any(
@@ -161,12 +299,7 @@ def test_pulls(mock_draw):
     # unknown plotting method
     with pytest.raises(NotImplementedError, match="unknown backend: unknown"):
         visualize.pulls(
-            bestfit,
-            uncertainty,
-            labels,
-            folder_path,
-            exclude_list=exclude_list,
-            method="unknown",
+            fit_results, folder_path, exclude_list=exclude_list, method="unknown"
         )
 
 

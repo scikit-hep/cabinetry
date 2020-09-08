@@ -9,6 +9,7 @@ import numpy as np
 
 log = logging.getLogger(__name__)
 
+
 H = TypeVar("H", bound="Histogram")
 
 
