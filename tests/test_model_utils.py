@@ -11,6 +11,12 @@ def test_get_parameter_names(example_spec):
     assert labels == ["staterror_Signal-Region", "Signal strength"]
 
 
+def test_build_Asimov_data(example_spec):
+    ws = pyhf.Workspace(example_spec)
+    model = ws.model()
+    assert np.allclose(model_utils.build_Asimov_data(model), [51.839756, 1])
+
+
 def test_get_asimov_parameters(example_spec):
     model = pyhf.Workspace(example_spec).model()
     pars, unc = model_utils.get_asimov_parameters(model)

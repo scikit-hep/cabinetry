@@ -1,7 +1,6 @@
 import logging
 
 import numpy as np
-import pyhf
 import pytest
 
 from cabinetry import fit
@@ -31,12 +30,6 @@ def test_print_results(caplog):
     assert "param_A:  1.000000 +/- 0.100000" in [rec.message for rec in caplog.records]
     assert "param_B:  2.000000 +/- 0.300000" in [rec.message for rec in caplog.records]
     caplog.clear()
-
-
-def test_build_Asimov_data(example_spec):
-    ws = pyhf.Workspace(example_spec)
-    model = ws.model()
-    assert np.allclose(fit.build_Asimov_data(model), [51.839756, 1])
 
 
 # skip a "RuntimeWarning: numpy.ufunc size changed" warning

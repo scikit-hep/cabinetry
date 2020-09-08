@@ -45,21 +45,6 @@ def print_results(
         log.info(f"{l_with_spacer}: {bestfit[i]: .6f} +/- {uncertainty[i]:.6f}")
 
 
-def build_Asimov_data(model: pyhf.Model) -> np.ndarray:
-    """Returns the Asimov dataset (with auxdata) for a model.
-
-    Args:
-        model (pyhf.Model): the model from which to construct the
-            dataset
-
-    Returns:
-        np.ndarray: the Asimov dataset
-    """
-    asimov_data = np.sum(model.nominal_rates, axis=1)[0][0]
-    asimov_aux = model.config.auxdata
-    return np.hstack((asimov_data, asimov_aux))
-
-
 def fit(spec: Dict[str, Any], asimov: bool = False) -> FitResults:
     """Performs an unconstrained maximum likelihood fit with ``pyhf``.
 
@@ -75,6 +60,7 @@ def fit(spec: Dict[str, Any], asimov: bool = False) -> FitResults:
         FitResults: fit information stored in one object
     """
     log.info("performing unconstrained fit")
+    pyhf.set_backend("numpy", pyhf.optimize.minuit_optimizer(verbose=True))
 
     workspace = pyhf.Workspace(spec)
     model = workspace.model(
@@ -87,9 +73,8 @@ def fit(spec: Dict[str, Any], asimov: bool = False) -> FitResults:
     if not asimov:
         data = workspace.data(model)
     else:
-        data = build_Asimov_data(model)
+        data = model_utils.build_Asimov_data(model)
 
-    pyhf.set_backend("numpy", pyhf.optimize.minuit_optimizer(verbose=True))
     result, result_obj = pyhf.infer.mle.fit(
         data, model, return_uncertainties=True, return_result_obj=True
     )
@@ -123,6 +108,7 @@ def custom_fit(spec: Dict[str, Any], asimov: bool = False) -> FitResults:
     Returns:
         FitResults: fit information stored in one object
     """
+    log.info("performing unconstrained fit")
     pyhf.set_backend("numpy", pyhf.optimize.minuit_optimizer(verbose=True))
 
     workspace = pyhf.Workspace(spec)
@@ -140,7 +126,7 @@ def custom_fit(spec: Dict[str, Any], asimov: bool = False) -> FitResults:
     if not asimov:
         data = workspace.data(model)
     else:
-        data = build_Asimov_data(model)
+        data = model_utils.build_Asimov_data(model)
 
     # set initial step size to 0 for fixed parameters
     # this will cause the associated parameter uncertainties to be 0 post-fit

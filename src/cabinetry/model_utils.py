@@ -30,6 +30,21 @@ def get_parameter_names(model: pyhf.pdf.Model) -> List[str]:
     return labels
 
 
+def build_Asimov_data(model: pyhf.Model) -> np.ndarray:
+    """Returns the Asimov dataset (with auxdata) for a model.
+
+    Args:
+        model (pyhf.Model): the model from which to construct the
+            dataset
+
+    Returns:
+        np.ndarray: the Asimov dataset
+    """
+    asimov_data = np.sum(model.nominal_rates, axis=1)[0][0]
+    asimov_aux = model.config.auxdata
+    return np.hstack((asimov_data, asimov_aux))
+
+
 def get_asimov_parameters(model: pyhf.pdf.Model) -> Tuple[np.ndarray, np.ndarray]:
     """Returns a list of Asimov parameter values and pre-fit uncertainties for a model.
 
