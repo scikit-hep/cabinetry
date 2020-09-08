@@ -1,5 +1,5 @@
 import logging
-from typing import Any, Dict, List, NamedTuple
+from typing import Any, Dict, List, NamedTuple, Tuple
 
 import iminuit
 import numpy as np
@@ -45,6 +45,35 @@ def print_results(
         log.info(f"{l_with_spacer}: {bestfit[i]: .6f} +/- {uncertainty[i]:.6f}")
 
 
+def model_and_data(
+    spec: Dict[str, Any], asimov: bool = False
+) -> Tuple[pyhf.pdf.Model, List[float]]:
+    """Returns model and data for a ``pyhf`` workspace specification.
+
+    Args:
+        spec (Dict[str, Any]): a ``pyhf`` workspace specification
+        asimov (bool, optional): whether to return the Asimov dataset, defaults
+            to False
+
+    Returns:
+        Tuple[pyhf.pdf.Model, List[float]]:
+            - a HistFactory-style model in ``pyhf`` format
+            - the data (plus auxdata) for the model
+    """
+    workspace = pyhf.Workspace(spec)
+    model = workspace.model(
+        modifier_settings={
+            "normsys": {"interpcode": "code4"},
+            "histosys": {"interpcode": "code4p"},
+        }
+    )  # use HistFactory InterpCode=4
+    if not asimov:
+        data = workspace.data(model)
+    else:
+        data = model_utils.build_Asimov_data(model)
+    return model, data
+
+
 def fit(spec: Dict[str, Any], asimov: bool = False) -> FitResults:
     """Performs an unconstrained maximum likelihood fit with ``pyhf``.
 
@@ -62,18 +91,7 @@ def fit(spec: Dict[str, Any], asimov: bool = False) -> FitResults:
     log.info("performing unconstrained fit")
     pyhf.set_backend("numpy", pyhf.optimize.minuit_optimizer(verbose=True))
 
-    workspace = pyhf.Workspace(spec)
-    model = workspace.model(
-        modifier_settings={
-            "normsys": {"interpcode": "code4"},
-            "histosys": {"interpcode": "code4p"},
-        }
-    )  # use HistFactory InterpCode=4
-
-    if not asimov:
-        data = workspace.data(model)
-    else:
-        data = model_utils.build_Asimov_data(model)
+    model, data = model_and_data(spec, asimov)
 
     result, result_obj = pyhf.infer.mle.fit(
         data, model, return_uncertainties=True, return_result_obj=True
@@ -111,22 +129,11 @@ def custom_fit(spec: Dict[str, Any], asimov: bool = False) -> FitResults:
     log.info("performing unconstrained fit")
     pyhf.set_backend("numpy", pyhf.optimize.minuit_optimizer(verbose=True))
 
-    workspace = pyhf.Workspace(spec)
-    model = workspace.model(
-        modifier_settings={
-            "normsys": {"interpcode": "code4"},
-            "histosys": {"interpcode": "code4p"},
-        }
-    )  # use HistFactory InterpCode=4
+    model, data = model_and_data(spec, asimov)
 
     init_pars = model.config.suggested_init()
     par_bounds = model.config.suggested_bounds()
     fix_pars = model.config.suggested_fixed()
-
-    if not asimov:
-        data = workspace.data(model)
-    else:
-        data = model_utils.build_Asimov_data(model)
 
     # set initial step size to 0 for fixed parameters
     # this will cause the associated parameter uncertainties to be 0 post-fit

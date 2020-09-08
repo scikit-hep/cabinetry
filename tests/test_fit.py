@@ -32,6 +32,20 @@ def test_print_results(caplog):
     caplog.clear()
 
 
+def test_model_and_data(example_spec):
+    model, data = fit.model_and_data(example_spec)
+    assert model.spec["channels"] == example_spec["channels"]
+    assert model.config.modifier_settings == {
+        "normsys": {"interpcode": "code4"},
+        "histosys": {"interpcode": "code4p"},
+    }
+    assert np.allclose(data, [475, 1.0])
+
+    # requesting Asimov dataset
+    model, data = fit.model_and_data(example_spec, asimov=True)
+    assert np.allclose(data, [51.839756, 1.0])
+
+
 # skip a "RuntimeWarning: numpy.ufunc size changed" warning
 # due to different numpy versions used in dependencies
 @pytest.mark.filterwarnings("ignore::RuntimeWarning")

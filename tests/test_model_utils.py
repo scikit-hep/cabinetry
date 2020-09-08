@@ -14,7 +14,7 @@ def test_get_parameter_names(example_spec):
 def test_build_Asimov_data(example_spec):
     ws = pyhf.Workspace(example_spec)
     model = ws.model()
-    assert np.allclose(model_utils.build_Asimov_data(model), [51.839756, 1])
+    assert model_utils.build_Asimov_data(model) == [51.839756, 1]
 
 
 def test_get_asimov_parameters(example_spec):

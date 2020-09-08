@@ -30,7 +30,7 @@ def get_parameter_names(model: pyhf.pdf.Model) -> List[str]:
     return labels
 
 
-def build_Asimov_data(model: pyhf.Model) -> np.ndarray:
+def build_Asimov_data(model: pyhf.Model) -> List[float]:
     """Returns the Asimov dataset (with auxdata) for a model.
 
     Args:
@@ -38,11 +38,11 @@ def build_Asimov_data(model: pyhf.Model) -> np.ndarray:
             dataset
 
     Returns:
-        np.ndarray: the Asimov dataset
+        List[float]: the Asimov dataset
     """
-    asimov_data = np.sum(model.nominal_rates, axis=1)[0][0]
+    asimov_data = np.sum(model.nominal_rates, axis=1)[0][0].tolist()
     asimov_aux = model.config.auxdata
-    return np.hstack((asimov_data, asimov_aux))
+    return asimov_data + asimov_aux
 
 
 def get_asimov_parameters(model: pyhf.pdf.Model) -> Tuple[np.ndarray, np.ndarray]:
