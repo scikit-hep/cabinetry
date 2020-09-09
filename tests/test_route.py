@@ -227,7 +227,7 @@ def test_apply_to_all_templates():
     # check that the default function was called for all templates
     assert len(default_func.call_args_list) == 3
     assert default_func.call_args_list[0] == (
-        ({"Name": "test_region"}, {"Name": "sample"}, {"Name": "nominal"}, "Nominal"),
+        ({"Name": "test_region"}, {"Name": "sample"}, {"Name": "Nominal"}, "Nominal"),
         {},
     )
     assert default_func.call_args_list[1] == (
@@ -255,7 +255,7 @@ def test_apply_to_all_templates():
     assert override_call_args[0] == (
         {"Name": "test_region"},
         {"Name": "sample"},
-        {"Name": "nominal"},
+        {"Name": "Nominal"},
         "Nominal",
     )
     assert override_call_args[1] == (

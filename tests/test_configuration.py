@@ -110,7 +110,7 @@ def test_sample_affected_by_modifier(sample_and_modifier, affected):
     "reg_sam_sys_tem, is_needed",
     [
         # nominal
-        (({}, {}, {"Name": "nominal"}, "Nominal"), True),
+        (({}, {}, {"Name": "Nominal"}, "Nominal"), True),
         # non-nominal data
         (({}, {"Data": True}, {"Name": "var"}, ""), False),
         # overall normalization variation

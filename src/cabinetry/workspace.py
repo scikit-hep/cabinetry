@@ -75,13 +75,13 @@ class WorkspaceBuilder:
             region (Dict[str, Any]): specific region to use
             sample (Dict[str, Any]): specific sample to use
             systematic (Optional[Dict[str, Any]], optional): specific systematic variation to use,
-                defaults to None -> {"Name": "nominal"}
+                defaults to None -> {"Name": "Nominal"}
 
         Returns:
             List[float]: yields per bin for the sample
         """
         if systematic is None:
-            systematic = {"Name": "nominal"}
+            systematic = {"Name": "Nominal"}
 
         histogram = histo.Histogram.from_config(
             self.histogram_folder, region, sample, systematic, modified=True
@@ -101,13 +101,13 @@ class WorkspaceBuilder:
             region (Dict[str, Any]): specific region to use
             sample (Dict[str, Any]): specific sample to use
             systematic (Optional[Dict[str, Any]], optional): specific systematic variation to use,
-                defaults to None -> {"Name": "nominal"}
+                defaults to None -> {"Name": "Nominal"}
 
         Returns:
             List[float]: statistical uncertainty of yield per bin for the sample
         """
         if systematic is None:
-            systematic = {"Name": "nominal"}
+            systematic = {"Name": "Nominal"}
 
         histogram = histo.Histogram.from_config(
             self.histogram_folder, region, sample, systematic, modified=True
@@ -192,7 +192,7 @@ class WorkspaceBuilder:
 
         # also need the nominal histogram
         histogram_nominal = histo.Histogram.from_config(
-            self.histogram_folder, region, sample, {"Name": "nominal"}, modified=True
+            self.histogram_folder, region, sample, {"Name": "Nominal"}, modified=True
         )
 
         if systematic.get("Down", {}).get("Symmetrize", False):

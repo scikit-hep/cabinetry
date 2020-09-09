@@ -62,7 +62,7 @@ def _get_ntuple_path(
     sample_path = sample.get("SamplePath", None)
 
     # check whether a systematic is being processed, and whether overrides exist
-    if systematic.get("Name", "nominal") != "nominal":
+    if systematic.get("Name", "Nominal") != "Nominal":
         # determine whether the template has an override specified
         sample_override = _check_for_override(systematic, template, "SamplePath")
         if sample_override is not None:
@@ -126,7 +126,7 @@ def _get_filter(
     """
     selection_filter = region.get("Filter", None)
     # check whether a systematic is being processed
-    if systematic.get("Name", "nominal") != "nominal":
+    if systematic.get("Name", "Nominal") != "Nominal":
         # determine whether the template has an override specified
         selection_filter_override = _check_for_override(systematic, template, "Filter")
         if selection_filter_override is not None:
@@ -155,7 +155,7 @@ def _get_weight(
     """
     weight = sample.get("Weight", None)
     # check whether a systematic is being processed
-    if systematic.get("Name", "nominal") != "nominal":
+    if systematic.get("Name", "Nominal") != "Nominal":
         # determine whether the template has an override specified
         weight_override = _check_for_override(systematic, template, "Weight")
         if weight_override is not None:
@@ -181,7 +181,7 @@ def _get_position_in_file(
     """
     position = sample["Tree"]
     # check whether a systematic is being processed
-    if systematic.get("Name", "nominal") != "nominal":
+    if systematic.get("Name", "Nominal") != "Nominal":
         # determine whether the template has an override specified
         position_override = _check_for_override(systematic, template, "Tree")
         if position_override is not None:

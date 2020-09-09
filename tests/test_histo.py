@@ -131,7 +131,7 @@ def test_Histogram_from_config(tmp_path, example_histograms, histogram_helpers):
 
     region = {"Name": "region"}
     sample = {"Name": "sample"}
-    systematic = {"Name": "nominal"}
+    systematic = {"Name": "Nominal"}
     h_from_path = histo.Histogram.from_config(
         tmp_path, region, sample, systematic, modified=False
     )

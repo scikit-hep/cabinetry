@@ -132,7 +132,7 @@ def histogram_is_needed(
     Returns:
         bool: whether a histogram is needed
     """
-    if systematic.get("Name", None) == "nominal":
+    if systematic.get("Name", None) == "Nominal":
         # for nominal, histograms are generally needed
         histo_needed = True
     else:
