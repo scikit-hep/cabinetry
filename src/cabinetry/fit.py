@@ -171,7 +171,7 @@ def fit(spec: Dict[str, Any], asimov: bool = False, custom: bool = False) -> Fit
     Returns:
         FitResults: object storing relevant fit results
     """
-    log.info("performing unconstrained fit")
+    log.info("performing maximum likelihood fit")
 
     model, data = model_and_data(spec, asimov)
 
