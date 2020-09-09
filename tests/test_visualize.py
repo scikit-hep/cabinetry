@@ -399,7 +399,7 @@ def test_ranking(mock_draw):
 def test_templates(mock_draw, mock_histo_config, mock_histo_path, tmp_path):
     # the side effects are repeated for the patched Histogram.from_path
     # to check all relevant behavior (including the unknown backend check)
-    nominal_path = tmp_path / "region_sample_nominal_modified.npz"
+    nominal_path = tmp_path / "region_sample_Nominal_modified.npz"
     up_path = tmp_path / "region_sample_sys_Up_modified.npz"
     down_path = tmp_path / "region_sample_sys_Down_modified.npz"
     region = {"Name": "region", "Variable": "x"}

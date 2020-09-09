@@ -126,7 +126,7 @@ def test_Histogram_from_path(tmp_path, caplog, example_histograms, histogram_hel
 
 def test_Histogram_from_config(tmp_path, example_histograms, histogram_helpers):
     h_ref = histo.Histogram.from_arrays(*example_histograms.normal())
-    histo_path = tmp_path / "region_sample_nominal.npz"
+    histo_path = tmp_path / "region_sample_Nominal.npz"
     h_ref.save(histo_path)
 
     region = {"Name": "region"}
