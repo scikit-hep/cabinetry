@@ -45,7 +45,7 @@ def print_results(
 
 
 def model_and_data(
-    spec: Dict[str, Any], asimov: bool = False
+    spec: Dict[str, Any], asimov: bool = False, with_aux: bool = True
 ) -> Tuple[pyhf.pdf.Model, List[float]]:
     """Returns model and data for a ``pyhf`` workspace specification.
 
@@ -53,11 +53,13 @@ def model_and_data(
         spec (Dict[str, Any]): a ``pyhf`` workspace specification
         asimov (bool, optional): whether to return the Asimov dataset, defaults
             to False
+        with_aux (bool, optional): whether to also return auxdata, defaults
+            to True
 
     Returns:
         Tuple[pyhf.pdf.Model, List[float]]:
             - a HistFactory-style model in ``pyhf`` format
-            - the data (plus auxdata) for the model
+            - the data (plus auxdata if requested) for the model
     """
     workspace = pyhf.Workspace(spec)
     model = workspace.model(
@@ -67,9 +69,9 @@ def model_and_data(
         }
     )  # use HistFactory InterpCode=4
     if not asimov:
-        data = workspace.data(model)
+        data = workspace.data(model, with_aux=with_aux)
     else:
-        data = model_utils.build_Asimov_data(model)
+        data = model_utils.build_Asimov_data(model, with_aux=with_aux)
     return model, data
 
 

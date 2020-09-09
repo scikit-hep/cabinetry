@@ -30,19 +30,22 @@ def get_parameter_names(model: pyhf.pdf.Model) -> List[str]:
     return labels
 
 
-def build_Asimov_data(model: pyhf.Model) -> List[float]:
-    """Returns the Asimov dataset (with auxdata) for a model.
+def build_Asimov_data(model: pyhf.Model, with_aux: bool = True) -> List[float]:
+    """Returns the Asimov dataset (optionally with auxdata) for a model.
 
     Args:
         model (pyhf.Model): the model from which to construct the
             dataset
+        with_aux (bool, optional): whether to also return auxdata, defaults
+            to True
 
     Returns:
         List[float]: the Asimov dataset
     """
     asimov_data = np.sum(model.nominal_rates, axis=1)[0][0].tolist()
-    asimov_aux = model.config.auxdata
-    return asimov_data + asimov_aux
+    if with_aux:
+        return asimov_data + model.config.auxdata
+    return asimov_data
 
 
 def get_asimov_parameters(model: pyhf.pdf.Model) -> Tuple[np.ndarray, np.ndarray]:

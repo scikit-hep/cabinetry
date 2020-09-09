@@ -16,6 +16,9 @@ def test_build_Asimov_data(example_spec):
     model = ws.model()
     assert model_utils.build_Asimov_data(model) == [51.839756, 1]
 
+    # without auxdata
+    assert model_utils.build_Asimov_data(model, with_aux=False) == [51.839756]
+
 
 def test_get_asimov_parameters(example_spec):
     model = pyhf.Workspace(example_spec).model()

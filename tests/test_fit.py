@@ -42,11 +42,15 @@ def test_model_and_data(example_spec):
         "normsys": {"interpcode": "code4"},
         "histosys": {"interpcode": "code4p"},
     }
-    assert np.allclose(data, [475, 1.0])
+    assert data == [475, 1.0]
 
     # requesting Asimov dataset
     model, data = fit.model_and_data(example_spec, asimov=True)
-    assert np.allclose(data, [51.839756, 1.0])
+    assert data == [51.839756, 1.0]
+
+    # without auxdata
+    model, data = fit.model_and_data(example_spec, with_aux=False)
+    assert data == [475]
 
 
 # skip a "RuntimeWarning: numpy.ufunc size changed" warning
