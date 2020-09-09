@@ -177,8 +177,8 @@ def run(output_directory, visualize=False):
     yield_b = 1000
     yield_b_var = 1000
     labels = ["signal", "background", "background_varied"]  # names of prcesses
-    file_name = output_directory + "prediction.root"
-    file_name_pseudodata = output_directory + "data.root"
+    file_name = output_directory + "/prediction.root"
+    file_name_pseudodata = output_directory + "/data.root"
 
     np.random.seed(0)
 
