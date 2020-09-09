@@ -4,7 +4,6 @@ import pathlib
 from typing import Any, Dict, List, Optional, Union
 
 import numpy as np
-import pyhf
 
 from . import configuration
 from . import fit
@@ -122,13 +121,7 @@ def data_MC(
     Raises:
         NotImplementedError: when trying to plot with a method that is not supported
     """
-    workspace = pyhf.Workspace(spec)
-    model = workspace.model(
-        modifier_settings={
-            "normsys": {"interpcode": "code4"},
-            "histosys": {"interpcode": "code4p"},
-        }
-    )
+    model, data_combined = fit.model_and_data(spec, with_aux=False)
 
     if fit_results:
         # fit results specified, draw a post-fit plot with them applied
@@ -148,7 +141,6 @@ def data_MC(
     yields_combined = model.main_model.expected_data(
         param_values, return_by_sample=True
     )  # all channels concatenated
-    data_combined = workspace.data(model, with_aux=False)
 
     # slice the yields into an array where the first index is the channel,
     # and the second index is the sample
