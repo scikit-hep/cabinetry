@@ -5,6 +5,7 @@ import numpy as np
 import pytest
 
 from cabinetry import fit
+from cabinetry import model_utils
 
 
 def test_FitResults():
@@ -35,29 +36,11 @@ def test_print_results(caplog):
     caplog.clear()
 
 
-def test_model_and_data(example_spec):
-    model, data = fit.model_and_data(example_spec)
-    assert model.spec["channels"] == example_spec["channels"]
-    assert model.config.modifier_settings == {
-        "normsys": {"interpcode": "code4"},
-        "histosys": {"interpcode": "code4p"},
-    }
-    assert data == [475, 1.0]
-
-    # requesting Asimov dataset
-    model, data = fit.model_and_data(example_spec, asimov=True)
-    assert data == [51.839756, 1.0]
-
-    # without auxdata
-    model, data = fit.model_and_data(example_spec, with_aux=False)
-    assert data == [475]
-
-
 # skip a "RuntimeWarning: numpy.ufunc size changed" warning
 # due to different numpy versions used in dependencies
 @pytest.mark.filterwarnings("ignore::RuntimeWarning")
 def test__fit_model_pyhf(example_spec):
-    model, data = fit.model_and_data(example_spec)
+    model, data = model_utils.model_and_data(example_spec)
     fit_results = fit._fit_model_pyhf(model, data)
     assert np.allclose(fit_results.bestfit, [1.1, 8.32984849])
     assert np.allclose(fit_results.uncertainty, [0.0, 0.38099445])
@@ -66,7 +49,7 @@ def test__fit_model_pyhf(example_spec):
     assert np.allclose(fit_results.corr_mat, [[0.0, 0.0], [0.0, 1.0]])
 
     # Asimov fit
-    model, data = fit.model_and_data(example_spec, asimov=True)
+    model, data = model_utils.model_and_data(example_spec, asimov=True)
     fit_results = fit._fit_model_pyhf(model, data)
     assert np.allclose(fit_results.bestfit, [1.1, 0.90917877], rtol=1e-4)
     assert np.allclose(fit_results.uncertainty, [0.0, 0.12623179])
@@ -77,7 +60,7 @@ def test__fit_model_pyhf(example_spec):
 
 @pytest.mark.filterwarnings("ignore::RuntimeWarning")
 def test__fit_model_custom(example_spec):
-    model, data = fit.model_and_data(example_spec)
+    model, data = model_utils.model_and_data(example_spec)
     fit_results = fit._fit_model_custom(model, data)
     assert np.allclose(fit_results.bestfit, [1.1, 8.32985794])
     assert np.allclose(fit_results.uncertainty, [0.0, 0.38153392])
@@ -86,7 +69,7 @@ def test__fit_model_custom(example_spec):
     assert np.allclose(fit_results.corr_mat, [[0.0, 0.0], [0.0, 1.0]])
 
     # Asimov fit, with fixed gamma (fixed not to Asimov MLE)
-    model, data = fit.model_and_data(example_spec, asimov=True)
+    model, data = model_utils.model_and_data(example_spec, asimov=True)
     fit_results = fit._fit_model_custom(model, data)
     # the gamma factor is multiplicative and fixed to 1.1, so the
     # signal strength needs to be 1/1.1 to compensate
@@ -110,7 +93,7 @@ def test__fit_model_custom(example_spec):
         np.asarray([1.0]), np.asarray([0.1]), ["par"], np.empty(0), 2.0
     ),
 )
-@mock.patch("cabinetry.fit.model_and_data", return_value=("model", "data"))
+@mock.patch("cabinetry.model_utils.model_and_data", return_value=("model", "data"))
 def test_fit(mock_load, mock_pyhf, mock_custom, mock_print, example_spec):
     fit.fit(example_spec)
     assert mock_load.call_args_list == [[(example_spec, False), {}]]

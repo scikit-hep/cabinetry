@@ -1,5 +1,5 @@
 import logging
-from typing import Any, Dict, List, NamedTuple, Tuple
+from typing import Any, Dict, List, NamedTuple
 
 import iminuit
 import numpy as np
@@ -42,37 +42,6 @@ def print_results(
         log.info(
             f"{label.ljust(max_label_length)}: {fit_result.bestfit[i]: .6f} +/- {fit_result.uncertainty[i]:.6f}"
         )
-
-
-def model_and_data(
-    spec: Dict[str, Any], asimov: bool = False, with_aux: bool = True
-) -> Tuple[pyhf.pdf.Model, List[float]]:
-    """Returns model and data for a ``pyhf`` workspace specification.
-
-    Args:
-        spec (Dict[str, Any]): a ``pyhf`` workspace specification
-        asimov (bool, optional): whether to return the Asimov dataset, defaults
-            to False
-        with_aux (bool, optional): whether to also return auxdata, defaults
-            to True
-
-    Returns:
-        Tuple[pyhf.pdf.Model, List[float]]:
-            - a HistFactory-style model in ``pyhf`` format
-            - the data (plus auxdata if requested) for the model
-    """
-    workspace = pyhf.Workspace(spec)
-    model = workspace.model(
-        modifier_settings={
-            "normsys": {"interpcode": "code4"},
-            "histosys": {"interpcode": "code4p"},
-        }
-    )  # use HistFactory InterpCode=4
-    if not asimov:
-        data = workspace.data(model, with_aux=with_aux)
-    else:
-        data = model_utils.build_Asimov_data(model, with_aux=with_aux)
-    return model, data
 
 
 def _fit_model_pyhf(model: pyhf.pdf.Model, data: List[float]) -> FitResults:
@@ -175,7 +144,7 @@ def fit(spec: Dict[str, Any], asimov: bool = False, custom: bool = False) -> Fit
     """
     log.info("performing maximum likelihood fit")
 
-    model, data = model_and_data(spec, asimov)
+    model, data = model_utils.model_and_data(spec, asimov)
 
     if not custom:
         fit_result = _fit_model_pyhf(model, data)

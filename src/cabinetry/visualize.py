@@ -121,7 +121,7 @@ def data_MC(
     Raises:
         NotImplementedError: when trying to plot with a method that is not supported
     """
-    model, data_combined = fit.model_and_data(spec, with_aux=False)
+    model, data_combined = model_utils.model_and_data(spec, with_aux=False)
 
     if fit_results:
         # fit results specified, draw a post-fit plot with them applied
