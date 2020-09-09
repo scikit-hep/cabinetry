@@ -170,7 +170,7 @@ def test__get_position_in_file():
     # no override
     assert (
         template_builder._get_position_in_file(
-            {"Tree": "tree_name"}, {"Name": "nominal"}, ""
+            {"Tree": "tree_name"}, {"Name": "Nominal"}, ""
         )
         == "tree_name"
     )
@@ -221,7 +221,7 @@ def test__Builder_create_histogram(mock_uproot_builder, mock_histo, mock_save):
         "SamplePath": "path_to_sample",
         "Weight": "weight_mc",
     }
-    systematic = {"Name": "nominal"}
+    systematic = {"Name": "Nominal"}
 
     builder = template_builder._Builder(pathlib.Path("path"), "{SamplePath}", "uproot")
     builder._create_histogram(region, sample, systematic, "Nominal")
@@ -254,7 +254,7 @@ def test__Builder_create_histogram(mock_uproot_builder, mock_histo, mock_save):
 def test__Builder__name_and_save(mock_name):
     region = {"Name": "test_region"}
     sample = {"Name": "sample"}
-    systematic = {"Name": "nominal"}
+    systematic = {"Name": "Nominal"}
 
     histogram = mock.MagicMock()
 
@@ -272,7 +272,7 @@ def test__Builder__wrap_custom_template_builder(mock_save):
     histogram = bh.Histogram(bh.axis.Variable([0, 1]))
     region = {"Name": "test_region"}
     sample = {"Name": "sample"}
-    systematic = {"Name": "nominal"}
+    systematic = {"Name": "Nominal"}
 
     def test_func(reg, sam, sys, tem):
         return histogram

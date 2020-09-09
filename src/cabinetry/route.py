@@ -240,10 +240,10 @@ def apply_to_all_templates(
         for sample in config["Samples"]:
             log.debug(f"    reading sample {sample['Name']}")
 
-            for systematic in [{"Name": "nominal"}] + config["Systematics"]:
+            for systematic in [{"Name": "Nominal"}] + config["Systematics"]:
 
                 # determine how many templates need to be considered
-                if systematic["Name"] == "nominal":
+                if systematic["Name"] == "Nominal":
                     # only nominal template is needed
                     templates = ["Nominal"]
                 else:
