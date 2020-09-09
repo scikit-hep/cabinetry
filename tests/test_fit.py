@@ -124,3 +124,5 @@ def test_fit(mock_load, mock_pyhf, mock_custom, mock_print, example_spec):
     fit.fit(example_spec, custom=True)
     mock_custom.assert_called_once()
     assert mock_custom.call_args == [("model", "data"), {}]
+    assert mock_print.call_args[0][0].bestfit == [3.0]
+    assert mock_print.call_args[0][0].uncertainty == [0.3]
