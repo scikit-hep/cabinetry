@@ -15,9 +15,14 @@ def test_integration(tmp_path, ntuple_creator):
     """The purpose of this integration test is to check whether the
     steps run without error and whether the fit result is as expected.
     """
-    ntuple_creator(str(tmp_path) + "/")
+    ntuple_creator(str(tmp_path))
 
     cabinetry_config = cabinetry.configuration.read("config_example.yml")
+
+    # override config options to point to tmp_path
+    cabinetry_config["General"]["HistogramFolder"] = str(tmp_path / "histograms")
+    cabinetry_config["General"]["InputPath"] = str(tmp_path / "{SamplePath}")
+
     cabinetry.template_builder.create_histograms(cabinetry_config, method="uproot")
     cabinetry.template_postprocessor.run(cabinetry_config)
     workspace_path = tmp_path / "example_workspace.json"
