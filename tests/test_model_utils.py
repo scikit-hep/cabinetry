@@ -5,10 +5,37 @@ import pyhf
 from cabinetry import model_utils
 
 
+def test_model_and_data(example_spec):
+    model, data = model_utils.model_and_data(example_spec)
+    assert model.spec["channels"] == example_spec["channels"]
+    assert model.config.modifier_settings == {
+        "normsys": {"interpcode": "code4"},
+        "histosys": {"interpcode": "code4p"},
+    }
+    assert data == [475, 1.0]
+
+    # requesting Asimov dataset
+    model, data = model_utils.model_and_data(example_spec, asimov=True)
+    assert data == [51.839756, 1.0]
+
+    # without auxdata
+    model, data = model_utils.model_and_data(example_spec, with_aux=False)
+    assert data == [475]
+
+
 def test_get_parameter_names(example_spec):
     model = pyhf.Workspace(example_spec).model()
     labels = model_utils.get_parameter_names(model)
     assert labels == ["staterror_Signal-Region", "Signal strength"]
+
+
+def test_build_Asimov_data(example_spec):
+    ws = pyhf.Workspace(example_spec)
+    model = ws.model()
+    assert model_utils.build_Asimov_data(model) == [51.839756, 1]
+
+    # without auxdata
+    assert model_utils.build_Asimov_data(model, with_aux=False) == [51.839756]
 
 
 def test_get_asimov_parameters(example_spec):

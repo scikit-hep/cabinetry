@@ -454,7 +454,7 @@ def build(config: Dict[str, Any], with_validation: bool = True) -> Dict[str, Any
 
 
 def validate(ws: Dict[str, Any]) -> None:
-    """Validate a workspace with ``pyhf``.
+    """Validates a workspace with ``pyhf``.
 
     Args:
         ws (Dict[str, Any]): the workspace to validate
@@ -463,7 +463,7 @@ def validate(ws: Dict[str, Any]) -> None:
 
 
 def save(ws: Dict[str, Any], file_path_string: Union[str, pathlib.Path]) -> None:
-    """Serialize a workspace to a file.
+    """Serializes a workspace to a file.
 
     Args:
         ws (Dict[str, Any]): ``pyhf``-compatible `HistFactory` workspace
@@ -479,7 +479,7 @@ def save(ws: Dict[str, Any], file_path_string: Union[str, pathlib.Path]) -> None
 
 
 def load(file_path_string: Union[str, pathlib.Path]) -> Dict[str, Any]:
-    """Load a workspace from a file.
+    """Loads a workspace from a file.
 
     Args:
         file_path_string (Union[str, pathlib.Path]): path to the file to load the workspace from

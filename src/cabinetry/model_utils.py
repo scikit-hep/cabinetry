@@ -1,5 +1,5 @@
 import logging
-from typing import List, Tuple
+from typing import Any, Dict, List, Tuple
 
 import awkward1 as ak
 import numpy as np
@@ -7,6 +7,37 @@ import pyhf
 
 
 log = logging.getLogger(__name__)
+
+
+def model_and_data(
+    spec: Dict[str, Any], asimov: bool = False, with_aux: bool = True
+) -> Tuple[pyhf.pdf.Model, List[float]]:
+    """Returns model and data for a ``pyhf`` workspace specification.
+
+    Args:
+        spec (Dict[str, Any]): a ``pyhf`` workspace specification
+        asimov (bool, optional): whether to return the Asimov dataset, defaults
+            to False
+        with_aux (bool, optional): whether to also return auxdata, defaults
+            to True
+
+    Returns:
+        Tuple[pyhf.pdf.Model, List[float]]:
+            - a HistFactory-style model in ``pyhf`` format
+            - the data (plus auxdata if requested) for the model
+    """
+    workspace = pyhf.Workspace(spec)
+    model = workspace.model(
+        modifier_settings={
+            "normsys": {"interpcode": "code4"},
+            "histosys": {"interpcode": "code4p"},
+        }
+    )  # use HistFactory InterpCode=4
+    if not asimov:
+        data = workspace.data(model, with_aux=with_aux)
+    else:
+        data = build_Asimov_data(model, with_aux=with_aux)
+    return model, data
 
 
 def get_parameter_names(model: pyhf.pdf.Model) -> List[str]:
@@ -28,6 +59,24 @@ def get_parameter_names(model: pyhf.pdf.Model) -> List[str]:
                 else parname
             )
     return labels
+
+
+def build_Asimov_data(model: pyhf.Model, with_aux: bool = True) -> List[float]:
+    """Returns the Asimov dataset (optionally with auxdata) for a model.
+
+    Args:
+        model (pyhf.Model): the model from which to construct the
+            dataset
+        with_aux (bool, optional): whether to also return auxdata, defaults
+            to True
+
+    Returns:
+        List[float]: the Asimov dataset
+    """
+    asimov_data = np.sum(model.nominal_rates, axis=1)[0][0].tolist()
+    if with_aux:
+        return asimov_data + model.config.auxdata
+    return asimov_data
 
 
 def get_asimov_parameters(model: pyhf.pdf.Model) -> Tuple[np.ndarray, np.ndarray]:
