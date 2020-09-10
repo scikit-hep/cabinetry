@@ -164,6 +164,7 @@ def data_MC(
     figure_path.parent.mkdir(parents=True, exist_ok=True)
     log.debug(f"saving figure as {figure_path}")
     fig.savefig(figure_path)
+    plt.close(fig)
 
 
 def correlation_matrix(
@@ -206,6 +207,7 @@ def correlation_matrix(
     figure_path.parent.mkdir(parents=True, exist_ok=True)
     log.debug(f"saving figure as {figure_path}")
     fig.savefig(figure_path)
+    plt.close(fig)
 
 
 def pulls(
@@ -241,6 +243,7 @@ def pulls(
     figure_path.parent.mkdir(parents=True, exist_ok=True)
     log.debug(f"saving figure as {figure_path}")
     fig.savefig(figure_path)
+    plt.close(fig)
 
 
 def ranking(
@@ -354,6 +357,7 @@ def ranking(
     figure_path.parent.mkdir(parents=True, exist_ok=True)
     log.debug(f"saving figure as {figure_path}")
     fig.savefig(figure_path)
+    plt.close(fig)
 
 
 def templates(
@@ -511,3 +515,4 @@ def templates(
     figure_path.parent.mkdir(parents=True, exist_ok=True)
     log.debug(f"saving figure as {figure_path}")
     fig.savefig(figure_path)
+    plt.close(fig)
