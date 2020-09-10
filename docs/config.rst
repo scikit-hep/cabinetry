@@ -34,4 +34,6 @@ Common options:
 
 .. jsonschema:: ../src/cabinetry/schemas/config.json#/definitions/samples_setting
 
+.. jsonschema:: ../src/cabinetry/schemas/config.json#/definitions/samplepath_setting
+
 

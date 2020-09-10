@@ -151,8 +151,7 @@
                     "type": "string"
                 },
                 "SamplePath": {
-                    "description": "(part of) path to file containing sample",
-                    "type": "string"
+                    "$ref": "#/definitions/samplepath_setting"
                 },
                 "Data": {
                     "description": "if it is a data sample",
@@ -253,6 +252,7 @@
         "samples_setting": {
             "title": "Sample setting",
             "$$target": "#/definitions/samples_setting",
+            "description": "name(s) of affected sample(s)",
             "oneOf": [
                 {
                     "description": "single affected sample",
@@ -264,6 +264,27 @@
                     "minItems": 1,
                     "items": {
                         "description": "single affected sample",
+                        "type": "string"
+                    },
+                    "uniqueItems": true
+                }
+            ]
+        },
+        "samplepath_setting": {
+            "title": "SamplePath setting",
+            "$$target": "#/definitions/samplepath_setting",
+            "description": "path(s) to input file(s) for ntuple production",
+            "oneOf": [
+                {
+                    "description": "path to single file",
+                    "type": "string"
+                },
+                {
+                    "description": "list of paths",
+                    "type": "array",
+                    "minItems": 1,
+                    "items": {
+                        "description": "path to single file",
                         "type": "string"
                     },
                     "uniqueItems": true
