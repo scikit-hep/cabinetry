@@ -34,18 +34,18 @@ def test__check_for_override():
     )
 
 
-def test__get_ntuple_path(caplog):
+def test__get_ntuple_paths(caplog):
     # only general path, no override
-    assert template_builder._get_ntuple_path(
+    assert template_builder._get_ntuple_paths(
         "path.root", {}, {}, {}, ""
     ) == pathlib.Path("path.root")
 
     # general path with region and sample templates
     assert (
-        template_builder._get_ntuple_path(
-            "{RegionPath}/{SamplePath}",
+        template_builder._get_ntuple_paths(
+            "{RegionPath}/{SamplePaths}",
             {"RegionPath": "region"},
-            {"SamplePath": "sample.root"},
+            {"SamplePaths": "sample.root"},
             {},
             "",
         )
@@ -54,26 +54,26 @@ def test__get_ntuple_path(caplog):
 
     # systematic with override
     assert (
-        template_builder._get_ntuple_path(
-            "{SamplePath}",
+        template_builder._get_ntuple_paths(
+            "{SamplePaths}",
             {},
-            {"SamplePath": "path.root"},
-            {"Name": "variation", "Up": {"SamplePath": "variation.root"}},
+            {"SamplePaths": "path.root"},
+            {"Name": "variation", "Up": {"SamplePaths": "variation.root"}},
             "Up",
         )
         == pathlib.Path("variation.root")
     )
 
     # systematic without override
-    assert template_builder._get_ntuple_path(
-        "{SamplePath}", {}, {"SamplePath": "path.root"}, {"Name": "variation"}, "Up"
+    assert template_builder._get_ntuple_paths(
+        "{SamplePaths}", {}, {"SamplePaths": "path.root"}, {"Name": "variation"}, "Up"
     ) == pathlib.Path("path.root")
 
     caplog.set_level(logging.DEBUG)
     caplog.clear()
 
     # warning: no region path in template
-    assert template_builder._get_ntuple_path(
+    assert template_builder._get_ntuple_paths(
         "path.root", {"RegionPath": "region.root"}, {}, {}, ""
     ) == pathlib.Path("path.root")
     assert "region override specified, but {RegionPath} not found in default path" in [
@@ -82,24 +82,24 @@ def test__get_ntuple_path(caplog):
     caplog.clear()
 
     # warning: no region path in template
-    assert template_builder._get_ntuple_path(
-        "path.root", {}, {"SamplePath": "sample.root"}, {}, ""
+    assert template_builder._get_ntuple_paths(
+        "path.root", {}, {"SamplePaths": "sample.root"}, {}, ""
     ) == pathlib.Path("path.root")
-    assert "sample override specified, but {SamplePath} not found in default path" in [
+    assert "sample override specified, but {SamplePaths} not found in default path" in [
         rec.message for rec in caplog.records
     ]
     caplog.clear()
 
     # error: no override for {RegionPath}
     with pytest.raises(ValueError, match="no path setting found for region region"):
-        template_builder._get_ntuple_path(
+        template_builder._get_ntuple_paths(
             "{RegionPath}", {"Name": "region"}, {}, {}, ""
         )
 
-    # error: no override for {SamplePath}
+    # error: no override for {SamplePaths}
     with pytest.raises(ValueError, match="no path setting found for sample sample"):
-        template_builder._get_ntuple_path(
-            "{SamplePath}", {}, {"Name": "sample"}, {}, ""
+        template_builder._get_ntuple_paths(
+            "{SamplePaths}", {}, {"Name": "sample"}, {}, ""
         )
 
 
@@ -218,12 +218,12 @@ def test__Builder_create_histogram(mock_uproot_builder, mock_histo, mock_save):
     sample = {
         "Name": "sample",
         "Tree": "tree",
-        "SamplePath": "path_to_sample",
+        "SamplePaths": "path_to_sample",
         "Weight": "weight_mc",
     }
     systematic = {"Name": "Nominal"}
 
-    builder = template_builder._Builder(pathlib.Path("path"), "{SamplePath}", "uproot")
+    builder = template_builder._Builder(pathlib.Path("path"), "{SamplePaths}", "uproot")
     builder._create_histogram(region, sample, systematic, "Nominal")
 
     # verify the backend call happened properly
@@ -244,7 +244,7 @@ def test__Builder_create_histogram(mock_uproot_builder, mock_histo, mock_save):
 
     # other backends
     builder_unknown = template_builder._Builder(
-        pathlib.Path("path"), "{SamplePath}", "unknown"
+        pathlib.Path("path"), "{SamplePaths}", "unknown"
     )
     with pytest.raises(NotImplementedError, match="unknown backend unknown"):
         builder_unknown._create_histogram(region, sample, systematic, "Nominal")
