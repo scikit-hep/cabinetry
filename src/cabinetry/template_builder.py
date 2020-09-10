@@ -1,11 +1,12 @@
 import functools
 import logging
 import pathlib
-from typing import Any, Dict, Optional
+from typing import Any, Dict, List, Optional
 
 import boost_histogram as bh
 import numpy as np
 
+from . import configuration
 from . import histo
 from . import route
 
@@ -37,7 +38,7 @@ def _get_ntuple_paths(
     sample: Dict[str, Any],
     systematic: Dict[str, Any],
     template: str,
-) -> pathlib.Path:
+) -> List[pathlib.Path]:
     """Returns the paths to ntuples for a region-sample-systematic-template.
 
     A path is built starting from the path specified in the general options
@@ -56,7 +57,7 @@ def _get_ntuple_paths(
         template (str): which template is considered: "Nominal", "Up", "Down"
 
     Returns:
-        pathlib.Path: path where the ntuples are located
+        List[pathlib.Path]: list of paths to ntuples
     """
     # obtain region and sample paths, if they are defined
     region_path = region.get("RegionPath", None)
@@ -85,12 +86,21 @@ def _get_ntuple_paths(
             log.warning(
                 "sample override specified, but {SamplePaths} not found in default path"
             )
-        general_path = general_path.replace("{SamplePaths}", sample_paths)
+        # SamplePaths can be a list, so need to construct all possible paths
+        sample_paths = configuration._convert_setting_to_list(sample_paths)
+        path_list = []
+        for sample_path in sample_paths:
+            path_list.append(general_path.replace("{SamplePaths}", sample_path))
     elif sample_template_exists:
         raise ValueError(f"no path setting found for sample {sample['Name']}")
+    else:
+        # no need for multiple paths, and no SamplePaths are present, so turn
+        # the existing path into a list
+        path_list = [general_path]
 
-    path = pathlib.Path(general_path)
-    return path
+    # convert the contents of path_lists to paths and return them
+    paths = [pathlib.Path(path) for path in path_list]
+    return paths
 
 
 def _get_variable(region: Dict[str, Any]) -> str:

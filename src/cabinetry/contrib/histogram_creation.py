@@ -1,5 +1,5 @@
 import pathlib
-from typing import Optional, Tuple
+from typing import List, Optional, Tuple
 
 import awkward1 as ak
 import boost_histogram as bh
@@ -8,31 +8,37 @@ import uproot4 as uproot
 
 
 def from_uproot(
-    ntuple_path: pathlib.Path,
+    ntuple_paths: List[pathlib.Path],
     pos_in_file: str,
     variable: str,
     bins: np.ndarray,
     weight: Optional[str] = None,
     selection_filter: Optional[str] = None,
 ) -> Tuple[np.ndarray, np.ndarray]:
-    """read an ntuple with uproot, the resulting arrays are then filled into a histogram
+    """Reads an ntuple with uproot, and fills a histogram with the observable.
+
+    The paths may contain wildcards.
 
     Args:
-        ntuple_path (pathlib.Path): path to ntuple
+        ntuple_paths (List[pathlib.Path]): list of paths to ntuples
         pos_in_file (str): name of tree within ntuple
         variable (str): variable to bin histogram in
         bins (numpy.ndarray): bin edges for histogram
-        weight (Optional[str], optional): event weight to extract, defaults to None (no weights applied)
-        selection_filter (Optional[str], optional): filter to be applied on events, defaults to None (no filter)
+        weight (Optional[str], optional): event weight to extract,
+            defaults to None (no weights applied)
+        selection_filter (Optional[str], optional): filter to be applied
+            on events, defaults to None (no filter)
 
     Returns:
         Tuple[np.ndarray, np.ndarray]:
             - yield per bin
             - stat. uncertainty per bin
     """
-    # if there is more than one file handed over in the list, need to concatenate differently with ":"
+    # concatenate the path to file and location within file with ":"
+    paths_with_trees = [str(path) + ":" + pos_in_file for path in ntuple_paths]
 
-    # determine whether the weight is a float or an expression (for which a branch needs to be read)
+    # determine whether the weight is a float or an expression
+    # (for which a branch needs to be read)
     if weight is not None:
         try:
             float(weight)
@@ -48,7 +54,7 @@ def from_uproot(
     if weight_is_expression:
         # need to read observables and weights
         array_generator = uproot.iterate(
-            str(ntuple_path) + ":" + pos_in_file,
+            paths_with_trees,
             expressions=[variable, weight],
             cut=selection_filter,
         )
@@ -63,7 +69,7 @@ def from_uproot(
     else:
         # only need to read the observables
         array_generator = uproot.iterate(
-            str(ntuple_path) + ":" + pos_in_file,
+            paths_with_trees,
             expressions=[variable],
             cut=selection_filter,
         )
@@ -80,8 +86,7 @@ def from_uproot(
 def _bin_data(
     observables: np.ndarray, weights: np.ndarray, bins: np.ndarray
 ) -> Tuple[np.ndarray, np.ndarray]:
-    """create a histogram from unbinned data, providing yields, statistical uncertainties
-    and the bin edges
+    """Creates a histogram from unbinned data.
 
     Args:
         observables (numpy.ndarray): values the histogram will be binned in
