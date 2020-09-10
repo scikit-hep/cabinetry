@@ -30,23 +30,48 @@ def from_uproot(
             - yield per bin
             - stat. uncertainty per bin
     """
-    tree = uproot.open(str(ntuple_path) + ":" + pos_in_file)
+    # if there is more than one file handed over in the list, need to concatenate differently with ":"
 
-    # extract observable and weights
-    # need the last [variable] to select the right entry out of the dict
-    # this only reads the observable branch and branches needed for the cut into memory
-    observables = ak.to_numpy(tree.arrays(variable, cut=selection_filter)[variable])
-
+    # determine whether the weight is a float or an expression (for which a branch needs to be read)
     if weight is not None:
         try:
-            # if the weight is just a number, no branch needs to be read
-            weights = np.ones_like(observables) * float(weight)
+            float(weight)
+            weight_is_expression = False
         except ValueError:
-            # evaluate the expression with uproot4
-            weights = ak.to_numpy(tree.arrays(weight, cut=selection_filter)[weight])
+            # weight is not a float, need to evaluate the expression
+            weight_is_expression = True
+    else:
+        # no weight specified, all weights are 1.0
+        weight_is_expression = False
+        weight = "1.0"
+
+    if weight_is_expression:
+        # need to read observables and weights
+        array_generator = uproot.iterate(
+            str(ntuple_path) + ":" + pos_in_file,
+            expressions=[variable, weight],
+            cut=selection_filter,
+        )
+        obs_list = []
+        weight_list = []
+        for arr in array_generator:
+            obs_list.append(ak.to_numpy(arr[variable]))
+            weight_list.append(ak.to_numpy(arr[weight]))
+        observables = np.concatenate(obs_list)
+        weights = np.concatenate(weight_list)
 
     else:
-        weights = np.ones_like(observables)
+        # only need to read the observables
+        array_generator = uproot.iterate(
+            str(ntuple_path) + ":" + pos_in_file,
+            expressions=[variable],
+            cut=selection_filter,
+        )
+        obs_list = []
+        for arr in array_generator:
+            obs_list.append(ak.to_numpy(arr[variable]))
+        observables = np.concatenate(obs_list)
+        weights = np.ones_like(observables) * float(weight)
 
     yields, stdev = _bin_data(observables, weights, bins)
     return yields, stdev
