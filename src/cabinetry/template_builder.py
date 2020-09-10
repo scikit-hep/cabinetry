@@ -1,7 +1,7 @@
 import functools
 import logging
 import pathlib
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, Union
 
 import boost_histogram as bh
 import numpy as np
@@ -16,10 +16,12 @@ log = logging.getLogger(__name__)
 
 def _check_for_override(
     systematic: Dict[str, Any], template: str, option: str
-) -> Optional[str]:
-    """Given a systematic and a string specifying which template is currently under consideration,
-    check whether the systematic defines an override for an option. Return the override if it
-    exists, otherwise return None.
+) -> Optional[Union[str, List[str]]]:
+    """Returns an override if specified by a template of a systematic.
+
+    Given a systematic and a string specifying which template is currently
+    under consideration, check whether the systematic defines an override
+    for an option. Return the override if it exists, otherwise return None.
 
     Args:
         systematic (Dict[str, Any]): containing all systematic information
@@ -27,7 +29,8 @@ def _check_for_override(
         option (str): the option for which the presence of an override is checked
 
     Returns:
-        Optional[str]: either None if no override exists, or the override
+        Optional[Union[str, List[str]]]: either None if no override exists,
+        or the override
     """
     return systematic.get(template, {}).get(option, None)
 

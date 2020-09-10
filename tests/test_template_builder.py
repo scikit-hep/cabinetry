@@ -33,12 +33,17 @@ def test__check_for_override():
         is None
     )
 
+    # override is a list
+    assert template_builder._check_for_override(
+        {"Up": {"setting": ["val", "val2"]}}, "Up", "setting"
+    ) == ["val", "val2"]
+
 
 def test__get_ntuple_paths(caplog):
     # only general path, no override
-    assert template_builder._get_ntuple_paths(
-        "path.root", {}, {}, {}, ""
-    ) == pathlib.Path("path.root")
+    assert template_builder._get_ntuple_paths("path.root", {}, {}, {}, "") == [
+        pathlib.Path("path.root")
+    ]
 
     # general path with region and sample templates
     assert (
@@ -49,7 +54,19 @@ def test__get_ntuple_paths(caplog):
             {},
             "",
         )
-        == pathlib.Path("region/sample.root")
+        == [pathlib.Path("region/sample.root")]
+    )
+
+    # two SamplePaths
+    assert (
+        template_builder._get_ntuple_paths(
+            "{RegionPath}/{SamplePaths}",
+            {"RegionPath": "region"},
+            {"SamplePaths": ["sample.root", "new.root"]},
+            {},
+            "",
+        )
+        == [pathlib.Path("region/sample.root"), pathlib.Path("region/new.root")]
     )
 
     # systematic with override
@@ -58,16 +75,19 @@ def test__get_ntuple_paths(caplog):
             "{SamplePaths}",
             {},
             {"SamplePaths": "path.root"},
-            {"Name": "variation", "Up": {"SamplePaths": "variation.root"}},
+            {
+                "Name": "variation",
+                "Up": {"SamplePaths": ["variation.root", "new.root"]},
+            },
             "Up",
         )
-        == pathlib.Path("variation.root")
+        == [pathlib.Path("variation.root"), pathlib.Path("new.root")]
     )
 
     # systematic without override
     assert template_builder._get_ntuple_paths(
         "{SamplePaths}", {}, {"SamplePaths": "path.root"}, {"Name": "variation"}, "Up"
-    ) == pathlib.Path("path.root")
+    ) == [pathlib.Path("path.root")]
 
     caplog.set_level(logging.DEBUG)
     caplog.clear()
@@ -75,7 +95,7 @@ def test__get_ntuple_paths(caplog):
     # warning: no region path in template
     assert template_builder._get_ntuple_paths(
         "path.root", {"RegionPath": "region.root"}, {}, {}, ""
-    ) == pathlib.Path("path.root")
+    ) == [pathlib.Path("path.root")]
     assert "region override specified, but {RegionPath} not found in default path" in [
         rec.message for rec in caplog.records
     ]
@@ -84,7 +104,7 @@ def test__get_ntuple_paths(caplog):
     # warning: no region path in template
     assert template_builder._get_ntuple_paths(
         "path.root", {}, {"SamplePaths": "sample.root"}, {}, ""
-    ) == pathlib.Path("path.root")
+    ) == [pathlib.Path("path.root")]
     assert "sample override specified, but {SamplePaths} not found in default path" in [
         rec.message for rec in caplog.records
     ]
@@ -229,7 +249,7 @@ def test__Builder_create_histogram(mock_uproot_builder, mock_histo, mock_save):
     # verify the backend call happened properly
     assert mock_uproot_builder.call_args_list == [
         (
-            (pathlib.Path("path_to_sample"), "tree", "x", [0]),
+            ([pathlib.Path("path_to_sample")], "tree", "x", [0]),
             {"weight": "weight_mc", "selection_filter": "x>3"},
         )
     ]
