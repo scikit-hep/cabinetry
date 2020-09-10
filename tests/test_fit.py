@@ -96,7 +96,7 @@ def test__fit_model_custom(example_spec):
 @mock.patch("cabinetry.model_utils.model_and_data", return_value=("model", "data"))
 def test_fit(mock_load, mock_pyhf, mock_custom, mock_print, example_spec):
     fit.fit(example_spec)
-    assert mock_load.call_args_list == [[(example_spec, False), {}]]
+    assert mock_load.call_args_list == [[(example_spec,), {"asimov": False}]]
     assert mock_pyhf.call_args_list == [[("model", "data"), {}]]
     mock_print.assert_called_once()
     assert mock_print.call_args[0][0].bestfit == [1.0]
@@ -105,7 +105,7 @@ def test_fit(mock_load, mock_pyhf, mock_custom, mock_print, example_spec):
 
     # Asimov fit
     fit.fit(example_spec, asimov=True)
-    assert mock_load.call_args == [(example_spec, True), {}]
+    assert mock_load.call_args == [(example_spec,), {"asimov": True}]
 
     # custom fit
     fit.fit(example_spec, custom=True)
