@@ -91,8 +91,8 @@ def test_print_overview(caplog):
 @pytest.mark.parametrize(
     "samples, converted", [("sample", ["sample"]), (["sample"], ["sample"])]
 )
-def test__convert_samples_to_list(samples, converted):
-    assert configuration._convert_samples_to_list(samples) == converted
+def test__convert_setting_to_list(samples, converted):
+    assert configuration._convert_setting_to_list(samples) == converted
 
 
 @pytest.mark.parametrize(
