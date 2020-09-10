@@ -1,5 +1,5 @@
 import logging
-from typing import Any, Dict, List, NamedTuple
+from typing import Any, Dict, List, NamedTuple, Optional
 
 import iminuit
 import numpy as np
@@ -72,7 +72,11 @@ def _fit_model_pyhf(model: pyhf.pdf.Model, data: List[float]) -> FitResults:
     return fit_result
 
 
-def _fit_model_custom(model: pyhf.pdf.Model, data: List[float]) -> FitResults:
+def _fit_model_custom(
+    model: pyhf.pdf.Model,
+    data: List[float],
+    fix_par_dict: Optional[List[Dict[str, Any]]] = None,
+) -> FitResults:
     """Uses ``iminuit`` directly to perform a maximum likelihood fit.
 
     Parameters set to be fixed in the model are held constant.
@@ -80,6 +84,9 @@ def _fit_model_custom(model: pyhf.pdf.Model, data: List[float]) -> FitResults:
     Args:
         model (pyhf.pdf.Model): the model to use in the fit
         data (List[float]): the data to fit the model to
+        fix_par_dict: Optional[List[Dict[str, Any]]]: list of parameters to
+            hold constant at given value, defaults to None (no additional
+            parameters held constant)
 
     Returns:
         FitResults: object storing relevant fit results
@@ -89,6 +96,16 @@ def _fit_model_custom(model: pyhf.pdf.Model, data: List[float]) -> FitResults:
     init_pars = model.config.suggested_init()
     par_bounds = model.config.suggested_bounds()
     fix_pars = model.config.suggested_fixed()
+
+    if fix_par_dict:
+        # fix additional parameters
+        for par in fix_par_dict:
+            par_name = par["name"]
+            par_value = par["value"]
+            par_index = par["index"]
+            log.debug(f"holding parameter {par_name} fixed at {par_value:.6f}")
+            fix_pars[par_index] = True
+            init_pars[par_index] = par_value
 
     # set initial step size to 0 for fixed parameters
     # this will cause the associated parameter uncertainties to be 0 post-fit
@@ -144,7 +161,7 @@ def fit(spec: Dict[str, Any], asimov: bool = False, custom: bool = False) -> Fit
     """
     log.info("performing maximum likelihood fit")
 
-    model, data = model_utils.model_and_data(spec, asimov)
+    model, data = model_utils.model_and_data(spec, asimov=asimov)
 
     if not custom:
         fit_result = _fit_model_pyhf(model, data)
@@ -155,3 +172,37 @@ def fit(spec: Dict[str, Any], asimov: bool = False, custom: bool = False) -> Fit
     log.debug(f"-2 log(L) = {fit_result.best_twice_nll:.6f} at the best-fit point")
 
     return fit_result
+
+
+def ranking(
+    spec: Dict[str, Any], fit_results: FitResults, asimov: bool = False
+) -> None:
+    model, data = model_utils.model_and_data(spec, asimov=asimov)
+    labels = model_utils.get_parameter_names(model)
+
+    nominal_poi = fit_results.bestfit[model.config.poi_index]
+
+    for i_par, label in enumerate(labels):
+        if label == model.config.poi_name:
+            continue
+        log.info(f"\n\n\t\trunning ranking for {label}\n")
+
+        with open("ranking.txt", "a") as f:
+            f.write(label + " " * (40 - len(label)))
+
+        for val in [
+            fit_results.bestfit[i_par] + fit_results.uncertainty[i_par],
+            fit_results.bestfit[i_par] - fit_results.uncertainty[i_par],
+        ]:
+            fix_dict = [{"name": label, "value": val, "index": i_par}]
+            fit_results_ranking = _fit_model_custom(model, data, fix_par_dict=fix_dict)
+            poi_val = fit_results_ranking.bestfit[model.config.poi_index]
+            log.info(
+                f"POI is {poi_val:.6f}, difference to nominal is {poi_val - nominal_poi:.6f}"
+            )
+
+            with open("ranking.txt", "a+") as f:
+                f.write("  " + str(poi_val - nominal_poi))
+
+        with open("ranking.txt", "a") as f:
+            f.write("\n")
