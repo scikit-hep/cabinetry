@@ -314,6 +314,7 @@ def test_ranking(mock_draw):
     bestfit = np.asarray([1.2, 0.1, 0.9])
     uncertainty = np.asarray([0.2, 0.8, 0.5])
     labels = ["staterror_a", "modeling", "mu"]
+    fit_results = fit.FitResults(bestfit, uncertainty, labels, np.empty(0), 0.0)
     impact_prefit_up = np.asarray([0.1, 0.5])
     impact_prefit_down = np.asarray([-0.2, -0.4])
     impact_postfit_up = np.asarray([0.1, 0.4])
@@ -327,9 +328,7 @@ def test_ranking(mock_draw):
     labels_expected = ["modeling", "staterror_a"]
 
     visualize.ranking(
-        bestfit,
-        uncertainty,
-        labels,
+        fit_results,
         impact_prefit_up,
         impact_prefit_down,
         impact_postfit_up,
@@ -351,9 +350,7 @@ def test_ranking(mock_draw):
 
     # maximum parameter amount specified
     visualize.ranking(
-        bestfit,
-        uncertainty,
-        labels,
+        fit_results,
         impact_prefit_up,
         impact_prefit_down,
         impact_postfit_up,
@@ -376,9 +373,7 @@ def test_ranking(mock_draw):
     # unknown plotting method
     with pytest.raises(NotImplementedError, match="unknown backend: unknown"):
         visualize.ranking(
-            bestfit,
-            uncertainty,
-            labels,
+            fit_results,
             impact_prefit_up,
             impact_prefit_down,
             impact_postfit_up,

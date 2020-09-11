@@ -302,9 +302,7 @@ def pulls(
 
 
 def ranking(
-    bestfit: np.ndarray,
-    uncertainty: np.ndarray,
-    labels: List[str],
+    fit_results: fit.FitResults,
     impact_prefit_up: np.ndarray,
     impact_prefit_down: np.ndarray,
     impact_postfit_up: np.ndarray,
@@ -317,9 +315,7 @@ def ranking(
     """Produces a ranking plot showing the impact of parameters on the POI.
 
     Args:
-        bestfit (np.ndarray): best-fit parameter results
-        uncertainty (np.ndarray): parameter uncertainties
-        labels (List[str]): parameter labels
+        fit_results (fit.FitResults): fit results to show best-fit points and uncertainties
         impact_prefit_up (np.ndarray): pre-fit impact in "up" direction per parameter
         impact_prefit_down (np.ndarray): pre-fit impact in "down" direction per parameter
         impact_postfit_up (np.ndarray): post-fit impact in "up" direction per parameter
@@ -336,9 +332,9 @@ def ranking(
     figure_path = pathlib.Path(figure_folder) / "ranking.pdf"
 
     # remove the POI results from bestfit, uncertainty, labels
-    bestfit = np.delete(bestfit, poi_index)
-    uncertainty = np.delete(uncertainty, poi_index)
-    labels = np.delete(labels, poi_index)
+    bestfit = np.delete(fit_results.bestfit, poi_index)
+    uncertainty = np.delete(fit_results.uncertainty, poi_index)
+    labels = np.delete(fit_results.labels, poi_index)
 
     # normalize staterrors - subtract 1
     # could also normalize width of staterrors here
