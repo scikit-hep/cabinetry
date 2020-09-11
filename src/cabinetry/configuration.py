@@ -28,8 +28,10 @@ def load(file_path_string: Union[str, pathlib.Path]) -> Dict[str, Any]:
 
 
 def validate(config: Dict[str, Any]) -> bool:
-    """check whether the config satisfies the json schema, and perform additional
-    checks to validate it
+    """Returns True if the config file is validated, otherwise raises exceptions.
+
+    Checks that the config satisfies the json schema, and performs additional
+    checks to validate the config further.
 
     Args:
         config (Dict[str, Any]): cabinetry configuration
@@ -63,7 +65,7 @@ def validate(config: Dict[str, Any]) -> bool:
 
 
 def print_overview(config: Dict[str, Any]) -> None:
-    """output a compact summary of a config file
+    """Prints a compact summary of a config file.
 
     Args:
         config (Dict[str, Any]): cabinetry configuration
@@ -99,11 +101,12 @@ def _convert_setting_to_list(setting: Union[str, List[str]]) -> List[str]:
 def sample_affected_by_modifier(
     sample: Dict[str, Any], modifier: Dict[str, Any]
 ) -> bool:
-    """check if a sample is affected by a given modifier (Systematic, NormFactor)
+    """Checks if a sample is affected by a given modifier (Systematic, NormFactor).
 
     Args:
         sample (Dict[str, Any]): containing all sample information
-        modifier (Dict[str, Any]): containing all modifier information (a Systematic of a NormFactor)
+        modifier (Dict[str, Any]): containing all modifier information
+            (a Systematic of a NormFactor)
 
     Returns:
         bool: True if sample is affected, False otherwise
@@ -119,8 +122,10 @@ def histogram_is_needed(
     systematic: Dict[str, Any],
     template: str,
 ) -> bool:
-    """determine whether for a given sample-region-systematic pairing, there is
-    an associated histogram
+    """Determines whether a histogram is needed for a specific configuration.
+
+    The configuration is defined by the region, sample, systematic and template
+    ("Nominal", "Up" or "Down").
 
     Args:
         region (Dict[str, Any]): containing all region information
@@ -129,7 +134,8 @@ def histogram_is_needed(
         template (str): which template is considered: "Nominal", "Up", "Down"
 
     Raises:
-        NotImplementedError: non-supported systematic variations based on histograms are requested
+        NotImplementedError: non-supported systematic variations based on histograms
+            are requested
 
     Returns:
         bool: whether a histogram is needed

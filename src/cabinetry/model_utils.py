@@ -41,8 +41,9 @@ def model_and_data(
 
 
 def get_parameter_names(model: pyhf.pdf.Model) -> List[str]:
-    """Returns the labels of all fit parameters, expanding vectors that act on
-    one bin per vector entry (gammas).
+    """Returns the labels of all fit parameters.
+
+    Vectors that act on one bin per vector entry (gammas) are expanded.
 
     Args:
         model (pyhf.pdf.Model): a HistFactory-style model in ``pyhf`` format

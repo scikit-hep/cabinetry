@@ -13,8 +13,9 @@ log = logging.getLogger(__name__)
 
 
 def _fix_stat_unc(histogram: histo.Histogram, name: str) -> None:
-    """replace nan stat. unc. by zero for a histogram, modifies the
-    histogram handed over in the argument
+    """Replaces nan stat. unc. by zero for a histogram.
+
+    Modifies the histogram handed over in the argument.
 
     Args:
         histogram (cabinetry.histo.Histogram): the histogram to fix
@@ -27,9 +28,11 @@ def _fix_stat_unc(histogram: histo.Histogram, name: str) -> None:
 
 
 def apply_postprocessing(histogram: histo.Histogram, name: str) -> histo.Histogram:
-    """Create a new modified histogram, currently only calling the
-    stat. uncertainty fix. The histogram in the function argument
-    stays unchanged.
+    """Returns a new histogram with post-processing applied.
+
+    The histogram handed to the function stays unchanged. A copy of the
+    histogram receives post-processing (currently only the stat. uncertainty
+    fix) and is then returned.
 
     Args:
         histogram (cabinetry.histo.Histogram): the histogram to postprocess
@@ -45,9 +48,10 @@ def apply_postprocessing(histogram: histo.Histogram, name: str) -> histo.Histogr
 
 
 def _get_postprocessor(histogram_folder: pathlib.Path) -> route.ProcessorFunc:
-    """return the postprocessing function to be applied to template histograms, for
-    example via ``cabinetry.route.apply_to_all_templates``
-    could alternatively create a ``Postprocessor`` class that contains processors
+    """Returns the post-processing function to be applied to template histograms.
+
+    Needed by ``cabinetry.route.apply_to_all_templates``. Could alternatively
+    create a ``Postprocessor`` class that contains processors.
 
     Args:
         histogram_folder (Union[str, pathlib.Path]): folder containing histograms
@@ -62,7 +66,7 @@ def _get_postprocessor(histogram_folder: pathlib.Path) -> route.ProcessorFunc:
         systematic: Dict[str, Any],
         template: str,
     ) -> None:
-        """apply post-processing to a single histogram
+        """Applies post-processing to a single histogram.
 
         Args:
             region (Dict[str, Any]): specifying region information
@@ -88,7 +92,7 @@ def _get_postprocessor(histogram_folder: pathlib.Path) -> route.ProcessorFunc:
 
 
 def run(config: Dict[str, Any]) -> None:
-    """apply postprocessing to all histograms
+    """Applies postprocessing to all histograms.
 
     Args:
         config (Dict[str, Any]): cabinetry configuration
