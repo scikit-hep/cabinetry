@@ -106,7 +106,7 @@ def sample_affected_by_modifier(
     Args:
         sample (Dict[str, Any]): containing all sample information
         modifier (Dict[str, Any]): containing all modifier information
-            (a Systematic of a NormFactor)
+            (a Systematic or a NormFactor)
 
     Returns:
         bool: True if sample is affected, False otherwise
