@@ -38,49 +38,23 @@ def test_build_Asimov_data(example_spec):
     assert model_utils.build_Asimov_data(model, with_aux=False) == [51.839756]
 
 
-def test_get_asimov_parameters(example_spec):
+def test_get_asimov_parameters(example_spec, example_spec_shapefactor):
     model = pyhf.Workspace(example_spec).model()
-    pars, unc = model_utils.get_asimov_parameters(model)
+    pars = model_utils.get_asimov_parameters(model)
     assert np.allclose(pars, [1.0, 1.0])
+
+    model = pyhf.Workspace(example_spec_shapefactor).model()
+    pars = model_utils.get_asimov_parameters(model)
+    assert np.allclose(pars, [1.0, 1.0, 1.0])
+
+
+def test_get_prefit_uncertainties(example_spec, example_spec_shapefactor):
+    model = pyhf.Workspace(example_spec).model()
+    unc = model_utils.get_prefit_uncertainties(model)
     assert np.allclose(unc, [0.0495665682, 0.0])
 
-    spec = {
-        "channels": [
-            {
-                "name": "Signal Region",
-                "samples": [
-                    {
-                        "data": [20, 10],
-                        "modifiers": [
-                            {
-                                "data": None,
-                                "name": "shape factor",
-                                "type": "shapefactor",
-                            },
-                            {
-                                "data": None,
-                                "name": "Signal strength",
-                                "type": "normfactor",
-                            },
-                        ],
-                        "name": "Signal",
-                    }
-                ],
-            }
-        ],
-        "measurements": [
-            {
-                "config": {"parameters": [], "poi": "Signal strength"},
-                "name": "shapefactor fit",
-            }
-        ],
-        "observations": [{"data": [25, 8], "name": "Signal Region"}],
-        "version": "1.0.0",
-    }
-
-    model = pyhf.Workspace(spec).model()
-    pars, unc = model_utils.get_asimov_parameters(model)
-    assert np.allclose(pars, [1.0, 1.0, 1.0])
+    model = pyhf.Workspace(example_spec_shapefactor).model()
+    unc = model_utils.get_prefit_uncertainties(model)
     assert np.allclose(unc, [0.0, 0.0, 0.0])
 
 

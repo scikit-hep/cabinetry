@@ -134,7 +134,8 @@ def data_MC(
         # no fit results specified, draw a pre-fit plot
         prefit = True
         # use pre-fit parameter values and uncertainties, and diagonal correlation matrix
-        param_values, param_uncertainty = model_utils.get_asimov_parameters(model)
+        param_values = model_utils.get_asimov_parameters(model)
+        param_uncertainty = model_utils.get_prefit_uncertainties(model)
         corr_mat = np.zeros(shape=(len(param_values), len(param_values)))
         np.fill_diagonal(corr_mat, 1.0)
 

@@ -115,11 +115,15 @@ def test_data_MC_from_histograms(mock_load, mock_draw, mock_stdev, tmp_path):
 )
 @mock.patch("cabinetry.model_utils.calculate_stdev", return_value=np.asarray([[0.3]]))
 @mock.patch(
+    "cabinetry.model_utils.get_prefit_uncertainties",
+    return_value=([0.04956657, 0.0]),
+)
+@mock.patch(
     "cabinetry.model_utils.get_asimov_parameters",
-    return_value=([1.0, 1.0], [0.04956657, 0.0]),
+    return_value=([1.0, 1.0]),
 )
 def test_data_MC(
-    mock_asimov, mock_stdev, mock_dict, mock_bins, mock_draw, example_spec
+    mock_asimov, mock_unc, mock_stdev, mock_dict, mock_bins, mock_draw, example_spec
 ):
     config = {}
     figure_folder = "tmp"
@@ -128,9 +132,11 @@ def test_data_MC(
     # pre-fit plot
     visualize.data_MC(config, figure_folder, example_spec)
 
-    # Asimov parameter calculation
+    # Asimov parameter calculation and pre-fit uncertainties
     assert mock_stdev.call_count == 1
     assert mock_asimov.call_args_list[0][0][0].spec == model_spec
+    assert mock_unc.call_count == 1
+    assert mock_unc.call_args_list[0][0][0].spec == model_spec
 
     # call to stdev calculation
     assert mock_stdev.call_count == 1
