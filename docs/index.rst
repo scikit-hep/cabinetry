@@ -2,14 +2,15 @@ cabinetry
 ==============================
 
 .. toctree::
-   :hidden:
-   :maxdepth: 1
+    :hidden:
+    :maxdepth: 1
 
-   config
-   cli
-   advanced
-   api
-   license
+    core
+    advanced
+    config
+    cli
+    api
+    license
 
 ``cabinetry`` is a tool to build and steer (profile likelihood) template fits with applications in high energy physics in mind.
 It acts as an interface to many powerful tools to make it easier for an analyzer to run their statistical inference pipeline.
@@ -18,8 +19,8 @@ This documentation can be viewed `on Read the Docs <https://cabinetry.readthedoc
 
 .. code-block:: bash
 
-   sphinx-build docs docs/_build
-   open docs/_build/index.html
+    sphinx-build docs docs/_build
+    open docs/_build/index.html
 
 It contains a description of the ``cabinetry`` configuration file schema, as well as the public facing API.
 
