@@ -14,9 +14,7 @@ H = TypeVar("H", bound="Histogram")
 
 
 class Histogram(bh.Histogram):
-    """class to hold histogram information, extends functionality provided
-    by boost_histogram.Histogram
-    """
+    """Holds histogram information, extends boost_histogram.Histogram."""
 
     @classmethod
     def from_arrays(
@@ -25,8 +23,9 @@ class Histogram(bh.Histogram):
         yields: Union[List[float], np.ndarray],
         stdev: Union[List[float], np.ndarray],
     ) -> H:
-        """construct a histogram from arrays of yields and uncertainties, the input
-        can be lists of ints or floats, or numpy.ndarrays
+        """Constructs a histogram from arrays of yields and uncertainties.
+
+        The input can be lists of ints or floats, or numpy.ndarrays.
 
         Args:
             bins (Union[List[float], np.ndarray]): edges of histogram bins
@@ -56,13 +55,15 @@ class Histogram(bh.Histogram):
 
     @classmethod
     def from_path(cls: Type[H], histo_path: pathlib.Path, modified: bool = True) -> H:
-        """build a histogram from disk
-        try to load the "modified" version of the histogram by default
-        (which received post-processing)
+        """Builds a histogram from disk.
+
+        Loads the "modified" version of the histogram by default (which received
+        post-processing).
 
         Args:
             histo_path (pathlib.Path): where the histogram is located
-            modified (bool, optional): whether to load the modified histogram (after post-processing), defaults to True
+            modified (bool, optional): whether to load the modified histogram
+                (after post-processing), defaults to True
 
         Returns:
             cabinetry.histo.Histogram: the loaded histogram
@@ -92,16 +93,21 @@ class Histogram(bh.Histogram):
         modified: bool = True,
         template: str = "Nominal",
     ) -> H:
-        """load a histogram, given a folder the histogram is located in and the
-        relevant information from the config: region, sample, systematic
+        """Loads a histogram, using information specified in the configuration file.
+
+        To find the histogram, need to provide the folder the histogram is located in
+        and the relevant information from the config: region, sample, systematic,
+        template.
 
         Args:
             histo_folder (Union[str, patlib.Path]): folder containing all histograms
             region (Dict[str, Any]): containing all region information
             sample (Dict[str, Any]): containing all sample information
             systematic (Dict[str, Any]): containing all systematic information
-            modified (bool, optional): whether to load the modified histogram (after post-processing), defaults to True
-            template (str): which template (nominal/up/down) to consider, defaults to "Nominal"
+            modified (bool, optional): whether to load the modified histogram (after
+                post-processing), defaults to True
+            template (str): which template (nominal/up/down) to consider, defaults to
+                "Nominal"
 
         Returns:
             cabinetry.histo.Histogram: the loaded histogram
@@ -113,7 +119,7 @@ class Histogram(bh.Histogram):
 
     @property
     def yields(self) -> np.ndarray:
-        """get the yields per histogram bin
+        """Returns the yields per histogram bin.
 
         Returns:
             numpy.ndarray: yields per bin
@@ -122,7 +128,7 @@ class Histogram(bh.Histogram):
 
     @property
     def stdev(self) -> np.ndarray:
-        """get the stat. uncertainty per histogram bin
+        """Returns the stat. uncertainty per histogram bin.
 
         Returns:
             numpy.ndarray: stat. uncertainty per bin
@@ -131,7 +137,7 @@ class Histogram(bh.Histogram):
 
     @stdev.setter
     def stdev(self, value: np.ndarray) -> None:
-        """update the variance (by specifying the standard deviation)
+        """Updates the variance (by specifying the standard deviation).
 
         Args:
             value (numpy.ndarray): the standard deviation
@@ -140,7 +146,7 @@ class Histogram(bh.Histogram):
 
     @property
     def bins(self) -> np.ndarray:
-        """get the bin edges
+        """Returns the bin edges.
 
         Returns:
             numpy.ndarray: bin edges
@@ -148,7 +154,7 @@ class Histogram(bh.Histogram):
         return self.axes[0].edges
 
     def save(self, histo_path: pathlib.Path) -> None:
-        """save a histogram to disk
+        """Saves a histogram to disk.
 
         Args:
             histo_path (pathlib.Path): where to save the histogram
@@ -166,8 +172,10 @@ class Histogram(bh.Histogram):
         )
 
     def validate(self, name: str) -> None:
-        """run consistency checks on a histogram, checking for empty bins
-        and ill-defined statistical uncertainties
+        """Runs consistency checks on a histogram.
+
+        Checks for empty bins and ill-defined statistical uncertainties.
+        Logs warnings if issues are founds, but does not raise exceptions.
 
         Args:
             name (str): name of the histogram for logging purposes
@@ -193,11 +201,13 @@ class Histogram(bh.Histogram):
             )
 
     def normalize_to_yield(self, reference_histogram: H) -> np.float64:
-        """normalize a histogram to match the yield of a reference, and return the
-        normalization factor
+        """Normalizes a histogram to match the yield of a reference.
+
+        Returns the normalization factor used to normalize the histogram.
 
         Args:
-            reference_histogram (cabinetry.histo.Histogram): reference histogram to normalize to
+            reference_histogram (cabinetry.histo.Histogram): reference histogram
+                to normalize to
 
         Returns:
             np.float64: the yield ratio: un-normalized yield / normalized yield
@@ -216,13 +226,14 @@ def build_name(
     systematic: Dict[str, Any],
     template: str = "Nominal",
 ) -> str:
-    """construct a unique name for each histogram
+    """Returns a unique name for each histogram.
 
     Args:
         region (Dict[str, Any]): containing all region information
         sample (Dict[str, Any]): containing all sample information
         systematic (Dict[str, Any]): containing all systematic information
-        template (str): which template (nominal/up/down) to consider, defaults to "Nominal"
+        template (str): which template (nominal/up/down) to consider,
+            defaults to "Nominal"
 
     Returns:
         str: unique name for the histogram

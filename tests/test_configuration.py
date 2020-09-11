@@ -8,8 +8,8 @@ from cabinetry import configuration
 
 
 @mock.patch("cabinetry.configuration.validate")
-def test_read(mock_validation):
-    conf = configuration.read("config_example.yml")
+def test_load(mock_validation):
+    conf = configuration.load("config_example.yml")
     assert isinstance(conf, dict)
     mock_validation.assert_called_once()
 

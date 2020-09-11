@@ -112,7 +112,7 @@ def _get_ntuple_paths(
 
 
 def _get_variable(region: Dict[str, Any]) -> str:
-    """construct the variable the histogram will be binned in
+    """Returns the variable the histogram will be binned in.
 
     Args:
         region (Dict[str, Any]): containing all region information
@@ -130,9 +130,10 @@ def _get_filter(
     systematic: Dict[str, Any],
     template: str,
 ) -> Optional[str]:
-    """construct the filter to be applied for event selection
-    for non-nominal templates, override the nominal filter if an alternative is
-    specified for the template
+    """Returns the filter to be applied for event selection.
+
+    For non-nominal templates, overrides the nominal filter if an alternative is
+    specified for the template.
 
     Args:
         region (Dict[str, Any]): containing all region information
@@ -159,9 +160,10 @@ def _get_weight(
     systematic: Dict[str, Any],
     template: str,
 ) -> Optional[str]:
-    """find the weight to be used for the events in the histogram
-    for non-nominal templates, override the nominal weight if an alternative is
-    specified for the template
+    """Returns the weight to be used for events in histograms.
+
+    For non-nominal templates, overrides the nominal weight if an alternative is
+    specified for the template.
 
     Args:
         region (Dict[str, Any]): containing all region information
@@ -170,7 +172,8 @@ def _get_weight(
         template (str): which template is considered: "Nominal", "Up", "Down"
 
     Returns:
-        Optional[str]: weight used for events when filled into histograms, or None for no weight
+        Optional[str]: weight used for events when filled into histograms, or
+        None for no weight
     """
     weight = sample.get("Weight", None)
     # check whether a systematic is being processed
@@ -185,10 +188,10 @@ def _get_weight(
 def _get_position_in_file(
     sample: Dict[str, Any], systematic: Dict[str, Any], template: str
 ) -> str:
-    """the file might have some substructure, this specifies where in the file
-    the data is
-    for non-nominal templates, override the nominal position if an alternative is
-    specified for the template
+    """Returns the location of data within a file (e.g. a tree name).
+
+    For non-nominal templates, overrides the nominal position if an alternative is
+    specified for the template.
 
     Args:
         sample (Dict[str, Any]): containing all sample information
@@ -196,7 +199,7 @@ def _get_position_in_file(
         template (str): which template is considered: "Nominal", "Up", "Down"
 
     Returns:
-        str: where in the file to find the data (right now the name of a tree)
+        str: where in the file to find the data (the name of a tree)
     """
     position = sample["Tree"]
     # check whether a systematic is being processed
@@ -209,9 +212,10 @@ def _get_position_in_file(
 
 
 def _get_binning(region: Dict[str, Any]) -> np.ndarray:
-    """determine the binning to be used in a given region
-    should eventually also support other ways of specifying bins,
-    such as the amount of bins and the range to bin in
+    """Returns the binning to be used in a region.
+
+    Should eventually also support other ways of specifying bins,
+    such as the amount of bins and the range to bin in.
 
     Args:
         region (Dict[str, Any]): containing all region information
@@ -252,8 +256,10 @@ class _Builder:
         systematic: Dict[str, Any],
         template: str,
     ) -> None:
-        """function to create a histogram and write it to a file for the template
-        specified via the region-sample-systematic-template information
+        """Creates a histogram and writes it to a file.
+
+        The histogram is created for the region-sample-systematic-template
+        specified in the argument.
 
         Args:
             region (Dict[str, Any]): specifying region information
@@ -301,7 +307,7 @@ class _Builder:
         systematic: Dict[str, Any],
         template: str,
     ) -> None:
-        """generate a unique name for the histogram and save it
+        """Generates a unique name for a histogram and saves the histogram.
 
         Args:
             histogram (histo.Histogram): histogram to save
@@ -323,9 +329,9 @@ class _Builder:
     def _wrap_custom_template_builder(
         self, func: route.UserTemplateFunc
     ) -> route.ProcessorFunc:
-        """Wrapper for custom template builder functions that return a ``boost_histogram.Histogram``.
-        Returns a function that executes the custom template builder and saves the resulting
-        histogram.
+        """Returns a function that executes a custom template builder and saves the histogram.
+
+        Wrapper for custom template builder functions that return a ``boost_histogram.Histogram``.
 
         Args:
             func (cabinetry.route.UserTemplateFunc): user-defined template builder
@@ -343,9 +349,10 @@ class _Builder:
             systematic: Dict[str, Any],
             template: str,
         ) -> None:
-            """Takes a user-defined function that returns a histogram, executes that function and
-            saves the histogram. Returns None, to turn the user-defined function into a
-            ProcessorFunc when wrapped with this.
+            """Executes a user-defined function that returns a histogram and saves it.
+
+            Returns None, to turn the user-defined function into a ProcessorFunc when
+            wrapped with this.
 
             Args:
                 region (Dict[str, Any]): dict with region information
@@ -370,9 +377,10 @@ def create_histograms(
     method: str = "uproot",
     router: Optional[route.Router] = None,
 ) -> None:
-    """generate all required histograms specified by the configuration file,
-    calling either a default method specified via ``method``, or a custom
-    user-defined override through ``router``
+    """Produces all required histograms specified by the configuration file.
+
+    Uses either a default method specified via ``method``, or a custom
+    user-defined override through ``router``.
 
     Args:
         config (Dict[str, Any]): cabinetry configuration

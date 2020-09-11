@@ -12,14 +12,14 @@ from .. import workspace as cabinetry_workspace
 
 
 class OrderedGroup(click.Group):
-    """a group that shows commands in the order they were added"""
+    """A group that shows commands in the order they were added."""
 
     def list_commands(self, _: Any) -> KeysView[str]:
         return self.commands.keys()
 
 
 def _set_logging() -> None:
-    """set log levels and format for CLI"""
+    """Sets log levels and format for CLI."""
     logging.basicConfig(
         level=logging.INFO, format="%(levelname)s - %(name)s - %(message)s"
     )
@@ -35,24 +35,24 @@ def cabinetry() -> None:
 @click.argument("config_path", type=click.Path(exists=True))
 @click.option("--method", default="uproot", help="backend for histogram production")
 def templates(config_path: str, method: str) -> None:
-    """Produce template histograms.
+    """Produces template histograms.
 
     CONFIG_PATH: path to cabinetry configuration file
     """
     _set_logging()
-    cabinetry_config = cabinetry_configuration.read(config_path)
+    cabinetry_config = cabinetry_configuration.load(config_path)
     cabinetry_template_builder.create_histograms(cabinetry_config, method=method)
 
 
 @click.command()
 @click.argument("config_path", type=click.Path(exists=True))
 def postprocess(config_path: str) -> None:
-    """Post-process template histograms.
+    """Post-processes template histograms.
 
     CONFIG_PATH: path to cabinetry configuration file
     """
     _set_logging()
-    cabinetry_config = cabinetry_configuration.read(config_path)
+    cabinetry_config = cabinetry_configuration.load(config_path)
     cabinetry_template_postprocessor.run(cabinetry_config)
 
 
@@ -60,14 +60,14 @@ def postprocess(config_path: str) -> None:
 @click.argument("config_path", type=click.Path(exists=True))
 @click.argument("ws_path", type=click.Path(exists=False))
 def workspace(config_path: str, ws_path: str) -> None:
-    """Produce a ``pyhf`` workspace.
+    """Produces a ``pyhf`` workspace.
 
     CONFIG_PATH: path to cabinetry configuration file
 
     WS_PATH: where to save the workspace containing the fit model
     """
     _set_logging()
-    cabinetry_config = cabinetry_configuration.read(config_path)
+    cabinetry_config = cabinetry_configuration.load(config_path)
     ws = cabinetry_workspace.build(cabinetry_config)
     cabinetry_workspace.save(ws, ws_path)
 
@@ -78,7 +78,7 @@ def workspace(config_path: str, ws_path: str) -> None:
 @click.option("--corrmat", is_flag=True, help="produce correlation matrix")
 @click.option("--figfolder", default="figures/", help="folder to save figures to")
 def fit(ws_path: str, pulls: bool, corrmat: bool, figfolder: str) -> None:
-    """Fit a workspace and optionally visualize the results.
+    """Fits a workspace and optionally visualize the results.
 
     WS_PATH: path to workspace used in fit
     """

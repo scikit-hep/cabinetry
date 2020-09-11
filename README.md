@@ -50,7 +50,7 @@ To run the following example, first generate the input files via the script `uti
 ```python
 import cabinetry
 
-cabinetry_config = cabinetry.configuration.read("config_example.yml")
+cabinetry_config = cabinetry.configuration.load("config_example.yml")
 
 # create template histograms
 cabinetry.template_builder.create_histograms(cabinetry_config)

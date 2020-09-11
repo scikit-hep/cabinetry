@@ -30,8 +30,9 @@ MatchFunc = Callable[[str, str, str, str], Optional[ProcessorFunc]]
 
 
 class Router:
-    """Holds user-defined processing functions, and provides functions for matching
-    a pattern to apply the right function to each template.
+    """Holds user-defined processing functions and matches functions to templates.
+
+    Provides functions for matching a pattern to apply the right function to each template.
 
     Attributes:
         template_builders (List[Dict[str, Any]]): user-defined processors for template building
@@ -60,7 +61,7 @@ class Router:
         systematic_name: Optional[str],
         template: Optional[str],
     ) -> Callable[[GenericProcessorFunc], GenericProcessorFunc]:
-        """decorator for registering a custom processor function
+        """Decorator for registering a custom processor function.
 
         Args:
             region_name  (Optional[str]): name of the region to apply the function to,
@@ -73,7 +74,8 @@ class Router:
                 or None to apply to all templates
 
         Returns:
-            Callable[[GenericProcessorFunc], GenericProcessorFunc]: the function to register a processor
+            Callable[[GenericProcessorFunc], GenericProcessorFunc]: the function to register
+            a processor
         """
         if region_name is None:
             region_name = "*"
@@ -85,8 +87,9 @@ class Router:
             template = "*"
 
         def _register(func: GenericProcessorFunc) -> GenericProcessorFunc:
-            """register a processor function to be applied when matching the patterns of a
-            given region-sample-systematic-template
+            """Registers a processor function to be applied when matching a pattern.
+
+            The pattern is specified by region-sample-systematic-template.
 
             Args:
                 func (GenericProcessorFunc): the function to register
@@ -112,7 +115,7 @@ class Router:
         systematic_name: Optional[str] = None,
         template: Optional[str] = None,
     ) -> Callable[[Callable], UserTemplateFunc]:
-        """decorator for registering a template builder function
+        """Decorator for registering a template builder function.
 
         Args:
             region_name (Optional[str], optional): name of the region to apply the function to,
@@ -139,7 +142,7 @@ class Router:
         systematic_name: str,
         template: str,
     ) -> Optional[GenericProcessorFunc]:
-        """return a function matching the provided specification
+        """Returns a function matching the provided specification.
 
         Args:
             processor_list (List[Dict[str, Any]]): list of processors to search in
@@ -180,9 +183,10 @@ class Router:
     def _find_template_builder_match(
         self, region_name: str, sample_name: str, systematic_name: str, template: str
     ) -> Optional[ProcessorFunc]:
-        """Return a template builder function matching the provided specification, or
-        None if no matches are found. Wrap the user-defined function in the provided wrapper,
-        if no wrapper is found raise an error.
+        """Returns a template builder function matching the provided specification.
+
+        If no matches are found, returns None. Wraps the user-defined function in the
+        provided wrapper, if no wrapper is found raises an error.
 
         Args:
             region_name (str): region name
@@ -217,8 +221,10 @@ def apply_to_all_templates(
     default_func: ProcessorFunc,
     match_func: Optional[MatchFunc] = None,
 ) -> None:
-    """Apply the supplied function ``default_func`` to all templates specified by the
-    configuration file. This function takes four arguments in this order:
+    """Applies the supplied function ``default_func`` to all templates.
+
+    The templates are specified by the configuration file. The function takes four
+    arguments in this order:
 
     - the dict specifying region information
     - the dict specifying sample information
