@@ -68,7 +68,12 @@ def _get_ntuple_paths(
 
     # check whether a systematic is being processed, and whether overrides exist
     if systematic.get("Name", "Nominal") != "Nominal":
-        # determine whether the template has an override specified
+        # determine whether the template has an override for RegionPath specified
+        region_override = _check_for_override(systematic, template, "RegionPath")
+        if region_override is not None:
+            region_path = region_override
+
+        # check for SamplePaths override
         sample_override = _check_for_override(systematic, template, "SamplePaths")
         if sample_override is not None:
             sample_paths = sample_override

@@ -69,19 +69,22 @@ def test__get_ntuple_paths(caplog):
         == [pathlib.Path("region/sample.root"), pathlib.Path("region/new.root")]
     )
 
-    # systematic with override
+    # systematic with override for RegionPath and SamplePaths
     assert (
         template_builder._get_ntuple_paths(
-            "{SamplePaths}",
-            {},
+            "{RegionPath}/{SamplePaths}",
+            {"RegionPath": "reg_1"},
             {"SamplePaths": "path.root"},
             {
                 "Name": "variation",
-                "Up": {"SamplePaths": ["variation.root", "new.root"]},
+                "Up": {
+                    "SamplePaths": ["variation.root", "new.root"],
+                    "RegionPath": "reg_2",
+                },
             },
             "Up",
         )
-        == [pathlib.Path("variation.root"), pathlib.Path("new.root")]
+        == [pathlib.Path("reg_2/variation.root"), pathlib.Path("reg_2/new.root")]
     )
 
     # systematic without override
