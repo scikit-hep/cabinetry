@@ -31,7 +31,7 @@ def test_cabinetry():
 # using autospec to catch changes in public API
 @mock.patch("cabinetry.template_builder.create_histograms", autospec=True)
 @mock.patch(
-    "cabinetry.configuration.read",
+    "cabinetry.configuration.load",
     return_value={"General": {"Measurement": "test_config"}},
     autospec=True,
 )
@@ -60,7 +60,7 @@ def test_templates(mock_read, mock_create_histograms, cli_helpers, tmp_path):
 
 @mock.patch("cabinetry.template_postprocessor.run", autospec=True)
 @mock.patch(
-    "cabinetry.configuration.read",
+    "cabinetry.configuration.load",
     return_value={"General": {"Measurement": "test_config"}},
     autospec=True,
 )
@@ -83,7 +83,7 @@ def test_postprocess(mock_read, mock_postprocess, cli_helpers, tmp_path):
     "cabinetry.workspace.build", return_value={"workspace": "mock"}, autospec=True
 )
 @mock.patch(
-    "cabinetry.configuration.read",
+    "cabinetry.configuration.load",
     return_value={"General": {"Measurement": "test_config"}},
     autospec=True,
 )

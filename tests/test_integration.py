@@ -17,7 +17,7 @@ def test_integration(tmp_path, ntuple_creator):
     """
     ntuple_creator(str(tmp_path))
 
-    cabinetry_config = cabinetry.configuration.read("config_example.yml")
+    cabinetry_config = cabinetry.configuration.load("config_example.yml")
 
     # override config options to point to tmp_path
     cabinetry_config["General"]["HistogramFolder"] = str(tmp_path / "histograms")

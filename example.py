@@ -18,7 +18,7 @@ if __name__ == "__main__":
         raise SystemExit
 
     # import example config file
-    cabinetry_config = cabinetry.configuration.read("config_example.yml")
+    cabinetry_config = cabinetry.configuration.load("config_example.yml")
     cabinetry.configuration.print_overview(cabinetry_config)
 
     # create template histograms

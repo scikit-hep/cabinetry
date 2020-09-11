@@ -40,7 +40,7 @@ def templates(config_path: str, method: str) -> None:
     CONFIG_PATH: path to cabinetry configuration file
     """
     _set_logging()
-    cabinetry_config = cabinetry_configuration.read(config_path)
+    cabinetry_config = cabinetry_configuration.load(config_path)
     cabinetry_template_builder.create_histograms(cabinetry_config, method=method)
 
 
@@ -52,7 +52,7 @@ def postprocess(config_path: str) -> None:
     CONFIG_PATH: path to cabinetry configuration file
     """
     _set_logging()
-    cabinetry_config = cabinetry_configuration.read(config_path)
+    cabinetry_config = cabinetry_configuration.load(config_path)
     cabinetry_template_postprocessor.run(cabinetry_config)
 
 
@@ -67,7 +67,7 @@ def workspace(config_path: str, ws_path: str) -> None:
     WS_PATH: where to save the workspace containing the fit model
     """
     _set_logging()
-    cabinetry_config = cabinetry_configuration.read(config_path)
+    cabinetry_config = cabinetry_configuration.load(config_path)
     ws = cabinetry_workspace.build(cabinetry_config)
     cabinetry_workspace.save(ws, ws_path)
 

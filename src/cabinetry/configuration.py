@@ -11,8 +11,8 @@ import yaml
 log = logging.getLogger(__name__)
 
 
-def read(file_path_string: Union[str, pathlib.Path]) -> Dict[str, Any]:
-    """read a config file from a provided path and return it
+def load(file_path_string: Union[str, pathlib.Path]) -> Dict[str, Any]:
+    """Loads, validates, and returns a config file from the provided path.
 
     Args:
         file_path_string (Union[str, pathlib.Path]): path to config file
