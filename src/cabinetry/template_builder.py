@@ -1,11 +1,12 @@
 import functools
 import logging
 import pathlib
-from typing import Any, Dict, Optional
+from typing import Any, Dict, List, Optional, Union
 
 import boost_histogram as bh
 import numpy as np
 
+from . import configuration
 from . import histo
 from . import route
 
@@ -15,10 +16,12 @@ log = logging.getLogger(__name__)
 
 def _check_for_override(
     systematic: Dict[str, Any], template: str, option: str
-) -> Optional[str]:
-    """Given a systematic and a string specifying which template is currently under consideration,
-    check whether the systematic defines an override for an option. Return the override if it
-    exists, otherwise return None.
+) -> Optional[Union[str, List[str]]]:
+    """Returns an override if specified by a template of a systematic.
+
+    Given a systematic and a string specifying which template is currently
+    under consideration, check whether the systematic defines an override
+    for an option. Return the override if it exists, otherwise return None.
 
     Args:
         systematic (Dict[str, Any]): containing all systematic information
@@ -26,25 +29,27 @@ def _check_for_override(
         option (str): the option for which the presence of an override is checked
 
     Returns:
-        Optional[str]: either None if no override exists, or the override
+        Optional[Union[str, List[str]]]: either None if no override exists,
+        or the override
     """
     return systematic.get(template, {}).get(option, None)
 
 
-def _get_ntuple_path(
+def _get_ntuple_paths(
     general_path: str,
     region: Dict[str, Any],
     sample: Dict[str, Any],
     systematic: Dict[str, Any],
     template: str,
-) -> pathlib.Path:
-    """Returns the path to ntuples for a region-sample-systematic-template.
+) -> List[pathlib.Path]:
+    """Returns the paths to ntuples for a region-sample-systematic-template.
 
-    The path is built starting from the path specified in the general options
+    A path is built starting from the path specified in the general options
     in the configuration file. This path can contain placeholders for region-
     and sample-specific overrides, via ``{Region}`` and ``{Sample}``. For
     non-nominal templates, it is possible to override the sample path if the
-    ``SamplePath`` option is specified for the template.
+    ``SamplePaths`` option is specified for the template. If ``SamplePaths``
+    is a list, return a list of paths (one per entry in the list).
 
     Args:
         general_path (str): path specified in general settings, with sections
@@ -55,18 +60,23 @@ def _get_ntuple_path(
         template (str): which template is considered: "Nominal", "Up", "Down"
 
     Returns:
-        pathlib.Path: path where the ntuples are located
+        List[pathlib.Path]: list of paths to ntuples
     """
     # obtain region and sample paths, if they are defined
     region_path = region.get("RegionPath", None)
-    sample_path = sample.get("SamplePath", None)
+    sample_paths = sample.get("SamplePaths", None)
 
     # check whether a systematic is being processed, and whether overrides exist
     if systematic.get("Name", "Nominal") != "Nominal":
-        # determine whether the template has an override specified
-        sample_override = _check_for_override(systematic, template, "SamplePath")
+        # determine whether the template has an override for RegionPath specified
+        region_override = _check_for_override(systematic, template, "RegionPath")
+        if region_override is not None:
+            region_path = region_override
+
+        # check for SamplePaths override
+        sample_override = _check_for_override(systematic, template, "SamplePaths")
         if sample_override is not None:
-            sample_path = sample_override
+            sample_paths = sample_override
 
     region_template_exists = "{RegionPath}" in general_path
     if region_path is not None:
@@ -78,18 +88,27 @@ def _get_ntuple_path(
     elif region_template_exists:
         raise ValueError(f"no path setting found for region {region['Name']}")
 
-    sample_template_exists = "{SamplePath}" in general_path
-    if sample_path is not None:
+    sample_template_exists = "{SamplePaths}" in general_path
+    if sample_paths is not None:
         if not sample_template_exists:
             log.warning(
-                "sample override specified, but {SamplePath} not found in default path"
+                "sample override specified, but {SamplePaths} not found in default path"
             )
-        general_path = general_path.replace("{SamplePath}", sample_path)
+        # SamplePaths can be a list, so need to construct all possible paths
+        sample_paths = configuration._convert_setting_to_list(sample_paths)
+        path_list = []
+        for sample_path in sample_paths:
+            path_list.append(general_path.replace("{SamplePaths}", sample_path))
     elif sample_template_exists:
         raise ValueError(f"no path setting found for sample {sample['Name']}")
+    else:
+        # no need for multiple paths, and no SamplePaths are present, so turn
+        # the existing path into a list
+        path_list = [general_path]
 
-    path = pathlib.Path(general_path)
-    return path
+    # convert the contents of path_lists to paths and return them
+    paths = [pathlib.Path(path) for path in path_list]
+    return paths
 
 
 def _get_variable(region: Dict[str, Any]) -> str:
@@ -245,7 +264,7 @@ class _Builder:
         Raises:
             NotImplementedError: when requesting an unknown backend
         """
-        ntuple_path = _get_ntuple_path(
+        ntuple_paths = _get_ntuple_paths(
             self.general_path, region, sample, systematic, template
         )
         pos_in_file = _get_position_in_file(sample, systematic, template)
@@ -259,7 +278,7 @@ class _Builder:
             from .contrib import histogram_creation
 
             yields, stdev = histogram_creation.from_uproot(
-                ntuple_path,
+                ntuple_paths,
                 pos_in_file,
                 variable,
                 bins,

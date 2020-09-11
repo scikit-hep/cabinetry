@@ -76,22 +76,24 @@ def print_overview(config: Dict[str, Any]) -> None:
         log.info(f"  {len(config['Systematics'])} Systematic(s)")
 
 
-def _convert_samples_to_list(samples: Union[str, List[str]]) -> List[str]:
-    """the config can allow for two ways of specifying samples, a single sample:
-    "Samples": "ABC"
-    or a list of samples:
-    "Samples": ["ABC", "DEF"]
-    for consistent treatment, convert the single sample into a single-element list
+def _convert_setting_to_list(setting: Union[str, List[str]]) -> List[str]:
+    """Converts a configuration setting to a list.
+
+    The config allows for two ways of specifying some settings, for example
+    samples. A single sample is specified as ``"Samples": "ABC"``, a list
+    of samples as ``"Samples": ["ABC", "DEF"]``. For consistent treatment,
+    the single sample is converted to a list.
 
     Args:
-        samples (Union[str, List[str]]): name of single sample or list of sample names
+        setting (Union[str, List[str]]): name of single setting value or
+            list of values
 
     Returns:
         list: name(s) of sample(s)
     """
-    if not isinstance(samples, list):
-        samples = [samples]
-    return samples
+    if not isinstance(setting, list):
+        setting = [setting]
+    return setting
 
 
 def sample_affected_by_modifier(
@@ -106,7 +108,7 @@ def sample_affected_by_modifier(
     Returns:
         bool: True if sample is affected, False otherwise
     """
-    affected_samples = _convert_samples_to_list(modifier["Samples"])
+    affected_samples = _convert_setting_to_list(modifier["Samples"])
     affected = sample["Name"] in affected_samples
     return affected
 

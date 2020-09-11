@@ -10,63 +10,63 @@ cabinetry.configuration
 -----------------------
 
 .. automodule:: cabinetry.configuration
-   :members:
+    :members:
 
 
 cabinetry.route
 ---------------
 
 .. automodule:: cabinetry.route
-   :members:
+    :members:
 
 
 cabinetry.histo
 ---------------
 
 .. automodule:: cabinetry.histo
-   :members:
+    :members:
 
 
 cabinetry.template_builder
 --------------------------
 
 .. automodule:: cabinetry.template_builder
-   :members:
+    :members:
 
 
 cabinetry.template_postprocessor
 --------------------------------
 
 .. automodule:: cabinetry.template_postprocessor
-   :members:
+    :members:
 
 
 cabinetry.workspace
 -------------------
 
 .. automodule:: cabinetry.workspace
-   :members:
+    :members:
 
 
 cabinetry.fit
 -------------
 
 .. automodule:: cabinetry.fit
-   :members:
+    :members:
 
 
 cabinetry.visualize
 -------------------
 
 .. automodule:: cabinetry.visualize
-   :members:
+    :members:
 
 
 cabinetry.model_utils
 ---------------------
 
 .. automodule:: cabinetry.model_utils
-   :members:
+    :members:
 
 
 cabinetry.contrib
@@ -75,7 +75,7 @@ cabinetry.contrib
 .. automodule:: cabinetry.contrib
 
 .. automodule:: cabinetry.contrib.histogram_creation
-   :members:
+    :members:
 
 .. automodule:: cabinetry.contrib.matplotlib_visualize
-   :members:
+    :members:

@@ -21,7 +21,7 @@ def test_integration(tmp_path, ntuple_creator):
 
     # override config options to point to tmp_path
     cabinetry_config["General"]["HistogramFolder"] = str(tmp_path / "histograms")
-    cabinetry_config["General"]["InputPath"] = str(tmp_path / "{SamplePath}")
+    cabinetry_config["General"]["InputPath"] = str(tmp_path / "{SamplePaths}")
 
     cabinetry.template_builder.create_histograms(cabinetry_config, method="uproot")
     cabinetry.template_postprocessor.run(cabinetry_config)

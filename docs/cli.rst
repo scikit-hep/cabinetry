@@ -8,26 +8,26 @@ The resulting correlation matrix and pull plot are saved to the default output f
 
 .. code-block:: bash
 
-   cabinetry templates config_example.yml
-   cabinetry postprocess config_example.yml
-   cabinetry workspace config_example.yml workspaces/example_workspace.json
-   cabinetry fit --pulls --corrmat workspaces/example_workspace.json
+    cabinetry templates config_example.yml
+    cabinetry postprocess config_example.yml
+    cabinetry workspace config_example.yml workspaces/example_workspace.json
+    cabinetry fit --pulls --corrmat workspaces/example_workspace.json
 
 The ``--help`` flag can be used to obtain more information on the command line:
 
 .. code-block:: bash
 
-   cabinetry --help
+    cabinetry --help
 
 shows the available commands, while
 
 .. code-block:: bash
 
-   cabinetry fit --help
+    cabinetry fit --help
 
 shows what the ``fit`` command does, and which options it accepts.
 
 
 .. click:: cabinetry.cli:cabinetry
-   :prog: cabinetry
-   :nested: full
+    :prog: cabinetry
+    :nested: full

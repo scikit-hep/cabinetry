@@ -1,5 +1,5 @@
-Advanced topics
-===============
+Advanced concepts
+=================
 
 Accessing vector branches
 -------------------------
