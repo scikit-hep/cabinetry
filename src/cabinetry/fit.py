@@ -32,9 +32,8 @@ class FitResults(NamedTuple):
 class RankingResults(NamedTuple):
     """Collects nuisance parameter ranking results in one object.
 
-    The best-fit results per parameter / uncertainties / labels should
-    not include the parameter of interest, since no impact for it is
-    calculated.
+    The best-fit results per parameter, the uncertainties, and the labels should
+    not include the parameter of interest, since no impact for it is calculated.
 
     Args:
         bestfit (numpy.ndarray): best-fit results of parameters
