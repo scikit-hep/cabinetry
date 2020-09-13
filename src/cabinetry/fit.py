@@ -104,7 +104,8 @@ def _fit_model_custom(
 ) -> FitResults:
     """Uses ``iminuit`` directly to perform a maximum likelihood fit.
 
-    Parameters set to be fixed in the model are held constant.
+    Parameters set to be fixed in the model are held constant. Additional
+    parameters can be held constant via the ``fixed_pars`` keyword argument.
 
     Args:
         model (pyhf.pdf.Model): the model to use in the fit

@@ -59,7 +59,7 @@ def test__fit_model_pyhf(example_spec):
 
 
 @pytest.mark.filterwarnings("ignore::RuntimeWarning")
-def test__fit_model_custom(example_spec):
+def test__fit_model_custom(example_spec, example_spec_multibin):
     model, data = model_utils.model_and_data(example_spec)
     fit_results = fit._fit_model_custom(model, data)
     assert np.allclose(fit_results.bestfit, [1.1, 8.32985794])
@@ -78,6 +78,15 @@ def test__fit_model_custom(example_spec):
     assert fit_results.labels == ["staterror_Signal-Region", "Signal strength"]
     assert np.allclose(fit_results.best_twice_nll, 5.68851093)
     assert np.allclose(fit_results.corr_mat, [[0.0, 0.0], [0.0, 1.0]])
+
+    # parameters held constant via keyword argument
+    model, data = model_utils.model_and_data(example_spec_multibin)
+    fit_results = fit._fit_model_custom(
+        model, data, fixed_pars=[{"index": 0, "value": 0.9}, {"index": 1, "value": 1.1}]
+    )
+    assert np.allclose(fit_results.bestfit, [0.9, 1.1, 1.48041923, 0.97511112])
+    assert np.allclose(fit_results.uncertainty, [0.0, 0.0, 0.20694409, 0.11792805])
+    assert np.allclose(fit_results.best_twice_nll, 10.45318909)
 
 
 @mock.patch("cabinetry.fit.print_results")
