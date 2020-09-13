@@ -302,12 +302,7 @@ def pulls(
 
 
 def ranking(
-    fit_results: fit.FitResults,
-    impact_prefit_up: np.ndarray,
-    impact_prefit_down: np.ndarray,
-    impact_postfit_up: np.ndarray,
-    impact_postfit_down: np.ndarray,
-    poi_index: int,
+    ranking_results: fit.RankingResults,
     figure_folder: Union[str, pathlib.Path],
     max_pars: Optional[int] = None,
     method: str = "matplotlib",
@@ -315,12 +310,7 @@ def ranking(
     """Produces a ranking plot showing the impact of parameters on the POI.
 
     Args:
-        fit_results (fit.FitResults): fit results to show best-fit points and uncertainties
-        impact_prefit_up (np.ndarray): pre-fit impact in "up" direction per parameter
-        impact_prefit_down (np.ndarray): pre-fit impact in "down" direction per parameter
-        impact_postfit_up (np.ndarray): post-fit impact in "up" direction per parameter
-        impact_postfit_down (np.ndarray): post-fit impact in "down" direction per parameter
-        poi_index (int): index of POI in parameter list
+        ranking_results (fit.RankingResults): fit results, and pre- and post-fit impacts
         figure_folder (Union[str, pathlib.Path]): path to the folder to save figures in
         max_pars (Optional[int], optional): number of parameters to include, defaults to None
             (which means all parameters are included)
@@ -331,39 +321,30 @@ def ranking(
     """
     figure_path = pathlib.Path(figure_folder) / "ranking.pdf"
 
-    # remove the POI results from bestfit, uncertainty, labels
-    bestfit = np.delete(fit_results.bestfit, poi_index)
-    uncertainty = np.delete(fit_results.uncertainty, poi_index)
-    labels = np.delete(fit_results.labels, poi_index)
-
-    # normalize staterrors - subtract 1
-    # could also normalize width of staterrors here
-    for i_par, label in enumerate(labels):
-        if "staterror_" in label:
-            bestfit[i_par] -= 1
-
     # sort parameters by decreasing average post-fit impact
-    avg_postfit_impact = (np.abs(impact_postfit_up) + np.abs(impact_postfit_down)) / 2
+    avg_postfit_impact = (
+        np.abs(ranking_results.postfit_up) + np.abs(ranking_results.postfit_down)
+    ) / 2
 
     # get indices to sort by decreasing impact
     sorted_indices = np.argsort(avg_postfit_impact)[::-1]
-    bestfit = bestfit[sorted_indices]
-    uncertainty = uncertainty[sorted_indices]
-    labels = labels[sorted_indices]
-    impact_prefit_up = impact_prefit_up[sorted_indices]
-    impact_prefit_down = impact_prefit_down[sorted_indices]
-    impact_postfit_up = impact_postfit_up[sorted_indices]
-    impact_postfit_down = impact_postfit_down[sorted_indices]
+    bestfit = ranking_results.bestfit[sorted_indices]
+    uncertainty = ranking_results.uncertainty[sorted_indices]
+    labels = np.asarray(ranking_results.labels)[sorted_indices]  # labels are list
+    prefit_up = ranking_results.prefit_up[sorted_indices]
+    prefit_down = ranking_results.prefit_down[sorted_indices]
+    postfit_up = ranking_results.postfit_up[sorted_indices]
+    postfit_down = ranking_results.postfit_down[sorted_indices]
 
     if max_pars is not None:
         # only keep leading parameters in ranking
         bestfit = bestfit[:max_pars]
         uncertainty = uncertainty[:max_pars]
         labels = labels[:max_pars]
-        impact_prefit_up = impact_prefit_up[:max_pars]
-        impact_prefit_down = impact_prefit_down[:max_pars]
-        impact_postfit_up = impact_postfit_up[:max_pars]
-        impact_postfit_down = impact_postfit_down[:max_pars]
+        prefit_up = prefit_up[:max_pars]
+        prefit_down = prefit_down[:max_pars]
+        postfit_up = postfit_up[:max_pars]
+        postfit_down = postfit_down[:max_pars]
 
     if method == "matplotlib":
         from .contrib import matplotlib_visualize
@@ -372,10 +353,10 @@ def ranking(
             bestfit,
             uncertainty,
             labels,
-            impact_prefit_up,
-            impact_prefit_down,
-            impact_postfit_up,
-            impact_postfit_down,
+            prefit_up,
+            prefit_down,
+            postfit_up,
+            postfit_down,
             figure_path,
         )
     else:

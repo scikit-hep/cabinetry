@@ -29,6 +29,32 @@ class FitResults(NamedTuple):
     best_twice_nll: float
 
 
+class RankingResults(NamedTuple):
+    """Collects nuisance parameter ranking results in one object.
+
+    The best-fit results per parameter / uncertainties / labels should
+    not include the parameter of interest, since no impact for it is
+    calculated.
+
+    Args:
+        bestfit (numpy.ndarray): best-fit results of parameters
+        uncertainty (numpy.ndarray): uncertainties of best-fit parameter results
+        labels (List[str]): parameter labels
+        prefit_up (numpy.ndarray): pre-fit impact in "up" direction
+        prefit_down (numpy.ndarray): pre-fit impact in "down" direction
+        postfit_up (numpy.ndarray): post-fit impact in "up" direction
+        postfit_down (numpy.ndarray): post-fit impact in "down" direction
+    """
+
+    bestfit: np.ndarray
+    uncertainty: np.ndarray
+    labels: List[str]
+    prefit_up: np.ndarray
+    prefit_down: np.ndarray
+    postfit_up: np.ndarray
+    postfit_down: np.ndarray
+
+
 def print_results(
     fit_result: FitResults,
 ) -> None:
