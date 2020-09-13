@@ -125,11 +125,13 @@ def _fit_model_custom(
     labels = model_utils.get_parameter_names(model)
 
     if fixed_pars:
-        # hold parameters parameters
+        # hold parameters constant
         for par in fixed_pars:
             par_index = par["index"]
             par_value = par["value"]
-            log.debug(f"holding parameter {labels[par_index]} fixed at {par_value:.6f}")
+            log.debug(
+                f"holding parameter {labels[par_index]} constant at {par_value:.6f}"
+            )
             fix_pars[par_index] = True
             init_pars[par_index] = par_value
 
