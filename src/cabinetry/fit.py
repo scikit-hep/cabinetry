@@ -1,5 +1,5 @@
 import logging
-from typing import Any, Dict, List, NamedTuple, Optional, Tuple
+from typing import Any, Dict, List, NamedTuple, Optional
 
 import iminuit
 import numpy as np
@@ -200,7 +200,7 @@ def fit(spec: Dict[str, Any], asimov: bool = False, custom: bool = False) -> Fit
 
 def ranking(
     spec: Dict[str, Any], fit_results: FitResults, asimov: bool = False
-) -> Tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray, int]:
+) -> RankingResults:
     """Calculates the impact of nuisance parameters on the parameter of interest (POI).
 
     The impact is given by the difference in the POI between the nominal fit, and a fit
@@ -217,12 +217,7 @@ def ranking(
             to False
 
     Returns:
-        Tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray, int]:
-            - pre-fit impact in "up" direction
-            - pre-fit impact in "down" direction
-            - post-fit impact in "up" direction
-            - post-fit impact in "down" direction
-            - index of parameter of interest
+        RankingResults: fit results for parameters, and pre- and post-fit impacts
     """
     model, data = model_utils.model_and_data(spec, asimov=asimov)
     labels = model_utils.get_parameter_names(model)
@@ -260,4 +255,13 @@ def ranking(
     postfit_up = all_impacts_np[:, 2]
     postfit_down = all_impacts_np[:, 3]
 
-    return prefit_up, prefit_down, postfit_up, postfit_down, model.config.poi_index
+    # remove parameter of interest from bestfit / uncertainty / labels
+    # such that their entries match the entries of the impacts
+    bestfit = np.delete(fit_results.bestfit, model.config.poi_index)
+    uncertainty = np.delete(fit_results.uncertainty, model.config.poi_index)
+    labels = np.delete(fit_results.labels, model.config.poi_index).tolist()
+
+    ranking_results = RankingResults(
+        bestfit, uncertainty, labels, prefit_up, prefit_down, postfit_up, postfit_down
+    )
+    return ranking_results
