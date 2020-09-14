@@ -235,7 +235,6 @@ def ranking(
         # hold current parameter constant
         fix_pars = fix_pars_default.copy()
         fix_pars[i_par] = True
-        init_pars = init_pars_default.copy()
 
         parameter_impacts = []
         # calculate impacts: pre-fit up, pre-fit down, post-fit up, post-fit down
@@ -245,8 +244,10 @@ def ranking(
             fit_results.bestfit[i_par] + fit_results.uncertainty[i_par],
             fit_results.bestfit[i_par] - fit_results.uncertainty[i_par],
         ]:
+            init_pars = init_pars_default.copy()
             init_pars[i_par] = val  # set value of current nuisance parameter
             # could skip pre-fit calculation for unconstrained parameters
+            # skip calculation for fixed parameters?
             fit_results_ranking = _fit_model_custom(
                 model, data, init_pars=init_pars, fix_pars=fix_pars
             )
