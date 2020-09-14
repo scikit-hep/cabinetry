@@ -113,9 +113,9 @@ def _fit_model_custom(
         model (pyhf.pdf.Model): the model to use in the fit
         data (List[float]): the data to fit the model to
         init_pars (Optional[List[float]], optional): list of initial parameter
-            settings, defaults to None (use pyhf suggested inits)
+            settings, defaults to None (use ``pyhf`` suggested inits)
         fix_pars (Optional[List[bool]], optional): list of booleans specifying
-            which parameters are held constant, defaults to None (use pyhf
+            which parameters are held constant, defaults to None (use ``pyhf``
             suggestion)
 
     Returns:
