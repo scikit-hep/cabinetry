@@ -247,7 +247,6 @@ def ranking(
             init_pars = init_pars_default.copy()
             init_pars[i_par] = np_val  # set value of current nuisance parameter
             # could skip pre-fit calculation for unconstrained parameters
-            # skip calculation for fixed parameters?
             fit_results_ranking = _fit_model_custom(
                 model, data, init_pars=init_pars, fix_pars=fix_pars
             )
