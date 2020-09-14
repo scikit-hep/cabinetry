@@ -230,7 +230,7 @@ def ranking(
     for i_par, label in enumerate(labels):
         if label == model.config.poi_name:
             continue  # do not calculate impact of POI on itself
-        log.info(f"running ranking for {label}")
+        log.info(f"calculating impact of {label} on {labels[model.config.poi_index]}")
 
         # hold current parameter constant
         fix_pars = fix_pars_default.copy()
@@ -253,7 +253,7 @@ def ranking(
             )
             poi_val = fit_results_ranking.bestfit[model.config.poi_index]
             parameter_impact = poi_val - nominal_poi
-            log.info(
+            log.debug(
                 f"POI is {poi_val:.6f}, difference to nominal is {parameter_impact:.6f}"
             )
             parameter_impacts.append(parameter_impact)
