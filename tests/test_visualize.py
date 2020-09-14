@@ -115,11 +115,15 @@ def test_data_MC_from_histograms(mock_load, mock_draw, mock_stdev, tmp_path):
 )
 @mock.patch("cabinetry.model_utils.calculate_stdev", return_value=np.asarray([[0.3]]))
 @mock.patch(
+    "cabinetry.model_utils.get_prefit_uncertainties",
+    return_value=([0.04956657, 0.0]),
+)
+@mock.patch(
     "cabinetry.model_utils.get_asimov_parameters",
-    return_value=([1.0, 1.0], [0.04956657, 0.0]),
+    return_value=([1.0, 1.0]),
 )
 def test_data_MC(
-    mock_asimov, mock_stdev, mock_dict, mock_bins, mock_draw, example_spec
+    mock_asimov, mock_unc, mock_stdev, mock_dict, mock_bins, mock_draw, example_spec
 ):
     config = {}
     figure_folder = "tmp"
@@ -128,9 +132,11 @@ def test_data_MC(
     # pre-fit plot
     visualize.data_MC(config, figure_folder, example_spec)
 
-    # Asimov parameter calculation
+    # Asimov parameter calculation and pre-fit uncertainties
     assert mock_stdev.call_count == 1
     assert mock_asimov.call_args_list[0][0][0].spec == model_spec
+    assert mock_unc.call_count == 1
+    assert mock_unc.call_args_list[0][0][0].spec == model_spec
 
     # call to stdev calculation
     assert mock_stdev.call_count == 1
@@ -305,22 +311,14 @@ def test_pulls(mock_draw):
 
 @mock.patch("cabinetry.contrib.matplotlib_visualize.ranking")
 def test_ranking(mock_draw):
-    bestfit = np.asarray([1.2, 0.1, 0.9])
-    uncertainty = np.asarray([0.2, 0.8, 0.5])
-    labels = ["staterror_a", "modeling", "mu"]
+    bestfit = np.asarray([1.2, 0.1])
+    uncertainty = np.asarray([0.2, 0.8])
+    labels = ["staterror_a", "modeling"]
     impact_prefit_up = np.asarray([0.1, 0.5])
     impact_prefit_down = np.asarray([-0.2, -0.4])
     impact_postfit_up = np.asarray([0.1, 0.4])
     impact_postfit_down = np.asarray([-0.2, -0.3])
-    poi_index = 2
-    folder_path = "tmp"
-
-    figure_path = pathlib.Path(folder_path) / "ranking.pdf"
-    bestfit_expected = np.asarray([0.1, 0.2])
-    uncertainty_expected = np.asarray([0.8, 0.2])
-    labels_expected = ["modeling", "staterror_a"]
-
-    visualize.ranking(
+    ranking_results = fit.RankingResults(
         bestfit,
         uncertainty,
         labels,
@@ -328,9 +326,15 @@ def test_ranking(mock_draw):
         impact_prefit_down,
         impact_postfit_up,
         impact_postfit_down,
-        poi_index,
-        folder_path,
     )
+    folder_path = "tmp"
+
+    figure_path = pathlib.Path(folder_path) / "ranking.pdf"
+    bestfit_expected = np.asarray([0.1, 1.2])
+    uncertainty_expected = np.asarray([0.8, 0.2])
+    labels_expected = ["modeling", "staterror_a"]
+
+    visualize.ranking(ranking_results, folder_path)
     assert mock_draw.call_count == 1
     assert np.allclose(mock_draw.call_args[0][0], bestfit_expected)
     assert np.allclose(mock_draw.call_args[0][1], uncertainty_expected)
@@ -344,18 +348,7 @@ def test_ranking(mock_draw):
     assert mock_draw.call_args[1] == {}
 
     # maximum parameter amount specified
-    visualize.ranking(
-        bestfit,
-        uncertainty,
-        labels,
-        impact_prefit_up,
-        impact_prefit_down,
-        impact_postfit_up,
-        impact_postfit_down,
-        poi_index,
-        folder_path,
-        max_pars=1,
-    )
+    visualize.ranking(ranking_results, folder_path, max_pars=1)
     assert mock_draw.call_count == 2
     assert np.allclose(mock_draw.call_args[0][0], bestfit_expected[0])
     assert np.allclose(mock_draw.call_args[0][1], uncertainty_expected[0])
@@ -369,18 +362,7 @@ def test_ranking(mock_draw):
 
     # unknown plotting method
     with pytest.raises(NotImplementedError, match="unknown backend: unknown"):
-        visualize.ranking(
-            bestfit,
-            uncertainty,
-            labels,
-            impact_prefit_up,
-            impact_prefit_down,
-            impact_postfit_up,
-            impact_postfit_down,
-            poi_index,
-            folder_path,
-            method="unknown",
-        )
+        visualize.ranking(ranking_results, folder_path, method="unknown")
 
 
 @mock.patch(

@@ -119,3 +119,41 @@ def example_spec_multibin():
         "version": "1.0.0",
     }
     return spec
+
+
+@pytest.fixture
+def example_spec_shapefactor():
+    spec = {
+        "channels": [
+            {
+                "name": "Signal Region",
+                "samples": [
+                    {
+                        "data": [20, 10],
+                        "modifiers": [
+                            {
+                                "data": None,
+                                "name": "shape factor",
+                                "type": "shapefactor",
+                            },
+                            {
+                                "data": None,
+                                "name": "Signal strength",
+                                "type": "normfactor",
+                            },
+                        ],
+                        "name": "Signal",
+                    }
+                ],
+            }
+        ],
+        "measurements": [
+            {
+                "config": {"parameters": [], "poi": "Signal strength"},
+                "name": "shapefactor fit",
+            }
+        ],
+        "observations": [{"data": [25, 8], "name": "Signal Region"}],
+        "version": "1.0.0",
+    }
+    return spec

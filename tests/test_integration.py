@@ -138,3 +138,54 @@ def test_integration(tmp_path, ntuple_creator):
     assert np.allclose(fit_results.uncertainty, uncertainty_expected)
     assert np.allclose(fit_results.best_twice_nll, best_twice_nll_expected)
     assert np.allclose(fit_results.corr_mat, corr_mat_expected, rtol=5e-5)
+
+    # nuisance parameter ranking
+    ranking_results = cabinetry.fit.ranking(ws, fit_results)
+    assert np.allclose(
+        ranking_results.prefit_up,
+        [
+            -0.10470340,
+            0.14648429,
+            -0.10991236,
+            -0.05278778,
+            -0.14582642,
+            -1.67590283,
+            -1.51782965,
+        ],
+    )
+    assert np.allclose(
+        ranking_results.prefit_down,
+        [
+            0.11277466,
+            -0.14829532,
+            0.11949235,
+            0.06167027,
+            0.17465462,
+            1.41673474,
+            1.15103106,
+        ],
+    )
+    assert np.allclose(
+        ranking_results.postfit_up,
+        [
+            -0.10184155,
+            0.14165853,
+            -0.10464174,
+            -0.05181179,
+            -0.14457961,
+            -1.10093621,
+            -0.89766455,
+        ],
+    )
+    assert np.allclose(
+        ranking_results.postfit_down,
+        [
+            0.1097976,
+            -0.14270861,
+            0.11393967,
+            0.06079421,
+            0.17307896,
+            0.84412165,
+            0.76660498,
+        ],
+    )

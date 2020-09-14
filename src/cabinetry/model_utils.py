@@ -80,17 +80,15 @@ def build_Asimov_data(model: pyhf.Model, with_aux: bool = True) -> List[float]:
     return asimov_data
 
 
-def get_asimov_parameters(model: pyhf.pdf.Model) -> Tuple[np.ndarray, np.ndarray]:
-    """Returns a list of Asimov parameter values and pre-fit uncertainties for a model.
+def get_asimov_parameters(model: pyhf.pdf.Model) -> np.ndarray:
+    """Returns a list of Asimov parameter values for a model.
 
     Args:
         model (pyhf.pdf.Model): model for which to extract the parameters
 
     Returns:
-        Tuple[np.ndarray, np.ndarray]:
-            - the Asimov parameters, in the same order as
-              ``model.config.suggested_init()``
-            - pre-fit uncertainties for the parameters
+        np.ndarray: the Asimov parameters, in the same order as
+            ``model.config.suggested_init()``
     """
     # create a list of parameter names, one entry per single parameter
     # (vectors like staterror expanded)
@@ -102,7 +100,6 @@ def get_asimov_parameters(model: pyhf.pdf.Model) -> Tuple[np.ndarray, np.ndarray
     # best-fit value from the aux measurement, unconstrained parameters at
     # the init specified in the workspace)
     asimov_parameters = []
-    pre_fit_unc = []  # pre-fit uncertainties for parameters
     for parameter in model.config.par_order:
         # indices in auxdata list that match the current parameter
         aux_indices = [i for i, par in enumerate(auxdata_pars_all) if par == parameter]
@@ -116,6 +113,23 @@ def get_asimov_parameters(model: pyhf.pdf.Model) -> Tuple[np.ndarray, np.ndarray
             inits = model.config.param_set(parameter).suggested_init
         asimov_parameters += inits
 
+    return np.asarray(asimov_parameters)
+
+
+def get_prefit_uncertainties(model: pyhf.pdf.Model) -> np.ndarray:
+    """Returns a list of pre-fit parameter uncertainties for a model.
+
+    For unconstrained parameters the uncertainty is set to 0.
+
+    Args:
+        model (pyhf.pdf.Model): model for which to extract the parameters
+
+    Returns:
+        np.ndarray: pre-fit uncertainties for the parameters, in the same
+            order as ``model.config.suggested_init()``
+    """
+    pre_fit_unc = []  # pre-fit uncertainties for parameters
+    for parameter in model.config.par_order:
         # for constrained parameters, obtain their pre-fit uncertainty
         if model.config.param_set(parameter).constrained:
             pre_fit_unc += model.config.param_set(parameter).width()
@@ -126,8 +140,7 @@ def get_asimov_parameters(model: pyhf.pdf.Model) -> Tuple[np.ndarray, np.ndarray
             else:
                 # shapefactor
                 pre_fit_unc += [0.0] * model.config.param_set(parameter).n_parameters
-
-    return np.asarray(asimov_parameters), np.asarray(pre_fit_unc)
+    return np.asarray(pre_fit_unc)
 
 
 def calculate_stdev(

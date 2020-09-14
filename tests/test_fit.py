@@ -59,7 +59,7 @@ def test__fit_model_pyhf(example_spec):
 
 
 @pytest.mark.filterwarnings("ignore::RuntimeWarning")
-def test__fit_model_custom(example_spec):
+def test__fit_model_custom(example_spec, example_spec_multibin):
     model, data = model_utils.model_and_data(example_spec)
     fit_results = fit._fit_model_custom(model, data)
     assert np.allclose(fit_results.bestfit, [1.1, 8.32985794])
@@ -79,6 +79,21 @@ def test__fit_model_custom(example_spec):
     assert np.allclose(fit_results.best_twice_nll, 5.68851093)
     assert np.allclose(fit_results.corr_mat, [[0.0, 0.0], [0.0, 1.0]])
 
+    # parameters held constant via keyword argument
+    model, data = model_utils.model_and_data(example_spec_multibin)
+    init_pars = model.config.suggested_init()
+    init_pars[0] = 0.9
+    init_pars[1] = 1.1
+    fix_pars = model.config.suggested_fixed()
+    fix_pars[0] = True
+    fix_pars[1] = True
+    fit_results = fit._fit_model_custom(
+        model, data, init_pars=init_pars, fix_pars=fix_pars
+    )
+    assert np.allclose(fit_results.bestfit, [0.9, 1.1, 1.48041923, 0.97511112])
+    assert np.allclose(fit_results.uncertainty, [0.0, 0.0, 0.20694409, 0.11792805])
+    assert np.allclose(fit_results.best_twice_nll, 10.45318909)
+
 
 @mock.patch("cabinetry.fit.print_results")
 @mock.patch(
@@ -96,7 +111,7 @@ def test__fit_model_custom(example_spec):
 @mock.patch("cabinetry.model_utils.model_and_data", return_value=("model", "data"))
 def test_fit(mock_load, mock_pyhf, mock_custom, mock_print, example_spec):
     fit.fit(example_spec)
-    assert mock_load.call_args_list == [[(example_spec, False), {}]]
+    assert mock_load.call_args_list == [[(example_spec,), {"asimov": False}]]
     assert mock_pyhf.call_args_list == [[("model", "data"), {}]]
     mock_print.assert_called_once()
     assert mock_print.call_args[0][0].bestfit == [1.0]
@@ -105,7 +120,7 @@ def test_fit(mock_load, mock_pyhf, mock_custom, mock_print, example_spec):
 
     # Asimov fit
     fit.fit(example_spec, asimov=True)
-    assert mock_load.call_args == [(example_spec, True), {}]
+    assert mock_load.call_args == [(example_spec,), {"asimov": True}]
 
     # custom fit
     fit.fit(example_spec, custom=True)
@@ -113,3 +128,51 @@ def test_fit(mock_load, mock_pyhf, mock_custom, mock_print, example_spec):
     assert mock_custom.call_args == [("model", "data"), {}]
     assert mock_print.call_args[0][0].bestfit == [3.0]
     assert mock_print.call_args[0][0].uncertainty == [0.3]
+
+
+@mock.patch(
+    "cabinetry.fit._fit_model_custom",
+    side_effect=[
+        fit.FitResults(
+            np.asarray([0.9, 1.3]), np.asarray([0.1, 0.1]), ["a", "b"], np.empty(0), 0.0
+        ),
+        fit.FitResults(
+            np.asarray([0.9, 0.7]), np.asarray([0.1, 0.1]), ["a", "b"], np.empty(0), 0.0
+        ),
+        fit.FitResults(
+            np.asarray([0.9, 1.2]), np.asarray([0.1, 0.1]), ["a", "b"], np.empty(0), 0.0
+        ),
+        fit.FitResults(
+            np.asarray([0.9, 0.8]), np.asarray([0.1, 0.1]), ["a", "b"], np.empty(0), 0.0
+        ),
+    ],
+)
+def test_ranking(mock_fit, example_spec, caplog):
+    caplog.set_level(logging.DEBUG)
+    bestfit = np.asarray([0.9, 1.0])
+    uncertainty = np.asarray([0.02, 0.1])
+    labels = ["staterror", "mu"]
+    fit_results = fit.FitResults(bestfit, uncertainty, labels, np.empty(0), 0.0)
+    model, data = model_utils.model_and_data(example_spec)
+    ranking_results = fit.ranking(example_spec, fit_results)
+
+    # correct call to fit
+    expected_fix = [True, False]
+    expected_inits = [[0.94956657, 1.0], [0.85043343, 1.0], [0.92, 1.0], [0.88, 1.0]]
+    assert mock_fit.call_count == 4
+    for i in range(4):
+        assert np.allclose(
+            mock_fit.call_args_list[i][1]["init_pars"], expected_inits[i]
+        )
+        assert np.allclose(mock_fit.call_args_list[i][1]["fix_pars"], expected_fix)
+
+    # POI removed from fit results
+    assert np.allclose(ranking_results.bestfit, [0.9])
+    assert np.allclose(ranking_results.uncertainty, [0.02])
+    assert ranking_results.labels == ["staterror"]
+
+    # received correct mock results
+    assert np.allclose(ranking_results.prefit_up, [0.3])
+    assert np.allclose(ranking_results.prefit_down, [-0.3])
+    assert np.allclose(ranking_results.postfit_up, [0.2])
+    assert np.allclose(ranking_results.postfit_down, [-0.2])

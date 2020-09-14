@@ -1,5 +1,5 @@
 import logging
-from typing import Any, Dict, List, NamedTuple
+from typing import Any, Dict, List, NamedTuple, Optional
 
 import iminuit
 import numpy as np
@@ -27,6 +27,31 @@ class FitResults(NamedTuple):
     labels: List[str]
     corr_mat: np.ndarray
     best_twice_nll: float
+
+
+class RankingResults(NamedTuple):
+    """Collects nuisance parameter ranking results in one object.
+
+    The best-fit results per parameter, the uncertainties, and the labels should
+    not include the parameter of interest, since no impact for it is calculated.
+
+    Args:
+        bestfit (numpy.ndarray): best-fit results of parameters
+        uncertainty (numpy.ndarray): uncertainties of best-fit parameter results
+        labels (List[str]): parameter labels
+        prefit_up (numpy.ndarray): pre-fit impact in "up" direction
+        prefit_down (numpy.ndarray): pre-fit impact in "down" direction
+        postfit_up (numpy.ndarray): post-fit impact in "up" direction
+        postfit_down (numpy.ndarray): post-fit impact in "down" direction
+    """
+
+    bestfit: np.ndarray
+    uncertainty: np.ndarray
+    labels: List[str]
+    prefit_up: np.ndarray
+    prefit_down: np.ndarray
+    postfit_up: np.ndarray
+    postfit_down: np.ndarray
 
 
 def print_results(
@@ -72,29 +97,43 @@ def _fit_model_pyhf(model: pyhf.pdf.Model, data: List[float]) -> FitResults:
     return fit_result
 
 
-def _fit_model_custom(model: pyhf.pdf.Model, data: List[float]) -> FitResults:
+def _fit_model_custom(
+    model: pyhf.pdf.Model,
+    data: List[float],
+    init_pars: Optional[List[float]] = None,
+    fix_pars: Optional[List[bool]] = None,
+) -> FitResults:
     """Uses ``iminuit`` directly to perform a maximum likelihood fit.
 
-    Parameters set to be fixed in the model are held constant.
+    Parameters set to be fixed in the model are held constant. The ``init_pars``
+    argument allows to override the ``pyhf`` default initial parameter settings,
+    and the ``fix_pars`` argument overrides which parameters are held constant.
 
     Args:
         model (pyhf.pdf.Model): the model to use in the fit
         data (List[float]): the data to fit the model to
+        init_pars (Optional[List[float]], optional): list of initial parameter
+            settings, defaults to None (use ``pyhf`` suggested inits)
+        fix_pars (Optional[List[bool]], optional): list of booleans specifying
+            which parameters are held constant, defaults to None (use ``pyhf``
+            suggestion)
 
     Returns:
         FitResults: object storing relevant fit results
     """
     pyhf.set_backend("numpy", pyhf.optimize.minuit_optimizer(verbose=True))
 
-    init_pars = model.config.suggested_init()
+    # use init_pars provided in function argument if they exist, else use default
+    init_pars = init_pars or model.config.suggested_init()
     par_bounds = model.config.suggested_bounds()
-    fix_pars = model.config.suggested_fixed()
+    # use fix_pars provided in function argument if they exist, else use default
+    fix_pars = fix_pars or model.config.suggested_fixed()
+
+    labels = model_utils.get_parameter_names(model)
 
     # set initial step size to 0 for fixed parameters
     # this will cause the associated parameter uncertainties to be 0 post-fit
     step_size = [0.1 if not fix_pars[i_par] else 0.0 for i_par in range(len(init_pars))]
-
-    labels = model_utils.get_parameter_names(model)
 
     def twice_nll_func(pars: np.ndarray) -> np.float64:
         twice_nll = -2 * model.logpdf(pars, data)
@@ -144,7 +183,7 @@ def fit(spec: Dict[str, Any], asimov: bool = False, custom: bool = False) -> Fit
     """
     log.info("performing maximum likelihood fit")
 
-    model, data = model_utils.model_and_data(spec, asimov)
+    model, data = model_utils.model_and_data(spec, asimov=asimov)
 
     if not custom:
         fit_result = _fit_model_pyhf(model, data)
@@ -155,3 +194,83 @@ def fit(spec: Dict[str, Any], asimov: bool = False, custom: bool = False) -> Fit
     log.debug(f"-2 log(L) = {fit_result.best_twice_nll:.6f} at the best-fit point")
 
     return fit_result
+
+
+def ranking(
+    spec: Dict[str, Any], fit_results: FitResults, asimov: bool = False
+) -> RankingResults:
+    """Calculates the impact of nuisance parameters on the parameter of interest (POI).
+
+    The impact is given by the difference in the POI between the nominal fit, and a fit
+    where the nuisance parameter is held constant at its nominal value plus/minus its
+    associated uncertainty. The ``asimov`` flag determines which dataset is used to
+    calculate the impact. To calculate the proper Asimov impact, the ``fit_results``
+    should come from a fit to the Asimov dataset. The "pre-fit impact" is obtained by
+    varying the nuisance parameters by their uncertainty given by their constraint term.
+
+    Args:
+        spec (Dict[str, Any]): a ``pyhf`` workspace specification
+        fit_results (FitResults): fit results to use for ranking
+        asimov (bool, optional): whether to fit the Asimov dataset, defaults
+            to False
+
+    Returns:
+        RankingResults: fit results for parameters, and pre- and post-fit impacts
+    """
+    model, data = model_utils.model_and_data(spec, asimov=asimov)
+    labels = model_utils.get_parameter_names(model)
+    prefit_unc = model_utils.get_prefit_uncertainties(model)
+    nominal_poi = fit_results.bestfit[model.config.poi_index]
+
+    # get default initial parameter settings / whether parameters are constant
+    init_pars_default = model.config.suggested_init()
+    fix_pars_default = model.config.suggested_fixed()
+
+    all_impacts = []
+    for i_par, label in enumerate(labels):
+        if label == model.config.poi_name:
+            continue  # do not calculate impact of POI on itself
+        log.info(f"calculating impact of {label} on {labels[model.config.poi_index]}")
+
+        # hold current parameter constant
+        fix_pars = fix_pars_default.copy()
+        fix_pars[i_par] = True
+
+        parameter_impacts = []
+        # calculate impacts: pre-fit up, pre-fit down, post-fit up, post-fit down
+        for np_val in [
+            fit_results.bestfit[i_par] + prefit_unc[i_par],
+            fit_results.bestfit[i_par] - prefit_unc[i_par],
+            fit_results.bestfit[i_par] + fit_results.uncertainty[i_par],
+            fit_results.bestfit[i_par] - fit_results.uncertainty[i_par],
+        ]:
+            init_pars = init_pars_default.copy()
+            init_pars[i_par] = np_val  # set value of current nuisance parameter
+            # could skip pre-fit calculation for unconstrained parameters
+            fit_results_ranking = _fit_model_custom(
+                model, data, init_pars=init_pars, fix_pars=fix_pars
+            )
+            poi_val = fit_results_ranking.bestfit[model.config.poi_index]
+            parameter_impact = poi_val - nominal_poi
+            log.debug(
+                f"POI is {poi_val:.6f}, difference to nominal is {parameter_impact:.6f}"
+            )
+            parameter_impacts.append(parameter_impact)
+        all_impacts.append(parameter_impacts)
+
+    all_impacts_np = np.asarray(all_impacts)
+    prefit_up = all_impacts_np[:, 0]
+    prefit_down = all_impacts_np[:, 1]
+    postfit_up = all_impacts_np[:, 2]
+    postfit_down = all_impacts_np[:, 3]
+
+    # remove parameter of interest from bestfit / uncertainty / labels
+    # such that their entries match the entries of the impacts
+    bestfit = np.delete(fit_results.bestfit, model.config.poi_index)
+    uncertainty = np.delete(fit_results.uncertainty, model.config.poi_index)
+    labels = np.delete(fit_results.labels, model.config.poi_index).tolist()
+
+    ranking_results = RankingResults(
+        bestfit, uncertainty, labels, prefit_up, prefit_down, postfit_up, postfit_down
+    )
+    return ranking_results
