@@ -100,41 +100,36 @@ def _fit_model_pyhf(model: pyhf.pdf.Model, data: List[float]) -> FitResults:
 def _fit_model_custom(
     model: pyhf.pdf.Model,
     data: List[float],
-    fixed_pars: Optional[List[Dict[str, Any]]] = None,
+    init_pars: Optional[List[float]] = None,
+    fix_pars: Optional[List[bool]] = None,
 ) -> FitResults:
     """Uses ``iminuit`` directly to perform a maximum likelihood fit.
 
-    Parameters set to be fixed in the model are held constant. Additional
-    parameters can be held constant via the ``fixed_pars`` keyword argument.
+    Parameters set to be fixed in the model are held constant. The ``init_pars``
+    argument allows to override the ``pyhf`` default initial parameter settings,
+    and the ``fix_pars`` argument overrides which parameters are held constant.
 
     Args:
         model (pyhf.pdf.Model): the model to use in the fit
         data (List[float]): the data to fit the model to
-        fixed_pars: Optional[List[Dict[str, Any]]]: list of parameters to
-            hold constant at given value, defaults to None (no additional
-            parameters held constant)
+        init_pars (Optional[List[float]], optional): list of initial parameter
+            settings, defaults to None (use pyhf suggested inits)
+        fix_pars (Optional[List[bool]], optional): list of booleans specifying
+            which parameters are held constant, defaults to None (use pyhf
+            suggestion)
 
     Returns:
         FitResults: object storing relevant fit results
     """
     pyhf.set_backend("numpy", pyhf.optimize.minuit_optimizer(verbose=True))
 
-    init_pars = model.config.suggested_init()
+    # use init_pars provided in function argument if they exist, else use default
+    init_pars = init_pars or model.config.suggested_init()
     par_bounds = model.config.suggested_bounds()
-    fix_pars = model.config.suggested_fixed()
+    # use fix_pars provided in function argument if they exist, else use default
+    fix_pars = fix_pars or model.config.suggested_fixed()
 
     labels = model_utils.get_parameter_names(model)
-
-    if fixed_pars:
-        # hold parameters constant
-        for par in fixed_pars:
-            par_index = par["index"]
-            par_value = par["value"]
-            log.debug(
-                f"holding parameter {labels[par_index]} constant at {par_value:.6f}"
-            )
-            fix_pars[par_index] = True
-            init_pars[par_index] = par_value
 
     # set initial step size to 0 for fixed parameters
     # this will cause the associated parameter uncertainties to be 0 post-fit
@@ -227,11 +222,20 @@ def ranking(
     prefit_unc = model_utils.get_prefit_uncertainties(model)
     nominal_poi = fit_results.bestfit[model.config.poi_index]
 
+    # get default initial parameter settings / whether parameters are constant
+    init_pars_default = model.config.suggested_init()
+    fix_pars_default = model.config.suggested_fixed()
+
     all_impacts = []
     for i_par, label in enumerate(labels):
         if label == model.config.poi_name:
             continue  # do not calculate impact of POI on itself
         log.info(f"running ranking for {label}")
+
+        # hold current parameter constant
+        fix_pars = fix_pars_default.copy()
+        fix_pars[i_par] = True
+        init_pars = init_pars_default.copy()
 
         parameter_impacts = []
         # calculate impacts: pre-fit up, pre-fit down, post-fit up, post-fit down
@@ -241,9 +245,11 @@ def ranking(
             fit_results.bestfit[i_par] + fit_results.uncertainty[i_par],
             fit_results.bestfit[i_par] - fit_results.uncertainty[i_par],
         ]:
+            init_pars[i_par] = val  # set value of current nuisance parameter
             # could skip pre-fit calculation for unconstrained parameters
-            fix_dict = [{"index": i_par, "value": val}]
-            fit_results_ranking = _fit_model_custom(model, data, fixed_pars=fix_dict)
+            fit_results_ranking = _fit_model_custom(
+                model, data, init_pars=init_pars, fix_pars=fix_pars
+            )
             poi_val = fit_results_ranking.bestfit[model.config.poi_index]
             parameter_impact = poi_val - nominal_poi
             log.info(
