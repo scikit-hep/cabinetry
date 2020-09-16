@@ -38,16 +38,6 @@ def data_MC(
             mc_histograms_yields.append(h["yields"])
             mc_labels.append(h["label"])
 
-    # get the highest single bin from the sum of MC
-    y_max = np.max(
-        np.sum([h["yields"] for h in histogram_dict_list if not h["isData"]], axis=0)
-    )
-
-    # if data is higher in any bin, the maximum y axis range should take that into account
-    y_max = max(
-        y_max, np.max([h["yields"] for h in histogram_dict_list if h["isData"]])
-    )
-
     mpl.style.use("seaborn-colorblind")
 
     fig = plt.figure(figsize=(6, 6))
@@ -142,9 +132,24 @@ def data_MC(
         bin_centers, data_model_ratio, yerr=data_model_ratio_unc, fmt="o", color="k"
     )
 
+    # get the highest single bin yield, from the sum of MC or data
+    y_max = max(
+        np.max(total_yield),
+        np.max([h["yields"] for h in histogram_dict_list if h["isData"]]),
+    )
+    # lowest MC yield in single bin (not considering empty bins)
+    y_min = np.min(total_yield[np.nonzero(total_yield)])
+
+    if y_max / y_min > 100:
+        # yields varies over more than 2 orders of magnitude, set y-axis to log scale
+        ax1.set_yscale("log")
+        ax1.set_ylim([y_min / 10, y_max * 10])
+    else:
+        # no log scale
+        ax1.set_ylim([0, y_max * 1.5])  # 50% headroom
+
     ax1.legend(frameon=False, fontsize="large")
     ax1.set_xlim(bin_left_edges[0], bin_right_edges[-1])
-    ax1.set_ylim([0, y_max * 1.5])  # 50% headroom
     ax1.set_ylabel("events")
     ax1.set_xticklabels([])
     ax1.tick_params(axis="both", which="major", pad=8)  # tick label - axis padding
