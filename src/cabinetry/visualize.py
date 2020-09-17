@@ -473,7 +473,7 @@ def scan(
     """
     # replace [] by _, needed for staterrors
     figure_name = (
-        "scan_" + scan_results.name.replace("[", "_").replace("]", "_") + ".pdf"
+        "scan_" + scan_results.name.replace("[", "_").replace("]", "") + ".pdf"
     )
     figure_path = pathlib.Path(figure_folder) / figure_name
 
