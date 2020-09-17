@@ -368,7 +368,7 @@ def templates(
     figure_folder: Union[str, pathlib.Path],
     method: str = "matplotlib",
 ) -> None:
-    """Visualize template histograms for systematic variations.
+    """Visualizes template histograms for systematic variations.
 
     Args:
         config (Dict[str, Any]): cabinetry configuration
@@ -454,3 +454,39 @@ def templates(
 
                 else:
                     raise NotImplementedError(f"unknown backend: {method}")
+
+
+def scan(
+    scan_results: fit.ScanResults,
+    figure_folder: Union[str, pathlib.Path],
+    method: str = "matplotlib",
+) -> None:
+    """Visualizes the results of a likelihood scan.
+
+    Args:
+        scan_results (fit.ScanResults): results of a likelihood scan
+        figure_folder (Union[str, pathlib.Path]): path to the folder to save figures in
+        method (str, optional): what backend to use for plotting, defaults to "matplotlib"
+
+    Raises:
+        NotImplementedError: when trying to plot with a method that is not supported
+    """
+    # replace [] by _, needed for staterrors
+    figure_name = (
+        "scan_" + scan_results.name.replace("[", "_").replace("]", "_") + ".pdf"
+    )
+    figure_path = pathlib.Path(figure_folder) / figure_name
+
+    if method == "matplotlib":
+        from .contrib import matplotlib_visualize
+
+        matplotlib_visualize.scan(
+            scan_results.name,
+            scan_results.bestfit,
+            scan_results.uncertainty,
+            scan_results.scanned_values,
+            scan_results.delta_nlls,
+            figure_path,
+        )
+    else:
+        raise NotImplementedError(f"unknown backend: {method}")
