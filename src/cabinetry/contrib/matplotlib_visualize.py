@@ -565,10 +565,10 @@ def scan(
     # Gaussian at best-fit parameter value for reference
     val_grid = np.linspace(par_vals[0], par_vals[-1], 100)
     gaussian_approx = [((par_val - par_mle) / par_unc) ** 2 for par_val in val_grid]
-    ax.plot(val_grid, gaussian_approx, ":", color="C5", label="Gaussian approximation")
+    ax.plot(val_grid, gaussian_approx, "--", color="C5", label="Gaussian approximation")
 
     # scan results
-    ax.plot(par_vals, par_nlls, "--", color="C0")
+    ax.plot(par_vals, par_nlls, "-", color="C0")
     ax.plot(par_vals, par_nlls, "X", color="C0", label="parameter scan")
 
     # increase font sizes
@@ -589,6 +589,8 @@ def scan(
     ax.tick_params(direction="in", top=True, right=True, which="both")
 
     ax.legend(frameon=False, fontsize="large")
+
+    fig.tight_layout()
 
     figure_path.parent.mkdir(parents=True, exist_ok=True)
     log.debug(f"saving figure as {figure_path}")

@@ -108,3 +108,15 @@ def test_templates(tmp_path):
         variable,
         fname,
     )
+
+
+def test_scan(tmp_path):
+    fname = tmp_path / "fig.pdf"
+    par_name = "a"
+    par_mle = 1.5
+    par_unc = 0.2
+    par_vals = np.asarray([1.1, 1.3, 1.5, 1.7, 1.9])
+    par_nlls = np.asarray([4.1, 1.0, 0.0, 1.1, 3.9])
+
+    matplotlib_visualize.scan(par_name, par_mle, par_unc, par_vals, par_nlls, fname)
+    assert compare_images("tests/contrib/reference/scan.pdf", str(fname), 0) is None
