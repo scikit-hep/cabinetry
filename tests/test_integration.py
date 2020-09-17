@@ -189,3 +189,8 @@ def test_integration(tmp_path, ntuple_creator):
             0.76660498,
         ],
     )
+
+    # parameter scan
+    scan_results = cabinetry.fit.scan(ws, "Signal_norm", n_steps=3)
+    # lower edge of scan is beyond the normalization factor bounds specified in workspace
+    assert np.allclose(scan_results.delta_nlls, [3.2442593, 0.0, 4.63758532], atol=5e-5)
