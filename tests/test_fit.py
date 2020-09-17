@@ -147,8 +147,7 @@ def test_fit(mock_load, mock_pyhf, mock_custom, mock_print, example_spec):
         ),
     ],
 )
-def test_ranking(mock_fit, example_spec, caplog):
-    caplog.set_level(logging.DEBUG)
+def test_ranking(mock_fit, example_spec):
     bestfit = np.asarray([0.9, 1.0])
     uncertainty = np.asarray([0.02, 0.1])
     labels = ["staterror", "mu"]
@@ -176,3 +175,52 @@ def test_ranking(mock_fit, example_spec, caplog):
     assert np.allclose(ranking_results.prefit_down, [-0.3])
     assert np.allclose(ranking_results.postfit_up, [0.2])
     assert np.allclose(ranking_results.postfit_down, [-0.2])
+
+
+@mock.patch(
+    "cabinetry.fit._fit_model_custom",
+    side_effect=[
+        fit.FitResults(
+            np.asarray([0.9, 1.3]), np.asarray([0.1, 0.1]), [], np.empty(0), 8.0
+        )
+    ]  # nominal fit
+    + [
+        fit.FitResults(np.empty(0), np.empty(0), [], np.empty(0), abs(i) + 8)
+        for i in np.linspace(-5, 5, 11)
+    ]  # fits in scan
+    + [
+        fit.FitResults(
+            np.asarray([0.9, 1.3]), np.asarray([0.1, 0.1]), [], np.empty(0), 2.0
+        )
+    ]
+    * 6,  # fits for custom parameter range
+)
+def test_scan(mock_fit, example_spec):
+    expected_scan_values = np.linspace(1.1, 1.5, 11)
+    # -2 log(L) from unconstrained fit subtracted from expected NLLs
+    expected_delta_nlls = np.abs(np.linspace(-5, 5, 11))
+
+    par_name = "Signal strength"
+    scan_results = fit.scan(example_spec, par_name)
+    assert scan_results.name == par_name
+    assert scan_results.bestfit == 1.3
+    assert scan_results.uncertainty == 0.1
+    assert np.allclose(scan_results.scanned_values, expected_scan_values)
+    assert np.allclose(scan_results.delta_nlls, expected_delta_nlls)
+
+    assert mock_fit.call_count == 12
+    # unconstrained fit
+    assert mock_fit.call_args_list[0][1] == {}
+    # fits in scan
+    for i, scan_val in enumerate(expected_scan_values):
+        assert mock_fit.call_args_list[i + 1][1]["init_pars"] == [1.1, scan_val]
+        assert mock_fit.call_args_list[i + 1][1]["fix_pars"] == [True, True]
+
+    # parameter range specified
+    scan_results = fit.scan(example_spec, par_name, par_range=(1.0, 1.5), n_steps=5)
+    expected_custom_scan = np.linspace(1.0, 1.5, 5)
+    assert np.allclose(scan_results.scanned_values, expected_custom_scan)
+
+    # unknown parameter
+    with pytest.raises(ValueError, match="could not find parameter abc in model"):
+        fit.scan(example_spec, "abc")

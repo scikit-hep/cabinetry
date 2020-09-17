@@ -354,9 +354,10 @@ def scan(
     )
     for i_par, par_value in enumerate(scan_values):
         log.debug(f"performing fit with {par_name} = {par_value:.3f}")
-        init_pars[par_index] = par_value
+        init_pars_scan = init_pars.copy()
+        init_pars_scan[par_index] = par_value
         scan_fit_results = _fit_model_custom(
-            model, data, init_pars=init_pars, fix_pars=fix_pars
+            model, data, init_pars=init_pars_scan, fix_pars=fix_pars
         )
         # subtract best-fit
         delta_nlls[i_par] = scan_fit_results.best_twice_nll - nominal_twice_nll
