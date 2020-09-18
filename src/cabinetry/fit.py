@@ -305,8 +305,8 @@ def scan(
 
     If no parameter range is specified, center the scan around the best-fit result
     for the parameter that is being scanned, and scan over twice its uncertainty
-    in each direction. The reported likelihood values are the difference between
-    -2 log(L) at each point in the scan, and the global minimum.
+    in each direction. The reported likelihood values are the differences between
+    -2 log(L) at each point in the scan and the global minimum.
 
     Args:
         spec (Dict[str, Any]): a ``pyhf`` workspace specification
