@@ -471,7 +471,7 @@ def scan(
     Raises:
         NotImplementedError: when trying to plot with a method that is not supported
     """
-    # replace [] by _, needed for staterrors
+    # replace [], needed for staterrors
     figure_name = (
         "scan_" + scan_results.name.replace("[", "_").replace("]", "") + ".pdf"
     )
