@@ -349,7 +349,7 @@ def scan(
     fix_pars[par_index] = True  # hold scan parameter constant in fits
 
     log.info(
-        f"performing likelihood scan for {par_name} in range ({par_range[0]:.3f},"
+        f"performing likelihood scan for {par_name} in range ({par_range[0]:.3f}, "
         f"{par_range[1]:.3f}) with {n_steps} steps"
     )
     for i_par, par_value in enumerate(scan_values):
