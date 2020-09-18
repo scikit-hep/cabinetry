@@ -238,6 +238,9 @@ def pulls(
     ax.set_ylim([-0.5, num_pars - 0.5])
     ax.set_yticks(y_positions)
     ax.set_yticklabels(labels)
+    ax.xaxis.set_minor_locator(mpl.ticker.AutoMinorLocator())  # minor ticks
+    ax.tick_params(axis="both", which="major", pad=8)
+    ax.tick_params(direction="in", top=True, right=True, which="both")
     fig.tight_layout()
 
     figure_path.parent.mkdir(parents=True, exist_ok=True)
