@@ -238,6 +238,9 @@ def pulls(
     ax.set_ylim([-0.5, num_pars - 0.5])
     ax.set_yticks(y_positions)
     ax.set_yticklabels(labels)
+    ax.xaxis.set_minor_locator(mpl.ticker.AutoMinorLocator())  # minor ticks
+    ax.tick_params(axis="both", which="major", pad=8)
+    ax.tick_params(direction="in", top=True, right=True, which="both")
     fig.tight_layout()
 
     figure_path.parent.mkdir(parents=True, exist_ok=True)
@@ -509,6 +512,86 @@ def templates(
     ax2.set_yticklabels([0.5, 0.75, 1.0, 1.25, ""])
     ax2.tick_params(axis="both", which="major", pad=8)
     ax2.tick_params(direction="in", top=True, right=True, which="both")
+
+    fig.tight_layout()
+
+    figure_path.parent.mkdir(parents=True, exist_ok=True)
+    log.debug(f"saving figure as {figure_path}")
+    fig.savefig(figure_path)
+    plt.close(fig)
+
+
+def scan(
+    par_name: str,
+    par_mle: float,
+    par_unc: float,
+    par_vals: np.ndarray,
+    par_nlls: np.ndarray,
+    figure_path: pathlib.Path,
+) -> None:
+    """Draws a figure showing the results of a likelihood scan.
+
+    Args:
+        par_name (str): name of parameter used in scan
+        par_mle (float): best-fit result for parameter
+        par_unc (float): best-fit parameter uncertainty
+        par_vals (np.ndarray): values used in scan over parameter
+        par_nlls (np.ndarray): -2 log(L) offset at each scan point
+        figure_path (pathlib.Path): path where figure should be saved
+    """
+    mpl.style.use("seaborn-colorblind")
+    fig, ax = plt.subplots()
+
+    # line through y=1 and y=4 to show confidence levels
+    ax.plot([par_vals[0], par_vals[-1]], [1, 1], ":", color="gray")
+    ax.plot([par_vals[0], par_vals[-1]], [4, 4], ":", color="gray")
+
+    # position for text - right edge of the figure, with slight padding
+    text_x_pos = par_vals[-1] - 0.01 * (par_vals[-1] - par_vals[0])
+    ax.text(
+        text_x_pos,
+        1.0,
+        "68% CL",
+        horizontalalignment="right",
+        verticalalignment="bottom",
+        color="gray",
+    )
+    ax.text(
+        text_x_pos,
+        4.0,
+        "95% CL",
+        horizontalalignment="right",
+        verticalalignment="bottom",
+        color="gray",
+    )
+
+    # Gaussian at best-fit parameter value for reference
+    val_grid = np.linspace(par_vals[0], par_vals[-1], 100)
+    gaussian_approx = [((par_val - par_mle) / par_unc) ** 2 for par_val in val_grid]
+    ax.plot(val_grid, gaussian_approx, "--", color="C5", label="Gaussian approximation")
+
+    # scan results
+    ax.plot(par_vals, par_nlls, "-", color="C0")
+    ax.plot(par_vals, par_nlls, "X", color="C0", label="parameter scan")
+
+    # increase font sizes
+    for item in (
+        [ax.yaxis.label, ax.xaxis.label] + ax.get_xticklabels() + ax.get_yticklabels()
+    ):
+        item.set_fontsize("large")
+
+    # minor ticks
+    for axis in [ax.xaxis, ax.yaxis]:
+        axis.set_minor_locator(mpl.ticker.AutoMinorLocator())
+
+    ax.set_xlabel(par_name)
+    ax.set_xlim(par_vals[0], par_vals[-1])
+    ax.set_ylabel(r"$-2 \Delta \log(L)$")
+    ax.set_ylim(0, max(par_nlls) * 1.2)
+    ax.tick_params(axis="both", which="major", pad=8)
+    ax.tick_params(direction="in", top=True, right=True, which="both")
+
+    ax.legend(frameon=False, fontsize="large")
 
     fig.tight_layout()
 

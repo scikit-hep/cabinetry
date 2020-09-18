@@ -1,5 +1,5 @@
 import logging
-from typing import Any, Dict, List, NamedTuple, Optional
+from typing import Any, Dict, List, NamedTuple, Optional, Tuple
 
 import iminuit
 import numpy as np
@@ -52,6 +52,24 @@ class RankingResults(NamedTuple):
     prefit_down: np.ndarray
     postfit_up: np.ndarray
     postfit_down: np.ndarray
+
+
+class ScanResults(NamedTuple):
+    """Collects likelihood scan results in one object.
+
+    Args:
+        name (str): name of parameter in scan
+        bestfit (float): best-fit parameter value from unconstrained fit
+        uncertainty (float): uncertainty of parameter in unconstrained fit
+        scanned_values (np.ndarray): parameter values used in scan
+        delta_nlls (np.ndarray): -2 log(L) difference at each scanned point
+    """
+
+    name: str
+    bestfit: float
+    uncertainty: float
+    scanned_values: np.ndarray
+    delta_nlls: np.ndarray
 
 
 def print_results(
@@ -274,3 +292,75 @@ def ranking(
         bestfit, uncertainty, labels, prefit_up, prefit_down, postfit_up, postfit_down
     )
     return ranking_results
+
+
+def scan(
+    spec: Dict[str, Any],
+    par_name: str,
+    par_range: Optional[Tuple[float, float]] = None,
+    n_steps: int = 11,
+    asimov: bool = False,
+) -> ScanResults:
+    """Performs a likelihood scan over the specified parameter.
+
+    If no parameter range is specified, center the scan around the best-fit result
+    for the parameter that is being scanned, and scan over twice its uncertainty
+    in each direction. The reported likelihood values are the differences between
+    -2 log(L) at each point in the scan and the global minimum.
+
+    Args:
+        spec (Dict[str, Any]): a ``pyhf`` workspace specification
+        par_name (str): name of parameter to scan over
+        par_range (Optional[Tuple[float, float]], optional): upper and lower bounds
+            of parameter in scan, defaults to None (automatically determine bounds)
+        n_steps (int, optional): number of steps in scan, defaults to 10
+        asimov (bool, optional): whether to fit the Asimov dataset, defaults
+            to False
+
+    Raises:
+        ValueError: if parameter is not found in model
+
+    Returns:
+        ScanResults: includes parameter name, scanned values and 2*log(likelihood) offset
+    """
+    model, data = model_utils.model_and_data(spec, asimov=asimov)
+    labels = model_utils.get_parameter_names(model)
+    init_pars = model.config.suggested_init()
+    fix_pars = model.config.suggested_fixed()
+
+    # get index of parameter with name par_name
+    par_index = next((i for i, label in enumerate(labels) if label == par_name), -1)
+    if par_index == -1:
+        raise ValueError(f"could not find parameter {par_name} in model")
+
+    # run a fit with the parameter not held constant, to find the best-fit point
+    fit_results = _fit_model_custom(model, data)
+    nominal_twice_nll = fit_results.best_twice_nll
+    par_mle = fit_results.bestfit[par_index]
+    par_unc = fit_results.uncertainty[par_index]
+
+    if not par_range:
+        # if no parameter range is specified, use +/-2 sigma from the MLE
+        par_range = (par_mle - 2 * par_unc, par_mle + 2 * par_unc)
+
+    scan_values = np.linspace(par_range[0], par_range[1], n_steps)
+    delta_nlls = np.zeros_like(scan_values)  # holds results
+
+    fix_pars[par_index] = True  # hold scan parameter constant in fits
+
+    log.info(
+        f"performing likelihood scan for {par_name} in range ({par_range[0]:.3f}, "
+        f"{par_range[1]:.3f}) with {n_steps} steps"
+    )
+    for i_par, par_value in enumerate(scan_values):
+        log.debug(f"performing fit with {par_name} = {par_value:.3f}")
+        init_pars_scan = init_pars.copy()
+        init_pars_scan[par_index] = par_value
+        scan_fit_results = _fit_model_custom(
+            model, data, init_pars=init_pars_scan, fix_pars=fix_pars
+        )
+        # subtract best-fit
+        delta_nlls[i_par] = scan_fit_results.best_twice_nll - nominal_twice_nll
+
+    scan_results = ScanResults(par_name, par_mle, par_unc, scan_values, delta_nlls)
+    return scan_results

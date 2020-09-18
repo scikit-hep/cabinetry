@@ -429,3 +429,30 @@ def test_templates(mock_draw, mock_histo_config, mock_histo_path, tmp_path):
 
     visualize.templates(config, folder_path)
     assert mock_draw.call_count == 1  # no new call, since no variations found
+
+
+@mock.patch("cabinetry.contrib.matplotlib_visualize.scan")
+def test_scan(mock_draw):
+    folder_path = "tmp"
+    figure_path = pathlib.Path(folder_path) / "scan_a_0.pdf"
+
+    par_name = "a[0]"
+    par_mle = 1.5
+    par_unc = 0.2
+    par_vals = np.asarray([1.3, 1.5, 1.7])
+    par_nlls = np.asarray([0.9, 0.0, 1.1])
+    scan_results = fit.ScanResults(par_name, par_mle, par_unc, par_vals, par_nlls)
+
+    visualize.scan(scan_results, folder_path)
+
+    assert mock_draw.call_count == 1
+    assert mock_draw.call_args[0][0] == par_name
+    assert mock_draw.call_args[0][1] == par_mle
+    assert mock_draw.call_args[0][2] == par_unc
+    assert np.allclose(mock_draw.call_args[0][3], par_vals)
+    assert np.allclose(mock_draw.call_args[0][4], par_nlls)
+    assert mock_draw.call_args[0][5] == figure_path
+
+    # unknown plotting method
+    with pytest.raises(NotImplementedError, match="unknown backend: unknown"):
+        visualize.scan(scan_results, folder_path, method="unknown")
