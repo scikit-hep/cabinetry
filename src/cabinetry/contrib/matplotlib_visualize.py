@@ -585,7 +585,7 @@ def scan(
     ax.set_xlim(par_vals[0], par_vals[-1])
     ax.set_ylabel(r"$-2 \Delta \log(L)$")
     ax.set_ylim(0, max(par_nlls) * 1.2)
-    ax.tick_params(axis="both", which="major")
+    ax.tick_params(axis="both", which="major", pad=8)
     ax.tick_params(direction="in", top=True, right=True, which="both")
 
     ax.legend(frameon=False, fontsize="large")
