@@ -74,17 +74,18 @@ def workspace(config_path: str, ws_path: str) -> None:
 
 @click.command()
 @click.argument("ws_path", type=click.Path(exists=True))
+@click.option("--asimov", is_flag=True, help="fit Asimov dataset")
 @click.option("--pulls", is_flag=True, help="produce pull plot")
 @click.option("--corrmat", is_flag=True, help="produce correlation matrix")
 @click.option("--figfolder", default="figures/", help="folder to save figures to")
-def fit(ws_path: str, pulls: bool, corrmat: bool, figfolder: str) -> None:
+def fit(ws_path: str, asimov: bool, pulls: bool, corrmat: bool, figfolder: str) -> None:
     """Fits a workspace and optionally visualize the results.
 
     WS_PATH: path to workspace used in fit
     """
     _set_logging()
     ws = cabinetry_workspace.load(ws_path)
-    fit_results = cabinetry_fit.fit(ws)
+    fit_results = cabinetry_fit.fit(ws, asimov=asimov)
     if pulls:
         cabinetry_visualize.pulls(fit_results, figfolder)
     if corrmat:
