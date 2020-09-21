@@ -1,5 +1,5 @@
 import logging
-from typing import Any, KeysView
+from typing import Any, KeysView, Optional, Tuple
 
 import click
 
@@ -109,8 +109,60 @@ def ranking(ws_path: str, asimov: bool, max_pars: int, figfolder: str) -> None:
     cabinetry_visualize.ranking(ranking_results, figfolder, max_pars=max_pars)
 
 
+@click.command()
+@click.argument("ws_path", type=click.Path(exists=True))
+@click.argument("par_name", type=str)
+@click.option(
+    "--lower_bound", default=None, type=float, help="lower parameter bound in scan"
+)
+@click.option(
+    "--upper_bound", default=None, type=float, help="upper parameter bound in scan"
+)
+@click.option("--n_steps", default=11, help="number of steps in scan")
+@click.option("--asimov", is_flag=True, help="fit Asimov dataset")
+@click.option("--figfolder", default="figures/", help="folder to save figures to")
+def scan(
+    ws_path: str,
+    par_name: str,
+    lower_bound: float,
+    upper_bound: float,
+    n_steps: int,
+    asimov: bool,
+    figfolder: str,
+) -> None:
+    """Performs and visualizes a likelihood scan over a parameter.
+
+    Parameter bounds are determined automatically, unless both the ``lower_bound`` and
+    ``upper_bound`` parameters are provided.
+
+    WS_PATH: path to workspace used in fit
+
+    PAR_NAME: name of parameter to scan over
+    """
+    _set_logging()
+    par_range: Optional[Tuple[float, float]]
+    if lower_bound and upper_bound:
+        # both bounds specified
+        par_range = (lower_bound, upper_bound)
+    elif (not lower_bound) and (not upper_bound):
+        # no bounds specified
+        par_range = None
+    if (not lower_bound and upper_bound) or (lower_bound and not upper_bound):
+        # mixed case not supported
+        raise ValueError(
+            "Need to either specify both lower_bound and upper_bound, or neither."
+        )
+
+    ws = cabinetry_workspace.load(ws_path)
+    scan_results = cabinetry_fit.scan(
+        ws, par_name, par_range=par_range, n_steps=n_steps, asimov=asimov
+    )
+    cabinetry_visualize.scan(scan_results, figfolder)
+
+
 cabinetry.add_command(templates)
 cabinetry.add_command(postprocess)
 cabinetry.add_command(workspace)
 cabinetry.add_command(fit)
 cabinetry.add_command(ranking)
+cabinetry.add_command(scan)
