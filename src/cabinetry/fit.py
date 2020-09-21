@@ -339,7 +339,7 @@ def scan(
     par_mle = fit_results.bestfit[par_index]
     par_unc = fit_results.uncertainty[par_index]
 
-    if not par_range:
+    if par_range is None:
         # if no parameter range is specified, use +/-2 sigma from the MLE
         par_range = (par_mle - 2 * par_unc, par_mle + 2 * par_unc)
 
