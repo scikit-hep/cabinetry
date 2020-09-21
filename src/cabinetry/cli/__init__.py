@@ -104,7 +104,7 @@ def ranking(ws_path: str, asimov: bool, max_pars: int, figfolder: str) -> None:
     """
     _set_logging()
     ws = cabinetry_workspace.load(ws_path)
-    fit_results = cabinetry_fit.fit(ws, asimov=asimov, custom=True)
+    fit_results = cabinetry_fit.fit(ws, asimov=asimov)
     ranking_results = cabinetry_fit.ranking(ws, fit_results, asimov=asimov)
     cabinetry_visualize.ranking(ranking_results, figfolder, max_pars=max_pars)
 

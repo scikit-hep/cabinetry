@@ -139,6 +139,11 @@ def test_fit(mock_load, mock_fit, mock_pulls, mock_corrmat, tmp_path):
     assert mock_load.call_args_list == [((workspace_path,), {})]
     assert mock_fit.call_args_list == [((workspace,), {"asimov": False})]
 
+    # Asimov
+    result = runner.invoke(cli.fit, ["--asimov", workspace_path])
+    assert result.exit_code == 0
+    assert mock_fit.call_args_list[-1] == ((workspace,), {"asimov": True})
+
     # pull plot
     result = runner.invoke(cli.fit, ["--pulls", workspace_path])
     assert result.exit_code == 0
@@ -156,3 +161,68 @@ def test_fit(mock_load, mock_fit, mock_pulls, mock_corrmat, tmp_path):
     assert result.exit_code == 0
     assert mock_corrmat.call_args_list[-1] == ((fit_results, "folder/"), {})
     assert mock_pulls.call_args_list[-1] == ((fit_results, "folder/"), {})
+
+
+@mock.patch("cabinetry.visualize.ranking", autospec=True)
+@mock.patch(
+    "cabinetry.fit.ranking",
+    return_value=fit.RankingResults(
+        np.asarray([1.0]),
+        np.asarray([0.1]),
+        ["label"],
+        np.asarray([[1.2]]),
+        np.asarray([[0.8]]),
+        np.asarray([[1.1]]),
+        np.asarray([[0.9]]),
+    ),
+    autospec=True,
+)
+@mock.patch(
+    "cabinetry.fit.fit",
+    return_value=fit.FitResults(
+        np.asarray([1.0]), np.asarray([0.1]), ["label"], np.asarray([[1.0]]), 1.0
+    ),
+    autospec=True,
+)
+@mock.patch(
+    "cabinetry.workspace.load", return_value={"workspace": "mock"}, autospec=True
+)
+def test_ranking(mock_load, mock_fit, mock_rank, mock_vis, tmp_path):
+    workspace = {"workspace": "mock"}
+    bestfit = np.asarray([1.0])
+    uncertainty = np.asarray([0.1])
+    labels = ["label"]
+    corr_mat = np.asarray([[1.0]])
+    fit_results = fit.FitResults(bestfit, uncertainty, labels, corr_mat, 1.0)
+
+    workspace_path = str(tmp_path / "workspace.json")
+
+    # need to save workspace to file since click looks for it
+    with open(workspace_path, "w") as f:
+        f.write("{'workspace': 'mock'}")
+
+    runner = CliRunner()
+
+    # default
+    result = runner.invoke(cli.ranking, [workspace_path])
+    assert result.exit_code == 0
+    assert mock_load.call_args_list == [((workspace_path,), {})]
+    assert mock_fit.call_args_list == [((workspace,), {"asimov": False})]
+    assert mock_rank.call_args_list == [((workspace, fit_results), {"asimov": False})]
+    assert mock_vis.call_count == 1
+    assert np.allclose(mock_vis.call_args[0][0].prefit_up, [[1.2]])
+    assert np.allclose(mock_vis.call_args[0][0].prefit_down, [[0.8]])
+    assert np.allclose(mock_vis.call_args[0][0].postfit_up, [[1.1]])
+    assert np.allclose(mock_vis.call_args[0][0].postfit_down, [[0.9]])
+    assert mock_vis.call_args[0][1] == "figures/"
+    assert mock_vis.call_args[1] == {"max_pars": 10}
+
+    # Asimov, maximum amount of parameters, custom folder
+    result = runner.invoke(
+        cli.ranking,
+        ["--asimov", "--max_pars", 3, "--figfolder", "folder/", workspace_path],
+    )
+    assert result.exit_code == 0
+    assert mock_fit.call_args_list[-1] == ((workspace,), {"asimov": True})
+    assert mock_rank.call_args_list[-1] == ((workspace, fit_results), {"asimov": True})
+    assert mock_vis.call_args_list[-1][1] == {"max_pars": 3}
