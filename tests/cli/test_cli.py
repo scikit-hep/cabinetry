@@ -226,6 +226,7 @@ def test_ranking(mock_load, mock_fit, mock_rank, mock_vis, tmp_path):
     assert mock_fit.call_args_list[-1] == ((workspace,), {"asimov": True})
     assert mock_rank.call_args_list[-1] == ((workspace, fit_results), {"asimov": True})
     assert mock_vis.call_args_list[-1][1] == {"max_pars": 3}
+    assert mock_vis.call_args_list[-1][0][1] == "folder/"
 
 
 @mock.patch("cabinetry.visualize.scan", autospec=True)
