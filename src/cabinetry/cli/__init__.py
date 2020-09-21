@@ -33,7 +33,11 @@ def cabinetry() -> None:
 
 @click.command()
 @click.argument("config_path", type=click.Path(exists=True))
-@click.option("--method", default="uproot", help="backend for histogram production")
+@click.option(
+    "--method",
+    default="uproot",
+    help="backend for histogram production (default: uproot)",
+)
 def templates(config_path: str, method: str) -> None:
     """Produces template histograms.
 
@@ -74,10 +78,16 @@ def workspace(config_path: str, ws_path: str) -> None:
 
 @click.command()
 @click.argument("ws_path", type=click.Path(exists=True))
-@click.option("--asimov", is_flag=True, help="fit Asimov dataset")
-@click.option("--pulls", is_flag=True, help="produce pull plot")
-@click.option("--corrmat", is_flag=True, help="produce correlation matrix")
-@click.option("--figfolder", default="figures/", help="folder to save figures to")
+@click.option("--asimov", is_flag=True, help="fit Asimov dataset (default: False)")
+@click.option("--pulls", is_flag=True, help="produce pull plot (default: False)")
+@click.option(
+    "--corrmat", is_flag=True, help="produce correlation matrix (default: False)"
+)
+@click.option(
+    "--figfolder",
+    default="figures/",
+    help="folder to save figures to (default: figures/)",
+)
 def fit(ws_path: str, asimov: bool, pulls: bool, corrmat: bool, figfolder: str) -> None:
     """Fits a workspace and optionally visualize the results.
 
@@ -94,9 +104,15 @@ def fit(ws_path: str, asimov: bool, pulls: bool, corrmat: bool, figfolder: str) 
 
 @click.command()
 @click.argument("ws_path", type=click.Path(exists=True))
-@click.option("--asimov", is_flag=True, help="fit Asimov dataset")
-@click.option("--max_pars", default=10, help="maximum amount of parameters in plot")
-@click.option("--figfolder", default="figures/", help="folder to save figures to")
+@click.option("--asimov", is_flag=True, help="fit Asimov dataset (default: False)")
+@click.option(
+    "--max_pars", default=10, help="maximum amount of parameters in plot (default: 10)"
+)
+@click.option(
+    "--figfolder",
+    default="figures/",
+    help="folder to save figures to (default: figures/)",
+)
 def ranking(ws_path: str, asimov: bool, max_pars: int, figfolder: str) -> None:
     """Ranks nuisance parameters and visualizes the result.
 
@@ -113,14 +129,24 @@ def ranking(ws_path: str, asimov: bool, max_pars: int, figfolder: str) -> None:
 @click.argument("ws_path", type=click.Path(exists=True))
 @click.argument("par_name", type=str)
 @click.option(
-    "--lower_bound", default=None, type=float, help="lower parameter bound in scan"
+    "--lower_bound",
+    default=None,
+    type=float,
+    help="lower parameter bound in scan (default: auto)",
 )
 @click.option(
-    "--upper_bound", default=None, type=float, help="upper parameter bound in scan"
+    "--upper_bound",
+    default=None,
+    type=float,
+    help="upper parameter bound in scan (default: auto)",
 )
-@click.option("--n_steps", default=11, help="number of steps in scan")
-@click.option("--asimov", is_flag=True, help="fit Asimov dataset")
-@click.option("--figfolder", default="figures/", help="folder to save figures to")
+@click.option("--n_steps", default=11, help="number of steps in scan (default: 11)")
+@click.option("--asimov", is_flag=True, help="fit Asimov dataset (default: False)")
+@click.option(
+    "--figfolder",
+    default="figures/",
+    help="folder to save figures to (default: figures/)",
+)
 def scan(
     ws_path: str,
     par_name: str,
