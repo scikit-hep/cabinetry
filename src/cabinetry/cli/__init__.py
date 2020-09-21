@@ -91,7 +91,25 @@ def fit(ws_path: str, pulls: bool, corrmat: bool, figfolder: str) -> None:
         cabinetry_visualize.correlation_matrix(fit_results, figfolder)
 
 
+@click.command()
+@click.argument("ws_path", type=click.Path(exists=True))
+@click.option("--asimov", is_flag=True, help="fit Asimov dataset")
+@click.option("--max_pars", default=10, help="maximum amount of parameters in plot")
+@click.option("--figfolder", default="figures/", help="folder to save figures to")
+def ranking(ws_path: str, asimov: bool, max_pars: int, figfolder: str) -> None:
+    """Ranks nuisance parameters and visualizes the result.
+
+    WS_PATH: path to workspace used in fit
+    """
+    _set_logging()
+    ws = cabinetry_workspace.load(ws_path)
+    fit_results = cabinetry_fit.fit(ws, asimov=asimov, custom=True)
+    ranking_results = cabinetry_fit.ranking(ws, fit_results, asimov=asimov)
+    cabinetry_visualize.ranking(ranking_results, figfolder, max_pars=max_pars)
+
+
 cabinetry.add_command(templates)
 cabinetry.add_command(postprocess)
 cabinetry.add_command(workspace)
 cabinetry.add_command(fit)
+cabinetry.add_command(ranking)
