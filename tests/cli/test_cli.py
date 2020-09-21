@@ -226,3 +226,89 @@ def test_ranking(mock_load, mock_fit, mock_rank, mock_vis, tmp_path):
     assert mock_fit.call_args_list[-1] == ((workspace,), {"asimov": True})
     assert mock_rank.call_args_list[-1] == ((workspace, fit_results), {"asimov": True})
     assert mock_vis.call_args_list[-1][1] == {"max_pars": 3}
+
+
+@mock.patch("cabinetry.visualize.scan", autospec=True)
+@mock.patch(
+    "cabinetry.fit.scan",
+    return_value=fit.ScanResults("par", 1.0, 0.1, np.asarray([1.5]), np.asarray([3.5])),
+    autospec=True,
+)
+@mock.patch(
+    "cabinetry.workspace.load", return_value={"workspace": "mock"}, autospec=True
+)
+def test_scan(mock_load, mock_scan, mock_vis, tmp_path):
+    workspace = {"workspace": "mock"}
+    workspace_path = str(tmp_path / "workspace.json")
+
+    # need to save workspace to file since click looks for it
+    with open(workspace_path, "w") as f:
+        f.write("{'workspace': 'mock'}")
+
+    par_name = "par"
+    scan_results = fit.ScanResults(
+        par_name, 1.0, 0.1, np.asarray([1.5]), np.asarray([3.5])
+    )
+
+    runner = CliRunner()
+
+    # default
+    result = runner.invoke(cli.scan, [workspace_path, par_name])
+    assert result.exit_code == 0
+    assert mock_load.call_args_list == [((workspace_path,), {})]
+    assert mock_scan.call_args_list == [
+        ((workspace, par_name), {"par_range": None, "n_steps": 11, "asimov": False})
+    ]
+    assert mock_vis.call_count == 1
+    assert mock_vis.call_args[0][0].name == scan_results.name
+    assert mock_vis.call_args[0][0].bestfit == scan_results.bestfit
+    assert mock_vis.call_args[0][0].uncertainty == scan_results.uncertainty
+    assert np.allclose(
+        mock_vis.call_args[0][0].scanned_values, scan_results.scanned_values
+    )
+    assert np.allclose(mock_vis.call_args[0][0].delta_nlls, scan_results.delta_nlls)
+    assert mock_vis.call_args[0][1] == "figures/"
+
+    # only one bound
+    with pytest.raises(
+        ValueError,
+        match="Need to either specify both lower_bound and upper_bound, or neither.",
+    ):
+        runner.invoke(
+            cli.scan,
+            ["--lower_bound", 1.0, workspace_path, par_name],
+            catch_exceptions=False,
+        )
+    with pytest.raises(
+        ValueError,
+        match="Need to either specify both lower_bound and upper_bound, or neither.",
+    ):
+        runner.invoke(
+            cli.scan,
+            ["--upper_bound", 1.0, workspace_path, par_name],
+            catch_exceptions=False,
+        )
+
+    # custom bounds, number of steps and Asimov
+    result = runner.invoke(
+        cli.scan,
+        [
+            "--lower_bound",
+            0.0,
+            "--upper_bound",
+            2.0,
+            "--n_steps",
+            21,
+            "--asimov",
+            "--figfolder",
+            "folder/",
+            workspace_path,
+            par_name,
+        ],
+    )
+    assert result.exit_code == 0
+    assert mock_scan.call_args_list[-1] == (
+        (workspace, par_name),
+        {"par_range": (0.0, 2.0), "n_steps": 21, "asimov": True},
+    )
+    assert mock_vis.call_args[0][1] == "folder/"

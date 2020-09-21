@@ -124,8 +124,8 @@ def ranking(ws_path: str, asimov: bool, max_pars: int, figfolder: str) -> None:
 def scan(
     ws_path: str,
     par_name: str,
-    lower_bound: float,
-    upper_bound: float,
+    lower_bound: Optional[float],
+    upper_bound: Optional[float],
     n_steps: int,
     asimov: bool,
     figfolder: str,
@@ -141,17 +141,17 @@ def scan(
     """
     _set_logging()
     par_range: Optional[Tuple[float, float]]
-    if lower_bound and upper_bound:
+    if (lower_bound is not None) and (upper_bound is not None):
         # both bounds specified
         par_range = (lower_bound, upper_bound)
-    elif (not lower_bound) and (not upper_bound):
-        # no bounds specified
-        par_range = None
-    if (not lower_bound and upper_bound) or (lower_bound and not upper_bound):
+    elif (lower_bound is not None) or (upper_bound is not None):
         # mixed case not supported
         raise ValueError(
             "Need to either specify both lower_bound and upper_bound, or neither."
         )
+    else:
+        # no bounds specified
+        par_range = None
 
     ws = cabinetry_workspace.load(ws_path)
     scan_results = cabinetry_fit.scan(
