@@ -123,7 +123,7 @@ def data_MC(
     """
     model, data_combined = model_utils.model_and_data(spec, with_aux=False)
 
-    if fit_results:
+    if fit_results is not None:
         # fit results specified, draw a post-fit plot with them applied
         prefit = False
         param_values = fit_results.bestfit
