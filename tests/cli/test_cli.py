@@ -137,7 +137,7 @@ def test_fit(mock_load, mock_fit, mock_pulls, mock_corrmat, tmp_path):
     result = runner.invoke(cli.fit, [workspace_path])
     assert result.exit_code == 0
     assert mock_load.call_args_list == [((workspace_path,), {})]
-    assert mock_fit.call_args_list == [((workspace,), {})]
+    assert mock_fit.call_args_list == [((workspace,), {"asimov": False})]
 
     # pull plot
     result = runner.invoke(cli.fit, ["--pulls", workspace_path])
