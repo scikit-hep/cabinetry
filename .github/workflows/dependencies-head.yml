@@ -1,0 +1,129 @@
+name: HEAD of dependencies
+
+on:
+  workflow_dispatch:
+  # Run daily at 0:01 UTC
+  schedule:
+  - cron:  '1 0 * * *'
+
+jobs:
+  pyhf:
+
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest]
+        python-version: [3.8]
+
+    steps:
+    - uses: actions/checkout@v2
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v2
+      with:
+        python-version: ${{ matrix.python-version }}
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip setuptools wheel
+        python -m pip install --ignore-installed --upgrade -q --no-cache-dir -e .[test]
+        python -m pip install --upgrade --no-cache-dir git+git://github.com/scikit-hep/pyhf.git
+        python -m pip list
+    - name: Test with pytest
+      run: |
+        python -m pytest -r sx
+
+  awkward1:
+
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest]
+        python-version: [3.8]
+
+    steps:
+    - uses: actions/checkout@v2
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v2
+      with:
+        python-version: ${{ matrix.python-version }}
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip setuptools wheel
+        python -m pip install --ignore-installed --upgrade -q --no-cache-dir -e .[test]
+        python -m pip install --upgrade --no-cache-dir git+git://github.com/scikit-hep/awkward-1.0.git
+        python -m pip list
+    - name: Test with pytest
+      run: |
+        python -m pytest -r sx
+
+  uproot4:
+
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest]
+        python-version: [3.8]
+
+    steps:
+    - uses: actions/checkout@v2
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v2
+      with:
+        python-version: ${{ matrix.python-version }}
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip setuptools wheel
+        python -m pip install --ignore-installed --upgrade -q --no-cache-dir -e .[test]
+        python -m pip install --upgrade --no-cache-dir git+git://github.com/scikit-hep/uproot4.git
+        python -m pip list
+    - name: Test with pytest
+      run: |
+        python -m pytest -r sx
+
+  iminuit:
+
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest]
+        python-version: [3.8]
+
+    steps:
+    - uses: actions/checkout@v2
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v2
+      with:
+        python-version: ${{ matrix.python-version }}
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip setuptools wheel
+        python -m pip install --ignore-installed --upgrade -q --no-cache-dir -e .[test]
+        python -m pip install --upgrade --no-cache-dir cython
+        python -m pip install --upgrade --no-cache-dir git+git://github.com/scikit-hep/iminuit.git
+        python -m pip list
+    - name: Test with pytest
+      run: |
+        python -m pytest -r sx
+
+  boost-histogram:
+
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest]
+        python-version: [3.8]
+
+    steps:
+    - uses: actions/checkout@v2
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v2
+      with:
+        python-version: ${{ matrix.python-version }}
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip setuptools wheel
+        python -m pip install --ignore-installed --upgrade -q --no-cache-dir -e .[test]
+        python -m pip install --upgrade --no-cache-dir git+git://github.com/scikit-hep/boost-histogram.git
+        python -m pip list
+    - name: Test with pytest
+      run: |
+        python -m pytest -r sx
