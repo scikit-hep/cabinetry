@@ -56,7 +56,7 @@ jobs:
       run: |
         python -m pytest -r sx
 
-  boost_histogram:
+  boost-histogram:
 
     runs-on: ${{ matrix.os }}
     strategy:
