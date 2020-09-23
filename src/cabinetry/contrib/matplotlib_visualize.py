@@ -1,6 +1,6 @@
 import logging
 import pathlib
-from typing import Any, Dict, List, Union
+from typing import Any, Dict, List, Optional, Union
 
 import matplotlib as mpl
 import matplotlib.pyplot as plt
@@ -15,6 +15,7 @@ def data_MC(
     total_model_unc: np.ndarray,
     bin_edges: np.ndarray,
     figure_path: pathlib.Path,
+    log_scale: Optional[bool] = None,
 ) -> None:
     """Draws a data/MC histogram with uncertainty bands and ratio panel.
 
@@ -26,6 +27,8 @@ def data_MC(
             defaults to None
         bin_edges (np.ndarray): bin edges of histogram
         figure_path (pathlib.Path): path where figure should be saved
+        log_scale (Optional[bool], optional): whether to use a logarithmic vertical axis,
+            defaults to None (automatically determine whether to use linear or log scale)
     """
     mc_histograms_yields = []
     mc_labels = []
@@ -37,16 +40,6 @@ def data_MC(
         else:
             mc_histograms_yields.append(h["yields"])
             mc_labels.append(h["label"])
-
-    # get the highest single bin from the sum of MC
-    y_max = np.max(
-        np.sum([h["yields"] for h in histogram_dict_list if not h["isData"]], axis=0)
-    )
-
-    # if data is higher in any bin, the maximum y axis range should take that into account
-    y_max = max(
-        y_max, np.max([h["yields"] for h in histogram_dict_list if h["isData"]])
-    )
 
     mpl.style.use("seaborn-colorblind")
 
@@ -142,9 +135,34 @@ def data_MC(
         bin_centers, data_model_ratio, yerr=data_model_ratio_unc, fmt="o", color="k"
     )
 
+    # get the highest single bin yield, from the sum of MC or data
+    y_max = max(
+        np.max(total_yield),
+        np.max([h["yields"] for h in histogram_dict_list if h["isData"]]),
+    )
+    # lowest MC yield in single bin (not considering empty bins)
+    y_min = np.min(total_yield[np.nonzero(total_yield)])
+
+    # determine scale setting, unless it is provided
+    if log_scale is None:
+        # if yields vary over more than 2 orders of magnitude, set y-axis to log scale
+        log_scale = (y_max / y_min) > 100
+
+    # set vertical axis scale and limits
+    if log_scale:
+        # use log scale
+        ax1.set_yscale("log")
+        ax1.set_ylim([y_min / 10, y_max * 10])
+        # add "_log" to the figure name
+        figure_path = figure_path.with_name(
+            figure_path.stem + "_log" + figure_path.suffix
+        )
+    else:
+        # do not use log scale
+        ax1.set_ylim([0, y_max * 1.5])  # 50% headroom
+
     ax1.legend(frameon=False, fontsize="large")
     ax1.set_xlim(bin_left_edges[0], bin_right_edges[-1])
-    ax1.set_ylim([0, y_max * 1.5])  # 50% headroom
     ax1.set_ylabel("events")
     ax1.set_xticklabels([])
     ax1.tick_params(axis="both", which="major", pad=8)  # tick label - axis padding

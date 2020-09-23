@@ -50,6 +50,7 @@ def _total_yield_uncertainty(stdev_list: List[np.ndarray]) -> np.ndarray:
 def data_MC_from_histograms(
     config: Dict[str, Any],
     figure_folder: Union[str, pathlib.Path],
+    log_scale: Optional[bool] = None,
     method: str = "matplotlib",
 ) -> None:
     """Draws pre-fit data/MC histograms, using histograms created by cabinetry.
@@ -59,6 +60,8 @@ def data_MC_from_histograms(
     Args:
         config (Dict[str, Any]): cabinetry configuration
         figure_folder (Union[str, pathlib.Path]): path to the folder to save figures in
+        log_scale (Optional[bool], optional): whether to use a logarithmic vertical axis,
+            defaults to None (automatically determine whether to use linear or log scale)
         method (str, optional): what backend to use for plotting, defaults to "matplotlib"
 
     Raises:
@@ -94,7 +97,11 @@ def data_MC_from_histograms(
 
             figure_path = pathlib.Path(figure_folder) / figure_name
             matplotlib_visualize.data_MC(
-                histogram_dict_list, total_model_unc, bin_edges, figure_path
+                histogram_dict_list,
+                total_model_unc,
+                bin_edges,
+                figure_path,
+                log_scale=log_scale,
             )
         else:
             raise NotImplementedError(f"unknown backend: {method}")
@@ -105,6 +112,7 @@ def data_MC(
     figure_folder: Union[str, pathlib.Path],
     spec: Dict[str, Any],
     fit_results: Optional[fit.FitResults] = None,
+    log_scale: Optional[bool] = None,
     method: str = "matplotlib",
 ) -> None:
     """Draws pre- and post-fit data/MC histograms from a ``pyhf`` workspace.
@@ -116,6 +124,8 @@ def data_MC(
         fit_results (Optional[fit.FitResults]): parameter configuration to use for plot,
             includes best-fit settings and uncertainties, as well as correlation matrix,
             defaults to None (then the pre-fit configuration is drawn)
+        log_scale (Optional[bool], optional): whether to use a logarithmic vertical axis,
+            defaults to None (automatically determine whether to use linear or log scale)
         method (str, optional): what backend to use for plotting, defaults to "matplotlib"
 
     Raises:
@@ -202,6 +212,7 @@ def data_MC(
                 np.asarray(total_stdev_model[i_chan]),
                 bin_edges,
                 figure_path,
+                log_scale=log_scale,
             )
         else:
             raise NotImplementedError(f"unknown backend: {method}")
