@@ -99,6 +99,7 @@ def test_data_MC_from_histograms(mock_load, mock_draw, mock_stdev, tmp_path):
                 [0.0, 1.0],
                 tmp_path / "reg_1_prefit.pdf",
             ),
+            {"log_scale": None},
         )
     ]
 
@@ -172,9 +173,9 @@ def test_data_MC(
     assert mock_draw.call_args_list[0][0][3] == pathlib.Path(
         "tmp/Signal-Region_prefit.pdf"
     )
-    assert mock_draw.call_args_list[0][1] == {}
+    assert mock_draw.call_args_list[0][1] == {"log_scale": None}
 
-    # post-fit plot
+    # post-fit plot and custom scale
     fit_results = fit.FitResults(
         np.asarray([1.01, 1.1]),
         np.asarray([0.03, 0.1]),
@@ -182,7 +183,9 @@ def test_data_MC(
         np.asarray([[1.0, 0.2], [0.2, 1.0]]),
         0.0,
     )
-    visualize.data_MC(config, figure_folder, example_spec, fit_results=fit_results)
+    visualize.data_MC(
+        config, figure_folder, example_spec, fit_results=fit_results, log_scale=False
+    )
 
     assert mock_asimov.call_count == 1  # no new call
 
@@ -204,7 +207,7 @@ def test_data_MC(
     assert mock_draw.call_args_list[1][0][3] == pathlib.Path(
         "tmp/Signal-Region_postfit.pdf"
     )
-    assert mock_draw.call_args_list[1][1] == {}
+    assert mock_draw.call_args_list[1][1] == {"log_scale": False}
 
     # unknown plotting method
     with pytest.raises(NotImplementedError, match="unknown backend: unknown"):
