@@ -16,13 +16,13 @@ Samples:
     SamplePaths: "data.root"
     Data: True
 
-  - Name: "Background"
-    Tree: "background"
+  - Name: "Signal"
+    Tree: "signal"
     SamplePaths: "prediction.root"
     Weight: "weight"
 
-  - Name: "Signal"
-    Tree: "signal"
+  - Name: "Background"
+    Tree: "background"
     SamplePaths: "prediction.root"
     Weight: "weight"
 
