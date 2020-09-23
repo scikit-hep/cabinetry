@@ -1,3 +1,5 @@
+import copy
+
 from matplotlib.testing.compare import compare_images
 import numpy as np
 
@@ -30,6 +32,40 @@ def test_data_MC(tmp_path):
     bin_edges = np.asarray([1, 2, 3])
     matplotlib_visualize.data_MC(histo_dict_list, total_model_unc, bin_edges, fname)
     assert compare_images("tests/contrib/reference/data_MC.pdf", str(fname), 0) is None
+    fname.unlink()  # delete figure
+
+    histo_dict_list_log = copy.deepcopy(histo_dict_list)
+    histo_dict_list_log[0]["yields"] = np.asarray([2000, 14])
+    histo_dict_list_log[2]["yields"] = np.asarray([2010, 15])
+    total_model_unc_log = np.asarray([50, 1.5])
+    fname_log = fname.with_name(fname.stem + "_log" + fname.suffix)
+
+    # automatic log scale
+    matplotlib_visualize.data_MC(
+        histo_dict_list_log, total_model_unc_log, bin_edges, fname
+    )
+    assert (
+        compare_images("tests/contrib/reference/data_MC_log.pdf", str(fname_log), 0)
+        is None
+    )
+    fname_log.unlink()
+
+    # linear scale forced
+    matplotlib_visualize.data_MC(
+        histo_dict_list, total_model_unc, bin_edges, fname, log_scale=False
+    )
+    assert compare_images("tests/contrib/reference/data_MC.pdf", str(fname), 0) is None
+    fname.unlink()
+
+    # log scale forced
+    matplotlib_visualize.data_MC(
+        histo_dict_list_log, total_model_unc_log, bin_edges, fname, log_scale=True
+    )
+    assert (
+        compare_images("tests/contrib/reference/data_MC_log.pdf", str(fname_log), 0)
+        is None
+    )
+    fname_log.unlink()
 
 
 def test_correlation_matrix(tmp_path):
