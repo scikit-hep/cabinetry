@@ -72,7 +72,9 @@ def data_MC_from_histograms(
     for region in config["Regions"]:
         histogram_dict_list = []
         model_stdevs = []
-        for sample in config["Samples"]:
+        # loop over samples in reverse order, such that samples that appear first in the
+        # config will appear at the top of the stack in the plot (they are plotted last)
+        for sample in config["Samples"][::-1]:
             is_data = sample.get("Data", False)
             histogram = histo.Histogram.from_config(
                 histogram_folder, region, sample, {"Name": "Nominal"}, modified=True
