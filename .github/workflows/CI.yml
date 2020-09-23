@@ -55,4 +55,5 @@ jobs:
         fail_ci_if_error: true
     - name: Build docs with sphinx
       run: |
+        python -m pip install .[docs]
         sphinx-build docs docs/_build
