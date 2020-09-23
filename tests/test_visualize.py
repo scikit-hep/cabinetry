@@ -62,7 +62,7 @@ def test_data_MC_from_histograms(mock_load, mock_draw, mock_stdev, tmp_path):
             (
                 tmp_path,
                 {"Name": "reg_1", "Variable": "x"},
-                {"Name": "sample_1"},
+                {"Name": "data", "Data": True},
                 {"Name": "Nominal"},
             ),
             {"modified": True},
@@ -71,7 +71,7 @@ def test_data_MC_from_histograms(mock_load, mock_draw, mock_stdev, tmp_path):
             (
                 tmp_path,
                 {"Name": "reg_1", "Variable": "x"},
-                {"Name": "data", "Data": True},
+                {"Name": "sample_1"},
                 {"Name": "Nominal"},
             ),
             {"modified": True},
@@ -83,14 +83,14 @@ def test_data_MC_from_histograms(mock_load, mock_draw, mock_stdev, tmp_path):
             (
                 [
                     {
-                        "label": "sample_1",
-                        "isData": False,
+                        "label": "data",
+                        "isData": True,
                         "yields": [1.0],
                         "variable": "x",
                     },
                     {
-                        "label": "data",
-                        "isData": True,
+                        "label": "sample_1",
+                        "isData": False,
                         "yields": [1.0],
                         "variable": "x",
                     },

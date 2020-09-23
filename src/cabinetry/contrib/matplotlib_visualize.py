@@ -67,14 +67,15 @@ def data_MC(
     bin_left_edges = bin_edges[:-1]
     bin_width = bin_right_edges - bin_left_edges
     bin_centers = 0.5 * (bin_left_edges + bin_right_edges)
-    for i_sample, mc_sample_yield in enumerate(mc_histograms_yields):
-        ax1.bar(
+    mc_containers = []
+    for mc_sample_yield in mc_histograms_yields:
+        mc_container = ax1.bar(
             bin_centers,
             mc_sample_yield,
             width=bin_width,
             bottom=total_yield,
-            label=mc_labels[i_sample],
         )
+        mc_containers.append(mc_container)
 
         # add a black line on top of each sample
         line_x = [y for y in bin_edges for _ in range(2)][1:-1]
@@ -84,12 +85,11 @@ def data_MC(
         total_yield += mc_sample_yield
 
     # add total MC uncertainty
-    ax1.bar(
+    mc_unc_container = ax1.bar(
         bin_centers,
         2 * total_model_unc,
         width=bin_width,
         bottom=total_yield - total_model_unc,
-        label="Uncertainty",
         fill=False,
         linewidth=0,
         edgecolor="gray",
@@ -97,13 +97,12 @@ def data_MC(
     )
 
     # plot data
-    ax1.errorbar(
+    data_container = ax1.errorbar(
         bin_centers,
         data_histogram_yields,
         yerr=data_histogram_stdev,
         fmt="o",
         color="k",
-        label=data_label,
     )
 
     # ratio plot
@@ -161,7 +160,12 @@ def data_MC(
         # do not use log scale
         ax1.set_ylim([0, y_max * 1.5])  # 50% headroom
 
-    ax1.legend(frameon=False, fontsize="large")
+    # MC contributions in inverse order, such that first legend entry corresponds to
+    # the last (highest) contribution to the stack
+    all_containers = mc_containers[::-1] + [mc_unc_container, data_container]
+    all_labels = mc_labels[::-1] + ["Uncertainty", data_label]
+    ax1.legend(all_containers, all_labels, frameon=False, fontsize="large")
+
     ax1.set_xlim(bin_left_edges[0], bin_right_edges[-1])
     ax1.set_ylabel("events")
     ax1.set_xticklabels([])
