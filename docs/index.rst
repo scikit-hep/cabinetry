@@ -11,7 +11,6 @@ cabinetry
     cli
     api
     license
-    abc
 
 ``cabinetry`` is a tool to build and steer (profile likelihood) template fits with applications in high energy physics in mind.
 It acts as an interface to many powerful tools to make it easier for an analyzer to run their statistical inference pipeline.
