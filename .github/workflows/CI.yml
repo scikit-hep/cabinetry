@@ -53,3 +53,6 @@ jobs:
         file: ./coverage.xml
         name: codecov-umbrella
         fail_ci_if_error: true
+    - name: Build docs with sphinx
+      run: |
+        sphinx-build docs docs/_build
