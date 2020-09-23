@@ -1,6 +1,6 @@
 import logging
 import pathlib
-from typing import Any, Dict, List, Union
+from typing import Any, Dict, List, Optional, Union
 
 import matplotlib as mpl
 import matplotlib.pyplot as plt
@@ -15,6 +15,7 @@ def data_MC(
     total_model_unc: np.ndarray,
     bin_edges: np.ndarray,
     figure_path: pathlib.Path,
+    log_scale: Optional[bool] = None,
 ) -> None:
     """Draws a data/MC histogram with uncertainty bands and ratio panel.
 
@@ -26,6 +27,8 @@ def data_MC(
             defaults to None
         bin_edges (np.ndarray): bin edges of histogram
         figure_path (pathlib.Path): path where figure should be saved
+        log_scale (Optional[bool], optional): whether to use a logarithmic vertical axis,
+            defaults to None (automatically determine whether to use linear or log scale)
     """
     mc_histograms_yields = []
     mc_labels = []
@@ -140,12 +143,26 @@ def data_MC(
     # lowest MC yield in single bin (not considering empty bins)
     y_min = np.min(total_yield[np.nonzero(total_yield)])
 
-    if y_max / y_min > 100:
-        # yields varies over more than 2 orders of magnitude, set y-axis to log scale
+    # determine whether to use a linear or logarithmic vertical axis
+    if log_scale is None:
+        # automatically determine scale
+        if y_max / y_min > 100:
+            # yields varies over more than 2 orders of magnitude, set y-axis to log scale
+            log_scale = True
+        else:
+            log_scale = False  # do not use log scale
+
+    # set vertical axis scale and limits
+    if log_scale:
+        # use log scale
         ax1.set_yscale("log")
         ax1.set_ylim([y_min / 10, y_max * 10])
+        # add "_log" to the figure name
+        figure_path = figure_path.with_name(
+            figure_path.stem + "_log" + figure_path.suffix
+        )
     else:
-        # no log scale
+        # do not use log scale
         ax1.set_ylim([0, y_max * 1.5])  # 50% headroom
 
     ax1.legend(frameon=False, fontsize="large")
