@@ -132,7 +132,7 @@ def get_prefit_uncertainties(model: pyhf.pdf.Model) -> np.ndarray:
     """
     pre_fit_unc = []  # pre-fit uncertainties for parameters
     for parameter in model.config.par_order:
-        # obtain pre-fit uncertainty for constrained and non-fixed parameters
+        # obtain pre-fit uncertainty for constrained, non-fixed parameters
         if (
             model.config.param_set(parameter).constrained
             and not model.config.param_set(parameter).fixed
