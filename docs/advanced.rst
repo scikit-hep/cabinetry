@@ -98,3 +98,45 @@ All conditions need to be fulfilled to apply a user-defined function, so
 
 means that for the decorated function to be executed, the region name needs to be `signal_region`, the sample needs to be called `signal`, the systematic needs to be `alpha_S`, but there is no restriction to the template name.
 Omitting ``template`` from the arguments, or using the default ``template=None`` has the same result.
+
+
+Fixed parameters
+----------------
+
+The ``cabinetry`` configuration file contains the ``Fixed`` option (in the ``General`` group of options), which allows for the creation of a workspace with parameters set to be constant (via the ``pyhf`` ``"fixed": true`` option in the workspace):
+
+.. code-block:: yaml
+
+    Fixed:
+      - Name: par_a
+        Value: 2
+      - Name: par_b
+        Value: 1
+
+The same can be written in a more compact way:
+
+.. code-block:: yaml
+
+    Fixed: [{"Name": "par_a", "Value": 2},{"Name": "par_b", "Value": 1}]
+
+The associated ``pyhf`` workspace will contain the following:
+
+.. code-block:: json
+
+    {
+      "measurements": [
+        {
+          "config": {
+            "parameters": [
+              {"fixed": true, "inits": [2], "name": "par_a"},
+              {"fixed": true, "inits": [1], "name": "par_b"}
+            ]
+          }
+        }
+      ]
+    }
+
+Fixed parameters are not allowed to vary in fits.
+Both their pre-fit and post-fit uncertainty are set to zero.
+This means that the associated nuisance parameters do not contribute to uncertainty bands in data/MC visualizations either.
+The impact of such parameters on the parameter of interest (for nuisance parameter ranking) is also zero.
