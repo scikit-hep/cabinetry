@@ -103,7 +103,7 @@ Omitting ``template`` from the arguments, or using the default ``template=None``
 Fixed parameters
 ----------------
 
-The ``cabinetry`` configuration file contains the ``Fixed`` option (in the ``General`` group of options), which allows for the creation of a workspace with parameters set to be constant (via the ``pyhf`` ``"fixed": true`` option in the workspace):
+The ``cabinetry`` configuration file contains the ``Fixed`` option (in the ``General`` group of options), which allows for the creation of a workspace with parameters set to be constant.
 
 .. code-block:: yaml
 

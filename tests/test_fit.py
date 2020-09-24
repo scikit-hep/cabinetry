@@ -145,14 +145,21 @@ def test_fit(mock_load, mock_pyhf, mock_custom, mock_print, example_spec):
         fit.FitResults(
             np.asarray([0.9, 0.8]), np.asarray([0.1, 0.1]), ["a", "b"], np.empty(0), 0.0
         ),
+        # for second fit with fixed parameter
+        fit.FitResults(
+            np.asarray([0.9, 1.2]), np.asarray([0.1, 0.1]), ["a", "b"], np.empty(0), 0.0
+        ),
+        fit.FitResults(
+            np.asarray([0.9, 0.8]), np.asarray([0.1, 0.1]), ["a", "b"], np.empty(0), 0.0
+        ),
     ],
 )
 def test_ranking(mock_fit, example_spec):
+    example_spec["measurements"][0]["config"]["parameters"][0]["fixed"] = False
     bestfit = np.asarray([0.9, 1.0])
     uncertainty = np.asarray([0.02, 0.1])
     labels = ["staterror", "mu"]
     fit_results = fit.FitResults(bestfit, uncertainty, labels, np.empty(0), 0.0)
-    model, data = model_utils.model_and_data(example_spec)
     ranking_results = fit.ranking(example_spec, fit_results)
 
     # correct call to fit
@@ -173,6 +180,17 @@ def test_ranking(mock_fit, example_spec):
     # received correct mock results
     assert np.allclose(ranking_results.prefit_up, [0.3])
     assert np.allclose(ranking_results.prefit_down, [-0.3])
+    assert np.allclose(ranking_results.postfit_up, [0.2])
+    assert np.allclose(ranking_results.postfit_down, [-0.2])
+
+    # fixed parameter in ranking
+    example_spec["measurements"][0]["config"]["parameters"][0]["fixed"] = True
+    ranking_results = fit.ranking(example_spec, fit_results)
+    # expect two more calls in this ranking: pre-fit uncertainty is 0 since parameter
+    # is fixed, but mock post-fit uncertainty is not 0
+    assert mock_fit.call_count == 6
+    assert np.allclose(ranking_results.prefit_up, [0.0])
+    assert np.allclose(ranking_results.prefit_down, [0.0])
     assert np.allclose(ranking_results.postfit_up, [0.2])
     assert np.allclose(ranking_results.postfit_down, [-0.2])
 
