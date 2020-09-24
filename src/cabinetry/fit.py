@@ -262,18 +262,24 @@ def ranking(
             fit_results.bestfit[i_par] + fit_results.uncertainty[i_par],
             fit_results.bestfit[i_par] - fit_results.uncertainty[i_par],
         ]:
-            init_pars = init_pars_default.copy()
-            init_pars[i_par] = np_val  # set value of current nuisance parameter
-            # could skip pre-fit calculation for unconstrained parameters
-            fit_results_ranking = _fit_model_custom(
-                model, data, init_pars=init_pars, fix_pars=fix_pars
-            )
-            poi_val = fit_results_ranking.bestfit[model.config.poi_index]
-            parameter_impact = poi_val - nominal_poi
-            log.debug(
-                f"POI is {poi_val:.6f}, difference to nominal is {parameter_impact:.6f}"
-            )
-            parameter_impacts.append(parameter_impact)
+            # can skip pre-fit calculation for unconstrained parameters (their
+            # pre-fit uncertainty is set to 0), and pre- and post-fit calculation
+            # for fixed parameters (both uncertainties set to 0 as well)
+            if np_val == fit_results.bestfit[i_par]:
+                log.debug(f"impact of {label} is zero, skipping fit")
+                parameter_impacts.append(0.0)
+            else:
+                init_pars = init_pars_default.copy()
+                init_pars[i_par] = np_val  # set value of current nuisance parameter
+                fit_results_ranking = _fit_model_custom(
+                    model, data, init_pars=init_pars, fix_pars=fix_pars
+                )
+                poi_val = fit_results_ranking.bestfit[model.config.poi_index]
+                parameter_impact = poi_val - nominal_poi
+                log.debug(
+                    f"POI is {poi_val:.6f}, difference to nominal is {parameter_impact:.6f}"
+                )
+                parameter_impacts.append(parameter_impact)
         all_impacts.append(parameter_impacts)
 
     all_impacts_np = np.asarray(all_impacts)

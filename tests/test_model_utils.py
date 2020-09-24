@@ -48,10 +48,16 @@ def test_get_asimov_parameters(example_spec, example_spec_shapefactor):
     assert np.allclose(pars, [1.0, 1.0, 1.0])
 
 
-def test_get_prefit_uncertainties(example_spec, example_spec_shapefactor):
+def test_get_prefit_uncertainties(
+    example_spec, example_spec_multibin, example_spec_shapefactor
+):
     model = pyhf.Workspace(example_spec).model()
     unc = model_utils.get_prefit_uncertainties(model)
-    assert np.allclose(unc, [0.0495665682, 0.0])
+    assert np.allclose(unc, [0.0, 0.0])  # fixed parameter and normfactor
+
+    model = pyhf.Workspace(example_spec_multibin).model()
+    unc = model_utils.get_prefit_uncertainties(model)
+    assert np.allclose(unc, [0.2, 0.4, 0.0, 0.125])
 
     model = pyhf.Workspace(example_spec_shapefactor).model()
     unc = model_utils.get_prefit_uncertainties(model)

@@ -119,7 +119,9 @@ def get_asimov_parameters(model: pyhf.pdf.Model) -> np.ndarray:
 def get_prefit_uncertainties(model: pyhf.pdf.Model) -> np.ndarray:
     """Returns a list of pre-fit parameter uncertainties for a model.
 
-    For unconstrained parameters the uncertainty is set to 0.
+    For unconstrained parameters the uncertainty is set to 0. It is also
+    set to 0 for fixed parameters (similarly to how their post-fit
+    uncertainties are defined to be 0).
 
     Args:
         model (pyhf.pdf.Model): model for which to extract the parameters
@@ -130,12 +132,15 @@ def get_prefit_uncertainties(model: pyhf.pdf.Model) -> np.ndarray:
     """
     pre_fit_unc = []  # pre-fit uncertainties for parameters
     for parameter in model.config.par_order:
-        # for constrained parameters, obtain their pre-fit uncertainty
-        if model.config.param_set(parameter).constrained:
+        # obtain pre-fit uncertainty for constrained, non-fixed parameters
+        if (
+            model.config.param_set(parameter).constrained
+            and not model.config.param_set(parameter).fixed
+        ):
             pre_fit_unc += model.config.param_set(parameter).width()
         else:
             if model.config.param_set(parameter).n_parameters == 1:
-                # unconstrained normfactor, do not add any uncertainties
+                # unconstrained normfactor or fixed parameter, uncertainty is 0
                 pre_fit_unc.append(0.0)
             else:
                 # shapefactor
