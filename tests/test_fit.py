@@ -186,8 +186,8 @@ def test_ranking(mock_fit, example_spec):
     # fixed parameter in ranking
     example_spec["measurements"][0]["config"]["parameters"][0]["fixed"] = True
     ranking_results = fit.ranking(example_spec, fit_results)
-    # expect two more calls in this ranking: pre-fit uncertainty is 0 since parameter
-    # is fixed, but mock post-fit uncertainty is not 0
+    # expect two calls in this ranking (and had 4 before, so 6 total): pre-fit
+    # uncertainty is 0 since parameter is fixed, mock post-fit uncertainty is not 0
     assert mock_fit.call_count == 6
     assert np.allclose(ranking_results.prefit_up, [0.0])
     assert np.allclose(ranking_results.prefit_down, [0.0])
