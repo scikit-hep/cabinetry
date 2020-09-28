@@ -88,7 +88,7 @@ def get_asimov_parameters(model: pyhf.pdf.Model) -> np.ndarray:
 
     Returns:
         np.ndarray: the Asimov parameters, in the same order as
-            ``model.config.suggested_init()``
+        ``model.config.suggested_init()``
     """
     # create a list of parameter names, one entry per single parameter
     # (vectors like staterror expanded)
@@ -128,7 +128,7 @@ def get_prefit_uncertainties(model: pyhf.pdf.Model) -> np.ndarray:
 
     Returns:
         np.ndarray: pre-fit uncertainties for the parameters, in the same
-            order as ``model.config.suggested_init()``
+        order as ``model.config.suggested_init()``
     """
     pre_fit_unc = []  # pre-fit uncertainties for parameters
     for parameter in model.config.par_order:
