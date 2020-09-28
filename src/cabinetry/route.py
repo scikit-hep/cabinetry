@@ -14,8 +14,8 @@ log = logging.getLogger(__name__)
 # returns None
 ProcessorFunc = Callable[[Dict[str, Any], Dict[str, Any], Dict[str, Any], str], None]
 
-# type of a user-defined function for template processing, takes sample-region-systematic-template,
-# returns a boost_histogram.Histogram
+# type of a user-defined function for template processing, takes sample-region-
+# systematic-template, returns a boost_histogram.Histogram
 UserTemplateFunc = Callable[
     [Dict[str, Any], Dict[str, Any], Dict[str, Any], str], bh.Histogram
 ]
@@ -28,15 +28,21 @@ GenericProcessorFunc = Union[ProcessorFunc, UserTemplateFunc]
 # which returns either a ProcessorFunc or None
 MatchFunc = Callable[[str, str, str, str], Optional[ProcessorFunc]]
 
+# type of wrapper function that that turns a user-defined template processing function
+# (which returns a histogram) into a function that returns None
+WrapperFunc = Callable[[UserTemplateFunc], ProcessorFunc]
+
 
 class Router:
     """Holds user-defined processing functions and matches functions to templates.
 
-    Provides functions for matching a pattern to apply the right function to each template.
+    Provides functions for matching a pattern to apply the right function to each
+    template.
 
     Attributes:
-        template_builders (List[Dict[str, Any]]): user-defined processors for template building
-        template_builder_wrapper (Optional[Callable[[UserTemplateFunc], ProcessorFunc]]):
+        template_builders (List[Dict[str, Any]]): user-defined processors for template
+            building
+        template_builder_wrapper (Optional[WrapperFunc]):
             wrapper to apply on user-defined template builders
     """
 
@@ -45,13 +51,11 @@ class Router:
         # initialize all lists of processor types the user can specify
         self.template_builders: List[Dict[str, Any]] = []
 
-        # initialize the wrapper to be used for template building to turn the user-defined function
-        # (which returns a histogram) into one that saves the histogram instead
-        # this wrapper needs to be set before using _find_template_builder_match to properly handle
-        # the user-defined template builder
-        self.template_builder_wrapper: Optional[
-            Callable[[UserTemplateFunc], ProcessorFunc]
-        ] = None
+        # initialize the wrapper to be used for template building to turn the user-
+        # defined function (which returns a histogram) into one that saves the histogram
+        # this wrapper needs to be set before using _find_template_builder_match to
+        # properly handle the user-defined template builder
+        self.template_builder_wrapper: Optional[WrapperFunc] = None
 
     @staticmethod
     def _register_processor(
@@ -68,14 +72,14 @@ class Router:
                 or None to apply to all regions
             sample_name  (Optional[str]): name of the sample to apply the function to,
                 or None to apply to all samples
-            systematic_name  (Optional[str]): name of the systematic to apply the function to,
-                or None to apply to all systematics
+            systematic_name  (Optional[str]): name of the systematic to apply the
+                function to, or None to apply to all systematics
             template (Optional[str]): name of the template to apply the function to,
                 or None to apply to all templates
 
         Returns:
-            Callable[[GenericProcessorFunc], GenericProcessorFunc]: the function to register
-            a processor
+            Callable[[GenericProcessorFunc], GenericProcessorFunc]: the function to
+            register a processor
         """
         if region_name is None:
             region_name = "*"
@@ -118,17 +122,18 @@ class Router:
         """Decorator for registering a template builder function.
 
         Args:
-            region_name (Optional[str], optional): name of the region to apply the function to,
-                defaults to None (apply to all regions)
-            sample_name (Optional[str], optional): name of the sample to apply the function to,
-                defaults to None (apply to all samples)
-            systematic_name (Optional[str], optional): name of the systematic to apply the function to,
-                defaults to None (apply to all systematics)
-            template (Optional[str], optional): name of the template to apply the function to,
-                defaults to None (apply to all templates)
+            region_name (Optional[str], optional): name of the region to apply the
+                function to, defaults to None (apply to all regions)
+            sample_name (Optional[str], optional): name of the sample to apply the
+                function to, defaults to None (apply to all samples)
+            systematic_name (Optional[str], optional): name of the systematic to apply
+                the function to, defaults to None (apply to all systematics)
+            template (Optional[str], optional): name of the template to apply the
+                function to, defaults to None (apply to all templates)
 
         Returns:
-            Callable[[Callable], UserTemplateFunc]: the generic function to register a processor
+            Callable[[Callable], UserTemplateFunc]: the generic function to register a
+            processor
         """
         return self._register_processor(
             self.template_builders, region_name, sample_name, systematic_name, template
@@ -198,12 +203,12 @@ class Router:
             ValueError: when no template wrapper is set
 
         Returns:
-            Optional[ProcessorFunc]: wrapped template builder function matching the description,
-            or None if no matches are found
+            Optional[ProcessorFunc]: wrapped template builder function matching the
+            description, or None if no matches are found
         """
         if self.template_builder_wrapper is None:
-            # a wrapper needs to be defined already to convert the user-defined UserTemplateFunc
-            # into a ProcessorFunc
+            # a wrapper needs to be defined already to convert the user-defined
+            # UserTemplateFunc into a ProcessorFunc
             raise ValueError("no template builder wrapper defined")
 
         match = self._find_match(
@@ -211,7 +216,7 @@ class Router:
         )
 
         if match is not None:
-            # if a user-defined function was found, wrap the user-defined function and return it
+            # if user-defined function was found, wrap and return it
             return self.template_builder_wrapper(match)
         return None
 
@@ -231,14 +236,16 @@ def apply_to_all_templates(
     - the dict specifying systematic information
     - name of the template being considered: "Nominal", "Up", "Down"
 
-    In addition it is possible to specify a function that returns custom overrides. If one
-    is found for a given template, it is used instead of the default.
+    In addition it is possible to specify a function that returns custom overrides. If
+    one is found for a given template, it is used instead of the default.
 
     Args:
         config (Dict[str, Any]): cabinetry configuration
-        default_func (ProcessorFunc): function to be called for every template by default
-        match_func: (Optional[MatchFunc], optional): function that returns user-defined functions
-            to override the call to ``default_func``, defaults to None (then it is not used)
+        default_func (ProcessorFunc): function to be called for every template by
+            default
+        match_func: (Optional[MatchFunc], optional): function that returns user-defined
+            functions to override the call to ``default_func``, defaults to None (then
+            it is not used)
     """
     for region in config["Regions"]:
         log.debug(f"  in region {region['Name']}")
