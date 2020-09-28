@@ -189,7 +189,7 @@ def test_Router__find_template_builder_match(processor_examples):
         wrapped_builder = example_router._find_template_builder_match("reg", "", "", "")
         assert mock_find.call_args_list == [(([], "reg", "", "", ""), {})]
 
-        # need to verify that the wrapped template builder is wrapped with the right function
+        # need to verify that wrapped template builder is wrapped with right function
         expected_wrap = example_wrapper(example_template_builder)
         assert wrapped_builder.__name__ == expected_wrap.__name__
 

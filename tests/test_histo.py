@@ -117,7 +117,8 @@ def test_Histogram_from_path(tmp_path, caplog, example_histograms, histogram_hel
     fname_modified = tmp_path / (histo_name + "_modified")
     fname_original = tmp_path / histo_name
     h_ref.save(fname_modified)
-    # load the modified histogram by specifying the original name, which should produce no warning
+    # load the modified histogram by specifying the original name, which should produce
+    # no warning
     h_from_path_modified = histo.Histogram.from_path(fname_original, modified=True)
     histogram_helpers.assert_equal(h_ref, h_from_path_modified)
     assert [rec.message for rec in caplog.records] == []
