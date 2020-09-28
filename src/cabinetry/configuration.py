@@ -154,10 +154,12 @@ def histogram_is_needed(
                 # no histogram needed for normalization variation
                 histo_needed = False
             elif systematic["Type"] == "NormPlusShape":
-                # for a variation defined via a template, a histogram is needed (if sample is affected)
+                # for a variation defined via a template, a histogram is needed (if
+                # sample is affected)
                 histo_needed = sample_affected_by_modifier(sample, systematic)
-                # if symmetrization is specified for the template under consideration, a histogram
-                # is not needed (since it will later on be obtained via symmetrization)
+                # if symmetrization is specified for the template under consideration,
+                # a histogram is not needed (since it will later on be obtained via
+                # symmetrization)
                 if systematic.get(template, {}).get("Symmetrize", False):
                     histo_needed = False
             else:

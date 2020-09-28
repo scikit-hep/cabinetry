@@ -74,8 +74,8 @@ class WorkspaceBuilder:
         Args:
             region (Dict[str, Any]): specific region to use
             sample (Dict[str, Any]): specific sample to use
-            systematic (Optional[Dict[str, Any]], optional): specific systematic variation to use,
-                defaults to None -> {"Name": "Nominal"}
+            systematic (Optional[Dict[str, Any]], optional): specific systematic
+                variation to use, defaults to None -> {"Name": "Nominal"}
 
         Returns:
             List[float]: yields per bin for the sample
@@ -100,8 +100,8 @@ class WorkspaceBuilder:
         Args:
             region (Dict[str, Any]): specific region to use
             sample (Dict[str, Any]): specific sample to use
-            systematic (Optional[Dict[str, Any]], optional): specific systematic variation to use,
-                defaults to None -> {"Name": "Nominal"}
+            systematic (Optional[Dict[str, Any]], optional): specific systematic
+                variation to use, defaults to None -> {"Name": "Nominal"}
 
         Returns:
             List[float]: statistical uncertainty of yield per bin for the sample
@@ -140,7 +140,7 @@ class WorkspaceBuilder:
         """Returns a normalization modifier (OverallSys in `HistFactory`).
 
         Args:
-            systematic (Dict[str, Any]): systematic for which the modifier is constructed
+            systematic (Dict[str, Any]): systematic for which modifier is constructed
 
         Returns:
             Dict[str, Any]: single `normsys` modifier for ``pyhf`` workspace
@@ -167,8 +167,8 @@ class WorkspaceBuilder:
         """Returns modifiers for a correlated shape + normalization effect.
 
         For a variation including a correlated shape + normalization effect, this
-        provides the `histosys` and `normsys` modifiers for ``pyhf`` (in `HistFactory` language,
-        this corresponds to a `HistoSys` and an `OverallSys`).
+        provides the `histosys` and `normsys` modifiers for ``pyhf`` (in `HistFactory`
+        language, this corresponds to a `HistoSys` and an `OverallSys`).
         Symmetrization could happen either at this stage (this is the case currently),
         or somewhere earlier, such as during template postprocessing.
 
@@ -178,7 +178,8 @@ class WorkspaceBuilder:
             systematic (Dict[str, Any]): the systematic variation under consideration
 
         Returns:
-            List[Dict[str, Any]]: a list with a ``pyhf`` `normsys` modifier and a `histosys` modifier
+            List[Dict[str, Any]]: a list with a ``pyhf`` `normsys` modifier and a
+            `histosys` modifier
         """
         # load the systematic variation histogram
         histogram_up = histo.Histogram.from_config(
@@ -196,10 +197,11 @@ class WorkspaceBuilder:
         )
 
         if systematic.get("Down", {}).get("Symmetrize", False):
-            # need to add support for two-sided variations that do not require symmetrization here
+            # add support for two-sided variations that do not require symmetrization
             # if symmetrization is desired, should support different implementations
 
-            # symmetrization according to "method 1" from issue #26: first normalization, then symmetrization
+            # symmetrization according to "method 1" from issue #26:
+            # first normalization, then symmetrization
 
             # normalize the variation to the same yield as nominal
             norm_effect = histogram_up.normalize_to_yield(histogram_nominal)
@@ -207,10 +209,11 @@ class WorkspaceBuilder:
             norm_effect_down = 2 - norm_effect
             histo_yield_up = histogram_up.yields.tolist()
             log.debug(
-                f"normalization impact of systematic {systematic['Name']} on sample {sample['Name']}"
-                f" in region {region['Name']} is {norm_effect:.3f}"
+                f"normalization impact of systematic {systematic['Name']} on sample "
+                f"{sample['Name']} in region {region['Name']} is {norm_effect:.3f}"
             )
-            # need another histogram that corresponds to the "down" variation, which is 2*nominal - up
+            # need another histogram that corresponds to the "down" variation, which is
+            # 2*nominal - up
             histo_yield_down = (
                 2 * histogram_nominal.yields - histogram_up.yields
             ).tolist()
@@ -270,14 +273,16 @@ class WorkspaceBuilder:
                 if systematic["Type"] == "Normalization":
                     # OverallSys (norm uncertainty with Gaussian constraint)
                     log.debug(
-                        f"adding OverallSys {systematic['Name']} to sample {sample['Name']}",
+                        f"adding OverallSys {systematic['Name']} to sample"
+                        f" {sample['Name']}",
                     )
                     modifiers.append(self.get_Normalization_modifier(systematic))
                 elif systematic["Type"] == "NormPlusShape":
                     # two modifiers are needed - an OverallSys for the norm effect,
                     # and a HistoSys for the shape variation
                     log.debug(
-                        f"adding OverallSys and HistoSys {systematic['Name']} to sample {sample['Name']}",
+                        f"adding OverallSys and HistoSys {systematic['Name']} to sample"
+                        f" {sample['Name']}",
                     )
                     modifiers += self.get_NormPlusShape_modifiers(
                         region, sample, systematic
@@ -325,7 +330,7 @@ class WorkspaceBuilder:
                 nf_modifier_list = self.get_NF_modifiers(sample)
                 modifiers += nf_modifier_list
 
-                # check if systematic uncertainties affect the samples, add modifiers as needed
+                # check if systematic uncertainties affect the samples, add modifiers
                 sys_modifier_list = self.get_sys_modifiers(region, sample)
                 modifiers += sys_modifier_list
 
@@ -438,7 +443,8 @@ def build(config: Dict[str, Any], with_validation: bool = True) -> Dict[str, Any
 
     Args:
         config (Dict[str, Any]): cabinetry configuration
-        with_validation (bool, optional): validate workspace validity with pyhf, defaults to True
+        with_validation (bool, optional): validate workspace validity with pyhf,
+            defaults to True
 
     Returns:
         Dict[str, Any]: ``pyhf``-compatible `HistFactory` workspace
@@ -467,7 +473,8 @@ def save(ws: Dict[str, Any], file_path_string: Union[str, pathlib.Path]) -> None
 
     Args:
         ws (Dict[str, Any]): ``pyhf``-compatible `HistFactory` workspace
-        file_path_string (Union[str, pathlib.Path]): path to the file to save the workspace in
+        file_path_string (Union[str, pathlib.Path]): path to the file to save the
+            workspace in
     """
     file_path = pathlib.Path(file_path_string)
     log.debug(f"saving workspace to {file_path}")
@@ -482,7 +489,8 @@ def load(file_path_string: Union[str, pathlib.Path]) -> Dict[str, Any]:
     """Loads a workspace from a file.
 
     Args:
-        file_path_string (Union[str, pathlib.Path]): path to the file to load the workspace from
+        file_path_string (Union[str, pathlib.Path]): path to the file to load the
+            workspace from
 
     Returns:
         Dict[str, Any]: ``pyhf``-compatible `HistFactory` workspace
