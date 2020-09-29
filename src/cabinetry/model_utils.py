@@ -148,6 +148,28 @@ def get_prefit_uncertainties(model: pyhf.pdf.Model) -> np.ndarray:
     return np.asarray(pre_fit_unc)
 
 
+def _get_channel_boundary_indices(model: pyhf.pdf.Model) -> List[int]:
+    """Returns indices for splitting a concatenated list of observations into channels.
+
+    This is useful in combination with ``pyhf.pdf.Model.expected_data``, which returns
+    the yields across all bins in all channels. These indices mark the positions where a
+    channel begins. No index is returned for the first channel, which begins at ``[0]``.
+    The returned indices can be used with ``numpy.split``.
+
+    Args:
+        model (pyhf.pdf.Model): the model that defines the channels
+
+    Returns:
+        List[int]: indices of positions where a channel begins, no index is included for
+        the first bin of the first channel (which is always at ``[0]``)
+    """
+    # get the amount of bins per channel
+    bins_per_channel = [model.config.channel_nbins[ch] for ch in model.config.channels]
+    # indices of positions where a new channel starts (from the second channel onwards)
+    channel_start = [sum(bins_per_channel[:i]) for i in range(1, len(bins_per_channel))]
+    return channel_start
+
+
 def calculate_stdev(
     model: pyhf.pdf.Model,
     parameters: np.ndarray,
@@ -168,8 +190,7 @@ def calculate_stdev(
         is an array of standard deviations per bin
     """
     # indices where to split to separate all bins into regions
-    # last index dropped since no extra split is needed after the last bin
-    region_split = [model.config.channel_nbins[ch] for ch in model.config.channels][:-1]
+    region_split_indices = _get_channel_boundary_indices(model)
 
     # the lists up_variations and down_variations will contain the model distributions
     # with all parameters varied individually within uncertainties
@@ -188,12 +209,12 @@ def calculate_stdev(
 
         # total model distribution with this parameter varied up
         up_combined = model.expected_data(up_pars, include_auxdata=False)
-        up_yields = np.split(up_combined, region_split)
+        up_yields = np.split(up_combined, region_split_indices)
         up_variations.append(up_yields)
 
         # total model distribution with this parameter varied down
         down_combined = model.expected_data(down_pars, include_auxdata=False)
-        down_yields = np.split(down_combined, region_split)
+        down_yields = np.split(down_combined, region_split_indices)
         down_variations.append(down_yields)
 
     # convert to awkward arrays for further processing

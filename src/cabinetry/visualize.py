@@ -157,9 +157,7 @@ def data_MC(
 
     # slice the yields into an array where the first index is the channel,
     # and the second index is the sample
-    region_split_indices = [
-        model.config.channel_nbins[chan] for chan in model.config.channels
-    ][:-1]
+    region_split_indices = model_utils._get_channel_boundary_indices(model)
     model_yields = np.split(yields_combined, region_split_indices, axis=1)
     data = np.split(data_combined, region_split_indices)  # data just indexed by channel
 
