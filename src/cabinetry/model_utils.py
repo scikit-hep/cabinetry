@@ -88,7 +88,7 @@ def get_asimov_parameters(model: pyhf.pdf.Model) -> np.ndarray:
 
     Returns:
         np.ndarray: the Asimov parameters, in the same order as
-            ``model.config.suggested_init()``
+        ``model.config.suggested_init()``
     """
     # create a list of parameter names, one entry per single parameter
     # (vectors like staterror expanded)
@@ -128,7 +128,7 @@ def get_prefit_uncertainties(model: pyhf.pdf.Model) -> np.ndarray:
 
     Returns:
         np.ndarray: pre-fit uncertainties for the parameters, in the same
-            order as ``model.config.suggested_init()``
+        order as ``model.config.suggested_init()``
     """
     pre_fit_unc = []  # pre-fit uncertainties for parameters
     for parameter in model.config.par_order:
@@ -227,7 +227,7 @@ def calculate_stdev(
                     labels[i_par][0:10] == "staterror_"
                     and labels[j_par][0:10] == "staterror_"
                 ):
-                    continue  # two different staterrors are orthogonal and will not contribute
+                    continue  # two different staterrors are orthogonal, no contribution
                 sym_unc_i = (up_variations[i_par] - down_variations[i_par]) / 2
                 sym_unc_j = (up_variations[j_par] - down_variations[j_par]) / 2
                 # factor of two below is there since loop is only over half the matrix

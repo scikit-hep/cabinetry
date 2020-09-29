@@ -83,7 +83,8 @@ def print_results(
     max_label_length = max([len(label) for label in fit_result.labels])
     for i, label in enumerate(fit_result.labels):
         log.info(
-            f"{label.ljust(max_label_length)}: {fit_result.bestfit[i]: .6f} +/- {fit_result.uncertainty[i]:.6f}"
+            f"{label.ljust(max_label_length)}: {fit_result.bestfit[i]: .6f} +/- "
+            f"{fit_result.uncertainty[i]:.6f}"
         )
 
 
@@ -277,7 +278,8 @@ def ranking(
                 poi_val = fit_results_ranking.bestfit[model.config.poi_index]
                 parameter_impact = poi_val - nominal_poi
                 log.debug(
-                    f"POI is {poi_val:.6f}, difference to nominal is {parameter_impact:.6f}"
+                    f"POI is {poi_val:.6f}, difference to nominal is "
+                    f"{parameter_impact:.6f}"
                 )
                 parameter_impacts.append(parameter_impact)
         all_impacts.append(parameter_impacts)
@@ -327,7 +329,8 @@ def scan(
         ValueError: if parameter is not found in model
 
     Returns:
-        ScanResults: includes parameter name, scanned values and 2*log(likelihood) offset
+        ScanResults: includes parameter name, scanned values and 2*log(likelihood)
+        offset
     """
     model, data = model_utils.model_and_data(spec, asimov=asimov)
     labels = model_utils.get_parameter_names(model)

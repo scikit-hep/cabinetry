@@ -27,8 +27,9 @@ def data_MC(
             defaults to None
         bin_edges (np.ndarray): bin edges of histogram
         figure_path (pathlib.Path): path where figure should be saved
-        log_scale (Optional[bool], optional): whether to use a logarithmic vertical axis,
-            defaults to None (automatically determine whether to use linear or log scale)
+        log_scale (Optional[bool], optional): whether to use a logarithmic vertical
+            axis, defaults to None (automatically determine whether to use linear or log
+            scale)
     """
     mc_histograms_yields = []
     mc_labels = []
@@ -198,7 +199,8 @@ def correlation_matrix(
 
     Args:
         corr_mat (np.ndarray): the correlation matrix to plot
-        labels (Union[List[str], np.ndarray]): names of parameters in the correlation matrix
+        labels (Union[List[str], np.ndarray]): names of parameters in the correlation
+            matrix
         figure_path (pathlib.Path): path where figure should be saved
     """
     # rounding for test in CI to match reference
@@ -288,9 +290,11 @@ def ranking(
         uncertainty (np.ndarray): parameter uncertainties
         labels (Union[List[str], np.ndarray]): parameter labels
         impact_prefit_up (np.ndarray): pre-fit impact in "up" direction per parameter
-        impact_prefit_down (np.ndarray): pre-fit impact in "down" direction per parameter
+        impact_prefit_down (np.ndarray): pre-fit impact in "down" direction per
+            parameter
         impact_postfit_up (np.ndarray): post-fit impact in "up" direction per parameter
-        impact_postfit_down (np.ndarray): post-fit impact in "down" direction per parameter
+        impact_postfit_down (np.ndarray): post-fit impact in "down" direction per
+            parameter
         figure_path (pathlib.Path): path where figure should be saved
     """
     num_pars = len(bestfit)

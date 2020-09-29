@@ -60,9 +60,9 @@ def data_MC_from_histograms(
     Args:
         config (Dict[str, Any]): cabinetry configuration
         figure_folder (Union[str, pathlib.Path]): path to the folder to save figures in
-        log_scale (Optional[bool], optional): whether to use a logarithmic vertical axis,
-            defaults to None (automatically determine whether to use linear or log scale)
-        method (str, optional): what backend to use for plotting, defaults to "matplotlib"
+        log_scale (Optional[bool], optional): whether to use logarithmic vertical axis,
+            defaults to None (automatically determine whether to use linear/log scale)
+        method (str, optional): backend to use for plotting, defaults to "matplotlib"
 
     Raises:
         NotImplementedError: when trying to plot with a method that is not supported
@@ -126,9 +126,9 @@ def data_MC(
         fit_results (Optional[fit.FitResults]): parameter configuration to use for plot,
             includes best-fit settings and uncertainties, as well as correlation matrix,
             defaults to None (then the pre-fit configuration is drawn)
-        log_scale (Optional[bool], optional): whether to use a logarithmic vertical axis,
-            defaults to None (automatically determine whether to use linear or log scale)
-        method (str, optional): what backend to use for plotting, defaults to "matplotlib"
+        log_scale (Optional[bool], optional): whether to use logarithmic vertical axis,
+            defaults to None (automatically determine whether to use linear/log scale)
+        method (str, optional): backend to use for plotting, defaults to "matplotlib"
 
     Raises:
         NotImplementedError: when trying to plot with a method that is not supported
@@ -145,7 +145,7 @@ def data_MC(
     else:
         # no fit results specified, draw a pre-fit plot
         prefit = True
-        # use pre-fit parameter values and uncertainties, and diagonal correlation matrix
+        # use pre-fit parameter values, uncertainties, and diagonal correlation matrix
         param_values = model_utils.get_asimov_parameters(model)
         param_uncertainty = model_utils.get_prefit_uncertainties(model)
         corr_mat = np.zeros(shape=(len(param_values), len(param_values)))
@@ -234,23 +234,27 @@ def correlation_matrix(
         figure_folder (Union[str, pathlib.Path]): path to the folder to save figures in
         pruning_threshold (float, optional): minimum correlation for a parameter to
             have with any other parameters to not get pruned, defaults to 0.0
-        method (str, optional): what backend to use for plotting, defaults to "matplotlib"
+        method (str, optional): backend to use for plotting, defaults to "matplotlib"
 
     Raises:
         NotImplementedError: when trying to plot with a method that is not supported
     """
-    # create a matrix that is True if a correlation is below threshold, and True on the diagonal
+    # create a matrix that is True if a correlation is below threshold, and True on the
+    # diagonal
     below_threshold = np.where(
         np.abs(fit_results.corr_mat) < pruning_threshold, True, False
     )
     np.fill_diagonal(below_threshold, True)
     # get list of booleans specifying if everything in rows/columns is below threshold
     all_below_threshold = np.all(below_threshold, axis=0)
-    # get list of booleans specifying if rows/columns correspond to fixed parameter (0 correlations)
+    # get list of booleans specifying if rows/columns correspond to fixed parameter
+    # (0 correlations)
     fixed_parameter = np.all(np.equal(fit_results.corr_mat, 0.0), axis=0)
-    # get indices of rows/columns where everything is below threshold, or the parameter is fixed
+    # get indices of rows/columns where everything is below threshold, or the parameter
+    # is fixed
     delete_indices = np.where(np.logical_or(all_below_threshold, fixed_parameter))
-    # delete rows and columns where all correlations are below threshold / parameter is fixed
+    # delete rows and columns where all correlations are below threshold / parameter is
+    # fixed
     corr_mat = np.delete(
         np.delete(fit_results.corr_mat, delete_indices, axis=1), delete_indices, axis=0
     )
@@ -277,9 +281,9 @@ def pulls(
         fit_results (fit.FitResults): fit results, including correlation matrix
             and parameter labels
         figure_folder (Union[str, pathlib.Path]): path to the folder to save figures in
-        exclude_list (Optional[List[str]], optional): list of parameters to exclude from plot,
-            defaults to None (nothing excluded)
-        method (str, optional): what backend to use for plotting, defaults to "matplotlib"
+        exclude_list (Optional[List[str]], optional): list of parameters to exclude from
+            plot, defaults to None (nothing excluded)
+        method (str, optional): backend to use for plotting, defaults to "matplotlib"
 
     Raises:
         NotImplementedError: when trying to plot with a method that is not supported
@@ -325,9 +329,9 @@ def ranking(
     Args:
         ranking_results (fit.RankingResults): fit results, and pre- and post-fit impacts
         figure_folder (Union[str, pathlib.Path]): path to the folder to save figures in
-        max_pars (Optional[int], optional): number of parameters to include, defaults to None
-            (which means all parameters are included)
-        method (str, optional): what backend to use for plotting, defaults to "matplotlib"
+        max_pars (Optional[int], optional): number of parameters to include, defaults to
+            None (which means all parameters are included)
+        method (str, optional): backend to use for plotting, defaults to "matplotlib"
 
     Raises:
         NotImplementedError: when trying to plot with a method that is not supported
@@ -386,7 +390,7 @@ def templates(
     Args:
         config (Dict[str, Any]): cabinetry configuration
         figure_folder (Union[str, pathlib.Path]): path to the folder to save figures in
-        method (str, optional): what backend to use for plotting, defaults to "matplotlib"
+        method (str, optional): backend to use for plotting, defaults to "matplotlib"
 
     Raises:
         NotImplementedError: when trying to plot with a method that is not supported
@@ -479,7 +483,7 @@ def scan(
     Args:
         scan_results (fit.ScanResults): results of a likelihood scan
         figure_folder (Union[str, pathlib.Path]): path to the folder to save figures in
-        method (str, optional): what backend to use for plotting, defaults to "matplotlib"
+        method (str, optional): backend to use for plotting, defaults to "matplotlib"
 
     Raises:
         NotImplementedError: when trying to plot with a method that is not supported

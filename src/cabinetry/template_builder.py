@@ -329,9 +329,10 @@ class _Builder:
     def _wrap_custom_template_builder(
         self, func: route.UserTemplateFunc
     ) -> route.ProcessorFunc:
-        """Returns a function that executes a custom template builder and saves the histogram.
+        """Returns function that executes custom template builder and saves histogram.
 
-        Wrapper for custom template builder functions that return a ``boost_histogram.Histogram``.
+        Wrapper for custom template builder functions that return a
+        ``boost_histogram.Histogram``.
 
         Args:
             func (cabinetry.route.UserTemplateFunc): user-defined template builder
@@ -339,9 +340,9 @@ class _Builder:
         Returns:
             cabinetry.route.ProcessorFunc: wrapped template builder
         """
-        # decorating this with functools.wraps will keep the name of the wrapped function the same,
-        # however the signature of the wrapped function is slightly different (the return value
-        # becomes None)
+        # decorating this with functools.wraps will keep the name of the wrapped
+        # function the same, however the signature of the wrapped function is slightly
+        # different (the return value becomes None)
         @functools.wraps(func)
         def wrapper(
             region: Dict[str, Any],
@@ -384,7 +385,8 @@ def create_histograms(
 
     Args:
         config (Dict[str, Any]): cabinetry configuration
-        method (str, optional): backend to use for histogram production, defaults to "uproot"
+        method (str, optional): backend to use for histogram production, defaults to
+            "uproot"
         router (Optional[route.Router], optional): instance of cabinetry.route.Router
             that contains user-defined overrides, defaults to None
     """

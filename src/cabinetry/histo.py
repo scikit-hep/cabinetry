@@ -30,10 +30,12 @@ class Histogram(bh.Histogram):
         Args:
             bins (Union[List[float], np.ndarray]): edges of histogram bins
             yields (Union[List[float], np.ndarray]): yield per histogram bin
-            stdev (Union[List[float], np.ndarray]): statistical uncertainty of yield per bin
+            stdev (Union[List[float], np.ndarray]): statistical uncertainty of yield per
+                bin
 
         Raises:
-            ValueError: when amount of bins specified via bin edges and bin contents do not match
+            ValueError: when amount of bins specified via bin edges and bin contents do
+                not match
             ValueError: when length of yields and stdev do not match
 
         Returns:
@@ -72,7 +74,8 @@ class Histogram(bh.Histogram):
             histo_path_modified = histo_path.parent / (histo_path.name + "_modified")
             if not histo_path_modified.with_suffix(".npz").exists():
                 log.warning(
-                    f"the modified histogram {histo_path_modified.with_suffix('.npz')} does not exist",
+                    f"the modified histogram {histo_path_modified.with_suffix('.npz')} "
+                    f"does not exist",
                 )
                 log.warning("loading the un-modified histogram instead!")
             else:
@@ -197,7 +200,8 @@ class Histogram(bh.Histogram):
         not_empty_but_nan = [b for b in nan_pos if b not in empty_bins]
         if len(not_empty_but_nan) > 0:
             log.warning(
-                f"{name} has non-empty bins with ill-defined stat. unc.: {not_empty_but_nan}",
+                f"{name} has non-empty bins with ill-defined stat. unc.: "
+                f"{not_empty_but_nan}",
             )
 
     def normalize_to_yield(self, reference_histogram: H) -> np.float64:
