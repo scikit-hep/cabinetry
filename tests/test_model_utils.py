@@ -66,7 +66,11 @@ def test_get_prefit_uncertainties(
     assert np.allclose(unc, [0.0, 0.0, 0.0])
 
 
-def test__get_channel_boundary_indices(example_spec_multibin):
+def test__get_channel_boundary_indices(example_spec, example_spec_multibin):
+    model = pyhf.Workspace(example_spec).model()
+    indices = model_utils._get_channel_boundary_indices(model)
+    assert indices == []
+
     model = pyhf.Workspace(example_spec_multibin).model()
     indices = model_utils._get_channel_boundary_indices(model)
     assert indices == [2]
