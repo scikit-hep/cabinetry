@@ -42,8 +42,8 @@ class Router:
     Attributes:
         template_builders (List[Dict[str, Any]]): user-defined processors for template
             building
-        template_builder_wrapper (Optional[WrapperFunc]):
-            wrapper to apply on user-defined template builders
+        template_builder_wrapper (Optional[WrapperFunc]): wrapper to apply on user-
+            defined template builders
     """
 
     def __init__(self) -> None:
