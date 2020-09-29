@@ -1,3 +1,5 @@
+import copy
+
 import awkward1 as ak
 import numpy as np
 import pyhf
@@ -62,6 +64,23 @@ def test_get_prefit_uncertainties(
     model = pyhf.Workspace(example_spec_shapefactor).model()
     unc = model_utils.get_prefit_uncertainties(model)
     assert np.allclose(unc, [0.0, 0.0, 0.0])
+
+
+def test__get_channel_boundary_indices(example_spec_multibin):
+    model = pyhf.Workspace(example_spec_multibin).model()
+    indices = model_utils._get_channel_boundary_indices(model)
+    assert indices == [2]
+
+    # add extra channel to model to test three channels (two indices needed)
+    three_channel_model = copy.deepcopy(example_spec_multibin)
+    extra_channel = copy.deepcopy(three_channel_model["channels"][0])
+    extra_channel["name"] = "region_3"
+    extra_channel["samples"][0]["modifiers"][0]["name"] = "staterror_region_3"
+    three_channel_model["channels"].append(extra_channel)
+    three_channel_model["observations"].append({"data": [35, 8], "name": "region_3"})
+    model = pyhf.Workspace(three_channel_model).model()
+    indices = model_utils._get_channel_boundary_indices(model)
+    assert indices == [2, 3]
 
 
 def test_calculate_stdev(example_spec, example_spec_multibin):
