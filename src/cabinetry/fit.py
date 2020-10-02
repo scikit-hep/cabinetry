@@ -284,6 +284,7 @@ def fit(
     spec: Dict[str, Any],
     asimov: bool = False,
     minos: Optional[Union[str, List[str]]] = None,
+    goodness_of_fit: bool = False,
     custom_fit: bool = False,
 ) -> FitResults:
     """Performs a  maximum likelihood fit, reports and returns the results.
@@ -297,6 +298,8 @@ def fit(
         asimov (bool, optional): whether to fit the Asimov dataset, defaults to False
         minos (Optional[Union[str, List[str]]], optional): runs the MINOS algorithm for
             all parameters specified in the list, defaults to None (does not run MINOS)
+        goodness_of_fit (bool, optional): calculate goodness of fit with a saturated
+            model (perfectly fits data with shapefactors in all bins), defaults to False
         custom_fit (bool, optional): whether to use the ``pyhf.infer`` API or
             ``iminuit``, defaults to False (using ``pyhf.infer``)
 
@@ -316,6 +319,32 @@ def fit(
 
     print_results(fit_results)
     log.debug(f"-2 log(L) = {fit_results.best_twice_nll:.6f} at the best-fit point")
+
+    if goodness_of_fit:
+        log.info("fitting with saturated model")
+        model, data = model_utils.model_and_data(spec, asimov=asimov, saturated=True)
+
+        fix_pars = model.config.suggested_fixed()
+        # only allow saturated model shapefactors to vary, fix other parameters
+        labels = model_utils.get_parameter_names(model)
+        for i, par_label in enumerate(labels):
+            if "shapefactor_saturated_" not in par_label:
+                fix_pars[i] = True
+
+        fit_results_saturated = _fit_model(
+            model, data, fix_pars=fix_pars, custom_fit=custom_fit
+        )
+
+        print_results(fit_results_saturated)
+        log.debug(
+            f"-2 log(L) = {fit_results_saturated.best_twice_nll:.6f} at the best-fit"
+            f"point"
+        )
+
+        delta_NLL = (
+            fit_results.best_twice_nll - fit_results_saturated.best_twice_nll
+        ) / 2
+        log.info(f"Delta NLL = {delta_NLL:.6f}")
 
     return fit_results
 

@@ -10,7 +10,10 @@ log = logging.getLogger(__name__)
 
 
 def model_and_data(
-    spec: Dict[str, Any], asimov: bool = False, with_aux: bool = True
+    spec: Dict[str, Any],
+    asimov: bool = False,
+    with_aux: bool = True,
+    saturated: bool = False,
 ) -> Tuple[pyhf.pdf.Model, List[float]]:
     """Returns model and data for a ``pyhf`` workspace specification.
 
@@ -18,6 +21,8 @@ def model_and_data(
         spec (Dict[str, Any]): a ``pyhf`` workspace specification
         asimov (bool, optional): whether to return the Asimov dataset, defaults to False
         with_aux (bool, optional): whether to also return auxdata, defaults to True
+        saturated (bool, optional): whether to build a saturated model (by adding shape-
+            factors to all bins), defaults to False
 
     Returns:
         Tuple[pyhf.pdf.Model, List[float]]:
@@ -25,6 +30,19 @@ def model_and_data(
             - the data (plus auxdata if requested) for the model
     """
     workspace = pyhf.Workspace(spec)
+
+    if saturated:
+        # build a saturated model, with shapefactors in all bins
+        for region in workspace["channels"]:
+            for sample in region["samples"]:
+                sample["modifiers"].append(
+                    {
+                        "name": "shapefactor_saturated_" + region["name"],
+                        "type": "shapefactor",
+                        "data": None,
+                    }
+                )
+
     model = workspace.model(
         modifier_settings={
             "normsys": {"interpcode": "code4"},
