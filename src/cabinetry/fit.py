@@ -1,5 +1,5 @@
 import logging
-from typing import Any, Dict, List, NamedTuple, Optional, Tuple
+from typing import Any, Dict, List, NamedTuple, Optional, Tuple, Union
 
 import iminuit
 import numpy as np
@@ -81,6 +81,7 @@ def print_results(
         fit_result (FitResults): results of fit to be printed
     """
     max_label_length = max([len(label) for label in fit_result.labels])
+    log.info("fit results (with symmetric uncertainties):")
     for i, label in enumerate(fit_result.labels):
         log.info(
             f"{label.ljust(max_label_length)}: {fit_result.bestfit[i]: .6f} +/- "
@@ -88,7 +89,11 @@ def print_results(
         )
 
 
-def _fit_model_pyhf(model: pyhf.pdf.Model, data: List[float]) -> FitResults:
+def _fit_model_pyhf(
+    model: pyhf.pdf.Model,
+    data: List[float],
+    minos_parameters: Optional[List[str]] = None,
+) -> FitResults:
     """Uses the ``pyhf.infer`` API to perform a maximum likelihood fit.
 
     Parameters set to be fixed in the model are held constant.
@@ -96,6 +101,8 @@ def _fit_model_pyhf(model: pyhf.pdf.Model, data: List[float]) -> FitResults:
     Args:
         model (pyhf.pdf.Model): the model to use in the fit
         data (List[float]): the data to fit the model to
+        minos_parameters (Optional[List[str]], optional): runs the MINOS algorithm for
+            all parameters specified in the list, defaults to None (does not run MINOS)
 
     Returns:
         FitResults: object storing relevant fit results
@@ -111,8 +118,18 @@ def _fit_model_pyhf(model: pyhf.pdf.Model, data: List[float]) -> FitResults:
     labels = model_utils.get_parameter_names(model)
     corr_mat = result_obj.minuit.np_matrix(correlation=True, skip_fixed=False)
     best_twice_nll = float(result_obj.fun)  # convert 0-dim np.ndarray to float
-
     fit_result = FitResults(bestfit, uncertainty, labels, corr_mat, best_twice_nll)
+
+    if minos_parameters is not None:
+        parameters_translated = []
+        for i, label in enumerate(labels):
+            if label in minos_parameters:
+                # pyhf does not hand over parameter names, all parameters are known as
+                # x0, x1, etc.
+                parameters_translated.append(f"x{i}")
+
+        run_minos(result_obj.minuit, parameters_translated, labels)
+
     return fit_result
 
 
@@ -121,6 +138,7 @@ def _fit_model_custom(
     data: List[float],
     init_pars: Optional[List[float]] = None,
     fix_pars: Optional[List[bool]] = None,
+    minos_parameters: Optional[List[str]] = None,
 ) -> FitResults:
     """Uses ``iminuit`` directly to perform a maximum likelihood fit.
 
@@ -136,6 +154,8 @@ def _fit_model_custom(
         fix_pars (Optional[List[bool]], optional): list of booleans specifying
             which parameters are held constant, defaults to None (use ``pyhf``
             suggestion)
+        minos_parameters (Optional[List[str]], optional): runs the MINOS algorithm for
+            all parameters specified in the list, defaults to None (does not run MINOS)
 
     Returns:
         FitResults: object storing relevant fit results
@@ -179,23 +199,33 @@ def _fit_model_custom(
     best_twice_nll = m.fval
 
     fit_result = FitResults(bestfit, uncertainty, labels, corr_mat, best_twice_nll)
+
+    if minos_parameters is not None:
+        run_minos(m, minos_parameters, labels)
+
     return fit_result
 
 
-def fit(spec: Dict[str, Any], asimov: bool = False, custom: bool = False) -> FitResults:
+def fit(
+    spec: Dict[str, Any],
+    asimov: bool = False,
+    custom: bool = False,
+    minos_parameters: Optional[Union[str, List[str]]] = None,
+) -> FitResults:
     """Performs a  maximum likelihood fit, reports and returns the results.
 
-    The ``asimov`` flag allows to fit the Asimov dataset instead of observed
-    data. Depending on the ``custom`` keyword argument, this uses either the
-    ``pyhf.infer`` API or ``iminuit`` directly for more control over the
-    minimization.
+    The ``asimov`` flag allows to fit the Asimov dataset instead of observed data.
+    Depending on the ``custom`` keyword argument, this uses either the ``pyhf.infer``
+    API or ``iminuit`` directly for more control over the minimization.
 
     Args:
         spec (Dict[str, Any]): a ``pyhf`` workspace specification
-        asimov (bool, optional): whether to fit the Asimov dataset, defaults
-            to False
-        custom (bool, optional): whether to use the ``pyhf.infer`` API or
-            ``iminuit``, defaults to False (using ``pyhf.infer``)
+        asimov (bool, optional): whether to fit the Asimov dataset, defaults to False
+        custom (bool, optional): whether to use the ``pyhf.infer`` API or ``iminuit``,
+            defaults to False (using ``pyhf.infer``)
+        minos_parameters (Optional[Union[str, List[str]]], optional): runs the MINOS
+            algorithm for all parameters specified in the list, defaults to None (does
+            not run MINOS)
 
     Returns:
         FitResults: object storing relevant fit results
@@ -204,10 +234,14 @@ def fit(spec: Dict[str, Any], asimov: bool = False, custom: bool = False) -> Fit
 
     model, data = model_utils.model_and_data(spec, asimov=asimov)
 
+    # convert minos parameter to list, if a parameter is specified and is not a list
+    if minos_parameters is not None and not isinstance(minos_parameters, list):
+        minos_parameters = [minos_parameters]
+
     if not custom:
-        fit_result = _fit_model_pyhf(model, data)
+        fit_result = _fit_model_pyhf(model, data, minos_parameters=minos_parameters)
     else:
-        fit_result = _fit_model_custom(model, data)
+        fit_result = _fit_model_custom(model, data, minos_parameters=minos_parameters)
 
     print_results(fit_result)
     log.debug(f"-2 log(L) = {fit_result.best_twice_nll:.6f} at the best-fit point")
@@ -373,3 +407,36 @@ def scan(
 
     scan_results = ScanResults(par_name, par_mle, par_unc, scan_values, delta_nlls)
     return scan_results
+
+
+def run_minos(
+    minuit_obj: iminuit._libiminuit.Minuit,
+    minos_parameters: List[str],
+    labels: List[str],
+) -> None:
+    """Determine parameter uncertainties for a list of parameters with MINOS.
+
+    Args:
+        minuit_obj (iminuit._libiminuit.Minuit): Minuit instance to use
+        minos_parameters (List[str]): parameters for which MINOS is run
+        labels (List[str]]): the actual parameter names
+    """
+    for par_name in minos_parameters:
+        # get index of current parameter in labels (to translate its name if iminuit
+        # did not receive the parameter labels)
+        par_index = next(
+            (i for i, par in enumerate(minuit_obj.parameters) if par == par_name)
+        )
+        log.info(f"running MINOS for {labels[par_index]}")
+        minuit_obj.minos(var=par_name)
+
+    log.info("MINOS results:")
+    max_label_length = max([len(label) for label in labels])
+    minos_unc = minuit_obj.np_merrors()
+    for i_err, unc_down, unc_up in zip(range(len(labels)), minos_unc[0], minos_unc[1]):
+        # the uncertainties are 0.0 by default if MINOS has not been run
+        if unc_up != 0.0 or unc_down != 0.0:
+            log.info(
+                f"{labels[i_err].ljust(max_label_length)} = "
+                f"{minuit_obj.np_values()[i_err]:.6f} -{unc_down:.6f} +{unc_up:.6f}"
+            )
