@@ -59,13 +59,13 @@ class Histogram(bh.Histogram):
     def from_path(cls: Type[H], histo_path: pathlib.Path, modified: bool = True) -> H:
         """Builds a histogram from disk.
 
-        Loads the "modified" version of the histogram by default (which received
-        post-processing).
+        Loads the "modified" version of the histogram by default (which received post-
+        processing).
 
         Args:
             histo_path (pathlib.Path): where the histogram is located
-            modified (bool, optional): whether to load the modified histogram
-                (after post-processing), defaults to True
+            modified (bool, optional): whether to load the modified histogram (after
+                post-processing), defaults to True
 
         Returns:
             cabinetry.histo.Histogram: the loaded histogram
@@ -177,8 +177,8 @@ class Histogram(bh.Histogram):
     def validate(self, name: str) -> None:
         """Runs consistency checks on a histogram.
 
-        Checks for empty bins and ill-defined statistical uncertainties.
-        Logs warnings if issues are founds, but does not raise exceptions.
+        Checks for empty bins and ill-defined statistical uncertainties. Logs warnings
+        if issues are founds, but does not raise exceptions.
 
         Args:
             name (str): name of the histogram for logging purposes
@@ -210,8 +210,8 @@ class Histogram(bh.Histogram):
         Returns the normalization factor used to normalize the histogram.
 
         Args:
-            reference_histogram (cabinetry.histo.Histogram): reference histogram
-                to normalize to
+            reference_histogram (cabinetry.histo.Histogram): reference histogram to
+                normalize to
 
         Returns:
             np.float64: the yield ratio: un-normalized yield / normalized yield
@@ -236,8 +236,8 @@ def build_name(
         region (Dict[str, Any]): containing all region information
         sample (Dict[str, Any]): containing all sample information
         systematic (Dict[str, Any]): containing all systematic information
-        template (str): which template (nominal/up/down) to consider,
-            defaults to "Nominal"
+        template (str): which template (nominal/up/down) to consider, defaults to
+            "Nominal"
 
     Returns:
         str: unique name for the histogram

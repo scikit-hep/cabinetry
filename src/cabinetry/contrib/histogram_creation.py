@@ -24,10 +24,10 @@ def from_uproot(
         pos_in_file (str): name of tree within ntuple
         variable (str): variable to bin histogram in
         bins (numpy.ndarray): bin edges for histogram
-        weight (Optional[str], optional): event weight to extract,
-            defaults to None (no weights applied)
-        selection_filter (Optional[str], optional): filter to be applied
-            on events, defaults to None (no filter)
+        weight (Optional[str], optional): event weight to extract, defaults to None (no
+            weights applied)
+        selection_filter (Optional[str], optional): filter to be applied on events,
+            defaults to None (no filter)
 
     Returns:
         Tuple[np.ndarray, np.ndarray]:

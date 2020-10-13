@@ -30,8 +30,8 @@ def load(file_path_string: Union[str, pathlib.Path]) -> Dict[str, Any]:
 def validate(config: Dict[str, Any]) -> bool:
     """Returns True if the config file is validated, otherwise raises exceptions.
 
-    Checks that the config satisfies the json schema, and performs additional
-    checks to validate the config further.
+    Checks that the config satisfies the json schema, and performs additional checks to
+    validate the config further.
 
     Args:
         config (Dict[str, Any]): cabinetry configuration
@@ -81,14 +81,13 @@ def print_overview(config: Dict[str, Any]) -> None:
 def _convert_setting_to_list(setting: Union[str, List[str]]) -> List[str]:
     """Converts a configuration setting to a list.
 
-    The config allows for two ways of specifying some settings, for example
-    samples. A single sample is specified as ``"Samples": "ABC"``, a list
-    of samples as ``"Samples": ["ABC", "DEF"]``. For consistent treatment,
-    the single sample is converted to a list.
+    The config allows for two ways of specifying some settings, for example samples. A
+    single sample is specified as ``"Samples": "ABC"``, a list of samples as
+    ``"Samples": ["ABC", "DEF"]``. For consistent treatment, the single sample is
+    converted to a list.
 
     Args:
-        setting (Union[str, List[str]]): name of single setting value or
-            list of values
+        setting (Union[str, List[str]]): name of single setting value or list of values
 
     Returns:
         list: name(s) of sample(s)
@@ -105,8 +104,8 @@ def sample_affected_by_modifier(
 
     Args:
         sample (Dict[str, Any]): containing all sample information
-        modifier (Dict[str, Any]): containing all modifier information
-            (a Systematic or a NormFactor)
+        modifier (Dict[str, Any]): containing all modifier information (a Systematic or
+            a NormFactor)
 
     Returns:
         bool: True if sample is affected, False otherwise
@@ -134,8 +133,8 @@ def histogram_is_needed(
         template (str): which template is considered: "Nominal", "Up", "Down"
 
     Raises:
-        NotImplementedError: non-supported systematic variations based on histograms
-            are requested
+        NotImplementedError: non-supported systematic variations based on histograms are
+            requested
 
     Returns:
         bool: whether a histogram is needed
