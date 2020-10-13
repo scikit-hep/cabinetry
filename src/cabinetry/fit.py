@@ -32,8 +32,8 @@ class FitResults(NamedTuple):
 class RankingResults(NamedTuple):
     """Collects nuisance parameter ranking results in one object.
 
-    The best-fit results per parameter, the uncertainties, and the labels should
-    not include the parameter of interest, since no impact for it is calculated.
+    The best-fit results per parameter, the uncertainties, and the labels should not
+    include the parameter of interest, since no impact for it is calculated.
 
     Args:
         bestfit (numpy.ndarray): best-fit results of parameters
@@ -144,17 +144,16 @@ def _fit_model_custom(
     """Uses ``iminuit`` directly to perform a maximum likelihood fit.
 
     Parameters set to be fixed in the model are held constant. The ``init_pars``
-    argument allows to override the ``pyhf`` default initial parameter settings,
-    and the ``fix_pars`` argument overrides which parameters are held constant.
+    argument allows to override the ``pyhf`` default initial parameter settings, and the
+    ``fix_pars`` argument overrides which parameters are held constant.
 
     Args:
         model (pyhf.pdf.Model): the model to use in the fit
         data (List[float]): the data to fit the model to
-        init_pars (Optional[List[float]], optional): list of initial parameter
-            settings, defaults to None (use ``pyhf`` suggested inits)
-        fix_pars (Optional[List[bool]], optional): list of booleans specifying
-            which parameters are held constant, defaults to None (use ``pyhf``
-            suggestion)
+        init_pars (Optional[List[float]], optional): list of initial parameter settings,
+            defaults to None (use ``pyhf`` suggested inits)
+        fix_pars (Optional[List[bool]], optional): list of booleans specifying which
+            parameters are held constant, defaults to None (use ``pyhf`` suggestion)
         minos_parameters (Optional[List[str]], optional): runs the MINOS algorithm for
             all parameters specified in the list, defaults to None (does not run MINOS)
 
@@ -346,19 +345,18 @@ def scan(
 ) -> ScanResults:
     """Performs a likelihood scan over the specified parameter.
 
-    If no parameter range is specified, center the scan around the best-fit result
-    for the parameter that is being scanned, and scan over twice its uncertainty
-    in each direction. The reported likelihood values are the differences between
-    -2 log(L) at each point in the scan and the global minimum.
+    If no parameter range is specified, center the scan around the best-fit result for
+    the parameter that is being scanned, and scan over twice its uncertainty in each
+    direction. The reported likelihood values are the differences between -2 log(L) at
+    each point in the scan and the global minimum.
 
     Args:
         spec (Dict[str, Any]): a ``pyhf`` workspace specification
         par_name (str): name of parameter to scan over
-        par_range (Optional[Tuple[float, float]], optional): upper and lower bounds
-            of parameter in scan, defaults to None (automatically determine bounds)
+        par_range (Optional[Tuple[float, float]], optional): upper and lower bounds of
+            parameter in scan, defaults to None (automatically determine bounds)
         n_steps (int, optional): number of steps in scan, defaults to 10
-        asimov (bool, optional): whether to fit the Asimov dataset, defaults
-            to False
+        asimov (bool, optional): whether to fit the Asimov dataset, defaults to False
 
     Raises:
         ValueError: if parameter is not found in model
@@ -436,10 +434,10 @@ def run_minos(
     log.info("MINOS results:")
     max_label_length = max([len(label) for label in labels])
     minos_unc = minuit_obj.np_merrors()
-    for i_err, unc_down, unc_up in zip(range(len(labels)), minos_unc[0], minos_unc[1]):
+    for i_par, unc_down, unc_up in zip(range(len(labels)), minos_unc[0], minos_unc[1]):
         # the uncertainties are 0.0 by default if MINOS has not been run
         if unc_up != 0.0 or unc_down != 0.0:
             log.info(
-                f"{labels[i_err].ljust(max_label_length)} = "
-                f"{minuit_obj.np_values()[i_err]:.4f} -{unc_down:.4f} +{unc_up:.4f}"
+                f"{labels[i_par].ljust(max_label_length)} = "
+                f"{minuit_obj.np_values()[i_par]:.4f} -{unc_down:.4f} +{unc_up:.4f}"
             )
