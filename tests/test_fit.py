@@ -1,6 +1,7 @@
 import logging
 from unittest import mock
 
+import iminuit
 import numpy as np
 import pytest
 
@@ -31,15 +32,16 @@ def test_print_results(caplog):
     fit_results = fit.FitResults(bestfit, uncertainty, labels, np.empty(0), 0.0)
 
     fit.print_results(fit_results)
-    assert "param_A:  1.000000 +/- 0.100000" in [rec.message for rec in caplog.records]
-    assert "param_B:  2.000000 +/- 0.300000" in [rec.message for rec in caplog.records]
+    assert "param_A:  1.0000 +/- 0.1000" in [rec.message for rec in caplog.records]
+    assert "param_B:  2.0000 +/- 0.3000" in [rec.message for rec in caplog.records]
     caplog.clear()
 
 
 # skip a "RuntimeWarning: numpy.ufunc size changed" warning
 # due to different numpy versions used in dependencies
 @pytest.mark.filterwarnings("ignore::RuntimeWarning")
-def test__fit_model_pyhf(example_spec):
+@mock.patch("cabinetry.fit.run_minos")
+def test__fit_model_pyhf(mock_minos, example_spec):
     model, data = model_utils.model_and_data(example_spec)
     fit_results = fit._fit_model_pyhf(model, data)
     assert np.allclose(fit_results.bestfit, [1.1, 8.32984849])
@@ -57,9 +59,19 @@ def test__fit_model_pyhf(example_spec):
     assert np.allclose(fit_results.best_twice_nll, 5.68851093)
     assert np.allclose(fit_results.corr_mat, [[0.0, 0.0], [0.0, 1.0]])
 
+    # including minos
+    model, data = model_utils.model_and_data(example_spec)
+    fit_results = fit._fit_model_pyhf(model, data, minos_parameters=["Signal strength"])
+    assert mock_minos.call_count == 1
+    # first argument to minos call is the Minuit instance
+    assert mock_minos.call_args[0][1] == ["x1"]
+    assert mock_minos.call_args[0][2] == ["staterror_Signal-Region", "Signal strength"]
+    assert mock_minos.call_args[1] == {}
+
 
 @pytest.mark.filterwarnings("ignore::RuntimeWarning")
-def test__fit_model_custom(example_spec, example_spec_multibin):
+@mock.patch("cabinetry.fit.run_minos")
+def test__fit_model_custom(mock_minos, example_spec, example_spec_multibin):
     model, data = model_utils.model_and_data(example_spec)
     fit_results = fit._fit_model_custom(model, data)
     assert np.allclose(fit_results.bestfit, [1.1, 8.32985794])
@@ -94,6 +106,17 @@ def test__fit_model_custom(example_spec, example_spec_multibin):
     assert np.allclose(fit_results.uncertainty, [0.0, 0.0, 0.20694409, 0.11792805])
     assert np.allclose(fit_results.best_twice_nll, 10.45318909)
 
+    # including minos
+    model, data = model_utils.model_and_data(example_spec)
+    fit_results = fit._fit_model_custom(
+        model, data, minos_parameters=["Signal strength"]
+    )
+    assert mock_minos.call_count == 1
+    # first argument to minos call is the Minuit instance
+    assert mock_minos.call_args[0][1] == ["Signal strength"]
+    assert mock_minos.call_args[0][2] == ["staterror_Signal-Region", "Signal strength"]
+    assert mock_minos.call_args[1] == {}
+
 
 @mock.patch("cabinetry.fit.print_results")
 @mock.patch(
@@ -112,7 +135,7 @@ def test__fit_model_custom(example_spec, example_spec_multibin):
 def test_fit(mock_load, mock_pyhf, mock_custom, mock_print, example_spec):
     fit.fit(example_spec)
     assert mock_load.call_args_list == [[(example_spec,), {"asimov": False}]]
-    assert mock_pyhf.call_args_list == [[("model", "data"), {}]]
+    assert mock_pyhf.call_args_list == [[("model", "data"), {"minos_parameters": None}]]
     mock_print.assert_called_once()
     assert mock_print.call_args[0][0].bestfit == [1.0]
     assert mock_print.call_args[0][0].uncertainty == [0.1]
@@ -125,9 +148,15 @@ def test_fit(mock_load, mock_pyhf, mock_custom, mock_print, example_spec):
     # custom fit
     fit.fit(example_spec, custom=True)
     mock_custom.assert_called_once()
-    assert mock_custom.call_args == [("model", "data"), {}]
+    assert mock_custom.call_args == [("model", "data"), {"minos_parameters": None}]
     assert mock_print.call_args[0][0].bestfit == [3.0]
     assert mock_print.call_args[0][0].uncertainty == [0.3]
+
+    # parameters for MINOS
+    fit.fit(example_spec, minos_parameters=["abc"])
+    assert mock_pyhf.call_args[1] == {"minos_parameters": ["abc"]}
+    fit.fit(example_spec, minos_parameters="abc")
+    assert mock_pyhf.call_args[1] == {"minos_parameters": ["abc"]}
 
 
 @mock.patch(
@@ -242,3 +271,46 @@ def test_scan(mock_fit, example_spec):
     # unknown parameter
     with pytest.raises(ValueError, match="could not find parameter abc in model"):
         fit.scan(example_spec, "abc")
+
+
+def test_run_minos(caplog):
+    caplog.set_level(logging.DEBUG)
+
+    def func_to_minimize(pars):
+        # mock NLL
+        return (
+            np.sum(
+                np.power(pars - 2 * np.ones_like(pars), 2)
+                + np.power(pars - 1 * np.ones_like(pars), 4)
+            )
+            + pars[0]
+        )
+
+    m = iminuit.Minuit.from_array_func(
+        func_to_minimize,
+        [1.0, 1.0],
+        name=["a", "b"],
+        errordef=1,
+    )
+    m.migrad()
+
+    fit.run_minos(m, ["b"], ["a", "b"])
+    assert "running MINOS for b" in [rec.message for rec in caplog.records]
+    assert "b = 1.5909 -0.7262 +0.4738" in [rec.message for rec in caplog.records]
+    caplog.clear()
+
+    # proper labels not known to iminuit
+    m = iminuit.Minuit.from_array_func(
+        func_to_minimize,
+        [1.0, 1.0],
+        errordef=1,
+    )
+    m.migrad()
+    fit.run_minos(m, ["x0"], ["a", "b"])
+    assert "running MINOS for a" in [rec.message for rec in caplog.records]
+    assert "a = 1.3827 -0.8713 +0.5715" in [rec.message for rec in caplog.records]
+    caplog.clear()
+
+    # unknown parameter
+    with pytest.raises(StopIteration):
+        fit.run_minos(m, ["x2"], ["a", "b"])

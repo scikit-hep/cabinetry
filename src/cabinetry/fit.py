@@ -84,8 +84,8 @@ def print_results(
     log.info("fit results (with symmetric uncertainties):")
     for i, label in enumerate(fit_result.labels):
         log.info(
-            f"{label.ljust(max_label_length)}: {fit_result.bestfit[i]: .6f} +/- "
-            f"{fit_result.uncertainty[i]:.6f}"
+            f"{label.ljust(max_label_length)}: {fit_result.bestfit[i]: .4f} +/- "
+            f"{fit_result.uncertainty[i]:.4f}"
         )
 
 
@@ -118,6 +118,7 @@ def _fit_model_pyhf(
     labels = model_utils.get_parameter_names(model)
     corr_mat = result_obj.minuit.np_matrix(correlation=True, skip_fixed=False)
     best_twice_nll = float(result_obj.fun)  # convert 0-dim np.ndarray to float
+
     fit_result = FitResults(bestfit, uncertainty, labels, corr_mat, best_twice_nll)
 
     if minos_parameters is not None:
@@ -419,7 +420,9 @@ def run_minos(
     Args:
         minuit_obj (iminuit._libiminuit.Minuit): Minuit instance to use
         minos_parameters (List[str]): parameters for which MINOS is run
-        labels (List[str]]): the actual parameter names
+        labels (List[str]]): names of all parameters known to ``iminuit``, these names
+            are used in output (may be the same as the names under which ``iminiuit``
+            knows parameters)
     """
     for par_name in minos_parameters:
         # get index of current parameter in labels (to translate its name if iminuit
@@ -438,5 +441,5 @@ def run_minos(
         if unc_up != 0.0 or unc_down != 0.0:
             log.info(
                 f"{labels[i_err].ljust(max_label_length)} = "
-                f"{minuit_obj.np_values()[i_err]:.6f} -{unc_down:.6f} +{unc_up:.6f}"
+                f"{minuit_obj.np_values()[i_err]:.4f} -{unc_down:.4f} +{unc_up:.4f}"
             )
