@@ -1,3 +1,5 @@
+import logging
+
 import numpy as np
 import pytest
 
@@ -11,7 +13,7 @@ def ntuple_creator():
 
 
 @pytest.mark.no_cover
-def test_integration(tmp_path, ntuple_creator):
+def test_integration(tmp_path, ntuple_creator, caplog):
     """The purpose of this integration test is to check whether the
     steps run without error and whether the fit result is as expected.
     """
@@ -23,13 +25,15 @@ def test_integration(tmp_path, ntuple_creator):
     cabinetry_config["General"]["HistogramFolder"] = str(tmp_path / "histograms")
     cabinetry_config["General"]["InputPath"] = str(tmp_path / "{SamplePaths}")
 
+    caplog.set_level(logging.DEBUG)
+
     cabinetry.template_builder.create_histograms(cabinetry_config, method="uproot")
     cabinetry.template_postprocessor.run(cabinetry_config)
     workspace_path = tmp_path / "example_workspace.json"
     ws = cabinetry.workspace.build(cabinetry_config)
     cabinetry.workspace.save(ws, workspace_path)
     ws = cabinetry.workspace.load(workspace_path)
-    fit_results = cabinetry.fit.fit(ws)
+    fit_results = cabinetry.fit.fit(ws, minos="Signal_norm")
 
     bestfit_expected = [
         1.00097604,
@@ -138,6 +142,11 @@ def test_integration(tmp_path, ntuple_creator):
     assert np.allclose(fit_results.uncertainty, uncertainty_expected)
     assert np.allclose(fit_results.best_twice_nll, best_twice_nll_expected)
     assert np.allclose(fit_results.corr_mat, corr_mat_expected, rtol=5e-5)
+
+    # minos result
+    assert "Signal_norm                    = 1.6865 -0.9551 +0.9083" in [
+        rec.message for rec in caplog.records
+    ]
 
     # nuisance parameter ranking
     ranking_results = cabinetry.fit.ranking(ws, fit_results)
