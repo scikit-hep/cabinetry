@@ -127,7 +127,7 @@ def _fit_model_pyhf(
                 # x0, x1, etc.
                 parameters_translated.append(f"x{i}")
 
-        run_minos(result_obj.minuit, parameters_translated, labels)
+        _run_minos(result_obj.minuit, parameters_translated, labels)
 
     return fit_result
 
@@ -199,7 +199,7 @@ def _fit_model_custom(
     fit_result = FitResults(bestfit, uncertainty, labels, corr_mat, best_twice_nll)
 
     if minos is not None:
-        run_minos(m, minos, labels)
+        _run_minos(m, minos, labels)
 
     return fit_result
 
@@ -405,7 +405,7 @@ def scan(
     return scan_results
 
 
-def run_minos(
+def _run_minos(
     minuit_obj: iminuit._libiminuit.Minuit, minos: List[str], labels: List[str]
 ) -> None:
     """Determine parameter uncertainties for a list of parameters with MINOS.

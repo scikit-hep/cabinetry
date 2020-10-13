@@ -40,7 +40,7 @@ def test_print_results(caplog):
 # skip a "RuntimeWarning: numpy.ufunc size changed" warning
 # due to different numpy versions used in dependencies
 @pytest.mark.filterwarnings("ignore::RuntimeWarning")
-@mock.patch("cabinetry.fit.run_minos")
+@mock.patch("cabinetry.fit._run_minos")
 def test__fit_model_pyhf(mock_minos, example_spec):
     model, data = model_utils.model_and_data(example_spec)
     fit_results = fit._fit_model_pyhf(model, data)
@@ -70,7 +70,7 @@ def test__fit_model_pyhf(mock_minos, example_spec):
 
 
 @pytest.mark.filterwarnings("ignore::RuntimeWarning")
-@mock.patch("cabinetry.fit.run_minos")
+@mock.patch("cabinetry.fit._run_minos")
 def test__fit_model_custom(mock_minos, example_spec, example_spec_multibin):
     model, data = model_utils.model_and_data(example_spec)
     fit_results = fit._fit_model_custom(model, data)
@@ -271,7 +271,7 @@ def test_scan(mock_fit, example_spec):
         fit.scan(example_spec, "abc")
 
 
-def test_run_minos(caplog):
+def test__run_minos(caplog):
     caplog.set_level(logging.DEBUG)
 
     def func_to_minimize(pars):
@@ -292,7 +292,7 @@ def test_run_minos(caplog):
     )
     m.migrad()
 
-    fit.run_minos(m, ["b"], ["a", "b"])
+    fit._run_minos(m, ["b"], ["a", "b"])
     assert "running MINOS for b" in [rec.message for rec in caplog.records]
     assert "b = 1.5909 -0.7262 +0.4738" in [rec.message for rec in caplog.records]
     caplog.clear()
@@ -304,11 +304,11 @@ def test_run_minos(caplog):
         errordef=1,
     )
     m.migrad()
-    fit.run_minos(m, ["x0"], ["a", "b"])
+    fit._run_minos(m, ["x0"], ["a", "b"])
     assert "running MINOS for a" in [rec.message for rec in caplog.records]
     assert "a = 1.3827 -0.8713 +0.5715" in [rec.message for rec in caplog.records]
     caplog.clear()
 
     # unknown parameter
     with pytest.raises(StopIteration):
-        fit.run_minos(m, ["x2"], ["a", "b"])
+        fit._run_minos(m, ["x2"], ["a", "b"])
