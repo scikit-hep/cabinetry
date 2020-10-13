@@ -505,3 +505,33 @@ def scan(
         )
     else:
         raise NotImplementedError(f"unknown backend: {method}")
+
+
+def limit(
+    limit_results: fit.LimitResults,
+    figure_folder: Union[str, pathlib.Path],
+    method: str = "matplotlib",
+) -> None:
+    """Visualizes observed and expected CLs values as a function of the POI.
+
+    Args:
+        limit_results (fit.LimitResults): results of upper limit determination
+        figure_folder (Union[str, pathlib.Path]): path to the folder to save figures in
+        method (str, optional): backend to use for plotting, defaults to "matplotlib"
+
+    Raises:
+        NotImplementedError: when trying to plot with a method that is not supported
+    """
+    figure_path = pathlib.Path(figure_folder) / "limit.pdf"
+
+    if method == "matplotlib":
+        from .contrib import matplotlib_visualize
+
+        matplotlib_visualize.limit(
+            limit_results.observed_CLs,
+            limit_results.expected_CLs,
+            limit_results.scanned_values,
+            figure_path,
+        )
+    else:
+        raise NotImplementedError(f"unknown backend: {method}")

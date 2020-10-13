@@ -4,6 +4,7 @@ from typing import Any, Dict, List, NamedTuple, Optional, Tuple, Union
 import iminuit
 import numpy as np
 import pyhf
+import scipy.optimize
 
 from . import model_utils
 
@@ -72,20 +73,33 @@ class ScanResults(NamedTuple):
     delta_nlls: np.ndarray
 
 
+class LimitResults(NamedTuple):
+    """Collects upper parameter limit results in one object.
+    Args:
+        observed_CLs (np.ndarray): observed CLs values
+        expected_CLs (np.ndarray): expected CLs values, including 1 and 2 sigma bands
+        scanned_values (np.ndarray): POI values used in scan
+    """
+
+    observed_CLs: np.ndarray
+    expected_CLs: np.ndarray
+    scanned_values: np.ndarray
+
+
 def print_results(
-    fit_result: FitResults,
+    fit_results: FitResults,
 ) -> None:
     """Prints the best-fit parameter results and associated uncertainties.
 
     Args:
-        fit_result (FitResults): results of fit to be printed
+        fit_results (FitResults): results of fit to be printed
     """
-    max_label_length = max([len(label) for label in fit_result.labels])
+    max_label_length = max([len(label) for label in fit_results.labels])
     log.info("fit results (with symmetric uncertainties):")
-    for i, label in enumerate(fit_result.labels):
+    for i, label in enumerate(fit_results.labels):
         log.info(
-            f"{label.ljust(max_label_length)}: {fit_result.bestfit[i]: .4f} +/- "
-            f"{fit_result.uncertainty[i]:.4f}"
+            f"{label.ljust(max_label_length)}: {fit_results.bestfit[i]: .4f} +/- "
+            f"{fit_results.uncertainty[i]:.4f}"
         )
 
 
@@ -117,7 +131,7 @@ def _fit_model_pyhf(
     corr_mat = result_obj.minuit.np_matrix(correlation=True, skip_fixed=False)
     best_twice_nll = float(result_obj.fun)  # convert 0-dim np.ndarray to float
 
-    fit_result = FitResults(bestfit, uncertainty, labels, corr_mat, best_twice_nll)
+    fit_results = FitResults(bestfit, uncertainty, labels, corr_mat, best_twice_nll)
 
     if minos is not None:
         parameters_translated = []
@@ -129,7 +143,7 @@ def _fit_model_pyhf(
 
         _run_minos(result_obj.minuit, parameters_translated, labels)
 
-    return fit_result
+    return fit_results
 
 
 def _fit_model_custom(
@@ -196,12 +210,12 @@ def _fit_model_custom(
     corr_mat = m.np_matrix(correlation=True, skip_fixed=False)
     best_twice_nll = m.fval
 
-    fit_result = FitResults(bestfit, uncertainty, labels, corr_mat, best_twice_nll)
+    fit_results = FitResults(bestfit, uncertainty, labels, corr_mat, best_twice_nll)
 
     if minos is not None:
         _run_minos(m, minos, labels)
 
-    return fit_result
+    return fit_results
 
 
 def fit(
@@ -236,14 +250,14 @@ def fit(
         minos = [minos]
 
     if not custom:
-        fit_result = _fit_model_pyhf(model, data, minos=minos)
+        fit_results = _fit_model_pyhf(model, data, minos=minos)
     else:
-        fit_result = _fit_model_custom(model, data, minos=minos)
+        fit_results = _fit_model_custom(model, data, minos=minos)
 
-    print_results(fit_result)
-    log.debug(f"-2 log(L) = {fit_result.best_twice_nll:.6f} at the best-fit point")
+    print_results(fit_results)
+    log.debug(f"-2 log(L) = {fit_results.best_twice_nll:.6f} at the best-fit point")
 
-    return fit_result
+    return fit_results
 
 
 def ranking(
@@ -408,7 +422,7 @@ def scan(
 def _run_minos(
     minuit_obj: iminuit._libiminuit.Minuit, minos: List[str], labels: List[str]
 ) -> None:
-    """Determine parameter uncertainties for a list of parameters with MINOS.
+    """Determines parameter uncertainties for a list of parameters with MINOS.
 
     Args:
         minuit_obj (iminuit._libiminuit.Minuit): Minuit instance to use
@@ -436,3 +450,110 @@ def _run_minos(
                 f"{labels[i_par].ljust(max_label_length)} = "
                 f"{minuit_obj.np_values()[i_par]:.4f} -{unc_down:.4f} +{unc_up:.4f}"
             )
+
+
+def limit(
+    spec: Dict[str, Any],
+    bracket: Optional[Tuple[float, float]] = None,
+    asimov: bool = False,
+) -> LimitResults:
+    """Calculates observed and expected 95% confidence level upper parameter limits.
+
+    Args:
+        spec (Dict[str, Any]): a ``pyhf`` workspace specification
+        bracket (Optional[Tuple[float, float]], optional): POI values used to start the
+            observed limit determination, defaults to None (uses ``scipy`` defaults)
+        asimov (bool, optional): whether to fit the Asimov dataset, defaults to False
+
+    Returns:
+        LimitResults: observed and expected CLs values, as well as scanned points
+    """
+    pyhf.set_backend("numpy", pyhf.optimize.minuit_optimizer(verbose=False))
+    model, data = model_utils.model_and_data(spec, asimov=asimov)
+
+    log.info(f"calculating upper limit for {model.config.poi_name}")
+
+    scan = []  # scanned POI values
+    observed_CLs_list = []  # observed CLs values, one entry per scan point
+    expected_CLs_list = []  # expected CLs values, 5 per point (with 1 and 2 sigma band)
+
+    def _CLs_distance_to_crossing(
+        poi: float, data: List[float], model: pyhf.pdf.Model, which_limit: int
+    ) -> float:
+        """Objective function to minimize in order to find CLs=0.05 crossing.
+
+        Args:
+            poi (float): value for parameter of interest
+            data (List[float]): data to fit to
+            model (pyhf.pdf.Model): model to fit to data
+            which_limit (int): which limit to run
+
+        Returns:
+            float: absolute value of difference to CLs=0.05
+        """
+        results = pyhf.infer.hypotest(
+            poi, data, model, qtilde=True, return_expected_set=True
+        )
+        observed = float(results[0])
+        expected = np.asarray(results[1])
+        scan.append(poi)
+        observed_CLs_list.append(observed)
+        expected_CLs_list.append(expected)
+        log.debug(f"{model.config.poi_name} = {poi:.4f}, observed CLs = {observed:.4f}")
+        if which_limit == -1:
+            return np.abs(observed - 0.05)
+        else:
+            return np.abs(expected[which_limit] - 0.05)
+
+    # find the 95% CL observed limit
+    res = scipy.optimize.minimize_scalar(
+        _CLs_distance_to_crossing,
+        bracket=bracket,
+        args=(data, model, -1),
+        method="brent",
+        options={"xtol": 1e-2, "maxiter": 100},
+    )
+    if not res.success:
+        log.error(f"failed to converge after {res.nfev} function evaluations")
+    else:
+        log.info(f"successfully converged after {res.nfev} function evaluations")
+
+    log.info(f"observed upper limit: {res.x:.4f}")
+
+    # sort scanned POI points
+    sorted_indices = np.argsort(scan)
+    expected_CLs_np = np.asarray(expected_CLs_list)[sorted_indices]
+    scan_np = np.asarray(scan)[sorted_indices]
+
+    for which_limit in [0, 1, 2, 3, 4]:
+        # 0: -2 sigma, 1: -1 sigma, 2: expected, 3: +1 sigma, 4: +2 sigma
+
+        # interpolate to get the expected limits, np.interp expects the function to
+        # increase, so need to invert arrays
+        interp_scan = np.interp(
+            [0.06, 0.04], expected_CLs_np[:, which_limit][::-1], scan_np[::-1]
+        )
+
+        # find the 95% CL for the expected limit
+        res = scipy.optimize.minimize_scalar(
+            _CLs_distance_to_crossing,
+            bracket=interp_scan,
+            args=(data, model, which_limit),
+            method="brent",
+            options={"xtol": 1e-2, "maxiter": 100},
+        )
+        if not res.success:
+            log.error(f"failed to converge after {res.nfev} function evaluations")
+        else:
+            log.info(f"successfully converged after {res.nfev} function evaluations")
+
+        log.info(f"expected upper limit: {res.x:.4f}")
+
+    # sort scanned POI points again
+    sorted_indices = np.argsort(scan)
+    observed_CLs_np = np.asarray(observed_CLs_list)[sorted_indices]
+    expected_CLs_np = np.asarray(expected_CLs_list)[sorted_indices]
+    scan_np = np.asarray(scan)[sorted_indices]
+
+    limit_results = LimitResults(observed_CLs_np, expected_CLs_np, scan_np)
+    return limit_results
