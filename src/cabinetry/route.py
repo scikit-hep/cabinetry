@@ -74,8 +74,8 @@ class Router:
                 or None to apply to all samples
             systematic_name  (Optional[str]): name of the systematic to apply the
                 function to, or None to apply to all systematics
-            template (Optional[str]): name of the template to apply the function to,
-                or None to apply to all templates
+            template (Optional[str]): name of the template to apply the function to, or
+                None to apply to all templates
 
         Returns:
             Callable[[GenericProcessorFunc], GenericProcessorFunc]: the function to

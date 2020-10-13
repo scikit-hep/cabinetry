@@ -19,9 +19,9 @@ def _check_for_override(
 ) -> Optional[Union[str, List[str]]]:
     """Returns an override if specified by a template of a systematic.
 
-    Given a systematic and a string specifying which template is currently
-    under consideration, check whether the systematic defines an override
-    for an option. Return the override if it exists, otherwise return None.
+    Given a systematic and a string specifying which template is currently under
+    consideration, check whether the systematic defines an override for an option.
+    Return the override if it exists, otherwise return None.
 
     Args:
         systematic (Dict[str, Any]): containing all systematic information
@@ -29,8 +29,8 @@ def _check_for_override(
         option (str): the option for which the presence of an override is checked
 
     Returns:
-        Optional[Union[str, List[str]]]: either None if no override exists,
-        or the override
+        Optional[Union[str, List[str]]]: either None if no override exists, or the
+        override
     """
     return systematic.get(template, {}).get(option, None)
 
@@ -44,16 +44,16 @@ def _get_ntuple_paths(
 ) -> List[pathlib.Path]:
     """Returns the paths to ntuples for a region-sample-systematic-template.
 
-    A path is built starting from the path specified in the general options
-    in the configuration file. This path can contain placeholders for region-
-    and sample-specific overrides, via ``{Region}`` and ``{Sample}``. For
-    non-nominal templates, it is possible to override the sample path if the
-    ``SamplePaths`` option is specified for the template. If ``SamplePaths``
-    is a list, return a list of paths (one per entry in the list).
+    A path is built starting from the path specified in the general options in the
+    configuration file. This path can contain placeholders for region- and sample-
+    specific overrides, via ``{Region}`` and ``{Sample}``. For non-nominal templates, it
+    is possible to override the sample path if the ``SamplePaths`` option is specified
+    for the template. If ``SamplePaths`` is a list, return a list of paths (one per
+    entry in the list).
 
     Args:
-        general_path (str): path specified in general settings, with sections
-            that can be overridden by region / sample settings
+        general_path (str): path specified in general settings, with sections that can
+            be overridden by region / sample settings
         region (Dict[str, Any]): containing all region information
         sample (Dict[str, Any]): containing all sample information
         systematic (Dict[str, Any]): containing all systematic information
@@ -172,8 +172,8 @@ def _get_weight(
         template (str): which template is considered: "Nominal", "Up", "Down"
 
     Returns:
-        Optional[str]: weight used for events when filled into histograms, or
-        None for no weight
+        Optional[str]: weight used for events when filled into histograms, or None for
+        no weight
     """
     weight = sample.get("Weight", None)
     # check whether a systematic is being processed
@@ -214,8 +214,8 @@ def _get_position_in_file(
 def _get_binning(region: Dict[str, Any]) -> np.ndarray:
     """Returns the binning to be used in a region.
 
-    Should eventually also support other ways of specifying bins,
-    such as the amount of bins and the range to bin in.
+    Should eventually also support other ways of specifying bins, such as the amount of
+    bins and the range to bin in.
 
     Args:
         region (Dict[str, Any]): containing all region information
@@ -258,8 +258,8 @@ class _Builder:
     ) -> None:
         """Creates a histogram and writes it to a file.
 
-        The histogram is created for the region-sample-systematic-template
-        specified in the argument.
+        The histogram is created for the region-sample-systematic-template specified in
+        the argument.
 
         Args:
             region (Dict[str, Any]): specifying region information
@@ -380,8 +380,8 @@ def create_histograms(
 ) -> None:
     """Produces all required histograms specified by the configuration file.
 
-    Uses either a default method specified via ``method``, or a custom
-    user-defined override through ``router``.
+    Uses either a default method specified via ``method``, or a custom user-defined
+    override through ``router``.
 
     Args:
         config (Dict[str, Any]): cabinetry configuration

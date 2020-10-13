@@ -227,8 +227,8 @@ def correlation_matrix(
     """Draws a correlation matrix.
 
     Args:
-        fit_results (fit.FitResults): fit results, including correlation matrix
-            and parameter labels
+        fit_results (fit.FitResults): fit results, including correlation matrix and
+            parameter labels
         figure_folder (Union[str, pathlib.Path]): path to the folder to save figures in
         pruning_threshold (float, optional): minimum correlation for a parameter to
             have with any other parameters to not get pruned, defaults to 0.0
@@ -276,8 +276,8 @@ def pulls(
     """Draws a pull plot of parameter results and uncertainties.
 
     Args:
-        fit_results (fit.FitResults): fit results, including correlation matrix
-            and parameter labels
+        fit_results (fit.FitResults): fit results, including correlation matrix and
+            parameter labels
         figure_folder (Union[str, pathlib.Path]): path to the folder to save figures in
         exclude_list (Optional[List[str]], optional): list of parameters to exclude from
             plot, defaults to None (nothing excluded)
