@@ -30,9 +30,9 @@ def _fix_stat_unc(histogram: histo.Histogram, name: str) -> None:
 def apply_postprocessing(histogram: histo.Histogram, name: str) -> histo.Histogram:
     """Returns a new histogram with post-processing applied.
 
-    The histogram handed to the function stays unchanged. A copy of the
-    histogram receives post-processing (currently only the stat. uncertainty
-    fix) and is then returned.
+    The histogram handed to the function stays unchanged. A copy of the histogram
+    receives post-processing (currently only the stat. uncertainty fix) and is then
+    returned.
 
     Args:
         histogram (cabinetry.histo.Histogram): the histogram to postprocess
@@ -50,8 +50,8 @@ def apply_postprocessing(histogram: histo.Histogram, name: str) -> histo.Histogr
 def _get_postprocessor(histogram_folder: pathlib.Path) -> route.ProcessorFunc:
     """Returns the post-processing function to be applied to template histograms.
 
-    Needed by ``cabinetry.route.apply_to_all_templates``. Could alternatively
-    create a ``Postprocessor`` class that contains processors.
+    Needed by ``cabinetry.route.apply_to_all_templates``. Could alternatively create a
+    ``Postprocessor`` class that contains processors.
 
     Args:
         histogram_folder (Union[str, pathlib.Path]): folder containing histograms

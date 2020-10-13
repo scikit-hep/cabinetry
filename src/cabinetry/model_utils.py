@@ -16,10 +16,8 @@ def model_and_data(
 
     Args:
         spec (Dict[str, Any]): a ``pyhf`` workspace specification
-        asimov (bool, optional): whether to return the Asimov dataset, defaults
-            to False
-        with_aux (bool, optional): whether to also return auxdata, defaults
-            to True
+        asimov (bool, optional): whether to return the Asimov dataset, defaults to False
+        with_aux (bool, optional): whether to also return auxdata, defaults to True
 
     Returns:
         Tuple[pyhf.pdf.Model, List[float]]:
@@ -66,10 +64,8 @@ def build_Asimov_data(model: pyhf.Model, with_aux: bool = True) -> List[float]:
     """Returns the Asimov dataset (optionally with auxdata) for a model.
 
     Args:
-        model (pyhf.Model): the model from which to construct the
-            dataset
-        with_aux (bool, optional): whether to also return auxdata, defaults
-            to True
+        model (pyhf.Model): the model from which to construct the dataset
+        with_aux (bool, optional): whether to also return auxdata, defaults to True
 
     Returns:
         List[float]: the Asimov dataset
@@ -119,16 +115,15 @@ def get_asimov_parameters(model: pyhf.pdf.Model) -> np.ndarray:
 def get_prefit_uncertainties(model: pyhf.pdf.Model) -> np.ndarray:
     """Returns a list of pre-fit parameter uncertainties for a model.
 
-    For unconstrained parameters the uncertainty is set to 0. It is also
-    set to 0 for fixed parameters (similarly to how their post-fit
-    uncertainties are defined to be 0).
+    For unconstrained parameters the uncertainty is set to 0. It is also set to 0 for
+    fixed parameters (similarly to how the post-fit uncertainties are defined to be 0).
 
     Args:
         model (pyhf.pdf.Model): model for which to extract the parameters
 
     Returns:
-        np.ndarray: pre-fit uncertainties for the parameters, in the same
-        order as ``model.config.suggested_init()``
+        np.ndarray: pre-fit uncertainties for the parameters, in the same order as
+        ``model.config.suggested_init()``
     """
     pre_fit_unc = []  # pre-fit uncertainties for parameters
     for parameter in model.config.par_order:
@@ -179,15 +174,15 @@ def calculate_stdev(
     """Calculates the symmetrized yield standard deviation of a model.
 
     Args:
-        model (pyhf.pdf.Model): the model for which to calculate the standard
-            deviations for all bins
+        model (pyhf.pdf.Model): the model for which to calculate the standard deviations
+            for all bins
         parameters (np.ndarray): central values of model parameters
         uncertainty (np.ndarray): uncertainty of model parameters
         corr_mat (np.ndarray): correlation matrix
 
     Returns:
-        ak.highlevel.Array: array of channels, each channel
-        is an array of standard deviations per bin
+        ak.highlevel.Array: array of channels, each channel is an array of standard
+        deviations per bin
     """
     # indices where to split to separate all bins into regions
     region_split_indices = _get_channel_boundary_indices(model)

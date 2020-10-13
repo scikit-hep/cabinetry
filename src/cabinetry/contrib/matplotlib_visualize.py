@@ -20,11 +20,10 @@ def data_MC(
     """Draws a data/MC histogram with uncertainty bands and ratio panel.
 
     Args:
-        histogram_dict_list (List[Dict[str, Any]]): list of samples (with info
-            stored in one dict per sample)
-        total_model_unc (np.ndarray): total model uncertainty, if specified
-            this is used instead of calculating it via sum in quadrature,
-            defaults to None
+        histogram_dict_list (List[Dict[str, Any]]): list of samples (with info stored in
+            one dict per sample)
+        total_model_unc (np.ndarray): total model uncertainty, if specified this is used
+            instead of calculating it via sum in quadrature, defaults to None
         bin_edges (np.ndarray): bin edges of histogram
         figure_path (pathlib.Path): path where figure should be saved
         log_scale (Optional[bool], optional): whether to use a logarithmic vertical
@@ -243,7 +242,7 @@ def pulls(
     """Draws a pull plot.
 
     Args:
-        bestfit (np.ndarray): [description]
+        bestfit (np.ndarray): best-fit parameter results
         uncertainty (np.ndarray): parameter uncertainties
         labels (Union[List[str], np.ndarray]): parameter names
         figure_path (pathlib.Path): path where figure should be saved

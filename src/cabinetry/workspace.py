@@ -41,16 +41,16 @@ class WorkspaceBuilder:
     def _get_constant_parameter_setting(self, par_name: str) -> Optional[float]:
         """Determines whether a parameter should be set to constant, and to which value.
 
-        For a given parameter, determines if it is supposed to be set to constant.
-        If not, returns None, otherwise returns the value it should be fixed to.
-        This only looks for the first occurrence of the parameter in the list.
+        For a given parameter, determines if it is supposed to be set to constant. If
+        not, returns None, otherwise returns the value it should be fixed to. This only
+        looks for the first occurrence of the parameter in the list.
 
         Args:
             par_name (str): name of parameter to check
 
         Returns:
-            Optional[float]: returns None if parameter is not supposed to be
-            held constant, or the value it has to be fixed to
+            Optional[float]: returns None if parameter is not supposed to be held
+            constant, or the value it has to be fixed to
         """
         fixed_parameters = self.config["General"].get("Fixed", [])
         fixed_value = next(
@@ -168,9 +168,9 @@ class WorkspaceBuilder:
 
         For a variation including a correlated shape + normalization effect, this
         provides the `histosys` and `normsys` modifiers for ``pyhf`` (in `HistFactory`
-        language, this corresponds to a `HistoSys` and an `OverallSys`).
-        Symmetrization could happen either at this stage (this is the case currently),
-        or somewhere earlier, such as during template postprocessing.
+        language, this corresponds to a `HistoSys` and an `OverallSys`). Symmetrization
+        could happen either at this stage (this is the case currently), or somewhere
+        earlier, such as during template postprocessing.
 
         Args:
             region (Dict[str, Any]): region the systematic variation acts in
@@ -343,9 +343,9 @@ class WorkspaceBuilder:
     def get_measurements(self) -> List[Dict[str, Any]]:
         """Returns the measurements object for the workspace.
 
-        Constructs the measurements, including POI setting and parameter bounds,
-        initial values and whether they are set to constant.
-        Only supports a single measurement so far.
+        Constructs the measurements, including POI setting and parameter bounds, initial
+        values and whether they are set to constant. Only supports a single measurement
+        so far.
 
         Returns:
             List[Dict[str, Any]]: measurements for ``pyhf`` workspace
