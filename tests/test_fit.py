@@ -61,7 +61,7 @@ def test__fit_model_pyhf(mock_minos, example_spec):
 
     # including minos
     model, data = model_utils.model_and_data(example_spec)
-    fit_results = fit._fit_model_pyhf(model, data, minos_parameters=["Signal strength"])
+    fit_results = fit._fit_model_pyhf(model, data, minos=["Signal strength"])
     assert mock_minos.call_count == 1
     # first argument to minos call is the Minuit instance
     assert mock_minos.call_args[0][1] == ["x1"]
@@ -108,9 +108,7 @@ def test__fit_model_custom(mock_minos, example_spec, example_spec_multibin):
 
     # including minos
     model, data = model_utils.model_and_data(example_spec)
-    fit_results = fit._fit_model_custom(
-        model, data, minos_parameters=["Signal strength"]
-    )
+    fit_results = fit._fit_model_custom(model, data, minos=["Signal strength"])
     assert mock_minos.call_count == 1
     # first argument to minos call is the Minuit instance
     assert mock_minos.call_args[0][1] == ["Signal strength"]
@@ -135,7 +133,7 @@ def test__fit_model_custom(mock_minos, example_spec, example_spec_multibin):
 def test_fit(mock_load, mock_pyhf, mock_custom, mock_print, example_spec):
     fit.fit(example_spec)
     assert mock_load.call_args_list == [[(example_spec,), {"asimov": False}]]
-    assert mock_pyhf.call_args_list == [[("model", "data"), {"minos_parameters": None}]]
+    assert mock_pyhf.call_args_list == [[("model", "data"), {"minos": None}]]
     mock_print.assert_called_once()
     assert mock_print.call_args[0][0].bestfit == [1.0]
     assert mock_print.call_args[0][0].uncertainty == [0.1]
@@ -148,15 +146,15 @@ def test_fit(mock_load, mock_pyhf, mock_custom, mock_print, example_spec):
     # custom fit
     fit.fit(example_spec, custom=True)
     mock_custom.assert_called_once()
-    assert mock_custom.call_args == [("model", "data"), {"minos_parameters": None}]
+    assert mock_custom.call_args == [("model", "data"), {"minos": None}]
     assert mock_print.call_args[0][0].bestfit == [3.0]
     assert mock_print.call_args[0][0].uncertainty == [0.3]
 
     # parameters for MINOS
-    fit.fit(example_spec, minos_parameters=["abc"])
-    assert mock_pyhf.call_args[1] == {"minos_parameters": ["abc"]}
-    fit.fit(example_spec, minos_parameters="abc")
-    assert mock_pyhf.call_args[1] == {"minos_parameters": ["abc"]}
+    fit.fit(example_spec, minos=["abc"])
+    assert mock_pyhf.call_args[1] == {"minos": ["abc"]}
+    fit.fit(example_spec, custom=True, minos="abc")
+    assert mock_custom.call_args[1] == {"minos": ["abc"]}
 
 
 @mock.patch(
