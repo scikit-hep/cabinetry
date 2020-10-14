@@ -530,7 +530,7 @@ def limit(
         matplotlib_visualize.limit(
             limit_results.observed_CLs,
             limit_results.expected_CLs,
-            limit_results.scanned_values,
+            limit_results.poi_values,
             figure_path,
         )
     else:

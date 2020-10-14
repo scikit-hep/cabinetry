@@ -629,7 +629,7 @@ def scan(
 def limit(
     observed_CLs: np.ndarray,
     expected_CLs: np.ndarray,
-    scanned_values: np.ndarray,
+    poi_values: np.ndarray,
     figure_path: pathlib.Path,
 ) -> None:
     """Draws observed and expected CLs values as function of the parameter of interest.
@@ -637,13 +637,13 @@ def limit(
     Args:
         observed_CLs (np.ndarray): observed CLs values
         expected_CLs (np.ndarray): expected CLs values, including 1 and 2 sigma bands
-        scanned_values (np.ndarray): parameter of interest values used in scan
+        poi_values (np.ndarray): parameter of interest values used in scan
         figure_path (pathlib.Path): path where figure should be saved
     """
     fig, ax = plt.subplots()
 
-    xmin = min(scanned_values)
-    xmax = max(scanned_values)
+    xmin = min(poi_values)
+    xmax = max(poi_values)
 
     # line through CLs = 0.05
     ax.hlines(
@@ -657,14 +657,14 @@ def limit(
 
     # 1 and 2 sigma bands
     ax.fill_between(
-        scanned_values,
+        poi_values,
         expected_CLs[:, 0],
         expected_CLs[:, 4],
         color="yellow",
         label=r"expected $2\sigma$ CI",
     )
     ax.fill_between(
-        scanned_values,
+        poi_values,
         expected_CLs[:, 1],
         expected_CLs[:, 3],
         color="limegreen",
@@ -673,7 +673,7 @@ def limit(
 
     # expected CLs
     ax.plot(
-        scanned_values,
+        poi_values,
         expected_CLs[:, 2],
         "--",
         color="black",
@@ -681,7 +681,7 @@ def limit(
     )
 
     # observed CLs values
-    ax.plot(scanned_values, observed_CLs, "o-", color="black", label=r"observed CL$_S$")
+    ax.plot(poi_values, observed_CLs, "o-", color="black", label=r"observed CL$_S$")
 
     # increase font sizes
     for item in (

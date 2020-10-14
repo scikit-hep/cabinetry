@@ -76,14 +76,18 @@ class ScanResults(NamedTuple):
 class LimitResults(NamedTuple):
     """Collects upper parameter limit results in one object.
     Args:
+        observed_limit (np.ndarray): observed limit
+        expected_limit (np.ndarray): expected limit, including 1 and 2 sigma bands
         observed_CLs (np.ndarray): observed CLs values
         expected_CLs (np.ndarray): expected CLs values, including 1 and 2 sigma bands
-        scanned_values (np.ndarray): POI values used in scan
+        poi_values (np.ndarray): POI values used in scan
     """
 
+    observed_limit: float
+    expected_limit: np.ndarray
     observed_CLs: np.ndarray
     expected_CLs: np.ndarray
-    scanned_values: np.ndarray
+    poi_values: np.ndarray
 
 
 def print_results(
@@ -453,16 +457,15 @@ def _run_minos(
 
 
 def limit(
-    spec: Dict[str, Any],
-    bracket: Optional[Tuple[float, float]] = None,
-    asimov: bool = False,
+    spec: Dict[str, Any], bracket: Optional[List[float]] = None, asimov: bool = False
 ) -> LimitResults:
     """Calculates observed and expected 95% confidence level upper parameter limits.
 
     Args:
         spec (Dict[str, Any]): a ``pyhf`` workspace specification
-        bracket (Optional[Tuple[float, float]], optional): POI values used to start the
-            observed limit determination, defaults to None (uses ``scipy`` defaults)
+        bracket (Optional[List[float]], optional): the two POI values used to start the
+            observed limit determination, example: ``[1.0, 2.0]``, defaults to None
+            (then uses ``scipy`` defaults)
         asimov (bool, optional): whether to fit the Asimov dataset, defaults to False
 
     Returns:
@@ -473,20 +476,30 @@ def limit(
 
     log.info(f"calculating upper limit for {model.config.poi_name}")
 
-    scan = []  # scanned POI values
+    poi_list = []  # scanned POI values
     observed_CLs_list = []  # observed CLs values, one entry per scan point
     expected_CLs_list = []  # expected CLs values, 5 per point (with 1 and 2 sigma band)
 
     def _CLs_distance_to_crossing(
-        poi: float, data: List[float], model: pyhf.pdf.Model, which_limit: int
+        poi: float,
+        data: List[float],
+        model: pyhf.pdf.Model,
+        which_limit: int,
+        limit_label: str,
     ) -> float:
         """Objective function to minimize in order to find CLs=0.05 crossing.
+
+        Each observed and expected CLs result is also appended to lists, useful for
+        visualization and to optimize the starting bracket for subsequent calculations.
 
         Args:
             poi (float): value for parameter of interest
             data (List[float]): data to fit to
             model (pyhf.pdf.Model): model to fit to data
-            which_limit (int): which limit to run
+            which_limit (int): which limit to run, 0: observed, 1: expected -2 sigma, 2:
+                expected -1 sigma, 3: expected, 4: expected +1 sigma, 5: expected +2
+                sigma
+            limit_label (str): string to use when referring to the current limit
 
         Returns:
             float: absolute value of difference to CLs=0.05
@@ -496,64 +509,90 @@ def limit(
         )
         observed = float(results[0])
         expected = np.asarray(results[1])
-        scan.append(poi)
+        poi_list.append(poi)
         observed_CLs_list.append(observed)
         expected_CLs_list.append(expected)
-        log.debug(f"{model.config.poi_name} = {poi:.4f}, observed CLs = {observed:.4f}")
-        if which_limit == -1:
-            return np.abs(observed - 0.05)
-        else:
-            return np.abs(expected[which_limit] - 0.05)
-
-    # find the 95% CL observed limit
-    res = scipy.optimize.minimize_scalar(
-        _CLs_distance_to_crossing,
-        bracket=bracket,
-        args=(data, model, -1),
-        method="brent",
-        options={"xtol": 1e-2, "maxiter": 100},
-    )
-    if not res.success:
-        log.error(f"failed to converge after {res.nfev} function evaluations")
-    else:
-        log.info(f"successfully converged after {res.nfev} function evaluations")
-
-    log.info(f"observed upper limit: {res.x:.4f}")
-
-    # sort scanned POI points
-    sorted_indices = np.argsort(scan)
-    expected_CLs_np = np.asarray(expected_CLs_list)[sorted_indices]
-    scan_np = np.asarray(scan)[sorted_indices]
-
-    for which_limit in [0, 1, 2, 3, 4]:
-        # 0: -2 sigma, 1: -1 sigma, 2: expected, 3: +1 sigma, 4: +2 sigma
-
-        # interpolate to get the expected limits, np.interp expects the function to
-        # increase, so need to invert arrays
-        interp_scan = np.interp(
-            [0.06, 0.04], expected_CLs_np[:, which_limit][::-1], scan_np[::-1]
+        current_CLs = np.hstack((observed, expected))[which_limit]
+        log.debug(
+            f"{model.config.poi_name} = {poi:.4f}, {limit_label} CLs = "
+            f"{current_CLs:.4f}"
         )
+        return np.abs(current_CLs - 0.05)
 
-        # find the 95% CL for the expected limit
+    # calculate all limits, one by one: observed, expected -2 sigma, expected -1 sigma,
+    # expected, expected +1 sigma, expected +2 sigma
+    limit_labels = [
+        "observed",
+        "expected -2 sigma",
+        "expected -1 sigma",
+        "expected",
+        "expected +1 sigma",
+        "expected +2 sigma",
+    ]
+    fits_total = 0
+    all_limits = []
+    for i_limit, limit_label in enumerate(limit_labels):
+        log.info(f"determining {limit_label} upper limit")
+
+        # find the 95% CL observed limit
         res = scipy.optimize.minimize_scalar(
             _CLs_distance_to_crossing,
-            bracket=interp_scan,
-            args=(data, model, which_limit),
+            bracket=bracket,
+            args=(data, model, i_limit, limit_label),
             method="brent",
             options={"xtol": 1e-2, "maxiter": 100},
         )
         if not res.success:
-            log.error(f"failed to converge after {res.nfev} function evaluations")
+            log.error(f"failed to converge after {res.nfev} fits")
         else:
-            log.info(f"successfully converged after {res.nfev} function evaluations")
+            log.info(f"successfully converged after {res.nfev} fits")
 
-        log.info(f"expected upper limit: {res.x:.4f}")
+        log.info(f"{limit_label} upper limit: {res.x:.4f}")
+        all_limits.append(res.x)
+        fits_total += res.nfev
 
-    # sort scanned POI points again
-    sorted_indices = np.argsort(scan)
+        # determine the starting bracket for the next limit calculation
+        if i_limit < 5:
+            # get sorted list of POI values and associated expected CLs
+            sorted_indices = np.argsort(poi_list)
+            expected_CLs_np = np.asarray(expected_CLs_list)[sorted_indices]
+            poi_list_np = np.asarray(poi_list)[sorted_indices]
+
+            # interpolate to get expected CLs=0.06 and CLs=0.04 positions, inverted as
+            # np.interp expects function to increase
+            # for i_limit = 0, the next limit will be expected -2 sigma, corresponding
+            # to expected_CLs_np[:, 0] etc.
+            next_bracket: List[float] = np.interp(
+                [0.06, 0.04], expected_CLs_np[:, i_limit][::-1], poi_list_np[::-1]
+            ).tolist()
+            # if the interpolation fails and the lower/upper bound are the same, then
+            # offset both values to avoid getting stuck
+            if next_bracket[0] == next_bracket[1]:
+                next_bracket = [next_bracket[0] - 1, next_bracket[1] + 1]
+            bracket = next_bracket
+
+    # report all results
+    log.info(f"total of {fits_total} fits to calculate all limits")
+    log.info("summary of upper limits:")
+    for i_limit, limit_label in enumerate(limit_labels):
+        log.info(f"{limit_label.ljust(18)}: {all_limits[i_limit]:.4f}")
+
+    # sort scanned POI points
+    sorted_indices = np.argsort(poi_list)
+    expected_CLs_np = np.asarray(expected_CLs_list)[sorted_indices]
+    poi_list_np = np.asarray(poi_list)[sorted_indices]
+
+    # sort all CLs values and scanned POI points by increasing POI value
+    sorted_indices = np.argsort(poi_list)
     observed_CLs_np = np.asarray(observed_CLs_list)[sorted_indices]
     expected_CLs_np = np.asarray(expected_CLs_list)[sorted_indices]
-    scan_np = np.asarray(scan)[sorted_indices]
+    poi_list_np = np.asarray(poi_list)[sorted_indices]
 
-    limit_results = LimitResults(observed_CLs_np, expected_CLs_np, scan_np)
+    limit_results = LimitResults(
+        all_limits[0],
+        np.asarray(all_limits[1:]),
+        observed_CLs_np,
+        expected_CLs_np,
+        poi_list_np,
+    )
     return limit_results
