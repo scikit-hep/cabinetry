@@ -697,8 +697,8 @@ def limit(
 
     ax.set_xlabel(r"$\mu$")
     ax.set_ylabel(r"$\mathrm{CL}_{s}$")
-    ax.set_xlim(xmin, xmax)
-    ax.set_ylim(0, 1)
+    ax.set_xlim([xmin, xmax])
+    ax.set_ylim([0, 1])
     ax.tick_params(axis="both", which="major", pad=8)
     ax.tick_params(direction="in", top=True, right=True, which="both")
 

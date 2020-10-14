@@ -250,7 +250,7 @@ def test_scan(mock_fit, example_spec):
     assert scan_results.name == par_name
     assert scan_results.bestfit == 1.3
     assert scan_results.uncertainty == 0.1
-    assert np.allclose(scan_results.scanned_values, expected_scan_values)
+    assert np.allclose(scan_results.parameter_values, expected_scan_values)
     assert np.allclose(scan_results.delta_nlls, expected_delta_nlls)
 
     assert mock_fit.call_count == 12
@@ -264,7 +264,7 @@ def test_scan(mock_fit, example_spec):
     # parameter range specified
     scan_results = fit.scan(example_spec, par_name, par_range=(1.0, 1.5), n_steps=5)
     expected_custom_scan = np.linspace(1.0, 1.5, 5)
-    assert np.allclose(scan_results.scanned_values, expected_custom_scan)
+    assert np.allclose(scan_results.parameter_values, expected_custom_scan)
 
     # unknown parameter
     with pytest.raises(ValueError, match="could not find parameter abc in model"):

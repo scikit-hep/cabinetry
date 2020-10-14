@@ -499,7 +499,7 @@ def scan(
             scan_results.name,
             scan_results.bestfit,
             scan_results.uncertainty,
-            scan_results.scanned_values,
+            scan_results.parameter_values,
             scan_results.delta_nlls,
             figure_path,
         )

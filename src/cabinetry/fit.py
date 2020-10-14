@@ -62,14 +62,14 @@ class ScanResults(NamedTuple):
         name (str): name of parameter in scan
         bestfit (float): best-fit parameter value from unconstrained fit
         uncertainty (float): uncertainty of parameter in unconstrained fit
-        scanned_values (np.ndarray): parameter values used in scan
+        parameter_values (np.ndarray): parameter values used in scan
         delta_nlls (np.ndarray): -2 log(L) difference at each scanned point
     """
 
     name: str
     bestfit: float
     uncertainty: float
-    scanned_values: np.ndarray
+    parameter_values: np.ndarray
     delta_nlls: np.ndarray
 
 
