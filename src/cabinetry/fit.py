@@ -461,11 +461,13 @@ def limit(
 ) -> LimitResults:
     """Calculates observed and expected 95% confidence level upper parameter limits.
 
+    Brent's algorithm is used to automatically determine POI values to be tested.
+
     Args:
         spec (Dict[str, Any]): a ``pyhf`` workspace specification
         bracket (Optional[List[float]], optional): the two POI values used to start the
-            observed limit determination, example: ``[1.0, 2.0]``, defaults to None
-            (then uses ``scipy`` defaults)
+            observed limit determination, example: ``[1.0, 2.0]`` (final POI values may
+            lie outside this bracket), defaults to None (then uses ``scipy`` defaults)
         asimov (bool, optional): whether to fit the Asimov dataset, defaults to False
 
     Returns:
@@ -529,7 +531,7 @@ def limit(
         "expected +1 sigma",
         "expected +2 sigma",
     ]
-    fits_total = 0
+    steps_total = 0
     all_limits = []
     for i_limit, limit_label in enumerate(limit_labels):
         log.info(f"determining {limit_label} upper limit")
@@ -543,13 +545,13 @@ def limit(
             options={"xtol": 1e-2, "maxiter": 100},
         )
         if not res.success:
-            log.error(f"failed to converge after {res.nfev} fits")
+            log.error(f"failed to converge after {res.nfev} steps")
         else:
-            log.info(f"successfully converged after {res.nfev} fits")
+            log.info(f"successfully converged after {res.nfev} steps")
 
         log.info(f"{limit_label} upper limit: {res.x:.4f}")
         all_limits.append(res.x)
-        fits_total += res.nfev
+        steps_total += res.nfev
 
         # determine the starting bracket for the next limit calculation
         if i_limit < 5:
@@ -572,7 +574,7 @@ def limit(
             bracket = next_bracket
 
     # report all results
-    log.info(f"total of {fits_total} fits to calculate all limits")
+    log.info(f"total of {steps_total} steps to calculate all limits")
     log.info("summary of upper limits:")
     for i_limit, limit_label in enumerate(limit_labels):
         log.info(f"{limit_label.ljust(18)}: {all_limits[i_limit]:.4f}")
