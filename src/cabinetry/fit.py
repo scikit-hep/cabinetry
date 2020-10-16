@@ -467,12 +467,19 @@ def limit(
         spec (Dict[str, Any]): a ``pyhf`` workspace specification
         bracket (Optional[List[float]], optional): the two POI values used to start the
             observed limit determination, example: ``[1.0, 2.0]`` (final POI values may
-            lie outside this bracket), defaults to None (then uses ``scipy`` defaults)
+            lie outside this bracket), the two values must not be the same, defaults to
+            None (then uses ``scipy`` defaults)
         asimov (bool, optional): whether to fit the Asimov dataset, defaults to False
+
+    Raises:
+        ValueError: if upper and lower bracket value are the same
 
     Returns:
         LimitResults: observed and expected CLs values, as well as scanned points
     """
+    if bracket is not None and bracket[0] == bracket[1]:
+        raise ValueError(f"the two bracket values must not be the same: " f"{bracket}")
+
     pyhf.set_backend("numpy", pyhf.optimize.minuit_optimizer(verbose=False))
     model, data = model_utils.model_and_data(spec, asimov=asimov)
 
