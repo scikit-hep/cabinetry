@@ -312,3 +312,14 @@ def test__run_minos(caplog):
     # unknown parameter
     with pytest.raises(StopIteration):
         fit._run_minos(m, ["x2"], ["a", "b"])
+
+
+def test_limit(example_spec_with_background):
+    limit_results = fit.limit(example_spec_with_background, bracket=[1.0, 1.5])
+
+    assert np.allclose(limit_results.observed_limit, 0.750, rtol=1e-2)
+    assert np.allclose(
+        limit_results.expected_limit,
+        [0.300, 0.411, 0.581, 0.836, 1.164],
+        rtol=1e-2,
+    )
