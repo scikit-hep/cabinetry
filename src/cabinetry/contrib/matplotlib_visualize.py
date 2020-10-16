@@ -661,14 +661,14 @@ def limit(
         expected_CLs[:, 0],
         expected_CLs[:, 4],
         color="yellow",
-        label=r"expected $2\sigma$ CI",
+        label=r"expected CL$_S$ $\pm 2\sigma$",
     )
     ax.fill_between(
         poi_values,
         expected_CLs[:, 1],
         expected_CLs[:, 3],
         color="limegreen",
-        label=r"expected $1\sigma$ CI",
+        label=r"expected CL$_S$ $\pm 1\sigma$",
     )
 
     # expected CLs
