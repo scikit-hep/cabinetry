@@ -478,6 +478,11 @@ def limit(
 
     log.info(f"calculating upper limit for {model.config.poi_name}")
 
+    # set lower POI bound to zero (for use with qmu_tilde)
+    par_bounds = model.config.suggested_bounds()
+    par_bounds[model.config.poi_index] = [0, par_bounds[model.config.poi_index][1]]
+    log.debug("setting lower parameter bound for POI to 0")
+
     poi_list = []  # scanned POI values
     observed_CLs_list = []  # observed CLs values, one entry per scan point
     expected_CLs_list = []  # expected CLs values, 5 per point (with 1 and 2 sigma band)
@@ -507,7 +512,12 @@ def limit(
             float: absolute value of difference to CLs=0.05
         """
         results = pyhf.infer.hypotest(
-            poi, data, model, qtilde=True, return_expected_set=True
+            poi,
+            data,
+            model,
+            qtilde=True,
+            return_expected_set=True,
+            par_bounds=par_bounds,
         )
         observed = float(results[0])
         expected = np.asarray(results[1])
@@ -544,8 +554,11 @@ def limit(
             method="brent",
             options={"xtol": 1e-2, "maxiter": 100},
         )
-        if not res.success:
-            log.error(f"failed to converge after {res.nfev} steps")
+        if (not res.success) or (res.fun > 1e-2):
+            log.error(
+                f"failed to converge after {res.nfev} steps, distance from CLS=0.05 is "
+                f"{res.fun:.4f}"
+            )
         else:
             log.info(f"successfully converged after {res.nfev} steps")
 
