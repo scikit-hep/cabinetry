@@ -39,6 +39,14 @@ def test_build_Asimov_data(example_spec):
     # without auxdata
     assert model_utils.build_Asimov_data(model, with_aux=False) == [51.839756]
 
+    # respect nominal settings for normfactors
+    example_spec["measurements"][0]["config"]["parameters"].append(
+        {"name": "Signal strength", "inits": [2.0]}
+    )
+    ws = pyhf.Workspace(example_spec)
+    model = ws.model()
+    assert model_utils.build_Asimov_data(model, with_aux=False) == [103.679512]
+
 
 def test_get_asimov_parameters(example_spec, example_spec_shapefactor):
     model = pyhf.Workspace(example_spec).model()
@@ -48,6 +56,14 @@ def test_get_asimov_parameters(example_spec, example_spec_shapefactor):
     model = pyhf.Workspace(example_spec_shapefactor).model()
     pars = model_utils.get_asimov_parameters(model)
     assert np.allclose(pars, [1.0, 1.0, 1.0])
+
+    # respect nominal settings for normfactors
+    example_spec["measurements"][0]["config"]["parameters"].append(
+        {"name": "Signal strength", "inits": [2.0]}
+    )
+    model = pyhf.Workspace(example_spec).model()
+    pars = model_utils.get_asimov_parameters(model)
+    assert np.allclose(pars, [1.0, 2.0])
 
 
 def test_get_prefit_uncertainties(

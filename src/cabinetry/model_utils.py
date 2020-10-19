@@ -63,6 +63,11 @@ def get_parameter_names(model: pyhf.pdf.Model) -> List[str]:
 def build_Asimov_data(model: pyhf.Model, with_aux: bool = True) -> List[float]:
     """Returns the Asimov dataset (optionally with auxdata) for a model.
 
+    Initial parameter settings for normalization factors in the workspace are treated as
+    the default settings for that parameter. Fitting the Asimov dataset will recover
+    these initial settings as the maximum likelihood estimate for normalization factors.
+    Initial settings for other modifiers are ignored.
+
     Args:
         model (pyhf.Model): the model from which to construct the dataset
         with_aux (bool, optional): whether to also return auxdata, defaults to True
@@ -70,14 +75,17 @@ def build_Asimov_data(model: pyhf.Model, with_aux: bool = True) -> List[float]:
     Returns:
         List[float]: the Asimov dataset
     """
-    asimov_data = np.sum(model.nominal_rates, axis=1)[0][0].tolist()
-    if with_aux:
-        return asimov_data + model.config.auxdata
+    asimov_data = model.expected_data(
+        get_asimov_parameters(model), include_auxdata=with_aux
+    ).tolist()
     return asimov_data
 
 
 def get_asimov_parameters(model: pyhf.pdf.Model) -> np.ndarray:
     """Returns a list of Asimov parameter values for a model.
+
+    For normalization factors, initial parameter settings (specified in the workspace)
+    are treated as nominal settings.
 
     Args:
         model (pyhf.pdf.Model): model for which to extract the parameters
