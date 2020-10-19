@@ -23,6 +23,58 @@ def test_FitResults():
     assert fit_results.best_twice_nll == best_twice_nll
 
 
+def test_RankingResults():
+    bestfit = np.asarray([1.0])
+    uncertainty = np.asarray([0.1])
+    labels = ["par_a"]
+    prefit_up = np.asarray([0.3])
+    prefit_down = np.asarray([-0.3])
+    postfit_up = np.asarray([0.2])
+    postfit_down = np.asarray([-0.2])
+    ranking_results = fit.RankingResults(
+        bestfit, uncertainty, labels, prefit_up, prefit_down, postfit_up, postfit_down
+    )
+    assert np.allclose(ranking_results.bestfit, bestfit)
+    assert np.allclose(ranking_results.uncertainty, uncertainty)
+    assert ranking_results.labels == labels
+    assert np.allclose(ranking_results.prefit_up, prefit_up)
+    assert np.allclose(ranking_results.prefit_down, prefit_down)
+    assert np.allclose(ranking_results.postfit_up, postfit_up)
+    assert np.allclose(ranking_results.postfit_down, postfit_down)
+
+
+def test_ScanResults():
+    name = "par_a"
+    bestfit = 1.2
+    uncertainty = 0.3
+    parameter_values = np.asarray([0.9, 1.2, 1.5])
+    delta_nlls = np.asarray([1.0, 0.0, 1.0])
+    scan_results = fit.ScanResults(
+        name, bestfit, uncertainty, parameter_values, delta_nlls
+    )
+    assert scan_results.name == name
+    assert scan_results.bestfit == bestfit
+    assert scan_results.uncertainty == uncertainty
+    assert np.allclose(scan_results.parameter_values, parameter_values)
+    assert np.allclose(scan_results.delta_nlls, delta_nlls)
+
+
+def test_LimitResults():
+    observed_limit = 3.0
+    expected_limit = np.asarray([1.0, 2.0, 3.0, 4.0, 5.0])
+    observed_CLs = np.asarray([0.05])
+    expected_CLs = np.asarray([0.01, 0.02, 0.05, 0.07, 0.10])
+    poi_values = np.asarray([3.0])
+    limit_results = fit.LimitResults(
+        observed_limit, expected_limit, observed_CLs, expected_CLs, poi_values
+    )
+    assert limit_results.observed_limit == observed_limit
+    assert np.allclose(limit_results.expected_limit, expected_limit)
+    assert np.allclose(limit_results.observed_CLs, observed_CLs)
+    assert np.allclose(limit_results.expected_CLs, expected_CLs)
+    assert np.allclose(limit_results.poi_values, poi_values)
+
+
 def test_print_results(caplog):
     caplog.set_level(logging.DEBUG)
 
