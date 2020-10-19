@@ -366,12 +366,59 @@ def test__run_minos(caplog):
         fit._run_minos(m, ["x2"], ["a", "b"])
 
 
-def test_limit(example_spec_with_background):
-    limit_results = fit.limit(example_spec_with_background, bracket=[1.0, 1.5])
+def test_limit(example_spec_with_background, caplog):
+    caplog.set_level(logging.DEBUG)
 
-    assert np.allclose(limit_results.observed_limit, 0.750, rtol=1e-2)
+    # expected values for results
+    observed_limit = 0.748
+    expected_limit = [0.300, 0.410, 0.583, 0.833, 1.159]
+
+    limit_results = fit.limit(example_spec_with_background)
+    assert np.allclose(limit_results.observed_limit, observed_limit, rtol=1e-2)
+    assert np.allclose(limit_results.expected_limit, expected_limit, rtol=1e-2)
+    # compare a few CLs values
+    assert np.allclose(limit_results.observed_CLs[0], 0.707447)
     assert np.allclose(
-        limit_results.expected_limit,
-        [0.300, 0.411, 0.581, 0.836, 1.164],
-        rtol=1e-2,
+        limit_results.expected_CLs[0],
+        [0.240884, 0.386364, 0.586467, 0.803260, 0.948896],
     )
+    assert np.allclose(limit_results.poi_values[0], 0.152476)
+    assert np.allclose(limit_results.observed_CLs[-1], 0.0)
+    assert np.allclose(limit_results.expected_CLs[-1], [0.0, 0.0, 0.0, 0.0, 0.0])
+    assert np.allclose(limit_results.poi_values[-1], 4.736068)
+    # verify that POI values are sorted
+    assert np.allclose(limit_results.poi_values, sorted(limit_results.poi_values))
+    caplog.clear()
+
+    # accesses negative POI values since upper bracket is too high
+    limit_results = fit.limit(example_spec_with_background, bracket=[1, 5])
+    assert (
+        "optimizer used Signal strength = -5.4721, skipping fit and setting CLs = 1"
+        in [rec.message for rec in caplog.records]
+    )
+    assert np.allclose(limit_results.observed_limit, observed_limit, rtol=1e-2)
+    assert np.allclose(limit_results.expected_limit, expected_limit, rtol=1e-2)
+    caplog.clear()
+
+    # convergence issues due to choice of bracket (needs larger bounds)
+    example_spec_with_background["measurements"][0]["config"]["parameters"][0][
+        "bounds"
+    ] = [[0.0, 500.0]]
+    fit.limit(example_spec_with_background, bracket=[10, 50])
+    assert "one or more calculations did not converge, check log" in [
+        rec.message for rec in caplog.records
+    ]
+    caplog.clear()
+
+    # Asimov dataset with nominal signal strength of 0
+    example_spec_with_background["measurements"][0]["config"]["parameters"][0][
+        "inits"
+    ] = [0.0]
+    limit_results = fit.limit(example_spec_with_background, asimov=True)
+    assert np.allclose(limit_results.observed_limit, 0.583, rtol=1e-2)
+    assert np.allclose(limit_results.expected_limit, expected_limit, rtol=2e-2)
+    caplog.clear()
+
+    # bracket with identical values
+    with pytest.raises(ValueError, match="the two bracket values must not be the same"):
+        fit.limit(example_spec_with_background, bracket=[3.0, 3.0])
