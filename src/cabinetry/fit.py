@@ -507,6 +507,7 @@ def limit(
 
         Each observed and expected CLs result is also appended to lists, useful for
         visualization and to optimize the starting bracket for subsequent calculations.
+        For POI values below 0, returns the maximum possible distance of 0.95.
 
         Args:
             poi (float): value for parameter of interest
@@ -520,6 +521,13 @@ def limit(
         Returns:
             float: absolute value of difference to CLs=0.05
         """
+        if poi < 0:
+            # no fit needed for negative POI value, return a default value
+            log.debug(
+                f"optimizer used {model.config.poi_name} = {poi:.4f}, skipping fit and "
+                f"setting CLs = 1"
+            )
+            return 0.95  # corresponds to distance of CLs = 1 to target CLs = 0.05
         results = pyhf.infer.hypotest(
             poi,
             data,
@@ -552,6 +560,7 @@ def limit(
     ]
     steps_total = 0
     all_limits = []
+    all_converged = True
     for i_limit, limit_label in enumerate(limit_labels):
         log.info(f"determining {limit_label} upper limit")
 
@@ -568,6 +577,7 @@ def limit(
                 f"failed to converge after {res.nfev} steps, distance from CLS=0.05 is "
                 f"{res.fun:.4f}"
             )
+            all_converged = False
         else:
             log.info(f"successfully converged after {res.nfev} steps")
 
@@ -597,6 +607,8 @@ def limit(
 
     # report all results
     log.info(f"total of {steps_total} steps to calculate all limits")
+    if not all_converged:
+        log.error("one or more calculations did not converge, check log")
     log.info("summary of upper limits:")
     for i_limit, limit_label in enumerate(limit_labels):
         log.info(f"{limit_label.ljust(18)}: {all_limits[i_limit]:.4f}")
