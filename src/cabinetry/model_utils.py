@@ -77,8 +77,8 @@ def build_Asimov_data(model: pyhf.Model, with_aux: bool = True) -> List[float]:
     """
     asimov_data = model.expected_data(
         get_asimov_parameters(model), include_auxdata=with_aux
-    )
-    return asimov_data.tolist()
+    ).tolist()
+    return asimov_data
 
 
 def get_asimov_parameters(model: pyhf.pdf.Model) -> np.ndarray:
