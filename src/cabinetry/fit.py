@@ -618,7 +618,7 @@ def limit(
         log.error("one or more calculations did not converge, check log")
     log.info("summary of upper limits:")
     for i_limit, limit_label in enumerate(limit_labels):
-        log.info(f"{limit_label.ljust(18)}: {all_limits[i_limit]:.4f}")
+        log.info(f"{limit_label.ljust(17)}: {all_limits[i_limit]:.4f}")
 
     # sort scanned POI points
     sorted_indices = np.argsort(poi_list)
