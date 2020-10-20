@@ -620,11 +620,6 @@ def limit(
     for i_limit, limit_label in enumerate(limit_labels):
         log.info(f"{limit_label.ljust(17)}: {all_limits[i_limit]:.4f}")
 
-    # sort scanned POI points
-    sorted_indices = np.argsort(poi_list)
-    expected_CLs_np = np.asarray(expected_CLs_list)[sorted_indices]
-    poi_list_np = np.asarray(poi_list)[sorted_indices]
-
     # sort all CLs values and scanned POI points by increasing POI value
     sorted_indices = np.argsort(poi_list)
     observed_CLs_np = np.asarray(observed_CLs_list)[sorted_indices]
