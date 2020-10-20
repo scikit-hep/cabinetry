@@ -457,7 +457,10 @@ def _run_minos(
 
 
 def limit(
-    spec: Dict[str, Any], bracket: Optional[List[float]] = None, asimov: bool = False
+    spec: Dict[str, Any],
+    bracket: Optional[List[float]] = None,
+    asimov: bool = False,
+    tolerance: float = 0.01,
 ) -> LimitResults:
     """Calculates observed and expected 95% confidence level upper parameter limits.
 
@@ -470,6 +473,8 @@ def limit(
             lie outside this bracket), the two values must not be the same, defaults to
             None (then uses ``[0.5, 1.5]`` as default)
         asimov (bool, optional): whether to fit the Asimov dataset, defaults to False
+        tolerance (float, optional): tolerance for convergence to CLs=0.05, defaults to
+            0.01
 
     Raises:
         ValueError: if upper and lower bracket value are the same
@@ -570,9 +575,9 @@ def limit(
             bracket=bracket,
             args=(data, model, i_limit, limit_label),
             method="brent",
-            options={"xtol": 1e-2, "maxiter": 100},
+            options={"xtol": tolerance, "maxiter": 100},
         )
-        if (not res.success) or (res.fun > 1e-2):
+        if (not res.success) or (res.fun > tolerance):
             log.error(
                 f"failed to converge after {res.nfev} steps, distance from CLS=0.05 is "
                 f"{res.fun:.4f}"
