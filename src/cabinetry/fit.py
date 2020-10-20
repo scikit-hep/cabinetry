@@ -482,7 +482,7 @@ def limit(
         ValueError: if lower and upper bracket value are the same
 
     Returns:
-        LimitResults: observed and expected CLs values, as well as scanned points
+        LimitResults: observed and expected limits, CLs values, and scanned points
     """
     if bracket is None:
         bracket = [0.5, 1.5]
