@@ -465,6 +465,7 @@ def limit(
 ) -> LimitResults:
     """Calculates observed and expected 95% confidence level upper parameter limits.
 
+    Limits are calculated for the parameter of interest (POI) defined in the workspace.
     Brent's algorithm is used to automatically determine POI values to be tested.
 
     Args:
@@ -478,7 +479,7 @@ def limit(
             0.01
 
     Raises:
-        ValueError: if upper and lower bracket value are the same
+        ValueError: if lower and upper bracket value are the same
 
     Returns:
         LimitResults: observed and expected CLs values, as well as scanned points
