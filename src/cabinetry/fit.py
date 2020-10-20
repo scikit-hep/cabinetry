@@ -74,7 +74,8 @@ class ScanResults(NamedTuple):
 
 
 class LimitResults(NamedTuple):
-    """Collects upper parameter limit results in one object.
+    """Collects parameter upper limit results in one object.
+
     Args:
         observed_limit (np.ndarray): observed limit
         expected_limit (np.ndarray): expected limit, including 1 and 2 sigma bands
