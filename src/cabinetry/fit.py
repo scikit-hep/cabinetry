@@ -571,7 +571,7 @@ def limit(
     for i_limit, limit_label in enumerate(limit_labels):
         log.info(f"determining {limit_label} upper limit")
 
-        # find the 95% CL observed limit
+        # find the 95% CL upper limit
         res = scipy.optimize.minimize_scalar(
             _CLs_distance_to_crossing,
             bracket=bracket,
