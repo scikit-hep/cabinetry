@@ -391,13 +391,15 @@ def test_limit(example_spec_with_background, caplog):
     caplog.clear()
 
     # accesses negative POI values since upper bracket is too high
-    limit_results = fit.limit(example_spec_with_background, bracket=[1, 5])
+    limit_results = fit.limit(
+        example_spec_with_background, bracket=[1, 5], tolerance=0.05
+    )
     assert (
         "optimizer used Signal strength = -5.4721, skipping fit and setting CLs = 1"
         in [rec.message for rec in caplog.records]
     )
-    assert np.allclose(limit_results.observed_limit, observed_limit, rtol=1e-2)
-    assert np.allclose(limit_results.expected_limit, expected_limit, rtol=1e-2)
+    assert np.allclose(limit_results.observed_limit, observed_limit, rtol=5e-2)
+    assert np.allclose(limit_results.expected_limit, expected_limit, rtol=5e-2)
     caplog.clear()
 
     # convergence issues due to choice of bracket (needs larger bounds)
@@ -415,7 +417,7 @@ def test_limit(example_spec_with_background, caplog):
         "inits"
     ] = [0.0]
     limit_results = fit.limit(example_spec_with_background, asimov=True)
-    assert np.allclose(limit_results.observed_limit, 0.583, rtol=1e-2)
+    assert np.allclose(limit_results.observed_limit, 0.587, rtol=1e-2)
     assert np.allclose(limit_results.expected_limit, expected_limit, rtol=2e-2)
     caplog.clear()
 
