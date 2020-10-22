@@ -141,11 +141,7 @@ def test_integration(tmp_path, ntuple_creator, caplog):
     assert np.allclose(fit_results.bestfit, bestfit_expected)
     assert np.allclose(fit_results.uncertainty, uncertainty_expected)
     assert np.allclose(fit_results.best_twice_nll, best_twice_nll_expected)
-    assert np.allclose(fit_results.corr_mat, corr_mat_expected, rtol=5e-3)
-    assert np.allclose(fit_results.corr_mat, corr_mat_expected, rtol=1e-3)
-    assert np.allclose(fit_results.corr_mat, corr_mat_expected, rtol=5e-4)
     assert np.allclose(fit_results.corr_mat, corr_mat_expected, rtol=1e-4)
-    assert np.allclose(fit_results.corr_mat, corr_mat_expected, rtol=5e-5)
 
     # minos result
     assert "Signal_norm                    = 1.6895 -0.9580 +0.9052" in [
