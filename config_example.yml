@@ -56,4 +56,4 @@ NormFactors:
   - Name: "Signal_norm"
     Samples: "Signal"
     Nominal: 1
-    Bounds: [0, 5]
+    Bounds: [0, 10]
