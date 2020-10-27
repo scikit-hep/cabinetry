@@ -33,7 +33,7 @@ python -m pytest
 All tests are required to pass before any changes can be merged.
 To build the documentation, run
 
-```
+```bash
 sphinx-build -W docs docs/_build
 ```
 
