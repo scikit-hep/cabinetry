@@ -10,7 +10,7 @@ Please also take a look at the [documentation](https://cabinetry.readthedocs.io/
 
 ## Pull requests
 
-It can be helpful to first get into contact via issues before getting started with a pull request.
+It can be helpful to first get into contact via issues before getting started with a [pull request](https://github.com/alexander-held/cabinetry/pulls).
 All pull requests are squashed and merged, so feel free to commit as many times as you want to the branch you are working on.
 The final commit message should follow the [conventional commits](https://www.conventionalcommits.org/en/v1.0.0/) specification.
 
