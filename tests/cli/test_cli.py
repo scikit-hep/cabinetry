@@ -1,3 +1,5 @@
+import json
+import pathlib
 from unittest import mock
 
 from click.testing import CliRunner
@@ -70,12 +72,11 @@ def test_postprocess(mock_validate, mock_postprocess, cli_helpers, tmp_path):
     assert mock_postprocess.call_args_list == [((config,), {})]
 
 
-@mock.patch("cabinetry.workspace.save", autospec=True)
 @mock.patch(
     "cabinetry.workspace.build", return_value={"workspace": "mock"}, autospec=True
 )
 @mock.patch("cabinetry.configuration.validate", autospec=True)
-def test_workspace(mock_validate, mock_build, mock_save, cli_helpers, tmp_path):
+def test_workspace(mock_validate, mock_build, cli_helpers, tmp_path):
     config = {"General": {"Measurement": "test_config"}}
 
     config_path = str(tmp_path / "config.yml")
@@ -85,12 +86,11 @@ def test_workspace(mock_validate, mock_build, mock_save, cli_helpers, tmp_path):
 
     runner = CliRunner()
 
-    # default histogram folder
     result = runner.invoke(cli.workspace, [config_path, workspace_path])
     assert result.exit_code == 0
     assert mock_validate.call_args_list == [((config,), {})]
     assert mock_build.call_args_list == [((config,), {})]
-    assert mock_save.call_args_list == [(({"workspace": "mock"}, workspace_path), {})]
+    assert json.loads(pathlib.Path(workspace_path).read_text()) == {"workspace": "mock"}
 
 
 @mock.patch("cabinetry.visualize.correlation_matrix", autospec=True)

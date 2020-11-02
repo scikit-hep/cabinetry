@@ -1,6 +1,7 @@
 import io
 import json
 import logging
+import pathlib
 from typing import Any, KeysView, Optional, Tuple
 
 import click
@@ -67,8 +68,8 @@ def postprocess(config: io.TextIOWrapper) -> None:
 
 @click.command()
 @click.argument("config", type=click.File("r"))
-@click.argument("ws_spec", type=click.Path(exists=False))
-def workspace(config: io.TextIOWrapper, ws_spec: str) -> None:
+@click.argument("ws_spec", type=click.File("w"))
+def workspace(config: io.TextIOWrapper, ws_spec: io.TextIOWrapper) -> None:
     """Produces a ``pyhf`` workspace.
 
     CONFIG: (path to) cabinetry configuration file
@@ -79,7 +80,9 @@ def workspace(config: io.TextIOWrapper, ws_spec: str) -> None:
     cabinetry_config = yaml.safe_load(config)
     cabinetry_configuration.validate(cabinetry_config)
     ws = cabinetry_workspace.build(cabinetry_config)
-    cabinetry_workspace.save(ws, ws_spec)
+    # create folder containing workspace if needed
+    pathlib.Path(ws_spec.name).parent.mkdir(parents=True, exist_ok=True)
+    ws_spec.write(json.dumps(ws, sort_keys=True, indent=4))
 
 
 @click.command()
