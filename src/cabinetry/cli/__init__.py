@@ -1,3 +1,5 @@
+import io
+import json
 import logging
 from typing import Any, KeysView, Optional, Tuple
 
@@ -77,7 +79,7 @@ def workspace(config_path: str, ws_path: str) -> None:
 
 
 @click.command()
-@click.argument("ws_path", type=click.Path(exists=True))
+@click.argument("ws_path", type=click.File("r"))
 @click.option("--asimov", is_flag=True, help="fit Asimov dataset (default: False)")
 @click.option("--pulls", is_flag=True, help="produce pull plot (default: False)")
 @click.option(
@@ -88,13 +90,15 @@ def workspace(config_path: str, ws_path: str) -> None:
     default="figures/",
     help="folder to save figures to (default: figures/)",
 )
-def fit(ws_path: str, asimov: bool, pulls: bool, corrmat: bool, figfolder: str) -> None:
+def fit(
+    ws_path: io.TextIOWrapper, asimov: bool, pulls: bool, corrmat: bool, figfolder: str
+) -> None:
     """Fits a workspace and optionally visualize the results.
 
     WS_PATH: path to workspace used in fit
     """
     _set_logging()
-    ws = cabinetry_workspace.load(ws_path)
+    ws = json.load(ws_path)
     fit_results = cabinetry_fit.fit(ws, asimov=asimov)
     if pulls:
         cabinetry_visualize.pulls(fit_results, figfolder)
@@ -103,7 +107,7 @@ def fit(ws_path: str, asimov: bool, pulls: bool, corrmat: bool, figfolder: str) 
 
 
 @click.command()
-@click.argument("ws_path", type=click.Path(exists=True))
+@click.argument("ws_path", type=click.File("r"))
 @click.option("--asimov", is_flag=True, help="fit Asimov dataset (default: False)")
 @click.option(
     "--max_pars", default=10, help="maximum amount of parameters in plot (default: 10)"
@@ -113,20 +117,22 @@ def fit(ws_path: str, asimov: bool, pulls: bool, corrmat: bool, figfolder: str) 
     default="figures/",
     help="folder to save figures to (default: figures/)",
 )
-def ranking(ws_path: str, asimov: bool, max_pars: int, figfolder: str) -> None:
+def ranking(
+    ws_path: io.TextIOWrapper, asimov: bool, max_pars: int, figfolder: str
+) -> None:
     """Ranks nuisance parameters and visualizes the result.
 
     WS_PATH: path to workspace used in fit
     """
     _set_logging()
-    ws = cabinetry_workspace.load(ws_path)
+    ws = json.load(ws_path)
     fit_results = cabinetry_fit.fit(ws, asimov=asimov)
     ranking_results = cabinetry_fit.ranking(ws, fit_results, asimov=asimov)
     cabinetry_visualize.ranking(ranking_results, figfolder, max_pars=max_pars)
 
 
 @click.command()
-@click.argument("ws_path", type=click.Path(exists=True))
+@click.argument("ws_path", type=click.File("r"))
 @click.argument("par_name", type=str)
 @click.option(
     "--lower_bound",
@@ -148,7 +154,7 @@ def ranking(ws_path: str, asimov: bool, max_pars: int, figfolder: str) -> None:
     help="folder to save figures to (default: figures/)",
 )
 def scan(
-    ws_path: str,
+    ws_path: io.TextIOWrapper,
     par_name: str,
     lower_bound: Optional[float],
     upper_bound: Optional[float],
@@ -179,7 +185,7 @@ def scan(
         # no bounds specified
         par_range = None
 
-    ws = cabinetry_workspace.load(ws_path)
+    ws = json.load(ws_path)
     scan_results = cabinetry_fit.scan(
         ws, par_name, par_range=par_range, n_steps=n_steps, asimov=asimov
     )
