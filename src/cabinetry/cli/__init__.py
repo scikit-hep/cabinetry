@@ -45,7 +45,7 @@ def cabinetry() -> None:
 def templates(config: io.TextIOWrapper, method: str) -> None:
     """Produces template histograms.
 
-    CONFIG: (path to) cabinetry configuration file
+    CONFIG: path to cabinetry configuration file
     """
     _set_logging()
     cabinetry_config = yaml.safe_load(config)
@@ -58,7 +58,7 @@ def templates(config: io.TextIOWrapper, method: str) -> None:
 def postprocess(config: io.TextIOWrapper) -> None:
     """Post-processes template histograms.
 
-    CONFIG: (path to) cabinetry configuration file
+    CONFIG: path to cabinetry configuration file
     """
     _set_logging()
     cabinetry_config = yaml.safe_load(config)
@@ -72,7 +72,7 @@ def postprocess(config: io.TextIOWrapper) -> None:
 def workspace(config: io.TextIOWrapper, ws_spec: io.TextIOWrapper) -> None:
     """Produces a ``pyhf`` workspace.
 
-    CONFIG: (path to) cabinetry configuration file
+    CONFIG: path to cabinetry configuration file
 
     WS_SPEC: where to save the workspace containing the fit model
     """
