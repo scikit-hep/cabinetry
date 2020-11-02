@@ -4,6 +4,7 @@ import logging
 from typing import Any, KeysView, Optional, Tuple
 
 import click
+import yaml
 
 from .. import configuration as cabinetry_configuration
 from .. import fit as cabinetry_fit
@@ -34,52 +35,55 @@ def cabinetry() -> None:
 
 
 @click.command()
-@click.argument("config_path", type=click.Path(exists=True))
+@click.argument("config", type=click.File("r"))
 @click.option(
     "--method",
     default="uproot",
     help="backend for histogram production (default: uproot)",
 )
-def templates(config_path: str, method: str) -> None:
+def templates(config: io.TextIOWrapper, method: str) -> None:
     """Produces template histograms.
 
-    CONFIG_PATH: path to cabinetry configuration file
+    CONFIG: (path to) cabinetry configuration file
     """
     _set_logging()
-    cabinetry_config = cabinetry_configuration.load(config_path)
+    cabinetry_config = yaml.safe_load(config)
+    cabinetry_configuration.validate(cabinetry_config)
     cabinetry_template_builder.create_histograms(cabinetry_config, method=method)
 
 
 @click.command()
-@click.argument("config_path", type=click.Path(exists=True))
-def postprocess(config_path: str) -> None:
+@click.argument("config", type=click.File("r"))
+def postprocess(config: io.TextIOWrapper) -> None:
     """Post-processes template histograms.
 
-    CONFIG_PATH: path to cabinetry configuration file
+    CONFIG: (path to) cabinetry configuration file
     """
     _set_logging()
-    cabinetry_config = cabinetry_configuration.load(config_path)
+    cabinetry_config = yaml.safe_load(config)
+    cabinetry_configuration.validate(cabinetry_config)
     cabinetry_template_postprocessor.run(cabinetry_config)
 
 
 @click.command()
-@click.argument("config_path", type=click.Path(exists=True))
-@click.argument("ws_path", type=click.Path(exists=False))
-def workspace(config_path: str, ws_path: str) -> None:
+@click.argument("config", type=click.File("r"))
+@click.argument("ws_spec", type=click.Path(exists=False))
+def workspace(config: io.TextIOWrapper, ws_spec: str) -> None:
     """Produces a ``pyhf`` workspace.
 
-    CONFIG_PATH: path to cabinetry configuration file
+    CONFIG: (path to) cabinetry configuration file
 
-    WS_PATH: where to save the workspace containing the fit model
+    WS_SPEC: where to save the workspace containing the fit model
     """
     _set_logging()
-    cabinetry_config = cabinetry_configuration.load(config_path)
+    cabinetry_config = yaml.safe_load(config)
+    cabinetry_configuration.validate(cabinetry_config)
     ws = cabinetry_workspace.build(cabinetry_config)
-    cabinetry_workspace.save(ws, ws_path)
+    cabinetry_workspace.save(ws, ws_spec)
 
 
 @click.command()
-@click.argument("ws_path", type=click.File("r"))
+@click.argument("ws_spec", type=click.File("r"))
 @click.option("--asimov", is_flag=True, help="fit Asimov dataset (default: False)")
 @click.option("--pulls", is_flag=True, help="produce pull plot (default: False)")
 @click.option(
@@ -91,14 +95,14 @@ def workspace(config_path: str, ws_path: str) -> None:
     help="folder to save figures to (default: figures/)",
 )
 def fit(
-    ws_path: io.TextIOWrapper, asimov: bool, pulls: bool, corrmat: bool, figfolder: str
+    ws_spec: io.TextIOWrapper, asimov: bool, pulls: bool, corrmat: bool, figfolder: str
 ) -> None:
     """Fits a workspace and optionally visualize the results.
 
-    WS_PATH: path to workspace used in fit
+    WS_SPEC: path to workspace used in fit
     """
     _set_logging()
-    ws = json.load(ws_path)
+    ws = json.load(ws_spec)
     fit_results = cabinetry_fit.fit(ws, asimov=asimov)
     if pulls:
         cabinetry_visualize.pulls(fit_results, figfolder)
@@ -107,7 +111,7 @@ def fit(
 
 
 @click.command()
-@click.argument("ws_path", type=click.File("r"))
+@click.argument("ws_spec", type=click.File("r"))
 @click.option("--asimov", is_flag=True, help="fit Asimov dataset (default: False)")
 @click.option(
     "--max_pars", default=10, help="maximum amount of parameters in plot (default: 10)"
@@ -118,21 +122,21 @@ def fit(
     help="folder to save figures to (default: figures/)",
 )
 def ranking(
-    ws_path: io.TextIOWrapper, asimov: bool, max_pars: int, figfolder: str
+    ws_spec: io.TextIOWrapper, asimov: bool, max_pars: int, figfolder: str
 ) -> None:
     """Ranks nuisance parameters and visualizes the result.
 
-    WS_PATH: path to workspace used in fit
+    WS_SPEC: path to workspace used in fit
     """
     _set_logging()
-    ws = json.load(ws_path)
+    ws = json.load(ws_spec)
     fit_results = cabinetry_fit.fit(ws, asimov=asimov)
     ranking_results = cabinetry_fit.ranking(ws, fit_results, asimov=asimov)
     cabinetry_visualize.ranking(ranking_results, figfolder, max_pars=max_pars)
 
 
 @click.command()
-@click.argument("ws_path", type=click.File("r"))
+@click.argument("ws_spec", type=click.File("r"))
 @click.argument("par_name", type=str)
 @click.option(
     "--lower_bound",
@@ -154,7 +158,7 @@ def ranking(
     help="folder to save figures to (default: figures/)",
 )
 def scan(
-    ws_path: io.TextIOWrapper,
+    ws_spec: io.TextIOWrapper,
     par_name: str,
     lower_bound: Optional[float],
     upper_bound: Optional[float],
@@ -167,7 +171,7 @@ def scan(
     Parameter bounds are determined automatically, unless both the ``lower_bound`` and
     ``upper_bound`` parameters are provided.
 
-    WS_PATH: path to workspace used in fit
+    WS_SPEC: path to workspace used in fit
 
     PAR_NAME: name of parameter to scan over
     """
@@ -185,7 +189,7 @@ def scan(
         # no bounds specified
         par_range = None
 
-    ws = json.load(ws_path)
+    ws = json.load(ws_spec)
     scan_results = cabinetry_fit.scan(
         ws, par_name, par_range=par_range, n_steps=n_steps, asimov=asimov
     )

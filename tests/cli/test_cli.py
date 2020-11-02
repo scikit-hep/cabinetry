@@ -30,12 +30,8 @@ def test_cabinetry():
 
 # using autospec to catch changes in public API
 @mock.patch("cabinetry.template_builder.create_histograms", autospec=True)
-@mock.patch(
-    "cabinetry.configuration.load",
-    return_value={"General": {"Measurement": "test_config"}},
-    autospec=True,
-)
-def test_templates(mock_read, mock_create_histograms, cli_helpers, tmp_path):
+@mock.patch("cabinetry.configuration.validate", autospec=True)
+def test_templates(mock_validate, mock_create_histograms, cli_helpers, tmp_path):
     config = {"General": {"Measurement": "test_config"}}
 
     config_path = str(tmp_path / "config.yml")
@@ -46,7 +42,7 @@ def test_templates(mock_read, mock_create_histograms, cli_helpers, tmp_path):
     # default method
     result = runner.invoke(cli.templates, [config_path])
     assert result.exit_code == 0
-    assert mock_read.call_args_list == [((config_path,), {})]
+    assert mock_validate.call_args_list == [((config,), {})]
     assert mock_create_histograms.call_args_list == [((config,), {"method": "uproot"})]
 
     # different method
@@ -59,12 +55,8 @@ def test_templates(mock_read, mock_create_histograms, cli_helpers, tmp_path):
 
 
 @mock.patch("cabinetry.template_postprocessor.run", autospec=True)
-@mock.patch(
-    "cabinetry.configuration.load",
-    return_value={"General": {"Measurement": "test_config"}},
-    autospec=True,
-)
-def test_postprocess(mock_read, mock_postprocess, cli_helpers, tmp_path):
+@mock.patch("cabinetry.configuration.validate", autospec=True)
+def test_postprocess(mock_validate, mock_postprocess, cli_helpers, tmp_path):
     config = {"General": {"Measurement": "test_config"}}
 
     config_path = str(tmp_path / "config.yml")
@@ -74,7 +66,7 @@ def test_postprocess(mock_read, mock_postprocess, cli_helpers, tmp_path):
 
     result = runner.invoke(cli.postprocess, [config_path])
     assert result.exit_code == 0
-    assert mock_read.call_args_list == [((config_path,), {})]
+    assert mock_validate.call_args_list == [((config,), {})]
     assert mock_postprocess.call_args_list == [((config,), {})]
 
 
@@ -82,12 +74,8 @@ def test_postprocess(mock_read, mock_postprocess, cli_helpers, tmp_path):
 @mock.patch(
     "cabinetry.workspace.build", return_value={"workspace": "mock"}, autospec=True
 )
-@mock.patch(
-    "cabinetry.configuration.load",
-    return_value={"General": {"Measurement": "test_config"}},
-    autospec=True,
-)
-def test_workspace(mock_read, mock_build, mock_save, cli_helpers, tmp_path):
+@mock.patch("cabinetry.configuration.validate", autospec=True)
+def test_workspace(mock_validate, mock_build, mock_save, cli_helpers, tmp_path):
     config = {"General": {"Measurement": "test_config"}}
 
     config_path = str(tmp_path / "config.yml")
@@ -100,7 +88,7 @@ def test_workspace(mock_read, mock_build, mock_save, cli_helpers, tmp_path):
     # default histogram folder
     result = runner.invoke(cli.workspace, [config_path, workspace_path])
     assert result.exit_code == 0
-    assert mock_read.call_args_list == [((config_path,), {})]
+    assert mock_validate.call_args_list == [((config,), {})]
     assert mock_build.call_args_list == [((config,), {})]
     assert mock_save.call_args_list == [(({"workspace": "mock"}, workspace_path), {})]
 
