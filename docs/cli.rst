@@ -27,6 +27,17 @@ shows the available commands, while
 
 shows what the ``fit`` command does, and which options it accepts.
 
+It is possible to read the ``cabinetry`` config and workspaces from stdin, and to write workspaces to stdout:
+
+.. code-block:: bash
+
+    # read config from stdin
+    cat config_example.yml | cabinetry workspace - workspaces/example_workspace.json
+    # read workspace from stdin
+    cat workspaces/example_workspace.json | cabinetry fit -
+    # write workspace to stdout
+    cabinetry workspace config_example.yml -
+
 
 .. click:: cabinetry.cli:cabinetry
     :prog: cabinetry
