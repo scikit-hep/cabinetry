@@ -114,10 +114,7 @@ def test_workspace(mock_read, mock_build, mock_save, cli_helpers, tmp_path):
     ),
     autospec=True,
 )
-@mock.patch(
-    "cabinetry.workspace.load", return_value={"workspace": "mock"}, autospec=True
-)
-def test_fit(mock_load, mock_fit, mock_pulls, mock_corrmat, tmp_path):
+def test_fit(mock_fit, mock_pulls, mock_corrmat, tmp_path):
     workspace = {"workspace": "mock"}
     bestfit = np.asarray([1.0])
     uncertainty = np.asarray([0.1])
@@ -129,14 +126,13 @@ def test_fit(mock_load, mock_fit, mock_pulls, mock_corrmat, tmp_path):
 
     # need to save workspace to file since click looks for it
     with open(workspace_path, "w") as f:
-        f.write("{'workspace': 'mock'}")
+        f.write('{"workspace": "mock"}')
 
     runner = CliRunner()
 
     # default
     result = runner.invoke(cli.fit, [workspace_path])
     assert result.exit_code == 0
-    assert mock_load.call_args_list == [((workspace_path,), {})]
     assert mock_fit.call_args_list == [((workspace,), {"asimov": False})]
 
     # Asimov
@@ -184,10 +180,7 @@ def test_fit(mock_load, mock_fit, mock_pulls, mock_corrmat, tmp_path):
     ),
     autospec=True,
 )
-@mock.patch(
-    "cabinetry.workspace.load", return_value={"workspace": "mock"}, autospec=True
-)
-def test_ranking(mock_load, mock_fit, mock_rank, mock_vis, tmp_path):
+def test_ranking(mock_fit, mock_rank, mock_vis, tmp_path):
     workspace = {"workspace": "mock"}
     bestfit = np.asarray([1.0])
     uncertainty = np.asarray([0.1])
@@ -199,14 +192,13 @@ def test_ranking(mock_load, mock_fit, mock_rank, mock_vis, tmp_path):
 
     # need to save workspace to file since click looks for it
     with open(workspace_path, "w") as f:
-        f.write("{'workspace': 'mock'}")
+        f.write('{"workspace": "mock"}')
 
     runner = CliRunner()
 
     # default
     result = runner.invoke(cli.ranking, [workspace_path])
     assert result.exit_code == 0
-    assert mock_load.call_args_list == [((workspace_path,), {})]
     assert mock_fit.call_args_list == [((workspace,), {"asimov": False})]
     assert mock_rank.call_args_list == [((workspace, fit_results), {"asimov": False})]
     assert mock_vis.call_count == 1
@@ -235,16 +227,13 @@ def test_ranking(mock_load, mock_fit, mock_rank, mock_vis, tmp_path):
     return_value=fit.ScanResults("par", 1.0, 0.1, np.asarray([1.5]), np.asarray([3.5])),
     autospec=True,
 )
-@mock.patch(
-    "cabinetry.workspace.load", return_value={"workspace": "mock"}, autospec=True
-)
-def test_scan(mock_load, mock_scan, mock_vis, tmp_path):
+def test_scan(mock_scan, mock_vis, tmp_path):
     workspace = {"workspace": "mock"}
     workspace_path = str(tmp_path / "workspace.json")
 
     # need to save workspace to file since click looks for it
     with open(workspace_path, "w") as f:
-        f.write("{'workspace': 'mock'}")
+        f.write('{"workspace": "mock"}')
 
     par_name = "par"
     scan_results = fit.ScanResults(
@@ -256,7 +245,6 @@ def test_scan(mock_load, mock_scan, mock_vis, tmp_path):
     # default
     result = runner.invoke(cli.scan, [workspace_path, par_name])
     assert result.exit_code == 0
-    assert mock_load.call_args_list == [((workspace_path,), {})]
     assert mock_scan.call_args_list == [
         ((workspace, par_name), {"par_range": None, "n_steps": 11, "asimov": False})
     ]
