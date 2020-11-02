@@ -1,6 +1,5 @@
 import json
 import logging
-import os
 import pathlib
 from typing import Any, Dict, List, Optional, Union
 
@@ -479,8 +478,7 @@ def save(ws: Dict[str, Any], file_path_string: Union[str, pathlib.Path]) -> None
     file_path = pathlib.Path(file_path_string)
     log.debug(f"saving workspace to {file_path}")
     # create output directory if it does not exist yet
-    if not os.path.exists(file_path.parent):
-        os.mkdir(file_path.parent)
+    file_path.parent.mkdir(parents=True, exist_ok=True)
     # save workspace to file
     file_path.write_text(json.dumps(ws, sort_keys=True, indent=4))
 
