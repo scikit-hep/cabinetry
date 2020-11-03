@@ -241,7 +241,7 @@ def test_scan(mock_scan, mock_vis, tmp_path):
     assert mock_vis.call_args[0][0].bestfit == scan_results.bestfit
     assert mock_vis.call_args[0][0].uncertainty == scan_results.uncertainty
     assert np.allclose(
-        mock_vis.call_args[0][0].scanned_values, scan_results.scanned_values
+        mock_vis.call_args[0][0].parameter_values, scan_results.parameter_values
     )
     assert np.allclose(mock_vis.call_args[0][0].delta_nlls, scan_results.delta_nlls)
     assert mock_vis.call_args[0][1] == "figures/"

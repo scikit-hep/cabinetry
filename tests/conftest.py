@@ -157,3 +157,61 @@ def example_spec_shapefactor():
         "version": "1.0.0",
     }
     return spec
+
+
+@pytest.fixture
+def example_spec_with_background():
+    spec = {
+        "channels": [
+            {
+                "name": "Signal Region",
+                "samples": [
+                    {
+                        "data": [50],
+                        "modifiers": [
+                            {
+                                "data": [5],
+                                "name": "staterror_Signal-Region",
+                                "type": "staterror",
+                            },
+                            {
+                                "data": None,
+                                "name": "Signal strength",
+                                "type": "normfactor",
+                            },
+                        ],
+                        "name": "Signal",
+                    },
+                    {
+                        "data": [150],
+                        "modifiers": [
+                            {
+                                "data": [7],
+                                "name": "staterror_Signal-Region",
+                                "type": "staterror",
+                            }
+                        ],
+                        "name": "Background",
+                    },
+                ],
+            }
+        ],
+        "measurements": [
+            {
+                "config": {
+                    "parameters": [
+                        {
+                            "name": "Signal strength",
+                            "bounds": [[0, 10]],
+                            "inits": [1.0],
+                        }
+                    ],
+                    "poi": "Signal strength",
+                },
+                "name": "signal plus background",
+            }
+        ],
+        "observations": [{"data": [160], "name": "Signal Region"}],
+        "version": "1.0.0",
+    }
+    return spec

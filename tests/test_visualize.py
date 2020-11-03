@@ -455,7 +455,34 @@ def test_scan(mock_draw):
     assert np.allclose(mock_draw.call_args[0][3], par_vals)
     assert np.allclose(mock_draw.call_args[0][4], par_nlls)
     assert mock_draw.call_args[0][5] == figure_path
+    assert mock_draw.call_args[1] == {}
 
     # unknown plotting method
     with pytest.raises(NotImplementedError, match="unknown backend: unknown"):
         visualize.scan(scan_results, folder_path, method="unknown")
+
+
+@mock.patch("cabinetry.contrib.matplotlib_visualize.limit")
+def test_limit(mock_draw):
+    folder_path = "tmp"
+    figure_path = pathlib.Path(folder_path) / "limit.pdf"
+
+    observed_CLs = np.asarray([0.75, 0.32, 0.02])
+    expected_CLs = np.asarray([[0.1, 0.2, 0.3, 0.4, 0.5] for _ in range(3)])
+    poi_values = np.asarray([0, 1, 2])
+    limit_results = fit.LimitResults(
+        3.0, np.empty(5), observed_CLs, expected_CLs, poi_values
+    )
+
+    visualize.limit(limit_results, folder_path)
+
+    assert mock_draw.call_count == 1
+    assert np.allclose(mock_draw.call_args[0][0], limit_results.observed_CLs)
+    assert np.allclose(mock_draw.call_args[0][1], limit_results.expected_CLs)
+    assert np.allclose(mock_draw.call_args[0][2], limit_results.poi_values)
+    assert mock_draw.call_args[0][3] == figure_path
+    assert mock_draw.call_args[1] == {}
+
+    # unknown plotting method
+    with pytest.raises(NotImplementedError, match="unknown backend: unknown"):
+        visualize.limit(limit_results, folder_path, method="unknown")

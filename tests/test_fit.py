@@ -23,6 +23,58 @@ def test_FitResults():
     assert fit_results.best_twice_nll == best_twice_nll
 
 
+def test_RankingResults():
+    bestfit = np.asarray([1.0])
+    uncertainty = np.asarray([0.1])
+    labels = ["par_a"]
+    prefit_up = np.asarray([0.3])
+    prefit_down = np.asarray([-0.3])
+    postfit_up = np.asarray([0.2])
+    postfit_down = np.asarray([-0.2])
+    ranking_results = fit.RankingResults(
+        bestfit, uncertainty, labels, prefit_up, prefit_down, postfit_up, postfit_down
+    )
+    assert np.allclose(ranking_results.bestfit, bestfit)
+    assert np.allclose(ranking_results.uncertainty, uncertainty)
+    assert ranking_results.labels == labels
+    assert np.allclose(ranking_results.prefit_up, prefit_up)
+    assert np.allclose(ranking_results.prefit_down, prefit_down)
+    assert np.allclose(ranking_results.postfit_up, postfit_up)
+    assert np.allclose(ranking_results.postfit_down, postfit_down)
+
+
+def test_ScanResults():
+    name = "par_a"
+    bestfit = 1.2
+    uncertainty = 0.3
+    parameter_values = np.asarray([0.9, 1.2, 1.5])
+    delta_nlls = np.asarray([1.0, 0.0, 1.0])
+    scan_results = fit.ScanResults(
+        name, bestfit, uncertainty, parameter_values, delta_nlls
+    )
+    assert scan_results.name == name
+    assert scan_results.bestfit == bestfit
+    assert scan_results.uncertainty == uncertainty
+    assert np.allclose(scan_results.parameter_values, parameter_values)
+    assert np.allclose(scan_results.delta_nlls, delta_nlls)
+
+
+def test_LimitResults():
+    observed_limit = 3.0
+    expected_limit = np.asarray([1.0, 2.0, 3.0, 4.0, 5.0])
+    observed_CLs = np.asarray([0.05])
+    expected_CLs = np.asarray([0.01, 0.02, 0.05, 0.07, 0.10])
+    poi_values = np.asarray([3.0])
+    limit_results = fit.LimitResults(
+        observed_limit, expected_limit, observed_CLs, expected_CLs, poi_values
+    )
+    assert limit_results.observed_limit == observed_limit
+    assert np.allclose(limit_results.expected_limit, expected_limit)
+    assert np.allclose(limit_results.observed_CLs, observed_CLs)
+    assert np.allclose(limit_results.expected_CLs, expected_CLs)
+    assert np.allclose(limit_results.poi_values, poi_values)
+
+
 def test_print_results(caplog):
     caplog.set_level(logging.DEBUG)
 
@@ -250,7 +302,7 @@ def test_scan(mock_fit, example_spec):
     assert scan_results.name == par_name
     assert scan_results.bestfit == 1.3
     assert scan_results.uncertainty == 0.1
-    assert np.allclose(scan_results.scanned_values, expected_scan_values)
+    assert np.allclose(scan_results.parameter_values, expected_scan_values)
     assert np.allclose(scan_results.delta_nlls, expected_delta_nlls)
 
     assert mock_fit.call_count == 12
@@ -264,7 +316,7 @@ def test_scan(mock_fit, example_spec):
     # parameter range specified
     scan_results = fit.scan(example_spec, par_name, par_range=(1.0, 1.5), n_steps=5)
     expected_custom_scan = np.linspace(1.0, 1.5, 5)
-    assert np.allclose(scan_results.scanned_values, expected_custom_scan)
+    assert np.allclose(scan_results.parameter_values, expected_custom_scan)
 
     # unknown parameter
     with pytest.raises(ValueError, match="could not find parameter abc in model"):
@@ -312,3 +364,63 @@ def test__run_minos(caplog):
     # unknown parameter
     with pytest.raises(StopIteration):
         fit._run_minos(m, ["x2"], ["a", "b"])
+
+
+def test_limit(example_spec_with_background, caplog):
+    caplog.set_level(logging.DEBUG)
+
+    # expected values for results
+    observed_limit = 0.748
+    expected_limit = [0.300, 0.410, 0.583, 0.833, 1.159]
+
+    limit_results = fit.limit(example_spec_with_background)
+    assert np.allclose(limit_results.observed_limit, observed_limit, rtol=1e-2)
+    assert np.allclose(limit_results.expected_limit, expected_limit, rtol=1e-2)
+    # compare a few CLs values
+    assert np.allclose(limit_results.observed_CLs[0], 0.707447)
+    assert np.allclose(
+        limit_results.expected_CLs[0],
+        [0.240884, 0.386364, 0.586467, 0.803260, 0.948896],
+    )
+    assert np.allclose(limit_results.poi_values[0], 0.152476)
+    assert np.allclose(limit_results.observed_CLs[-1], 0.0)
+    assert np.allclose(limit_results.expected_CLs[-1], [0.0, 0.0, 0.0, 0.0, 0.0])
+    assert np.allclose(limit_results.poi_values[-1], 4.736068)
+    # verify that POI values are sorted
+    assert np.allclose(limit_results.poi_values, sorted(limit_results.poi_values))
+    caplog.clear()
+
+    # accesses negative POI values since upper bracket is too high
+    limit_results = fit.limit(
+        example_spec_with_background, bracket=[1, 5], tolerance=0.05
+    )
+    assert (
+        "optimizer used Signal strength = -5.4721, skipping fit and setting CLs = 1"
+        in [rec.message for rec in caplog.records]
+    )
+    assert np.allclose(limit_results.observed_limit, observed_limit, rtol=5e-2)
+    assert np.allclose(limit_results.expected_limit, expected_limit, rtol=5e-2)
+    caplog.clear()
+
+    # convergence issues due to choice of bracket (needs larger bounds)
+    example_spec_with_background["measurements"][0]["config"]["parameters"][0][
+        "bounds"
+    ] = [[0.0, 500.0]]
+    fit.limit(example_spec_with_background, bracket=[10, 50])
+    assert "one or more calculations did not converge, check log" in [
+        rec.message for rec in caplog.records
+    ]
+    caplog.clear()
+
+    # Asimov dataset with nominal signal strength of 0
+    example_spec_with_background["measurements"][0]["config"]["parameters"][0][
+        "inits"
+    ] = [0.0]
+    limit_results = fit.limit(example_spec_with_background, asimov=True)
+    assert np.allclose(limit_results.observed_limit, 0.587, rtol=1e-2)
+    assert np.allclose(limit_results.expected_limit, expected_limit, rtol=2e-2)
+    caplog.clear()
+
+    # bracket with identical values
+    with pytest.raises(ValueError, match="the two bracket values must not be the same"):
+        fit.limit(example_spec_with_background, bracket=[3.0, 3.0])

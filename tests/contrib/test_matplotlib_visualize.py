@@ -156,3 +156,20 @@ def test_scan(tmp_path):
 
     matplotlib_visualize.scan(par_name, par_mle, par_unc, par_vals, par_nlls, fname)
     assert compare_images("tests/contrib/reference/scan.pdf", str(fname), 0) is None
+
+
+def test_limit(tmp_path):
+    fname = tmp_path / "fig.pdf"
+    observed_CLs = np.asarray([0.31, 0.05, 0.005, 0.0001])
+    expected_CLs = np.asarray(
+        [
+            [0.07, 0.16, 0.35, 0.62, 0.88],
+            [0.0, 0.01, 0.06, 0.23, 0.56],
+            [0.0, 0.0, 0.0, 0.05, 0.2],
+            [0.0, 0.0, 0.0, 0.0, 0.04],
+        ]
+    )
+    poi_values = np.asarray([0.5, 1.0, 1.5, 2.0])
+
+    matplotlib_visualize.limit(observed_CLs, expected_CLs, poi_values, fname)
+    assert compare_images("tests/contrib/reference/limit.pdf", str(fname), 0) is None

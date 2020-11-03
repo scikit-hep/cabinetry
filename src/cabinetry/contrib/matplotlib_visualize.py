@@ -567,7 +567,7 @@ def scan(
     mpl.style.use("seaborn-colorblind")
     fig, ax = plt.subplots()
 
-    # line through y=1 and y=4 to show confidence levels
+    # line through y=1 and y=4 to show confidence intervals
     ax.plot([par_vals[0], par_vals[-1]], [1, 1], ":", color="gray")
     ax.plot([par_vals[0], par_vals[-1]], [4, 4], ":", color="gray")
 
@@ -601,7 +601,7 @@ def scan(
 
     # increase font sizes
     for item in (
-        [ax.yaxis.label, ax.xaxis.label] + ax.get_xticklabels() + ax.get_yticklabels()
+        [ax.xaxis.label, ax.yaxis.label] + ax.get_xticklabels() + ax.get_yticklabels()
     ):
         item.set_fontsize("large")
 
@@ -617,6 +617,90 @@ def scan(
     ax.tick_params(direction="in", top=True, right=True, which="both")
 
     ax.legend(frameon=False, fontsize="large")
+
+    fig.tight_layout()
+
+    figure_path.parent.mkdir(parents=True, exist_ok=True)
+    log.debug(f"saving figure as {figure_path}")
+    fig.savefig(figure_path)
+    plt.close(fig)
+
+
+def limit(
+    observed_CLs: np.ndarray,
+    expected_CLs: np.ndarray,
+    poi_values: np.ndarray,
+    figure_path: pathlib.Path,
+) -> None:
+    """Draws observed and expected CLs values as function of the parameter of interest.
+
+    Args:
+        observed_CLs (np.ndarray): observed CLs values
+        expected_CLs (np.ndarray): expected CLs values, including 1 and 2 sigma bands
+        poi_values (np.ndarray): parameter of interest values used in scan
+        figure_path (pathlib.Path): path where figure should be saved
+    """
+    fig, ax = plt.subplots()
+
+    xmin = min(poi_values)
+    xmax = max(poi_values)
+
+    # line through CLs = 0.05
+    ax.hlines(
+        0.05,
+        xmin=xmin,
+        xmax=xmax,
+        linestyle="dashdot",
+        color="red",
+        label=r"CL$_S$ = 5%",
+    )
+
+    # 1 and 2 sigma bands
+    ax.fill_between(
+        poi_values,
+        expected_CLs[:, 0],
+        expected_CLs[:, 4],
+        color="yellow",
+        label=r"expected CL$_S$ $\pm 2\sigma$",
+    )
+    ax.fill_between(
+        poi_values,
+        expected_CLs[:, 1],
+        expected_CLs[:, 3],
+        color="limegreen",
+        label=r"expected CL$_S$ $\pm 1\sigma$",
+    )
+
+    # expected CLs
+    ax.plot(
+        poi_values,
+        expected_CLs[:, 2],
+        "--",
+        color="black",
+        label=r"expected CL$_S$",
+    )
+
+    # observed CLs values
+    ax.plot(poi_values, observed_CLs, "o-", color="black", label=r"observed CL$_S$")
+
+    # increase font sizes
+    for item in (
+        [ax.xaxis.label, ax.yaxis.label] + ax.get_xticklabels() + ax.get_yticklabels()
+    ):
+        item.set_fontsize("large")
+
+    # minor ticks
+    for axis in [ax.xaxis, ax.yaxis]:
+        axis.set_minor_locator(mpl.ticker.AutoMinorLocator())
+
+    ax.legend(frameon=False, fontsize="large")
+
+    ax.set_xlabel(r"$\mu$")
+    ax.set_ylabel(r"$\mathrm{CL}_{s}$")
+    ax.set_xlim([xmin, xmax])
+    ax.set_ylim([0, 1])
+    ax.tick_params(axis="both", which="major", pad=8)
+    ax.tick_params(direction="in", top=True, right=True, which="both")
 
     fig.tight_layout()
 
