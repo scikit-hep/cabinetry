@@ -40,7 +40,7 @@ def test__total_yield_uncertainty():
     "cabinetry.histo.Histogram.from_config",
     return_value=MockHistogram([0.0, 1.0], [1.0], [0.1]),
 )
-def test_data_MC_from_histograms(mock_load, mock_draw, mock_stdev, tmp_path):
+def test_data_MC_from_histograms(mock_load, mock_draw, mock_stdev):
     """contrib.matplotlib_visualize is only imported depending on the keyword argument,
     so cannot patch via cabinetry.visualize.matplotlib_visualize
     Generally it seems like following the path to the module is preferred, but that
@@ -48,13 +48,15 @@ def test_data_MC_from_histograms(mock_load, mock_draw, mock_stdev, tmp_path):
     https://docs.python.org/3/library/unittest.mock.html#where-to-patch
     """
     config = {
-        "General": {"HistogramFolder": tmp_path},
+        "General": {"HistogramFolder": "tmp_hist"},
         "Regions": [{"Name": "reg_1", "Variable": "x"}],
         "Samples": [{"Name": "sample_1"}, {"Name": "data", "Data": True}],
     }
+    figure_folder = pathlib.Path("tmp")
+    histogram_folder = pathlib.Path("tmp_hist")
 
     visualize.data_MC_from_histograms(
-        config, figure_folder=tmp_path, method="matplotlib"
+        config, figure_folder=figure_folder, method="matplotlib"
     )
 
     # the call_args_list contains calls (outer round brackets), first filled with
@@ -62,7 +64,7 @@ def test_data_MC_from_histograms(mock_load, mock_draw, mock_stdev, tmp_path):
     assert mock_load.call_args_list == [
         (
             (
-                tmp_path,
+                histogram_folder,
                 {"Name": "reg_1", "Variable": "x"},
                 {"Name": "data", "Data": True},
                 {"Name": "Nominal"},
@@ -71,7 +73,7 @@ def test_data_MC_from_histograms(mock_load, mock_draw, mock_stdev, tmp_path):
         ),
         (
             (
-                tmp_path,
+                histogram_folder,
                 {"Name": "reg_1", "Variable": "x"},
                 {"Name": "sample_1"},
                 {"Name": "Nominal"},
@@ -99,7 +101,7 @@ def test_data_MC_from_histograms(mock_load, mock_draw, mock_stdev, tmp_path):
                 ],
                 [0.2],
                 [0.0, 1.0],
-                tmp_path / "reg_1_prefit.pdf",
+                figure_folder / "reg_1_prefit.pdf",
             ),
             {"log_scale": None},
         )
@@ -108,7 +110,7 @@ def test_data_MC_from_histograms(mock_load, mock_draw, mock_stdev, tmp_path):
     # other plotting method
     with pytest.raises(NotImplementedError, match="unknown backend: unknown"):
         visualize.data_MC_from_histograms(
-            config, figure_folder=tmp_path, method="unknown"
+            config, figure_folder=figure_folder, method="unknown"
         )
 
 
