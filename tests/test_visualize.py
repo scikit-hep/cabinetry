@@ -53,7 +53,9 @@ def test_data_MC_from_histograms(mock_load, mock_draw, mock_stdev, tmp_path):
         "Samples": [{"Name": "sample_1"}, {"Name": "data", "Data": True}],
     }
 
-    visualize.data_MC_from_histograms(config, tmp_path, method="matplotlib")
+    visualize.data_MC_from_histograms(
+        config, figure_folder=tmp_path, method="matplotlib"
+    )
 
     # the call_args_list contains calls (outer round brackets), first filled with
     # arguments (inner round brackets) and then keyword arguments
@@ -105,7 +107,9 @@ def test_data_MC_from_histograms(mock_load, mock_draw, mock_stdev, tmp_path):
 
     # other plotting method
     with pytest.raises(NotImplementedError, match="unknown backend: unknown"):
-        visualize.data_MC_from_histograms(config, tmp_path, method="unknown")
+        visualize.data_MC_from_histograms(
+            config, figure_folder=tmp_path, method="unknown"
+        )
 
 
 @mock.patch("cabinetry.contrib.matplotlib_visualize.data_MC")
@@ -131,7 +135,7 @@ def test_data_MC(
     model_spec = pyhf.Workspace(example_spec).model().spec
 
     # pre-fit plot
-    visualize.data_MC(config, example_spec, figure_folder)
+    visualize.data_MC(config, example_spec, figure_folder=figure_folder)
 
     # Asimov parameter calculation and pre-fit uncertainties
     assert mock_stdev.call_count == 1
@@ -184,7 +188,11 @@ def test_data_MC(
         0.0,
     )
     visualize.data_MC(
-        config, example_spec, figure_folder, fit_results=fit_results, log_scale=False
+        config,
+        example_spec,
+        figure_folder=figure_folder,
+        fit_results=fit_results,
+        log_scale=False,
     )
 
     assert mock_asimov.call_count == 1  # no new call
@@ -211,7 +219,9 @@ def test_data_MC(
 
     # unknown plotting method
     with pytest.raises(NotImplementedError, match="unknown backend: unknown"):
-        visualize.data_MC(config, example_spec, figure_folder, method="unknown")
+        visualize.data_MC(
+            config, example_spec, figure_folder=figure_folder, method="unknown"
+        )
 
 
 @mock.patch("cabinetry.contrib.matplotlib_visualize.correlation_matrix")
@@ -225,7 +235,9 @@ def test_correlation_matrix(mock_draw):
     fit_results = fit.FitResults(np.empty(0), np.empty(0), labels, corr_mat, 1.0)
 
     # pruning with threshold
-    visualize.correlation_matrix(fit_results, folder_path, pruning_threshold=0.15)
+    visualize.correlation_matrix(
+        fit_results, figure_folder=folder_path, pruning_threshold=0.15
+    )
 
     mock_draw.assert_called_once()
     assert np.allclose(mock_draw.call_args[0][0], corr_mat_pruned)
@@ -240,7 +252,7 @@ def test_correlation_matrix(mock_draw):
     fit_results_fixed = fit.FitResults(
         np.empty(0), np.empty(0), labels, corr_mat_fixed, 1.0
     )
-    visualize.correlation_matrix(fit_results_fixed, folder_path)
+    visualize.correlation_matrix(fit_results_fixed, figure_folder=folder_path)
     assert np.allclose(mock_draw.call_args_list[1][0][0], corr_mat_pruned)
     assert np.any(
         [
@@ -251,7 +263,9 @@ def test_correlation_matrix(mock_draw):
 
     # unknown plotting method
     with pytest.raises(NotImplementedError, match="unknown backend: unknown"):
-        visualize.correlation_matrix(fit_results, folder_path, method="unknown")
+        visualize.correlation_matrix(
+            fit_results, figure_folder=folder_path, method="unknown"
+        )
 
 
 @mock.patch("cabinetry.contrib.matplotlib_visualize.pulls")
@@ -270,7 +284,10 @@ def test_pulls(mock_draw):
 
     # with filtering
     visualize.pulls(
-        fit_results, folder_path, exclude_list=exclude_list, method="matplotlib"
+        fit_results,
+        figure_folder=folder_path,
+        exclude_list=exclude_list,
+        method="matplotlib",
     )
 
     mock_draw.assert_called_once()
@@ -292,7 +309,7 @@ def test_pulls(mock_draw):
     bestfit_expected = np.asarray([1.0, 1.1])
     uncertainty_expected = np.asarray([1.0, 0.7])
     labels_expected = ["b", "c"]
-    visualize.pulls(fit_results, folder_path, method="matplotlib")
+    visualize.pulls(fit_results, figure_folder=folder_path, method="matplotlib")
 
     assert np.allclose(mock_draw.call_args[0][0], bestfit_expected)
     assert np.allclose(mock_draw.call_args[0][1], uncertainty_expected)
@@ -308,7 +325,10 @@ def test_pulls(mock_draw):
     # unknown plotting method
     with pytest.raises(NotImplementedError, match="unknown backend: unknown"):
         visualize.pulls(
-            fit_results, folder_path, exclude_list=exclude_list, method="unknown"
+            fit_results,
+            figure_folder=folder_path,
+            exclude_list=exclude_list,
+            method="unknown",
         )
 
 
@@ -337,7 +357,7 @@ def test_ranking(mock_draw):
     uncertainty_expected = np.asarray([0.8, 0.2])
     labels_expected = ["modeling", "staterror_a"]
 
-    visualize.ranking(ranking_results, folder_path)
+    visualize.ranking(ranking_results, figure_folder=folder_path)
     assert mock_draw.call_count == 1
     assert np.allclose(mock_draw.call_args[0][0], bestfit_expected)
     assert np.allclose(mock_draw.call_args[0][1], uncertainty_expected)
@@ -351,7 +371,7 @@ def test_ranking(mock_draw):
     assert mock_draw.call_args[1] == {}
 
     # maximum parameter amount specified
-    visualize.ranking(ranking_results, folder_path, max_pars=1)
+    visualize.ranking(ranking_results, figure_folder=folder_path, max_pars=1)
     assert mock_draw.call_count == 2
     assert np.allclose(mock_draw.call_args[0][0], bestfit_expected[0])
     assert np.allclose(mock_draw.call_args[0][1], uncertainty_expected[0])
@@ -365,7 +385,7 @@ def test_ranking(mock_draw):
 
     # unknown plotting method
     with pytest.raises(NotImplementedError, match="unknown backend: unknown"):
-        visualize.ranking(ranking_results, folder_path, method="unknown")
+        visualize.ranking(ranking_results, figure_folder=folder_path, method="unknown")
 
 
 @mock.patch(
@@ -407,7 +427,7 @@ def test_templates(mock_draw, mock_histo_config, mock_histo_path, tmp_path):
     # also add a file that matches pattern but is not needed
     (tmp_path / "region_sample_sys_unknown_modified.npz").touch()
 
-    visualize.templates(config, folder_path)
+    visualize.templates(config, figure_folder=folder_path)
 
     assert mock_histo_config.call_args_list == [
         [(tmp_path, region, sample, {"Name": "Nominal"}), {}]
@@ -424,13 +444,13 @@ def test_templates(mock_draw, mock_histo_config, mock_histo_path, tmp_path):
 
     # unknown plotting method
     with pytest.raises(NotImplementedError, match="unknown backend: unknown"):
-        visualize.templates(config, folder_path, method="unknown")
+        visualize.templates(config, figure_folder=folder_path, method="unknown")
 
     # remove files for variation histograms
     up_path.unlink()
     down_path.unlink()
 
-    visualize.templates(config, folder_path)
+    visualize.templates(config, figure_folder=folder_path)
     assert mock_draw.call_count == 1  # no new call, since no variations found
 
 
@@ -446,7 +466,7 @@ def test_scan(mock_draw):
     par_nlls = np.asarray([0.9, 0.0, 1.1])
     scan_results = fit.ScanResults(par_name, par_mle, par_unc, par_vals, par_nlls)
 
-    visualize.scan(scan_results, folder_path)
+    visualize.scan(scan_results, figure_folder=folder_path)
 
     assert mock_draw.call_count == 1
     assert mock_draw.call_args[0][0] == par_name
@@ -459,7 +479,7 @@ def test_scan(mock_draw):
 
     # unknown plotting method
     with pytest.raises(NotImplementedError, match="unknown backend: unknown"):
-        visualize.scan(scan_results, folder_path, method="unknown")
+        visualize.scan(scan_results, figure_folder=folder_path, method="unknown")
 
 
 @mock.patch("cabinetry.contrib.matplotlib_visualize.limit")
@@ -474,7 +494,7 @@ def test_limit(mock_draw):
         3.0, np.empty(5), observed_CLs, expected_CLs, poi_values
     )
 
-    visualize.limit(limit_results, folder_path)
+    visualize.limit(limit_results, figure_folder=folder_path)
 
     assert mock_draw.call_count == 1
     assert np.allclose(mock_draw.call_args[0][0], limit_results.observed_CLs)
@@ -485,4 +505,4 @@ def test_limit(mock_draw):
 
     # unknown plotting method
     with pytest.raises(NotImplementedError, match="unknown backend: unknown"):
-        visualize.limit(limit_results, folder_path, method="unknown")
+        visualize.limit(limit_results, figure_folder=folder_path, method="unknown")
