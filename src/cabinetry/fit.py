@@ -109,15 +109,25 @@ def print_results(
 
 
 def _fit_model_pyhf(
-    model: pyhf.pdf.Model, data: List[float], minos: Optional[List[str]] = None
+    model: pyhf.pdf.Model,
+    data: List[float],
+    init_pars: Optional[List[float]] = None,
+    fix_pars: Optional[List[bool]] = None,
+    minos: Optional[List[str]] = None,
 ) -> FitResults:
     """Uses the ``pyhf.infer`` API to perform a maximum likelihood fit.
 
-    Parameters set to be fixed in the model are held constant.
+    Parameters set to be fixed in the model are held constant. The ``init_pars``
+    argument allows to override the ``pyhf`` default initial parameter settings, and the
+    ``fix_pars`` argument overrides which parameters are held constant.
 
     Args:
         model (pyhf.pdf.Model): the model to use in the fit
         data (List[float]): the data to fit the model to
+        init_pars (Optional[List[float]], optional): list of initial parameter settings,
+            defaults to None (use ``pyhf`` suggested inits)
+        fix_pars (Optional[List[bool]], optional): list of booleans specifying which
+            parameters are held constant, defaults to None (use ``pyhf`` suggestion)
         minos (Optional[List[str]], optional): runs the MINOS algorithm for all
             parameters specified in the list, defaults to None (does not run MINOS)
 
@@ -127,7 +137,12 @@ def _fit_model_pyhf(
     pyhf.set_backend("numpy", pyhf.optimize.minuit_optimizer(verbose=True))
 
     result, result_obj = pyhf.infer.mle.fit(
-        data, model, return_uncertainties=True, return_result_obj=True
+        data,
+        model,
+        init_pars=init_pars,
+        fixed_params=fix_pars,
+        return_uncertainties=True,
+        return_result_obj=True,
     )
 
     bestfit = result[:, 0]

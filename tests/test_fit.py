@@ -93,7 +93,7 @@ def test_print_results(caplog):
 # due to different numpy versions used in dependencies
 @pytest.mark.filterwarnings("ignore::RuntimeWarning")
 @mock.patch("cabinetry.fit._run_minos")
-def test__fit_model_pyhf(mock_minos, example_spec):
+def test__fit_model_pyhf(mock_minos, example_spec, example_spec_multibin):
     model, data = model_utils.model_and_data(example_spec)
     fit_results = fit._fit_model_pyhf(model, data)
     assert np.allclose(fit_results.bestfit, [1.1, 8.32984849])
@@ -102,14 +102,31 @@ def test__fit_model_pyhf(mock_minos, example_spec):
     assert np.allclose(fit_results.best_twice_nll, 7.90080379)
     assert np.allclose(fit_results.corr_mat, [[0.0, 0.0], [0.0, 1.0]])
 
-    # Asimov fit
+    # Asimov fit, with fixed gamma (fixed not to Asimov MLE)
     model, data = model_utils.model_and_data(example_spec, asimov=True)
     fit_results = fit._fit_model_pyhf(model, data)
-    assert np.allclose(fit_results.bestfit, [1.1, 0.90917877], rtol=1e-4)
+    # the gamma factor is multiplicative and fixed to 1.1, so the
+    # signal strength needs to be 1/1.1 to compensate
+    assert np.allclose(fit_results.bestfit, [1.1, 0.90917877])
     assert np.allclose(fit_results.uncertainty, [0.0, 0.12623179])
     assert fit_results.labels == ["staterror_Signal-Region", "Signal strength"]
     assert np.allclose(fit_results.best_twice_nll, 5.68851093)
     assert np.allclose(fit_results.corr_mat, [[0.0, 0.0], [0.0, 1.0]])
+
+    # parameters held constant via keyword argument
+    model, data = model_utils.model_and_data(example_spec_multibin)
+    init_pars = model.config.suggested_init()
+    init_pars[0] = 0.9
+    init_pars[1] = 1.1
+    fix_pars = model.config.suggested_fixed()
+    fix_pars[0] = True
+    fix_pars[1] = True
+    fit_results = fit._fit_model_pyhf(
+        model, data, init_pars=init_pars, fix_pars=fix_pars
+    )
+    assert np.allclose(fit_results.bestfit, [0.9, 1.1, 1.48041923, 0.97511112])
+    assert np.allclose(fit_results.uncertainty, [0.0, 0.0, 0.20694465, 0.11792837])
+    assert np.allclose(fit_results.best_twice_nll, 10.4531891)
 
     # including minos
     model, data = model_utils.model_and_data(example_spec)
