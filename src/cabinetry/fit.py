@@ -238,6 +238,45 @@ def _fit_model_custom(
     return fit_results
 
 
+def _fit_model(
+    model: pyhf.pdf.Model,
+    data: List[float],
+    custom: bool,
+    init_pars: Optional[List[float]] = None,
+    fix_pars: Optional[List[bool]] = None,
+    minos: Optional[List[str]] = None,
+) -> FitResults:
+    """Interface for maximum likelihood fits through ``pyhf.infer`` API or ``iminuit``.
+
+    Parameters set to be fixed in the model are held constant. The ``init_pars``
+    argument allows to override the ``pyhf`` default initial parameter settings, and the
+    ``fix_pars`` argument overrides which parameters are held constant.
+
+    Args:
+        model (pyhf.pdf.Model): the model to use in the fit
+        data (List[float]): the data to fit the model to
+        custom (bool): uses the ``pyhf.infer`` API if True, otherwise uses ``iminuit``
+        init_pars (Optional[List[float]], optional): list of initial parameter settings,
+            defaults to None (use ``pyhf`` suggested inits)
+        fix_pars (Optional[List[bool]], optional): list of booleans specifying which
+            parameters are held constant, defaults to None (use ``pyhf`` suggestion)
+        minos (Optional[List[str]], optional): runs the MINOS algorithm for all
+            parameters specified in the list, defaults to None (does not run MINOS)
+
+    Returns:
+        FitResults: object storing relevant fit results
+    """
+    if not custom:
+        fit_results = _fit_model_pyhf(
+            model, data, init_pars=init_pars, fix_pars=fix_pars, minos=minos
+        )
+    else:
+        fit_results = _fit_model_custom(
+            model, data, init_pars=init_pars, fix_pars=fix_pars, minos=minos
+        )
+    return fit_results
+
+
 def fit(
     spec: Dict[str, Any],
     asimov: bool = False,
