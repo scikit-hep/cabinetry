@@ -28,8 +28,7 @@ if __name__ == "__main__":
     cabinetry.template_postprocessor.run(cabinetry_config)
 
     # visualize systematics templates
-    figure_folder = "figures/"
-    cabinetry.visualize.templates(cabinetry_config, figure_folder)
+    cabinetry.visualize.templates(cabinetry_config)
 
     # build a workspace and save to file
     workspace_path = "workspaces/example_workspace.json"
@@ -41,9 +40,9 @@ if __name__ == "__main__":
     fit_results = cabinetry.fit.fit(ws)
 
     # visualize pulls and correlation matrix
-    cabinetry.visualize.pulls(fit_results, figure_folder)
-    cabinetry.visualize.correlation_matrix(fit_results, figure_folder)
+    cabinetry.visualize.pulls(fit_results)
+    cabinetry.visualize.correlation_matrix(fit_results)
 
     # visualize pre- and post-fit distributions
-    cabinetry.visualize.data_MC(cabinetry_config, figure_folder, ws)
-    cabinetry.visualize.data_MC(cabinetry_config, figure_folder, ws, fit_results)
+    cabinetry.visualize.data_MC(cabinetry_config, ws)
+    cabinetry.visualize.data_MC(cabinetry_config, ws, fit_results=fit_results)

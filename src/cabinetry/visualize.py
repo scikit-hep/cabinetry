@@ -49,7 +49,7 @@ def _total_yield_uncertainty(stdev_list: List[np.ndarray]) -> np.ndarray:
 
 def data_MC_from_histograms(
     config: Dict[str, Any],
-    figure_folder: Union[str, pathlib.Path],
+    figure_folder: Union[str, pathlib.Path] = "figures",
     log_scale: Optional[bool] = None,
     method: str = "matplotlib",
 ) -> None:
@@ -59,7 +59,8 @@ def data_MC_from_histograms(
 
     Args:
         config (Dict[str, Any]): cabinetry configuration
-        figure_folder (Union[str, pathlib.Path]): path to the folder to save figures in
+        figure_folder (Union[str, pathlib.Path], optional): path to the folder to save
+            figures in, defaults to "figures"
         log_scale (Optional[bool], optional): whether to use logarithmic vertical axis,
             defaults to None (automatically determine whether to use linear/log scale)
         method (str, optional): backend to use for plotting, defaults to "matplotlib"
@@ -111,8 +112,8 @@ def data_MC_from_histograms(
 
 def data_MC(
     config: Dict[str, Any],
-    figure_folder: Union[str, pathlib.Path],
     spec: Dict[str, Any],
+    figure_folder: Union[str, pathlib.Path] = "figures",
     fit_results: Optional[fit.FitResults] = None,
     log_scale: Optional[bool] = None,
     method: str = "matplotlib",
@@ -121,8 +122,9 @@ def data_MC(
 
     Args:
         config (Dict[str, Any]): cabinetry configuration
-        figure_folder (Union[str, pathlib.Path]): path to the folder to save figures in
         spec (Dict[str, Any]): ``pyhf`` workspace specification
+        figure_folder (Union[str, pathlib.Path], optional): path to the folder to save
+            figures in, defaults to "figures"
         fit_results (Optional[fit.FitResults]): parameter configuration to use for plot,
             includes best-fit settings and uncertainties, as well as correlation matrix,
             defaults to None (then the pre-fit configuration is drawn)
@@ -220,7 +222,7 @@ def data_MC(
 
 def correlation_matrix(
     fit_results: fit.FitResults,
-    figure_folder: Union[str, pathlib.Path],
+    figure_folder: Union[str, pathlib.Path] = "figures",
     pruning_threshold: float = 0.0,
     method: str = "matplotlib",
 ) -> None:
@@ -229,7 +231,8 @@ def correlation_matrix(
     Args:
         fit_results (fit.FitResults): fit results, including correlation matrix and
             parameter labels
-        figure_folder (Union[str, pathlib.Path]): path to the folder to save figures in
+        figure_folder (Union[str, pathlib.Path], optional): path to the folder to save
+            figures in, defaults to "figures"
         pruning_threshold (float, optional): minimum correlation for a parameter to
             have with any other parameters to not get pruned, defaults to 0.0
         method (str, optional): backend to use for plotting, defaults to "matplotlib"
@@ -269,7 +272,7 @@ def correlation_matrix(
 
 def pulls(
     fit_results: fit.FitResults,
-    figure_folder: Union[str, pathlib.Path],
+    figure_folder: Union[str, pathlib.Path] = "figures",
     exclude_list: Optional[List[str]] = None,
     method: str = "matplotlib",
 ) -> None:
@@ -278,7 +281,8 @@ def pulls(
     Args:
         fit_results (fit.FitResults): fit results, including correlation matrix and
             parameter labels
-        figure_folder (Union[str, pathlib.Path]): path to the folder to save figures in
+        figure_folder (Union[str, pathlib.Path], optional): path to the folder to save
+            figures in, defaults to "figures"
         exclude_list (Optional[List[str]], optional): list of parameters to exclude from
             plot, defaults to None (nothing excluded)
         method (str, optional): backend to use for plotting, defaults to "matplotlib"
@@ -318,7 +322,7 @@ def pulls(
 
 def ranking(
     ranking_results: fit.RankingResults,
-    figure_folder: Union[str, pathlib.Path],
+    figure_folder: Union[str, pathlib.Path] = "figures",
     max_pars: Optional[int] = None,
     method: str = "matplotlib",
 ) -> None:
@@ -326,7 +330,8 @@ def ranking(
 
     Args:
         ranking_results (fit.RankingResults): fit results, and pre- and post-fit impacts
-        figure_folder (Union[str, pathlib.Path]): path to the folder to save figures in
+        figure_folder (Union[str, pathlib.Path], optional): path to the folder to save
+            figures in, defaults to "figures"
         max_pars (Optional[int], optional): number of parameters to include, defaults to
             None (which means all parameters are included)
         method (str, optional): backend to use for plotting, defaults to "matplotlib"
@@ -380,14 +385,15 @@ def ranking(
 
 def templates(
     config: Dict[str, Any],
-    figure_folder: Union[str, pathlib.Path],
+    figure_folder: Union[str, pathlib.Path] = "figures",
     method: str = "matplotlib",
 ) -> None:
     """Visualizes template histograms for systematic variations.
 
     Args:
         config (Dict[str, Any]): cabinetry configuration
-        figure_folder (Union[str, pathlib.Path]): path to the folder to save figures in
+        figure_folder (Union[str, pathlib.Path], optional): path to the folder to save
+            figures in, defaults to "figures"
         method (str, optional): backend to use for plotting, defaults to "matplotlib"
 
     Raises:
@@ -473,14 +479,15 @@ def templates(
 
 def scan(
     scan_results: fit.ScanResults,
-    figure_folder: Union[str, pathlib.Path],
+    figure_folder: Union[str, pathlib.Path] = "figures",
     method: str = "matplotlib",
 ) -> None:
     """Visualizes the results of a likelihood scan.
 
     Args:
         scan_results (fit.ScanResults): results of a likelihood scan
-        figure_folder (Union[str, pathlib.Path]): path to the folder to save figures in
+        figure_folder (Union[str, pathlib.Path], optional): path to the folder to save
+            figures in, defaults to "figures"
         method (str, optional): backend to use for plotting, defaults to "matplotlib"
 
     Raises:
@@ -509,14 +516,15 @@ def scan(
 
 def limit(
     limit_results: fit.LimitResults,
-    figure_folder: Union[str, pathlib.Path],
+    figure_folder: Union[str, pathlib.Path] = "figures",
     method: str = "matplotlib",
 ) -> None:
     """Visualizes observed and expected CLs values as a function of the POI.
 
     Args:
         limit_results (fit.LimitResults): results of upper limit determination
-        figure_folder (Union[str, pathlib.Path]): path to the folder to save figures in
+        figure_folder (Union[str, pathlib.Path], optional): path to the folder to save
+            figures in, defaults to "figures"
         method (str, optional): backend to use for plotting, defaults to "matplotlib"
 
     Raises:

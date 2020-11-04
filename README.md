@@ -58,14 +58,14 @@ cabinetry.template_builder.create_histograms(cabinetry_config)
 # perform histogram post-processing
 cabinetry.template_postprocessor.run(cabinetry_config)
 
-# visualize templates and data
-cabinetry.visualize.data_MC_from_histograms(cabinetry_config, "figures/")
-
 # build a workspace
 ws = cabinetry.workspace.build(cabinetry_config)
 
 # run a fit
-cabinetry.fit.fit(ws)
+fit_results = cabinetry.fit.fit(ws)
+
+# visualize the post-fit model prediction and data
+cabinetry.visualize.data_MC(cabinetry_config, ws, fit_results=fit_results)
 ```
 
 The above is an abbreviated version of an example included in `example.py`, which shows how to use `cabinetry`.
