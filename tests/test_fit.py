@@ -185,6 +185,69 @@ def test__fit_model_custom(mock_minos, example_spec, example_spec_multibin):
     assert mock_minos.call_args[1] == {}
 
 
+@mock.patch("cabinetry.fit._fit_model_custom")
+@mock.patch("cabinetry.fit._fit_model_pyhf")
+def test__fit_model(mock_pyhf, mock_custom, example_spec):
+    model, data = model_utils.model_and_data(example_spec)
+
+    # pyhf API
+    fit._fit_model(model, data)
+    assert mock_pyhf.call_count == 1
+    assert mock_pyhf.call_args[0][0].spec == model.spec
+    assert mock_pyhf.call_args[0][1] == data
+    assert mock_pyhf.call_args[1] == {
+        "init_pars": None,
+        "fix_pars": None,
+        "minos": None,
+    }
+
+    # pyhf API, init/fixed pars, minos
+    fit._fit_model(
+        model,
+        data,
+        init_pars=[1.5, 2.0],
+        fix_pars=[False, True],
+        minos=["Signal strength"],
+    )
+    assert mock_pyhf.call_count == 2
+    assert mock_pyhf.call_args[0][0].spec == model.spec
+    assert mock_pyhf.call_args[0][1] == data
+    assert mock_pyhf.call_args[1] == {
+        "init_pars": [1.5, 2.0],
+        "fix_pars": [False, True],
+        "minos": ["Signal strength"],
+    }
+
+    # direct iminuit
+    fit._fit_model(model, data, custom=True)
+    assert mock_custom.call_count == 1
+    assert mock_custom.call_args[0][0].spec == model.spec
+    assert mock_custom.call_args[0][1] == data
+    assert mock_custom.call_args[1] == {
+        "init_pars": None,
+        "fix_pars": None,
+        "minos": None,
+    }
+
+    # direct iminuit, init/fixed pars, minos
+    fit._fit_model(
+        model,
+        data,
+        init_pars=[1.5, 2.0],
+        fix_pars=[False, True],
+        minos=["Signal strength"],
+        custom=True,
+    )
+    assert mock_custom.call_count == 2
+    assert mock_custom.call_args[0][0].spec == model.spec
+    assert mock_custom.call_args[0][1] == data
+    assert mock_custom.call_args[1] == {
+        "init_pars": [1.5, 2.0],
+        "fix_pars": [False, True],
+        "minos": ["Signal strength"],
+    }
+
+
 @mock.patch("cabinetry.fit.print_results")
 @mock.patch(
     "cabinetry.fit._fit_model_custom",
