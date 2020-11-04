@@ -311,10 +311,8 @@ def fit(
     if minos is not None and not isinstance(minos, list):
         minos = [minos]
 
-    if not custom:
-        fit_results = _fit_model_pyhf(model, data, minos=minos)
-    else:
-        fit_results = _fit_model_custom(model, data, minos=minos)
+    # perform fit
+    fit_results = _fit_model(model, data, minos=minos, custom=custom)
 
     print_results(fit_results)
     log.debug(f"-2 log(L) = {fit_results.best_twice_nll:.6f} at the best-fit point")
