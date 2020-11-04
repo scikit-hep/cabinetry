@@ -131,7 +131,7 @@ def test_data_MC(
     model_spec = pyhf.Workspace(example_spec).model().spec
 
     # pre-fit plot
-    visualize.data_MC(config, figure_folder, example_spec)
+    visualize.data_MC(config, example_spec, figure_folder)
 
     # Asimov parameter calculation and pre-fit uncertainties
     assert mock_stdev.call_count == 1
@@ -184,7 +184,7 @@ def test_data_MC(
         0.0,
     )
     visualize.data_MC(
-        config, figure_folder, example_spec, fit_results=fit_results, log_scale=False
+        config, example_spec, figure_folder, fit_results=fit_results, log_scale=False
     )
 
     assert mock_asimov.call_count == 1  # no new call
@@ -211,7 +211,7 @@ def test_data_MC(
 
     # unknown plotting method
     with pytest.raises(NotImplementedError, match="unknown backend: unknown"):
-        visualize.data_MC(config, figure_folder, example_spec, method="unknown")
+        visualize.data_MC(config, example_spec, figure_folder, method="unknown")
 
 
 @mock.patch("cabinetry.contrib.matplotlib_visualize.correlation_matrix")
