@@ -123,8 +123,8 @@ def data_MC(
     Args:
         config (Dict[str, Any]): cabinetry configuration
         spec (Dict[str, Any]): ``pyhf`` workspace specification
-        figure_folder (Union[str, pathlib.Path]): path to the folder to save figures in,
-            defaults to "figures"
+        figure_folder (Union[str, pathlib.Path], optional): path to the folder to save
+            figures in, defaults to "figures"
         fit_results (Optional[fit.FitResults]): parameter configuration to use for plot,
             includes best-fit settings and uncertainties, as well as correlation matrix,
             defaults to None (then the pre-fit configuration is drawn)
@@ -231,8 +231,8 @@ def correlation_matrix(
     Args:
         fit_results (fit.FitResults): fit results, including correlation matrix and
             parameter labels
-        figure_folder (Union[str, pathlib.Path]): path to the folder to save figures in,
-            defaults to "figures"
+        figure_folder (Union[str, pathlib.Path], optional): path to the folder to save
+            figures in, defaults to "figures"
         pruning_threshold (float, optional): minimum correlation for a parameter to
             have with any other parameters to not get pruned, defaults to 0.0
         method (str, optional): backend to use for plotting, defaults to "matplotlib"
@@ -281,8 +281,8 @@ def pulls(
     Args:
         fit_results (fit.FitResults): fit results, including correlation matrix and
             parameter labels
-        figure_folder (Union[str, pathlib.Path]): path to the folder to save figures in,
-            defaults to "figures"
+        figure_folder (Union[str, pathlib.Path], optional): path to the folder to save
+            figures in, defaults to "figures"
         exclude_list (Optional[List[str]], optional): list of parameters to exclude from
             plot, defaults to None (nothing excluded)
         method (str, optional): backend to use for plotting, defaults to "matplotlib"
@@ -330,8 +330,8 @@ def ranking(
 
     Args:
         ranking_results (fit.RankingResults): fit results, and pre- and post-fit impacts
-        figure_folder (Union[str, pathlib.Path]): path to the folder to save figures in,
-            defaults to "figures"
+        figure_folder (Union[str, pathlib.Path], optional): path to the folder to save
+            figures in, defaults to "figures"
         max_pars (Optional[int], optional): number of parameters to include, defaults to
             None (which means all parameters are included)
         method (str, optional): backend to use for plotting, defaults to "matplotlib"
@@ -392,8 +392,8 @@ def templates(
 
     Args:
         config (Dict[str, Any]): cabinetry configuration
-        figure_folder (Union[str, pathlib.Path]): path to the folder to save figures in,
-            defaults to "figures"
+        figure_folder (Union[str, pathlib.Path], optional): path to the folder to save
+            figures in, defaults to "figures"
         method (str, optional): backend to use for plotting, defaults to "matplotlib"
 
     Raises:
@@ -486,8 +486,8 @@ def scan(
 
     Args:
         scan_results (fit.ScanResults): results of a likelihood scan
-        figure_folder (Union[str, pathlib.Path]): path to the folder to save figures in,
-            defaults to "figures"
+        figure_folder (Union[str, pathlib.Path], optional): path to the folder to save
+            figures in, defaults to "figures"
         method (str, optional): backend to use for plotting, defaults to "matplotlib"
 
     Raises:
@@ -523,8 +523,8 @@ def limit(
 
     Args:
         limit_results (fit.LimitResults): results of upper limit determination
-        figure_folder (Union[str, pathlib.Path]): path to the folder to save figures in,
-            defaults to "figures"
+        figure_folder (Union[str, pathlib.Path], optional): path to the folder to save
+            figures in, defaults to "figures"
         method (str, optional): backend to use for plotting, defaults to "matplotlib"
 
     Raises:
