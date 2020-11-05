@@ -201,7 +201,11 @@ def test_integration(tmp_path, ntuple_creator, caplog):
 
     # parameter scan
     scan_results = cabinetry.fit.scan(
-        ws, "Signal_norm", par_range=(1.18967971, 2.18967971), n_steps=3
+        ws,
+        "Signal_norm",
+        par_range=(1.18967971, 2.18967971),
+        n_steps=3,
+        custom_fit=True,
     )
     # lower edge of scan is beyond normalization factor bounds specified in workspace
     assert np.allclose(

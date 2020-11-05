@@ -379,7 +379,7 @@ def test_ranking(mock_fit, example_spec):
 
 
 @mock.patch(
-    "cabinetry.fit._fit_model_custom",
+    "cabinetry.fit._fit_model",
     side_effect=[
         fit.FitResults(
             np.asarray([0.9, 1.3]), np.asarray([0.1, 0.1]), [], np.empty(0), 8.0
@@ -411,16 +411,20 @@ def test_scan(mock_fit, example_spec):
 
     assert mock_fit.call_count == 12
     # unconstrained fit
-    assert mock_fit.call_args_list[0][1] == {}
+    assert mock_fit.call_args_list[0][1] == {"custom_fit": False}
     # fits in scan
     for i, scan_val in enumerate(expected_scan_values):
         assert mock_fit.call_args_list[i + 1][1]["init_pars"] == [1.1, scan_val]
         assert mock_fit.call_args_list[i + 1][1]["fix_pars"] == [True, True]
+        assert mock_fit.call_args_list[i + 1][1]["custom_fit"] is False
 
-    # parameter range specified
-    scan_results = fit.scan(example_spec, par_name, par_range=(1.0, 1.5), n_steps=5)
+    # parameter range specified, custom fit
+    scan_results = fit.scan(
+        example_spec, par_name, par_range=(1.0, 1.5), n_steps=5, custom_fit=True
+    )
     expected_custom_scan = np.linspace(1.0, 1.5, 5)
     assert np.allclose(scan_results.parameter_values, expected_custom_scan)
+    assert mock_fit.call_args[1]["custom_fit"] is True
 
     # unknown parameter
     with pytest.raises(ValueError, match="could not find parameter abc in model"):

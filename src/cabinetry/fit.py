@@ -422,6 +422,7 @@ def scan(
     par_range: Optional[Tuple[float, float]] = None,
     n_steps: int = 11,
     asimov: bool = False,
+    custom_fit: bool = False,
 ) -> ScanResults:
     """Performs a likelihood scan over the specified parameter.
 
@@ -437,6 +438,8 @@ def scan(
             parameter in scan, defaults to None (automatically determine bounds)
         n_steps (int, optional): number of steps in scan, defaults to 10
         asimov (bool, optional): whether to fit the Asimov dataset, defaults to False
+        custom_fit (bool, optional): whether to use the ``pyhf.infer`` API or
+            ``iminuit``, defaults to False (using ``pyhf.infer``)
 
     Raises:
         ValueError: if parameter is not found in model
@@ -456,7 +459,7 @@ def scan(
         raise ValueError(f"could not find parameter {par_name} in model")
 
     # run a fit with the parameter not held constant, to find the best-fit point
-    fit_results = _fit_model_custom(model, data)
+    fit_results = _fit_model(model, data, custom_fit=custom_fit)
     nominal_twice_nll = fit_results.best_twice_nll
     par_mle = fit_results.bestfit[par_index]
     par_unc = fit_results.uncertainty[par_index]
@@ -478,8 +481,12 @@ def scan(
         log.debug(f"performing fit with {par_name} = {par_value:.3f}")
         init_pars_scan = init_pars.copy()
         init_pars_scan[par_index] = par_value
-        scan_fit_results = _fit_model_custom(
-            model, data, init_pars=init_pars_scan, fix_pars=fix_pars
+        scan_fit_results = _fit_model(
+            model,
+            data,
+            init_pars=init_pars_scan,
+            fix_pars=fix_pars,
+            custom_fit=custom_fit,
         )
         # subtract best-fit
         delta_nlls[i_par] = scan_fit_results.best_twice_nll - nominal_twice_nll
