@@ -352,7 +352,7 @@ def test_ranking(mock_fit, example_spec):
             mock_fit.call_args_list[i][1]["init_pars"], expected_inits[i]
         )
         assert np.allclose(mock_fit.call_args_list[i][1]["fix_pars"], expected_fix)
-    assert mock_fit.call_args[1]["custom_fit"] is False
+        assert mock_fit.call_args_list[i][1]["custom_fit"] is False
 
     # POI removed from fit results
     assert np.allclose(ranking_results.bestfit, [0.9])
