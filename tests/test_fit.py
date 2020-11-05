@@ -231,7 +231,7 @@ def test__fit_model(mock_pyhf, mock_custom, example_spec):
     assert np.allclose(fit_results.bestfit, [1.1])
 
     # direct iminuit
-    fit_results = fit._fit_model(model, data, custom=True)
+    fit_results = fit._fit_model(model, data, custom_fit=True)
     assert mock_custom.call_count == 1
     assert mock_custom.call_args[0][0].spec == model.spec
     assert mock_custom.call_args[0][1] == data
@@ -249,7 +249,7 @@ def test__fit_model(mock_pyhf, mock_custom, example_spec):
         init_pars=[1.5, 2.0],
         fix_pars=[False, True],
         minos=["Signal strength"],
-        custom=True,
+        custom_fit=True,
     )
     assert mock_custom.call_count == 2
     assert mock_custom.call_args[0][0].spec == model.spec
@@ -275,7 +275,7 @@ def test_fit(mock_load, mock_fit, mock_print, example_spec):
     fit_results = fit.fit(example_spec)
     assert mock_load.call_args_list == [[(example_spec,), {"asimov": False}]]
     assert mock_fit.call_args_list == [
-        [("model", "data"), {"minos": None, "custom": False}]
+        [("model", "data"), {"minos": None, "custom_fit": False}]
     ]
     mock_print.assert_called_once()
     assert mock_print.call_args[0][0].bestfit == [1.0]
@@ -290,9 +290,12 @@ def test_fit(mock_load, mock_fit, mock_print, example_spec):
     assert fit_results.bestfit == [1.0]
 
     # custom fit
-    fit_results = fit.fit(example_spec, custom=True)
+    fit_results = fit.fit(example_spec, custom_fit=True)
     assert mock_fit.call_count == 3
-    assert mock_fit.call_args == [("model", "data"), {"minos": None, "custom": True}]
+    assert mock_fit.call_args == [
+        ("model", "data"),
+        {"minos": None, "custom_fit": True},
+    ]
     assert mock_print.call_args[0][0].bestfit == [1.0]
     assert mock_print.call_args[0][0].uncertainty == [0.1]
     assert fit_results.bestfit == [1.0]
@@ -300,11 +303,11 @@ def test_fit(mock_load, mock_fit, mock_print, example_spec):
     # parameters for MINOS
     fit_results = fit.fit(example_spec, minos=["abc"])
     assert mock_fit.call_count == 4
-    assert mock_fit.call_args[1] == {"minos": ["abc"], "custom": False}
+    assert mock_fit.call_args[1] == {"minos": ["abc"], "custom_fit": False}
     assert fit_results.bestfit == [1.0]
-    fit_results = fit.fit(example_spec, custom=True, minos="abc")
+    fit_results = fit.fit(example_spec, custom_fit=True, minos="abc")
     assert mock_fit.call_count == 5
-    assert mock_fit.call_args[1] == {"minos": ["abc"], "custom": True}
+    assert mock_fit.call_args[1] == {"minos": ["abc"], "custom_fit": True}
     assert fit_results.bestfit == [1.0]
 
 

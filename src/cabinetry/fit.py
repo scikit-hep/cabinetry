@@ -244,7 +244,7 @@ def _fit_model(
     init_pars: Optional[List[float]] = None,
     fix_pars: Optional[List[bool]] = None,
     minos: Optional[List[str]] = None,
-    custom: bool = False,
+    custom_fit: bool = False,
 ) -> FitResults:
     """Interface for maximum likelihood fits through ``pyhf.infer`` API or ``iminuit``.
 
@@ -261,13 +261,13 @@ def _fit_model(
             parameters are held constant, defaults to None (use ``pyhf`` suggestion)
         minos (Optional[List[str]], optional): runs the MINOS algorithm for all
             parameters specified in the list, defaults to None (does not run MINOS)
-        custom (bool, optional): whether to use the ``pyhf.infer`` API or ``iminuit``,
-            defaults to False (using ``pyhf.infer``)
+        custom_fit (bool, optional): whether to use the ``pyhf.infer`` API or
+            ``iminuit``, defaults to False (using ``pyhf.infer``)
 
     Returns:
         FitResults: object storing relevant fit results
     """
-    if not custom:
+    if not custom_fit:
         # use pyhf infer API
         fit_results = _fit_model_pyhf(
             model, data, init_pars=init_pars, fix_pars=fix_pars, minos=minos
@@ -283,20 +283,20 @@ def _fit_model(
 def fit(
     spec: Dict[str, Any],
     asimov: bool = False,
-    custom: bool = False,
+    custom_fit: bool = False,
     minos: Optional[Union[str, List[str]]] = None,
 ) -> FitResults:
     """Performs a  maximum likelihood fit, reports and returns the results.
 
     The ``asimov`` flag allows to fit the Asimov dataset instead of observed data.
-    Depending on the ``custom`` keyword argument, this uses either the ``pyhf.infer``
-    API or ``iminuit`` directly for more control over the minimization.
+    Depending on the ``custom_fit`` keyword argument, this uses either the
+    ``pyhf.infer`` API or ``iminuit`` directly for more control over the minimization.
 
     Args:
         spec (Dict[str, Any]): a ``pyhf`` workspace specification
         asimov (bool, optional): whether to fit the Asimov dataset, defaults to False
-        custom (bool, optional): whether to use the ``pyhf.infer`` API or ``iminuit``,
-            defaults to False (using ``pyhf.infer``)
+        custom_fit (bool, optional): whether to use the ``pyhf.infer`` API or
+            ``iminuit``, defaults to False (using ``pyhf.infer``)
         minos (Optional[Union[str, List[str]]], optional): runs the MINOS algorithm for
             all parameters specified in the list, defaults to None (does not run MINOS)
 
@@ -312,7 +312,7 @@ def fit(
         minos = [minos]
 
     # perform fit
-    fit_results = _fit_model(model, data, minos=minos, custom=custom)
+    fit_results = _fit_model(model, data, minos=minos, custom_fit=custom_fit)
 
     print_results(fit_results)
     log.debug(f"-2 log(L) = {fit_results.best_twice_nll:.6f} at the best-fit point")
