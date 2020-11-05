@@ -312,7 +312,7 @@ def test_fit(mock_load, mock_fit, mock_print, example_spec):
 
 
 @mock.patch(
-    "cabinetry.fit._fit_model_custom",
+    "cabinetry.fit._fit_model",
     side_effect=[
         fit.FitResults(
             np.asarray([0.9, 1.3]), np.asarray([0.1, 0.1]), ["a", "b"], np.empty(0), 0.0
@@ -352,6 +352,7 @@ def test_ranking(mock_fit, example_spec):
             mock_fit.call_args_list[i][1]["init_pars"], expected_inits[i]
         )
         assert np.allclose(mock_fit.call_args_list[i][1]["fix_pars"], expected_fix)
+    assert mock_fit.call_args[1]["custom_fit"] is False
 
     # POI removed from fit results
     assert np.allclose(ranking_results.bestfit, [0.9])
@@ -364,12 +365,13 @@ def test_ranking(mock_fit, example_spec):
     assert np.allclose(ranking_results.postfit_up, [0.2])
     assert np.allclose(ranking_results.postfit_down, [-0.2])
 
-    # fixed parameter in ranking
+    # fixed parameter in ranking, custom fit
     example_spec["measurements"][0]["config"]["parameters"][0]["fixed"] = True
-    ranking_results = fit.ranking(example_spec, fit_results)
+    ranking_results = fit.ranking(example_spec, fit_results, custom_fit=True)
     # expect two calls in this ranking (and had 4 before, so 6 total): pre-fit
     # uncertainty is 0 since parameter is fixed, mock post-fit uncertainty is not 0
     assert mock_fit.call_count == 6
+    assert mock_fit.call_args[1]["custom_fit"] is True
     assert np.allclose(ranking_results.prefit_up, [0.0])
     assert np.allclose(ranking_results.prefit_down, [0.0])
     assert np.allclose(ranking_results.postfit_up, [0.2])

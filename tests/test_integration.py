@@ -149,7 +149,7 @@ def test_integration(tmp_path, ntuple_creator, caplog):
     ]
 
     # nuisance parameter ranking
-    ranking_results = cabinetry.fit.ranking(ws, fit_results)
+    ranking_results = cabinetry.fit.ranking(ws, fit_results, custom_fit=True)
     assert np.allclose(
         ranking_results.prefit_up,
         [

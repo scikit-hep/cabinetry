@@ -321,7 +321,10 @@ def fit(
 
 
 def ranking(
-    spec: Dict[str, Any], fit_results: FitResults, asimov: bool = False
+    spec: Dict[str, Any],
+    fit_results: FitResults,
+    asimov: bool = False,
+    custom_fit: bool = False,
 ) -> RankingResults:
     """Calculates the impact of nuisance parameters on the parameter of interest (POI).
 
@@ -337,6 +340,8 @@ def ranking(
         fit_results (FitResults): fit results to use for ranking
         asimov (bool, optional): whether to fit the Asimov dataset, defaults
             to False
+        custom_fit (bool, optional): whether to use the ``pyhf.infer`` API or
+            ``iminuit``, defaults to False (using ``pyhf.infer``)
 
     Returns:
         RankingResults: fit results for parameters, and pre- and post-fit impacts
@@ -377,8 +382,12 @@ def ranking(
             else:
                 init_pars = init_pars_default.copy()
                 init_pars[i_par] = np_val  # set value of current nuisance parameter
-                fit_results_ranking = _fit_model_custom(
-                    model, data, init_pars=init_pars, fix_pars=fix_pars
+                fit_results_ranking = _fit_model(
+                    model,
+                    data,
+                    init_pars=init_pars,
+                    fix_pars=fix_pars,
+                    custom_fit=custom_fit,
                 )
                 poi_val = fit_results_ranking.bestfit[model.config.poi_index]
                 parameter_impact = poi_val - nominal_poi
