@@ -305,7 +305,7 @@ def test_fit(mock_load, mock_fit, mock_print, example_spec):
     assert mock_fit.call_count == 4
     assert mock_fit.call_args[1] == {"minos": ["abc"], "custom_fit": False}
     assert fit_results.bestfit == [1.0]
-    fit_results = fit.fit(example_spec, custom_fit=True, minos="abc")
+    fit_results = fit.fit(example_spec, minos="abc", custom_fit=True)
     assert mock_fit.call_count == 5
     assert mock_fit.call_args[1] == {"minos": ["abc"], "custom_fit": True}
     assert fit_results.bestfit == [1.0]

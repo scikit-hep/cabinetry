@@ -283,8 +283,8 @@ def _fit_model(
 def fit(
     spec: Dict[str, Any],
     asimov: bool = False,
-    custom_fit: bool = False,
     minos: Optional[Union[str, List[str]]] = None,
+    custom_fit: bool = False,
 ) -> FitResults:
     """Performs a  maximum likelihood fit, reports and returns the results.
 
@@ -295,10 +295,10 @@ def fit(
     Args:
         spec (Dict[str, Any]): a ``pyhf`` workspace specification
         asimov (bool, optional): whether to fit the Asimov dataset, defaults to False
-        custom_fit (bool, optional): whether to use the ``pyhf.infer`` API or
-            ``iminuit``, defaults to False (using ``pyhf.infer``)
         minos (Optional[Union[str, List[str]]], optional): runs the MINOS algorithm for
             all parameters specified in the list, defaults to None (does not run MINOS)
+        custom_fit (bool, optional): whether to use the ``pyhf.infer`` API or
+            ``iminuit``, defaults to False (using ``pyhf.infer``)
 
     Returns:
         FitResults: object storing relevant fit results
