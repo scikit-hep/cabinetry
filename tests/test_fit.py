@@ -185,45 +185,127 @@ def test__fit_model_custom(mock_minos, example_spec, example_spec_multibin):
     assert mock_minos.call_args[1] == {}
 
 
-@mock.patch("cabinetry.fit.print_results")
 @mock.patch(
     "cabinetry.fit._fit_model_custom",
     return_value=fit.FitResults(
-        np.asarray([3.0]), np.asarray([0.3]), ["par"], np.empty(0), 5.0
+        np.asarray([1.2]), np.asarray([0.2]), ["par"], np.empty(0), 2.0
     ),
 )
 @mock.patch(
     "cabinetry.fit._fit_model_pyhf",
     return_value=fit.FitResults(
+        np.asarray([1.1]), np.asarray([0.2]), ["par"], np.empty(0), 2.0
+    ),
+)
+def test__fit_model(mock_pyhf, mock_custom, example_spec):
+    model, data = model_utils.model_and_data(example_spec)
+
+    # pyhf API
+    fit_results = fit._fit_model(model, data)
+    assert mock_pyhf.call_count == 1
+    assert mock_pyhf.call_args[0][0].spec == model.spec
+    assert mock_pyhf.call_args[0][1] == data
+    assert mock_pyhf.call_args[1] == {
+        "init_pars": None,
+        "fix_pars": None,
+        "minos": None,
+    }
+    assert np.allclose(fit_results.bestfit, [1.1])
+
+    # pyhf API, init/fixed pars, minos
+    fit_results = fit._fit_model(
+        model,
+        data,
+        init_pars=[1.5, 2.0],
+        fix_pars=[False, True],
+        minos=["Signal strength"],
+    )
+    assert mock_pyhf.call_count == 2
+    assert mock_pyhf.call_args[0][0].spec == model.spec
+    assert mock_pyhf.call_args[0][1] == data
+    assert mock_pyhf.call_args[1] == {
+        "init_pars": [1.5, 2.0],
+        "fix_pars": [False, True],
+        "minos": ["Signal strength"],
+    }
+    assert np.allclose(fit_results.bestfit, [1.1])
+
+    # direct iminuit
+    fit_results = fit._fit_model(model, data, custom=True)
+    assert mock_custom.call_count == 1
+    assert mock_custom.call_args[0][0].spec == model.spec
+    assert mock_custom.call_args[0][1] == data
+    assert mock_custom.call_args[1] == {
+        "init_pars": None,
+        "fix_pars": None,
+        "minos": None,
+    }
+    assert np.allclose(fit_results.bestfit, [1.2])
+
+    # direct iminuit, init/fixed pars, minos
+    fit_results = fit._fit_model(
+        model,
+        data,
+        init_pars=[1.5, 2.0],
+        fix_pars=[False, True],
+        minos=["Signal strength"],
+        custom=True,
+    )
+    assert mock_custom.call_count == 2
+    assert mock_custom.call_args[0][0].spec == model.spec
+    assert mock_custom.call_args[0][1] == data
+    assert mock_custom.call_args[1] == {
+        "init_pars": [1.5, 2.0],
+        "fix_pars": [False, True],
+        "minos": ["Signal strength"],
+    }
+    assert np.allclose(fit_results.bestfit, [1.2])
+
+
+@mock.patch("cabinetry.fit.print_results")
+@mock.patch(
+    "cabinetry.fit._fit_model",
+    return_value=fit.FitResults(
         np.asarray([1.0]), np.asarray([0.1]), ["par"], np.empty(0), 2.0
     ),
 )
 @mock.patch("cabinetry.model_utils.model_and_data", return_value=("model", "data"))
-def test_fit(mock_load, mock_pyhf, mock_custom, mock_print, example_spec):
-    fit.fit(example_spec)
+def test_fit(mock_load, mock_fit, mock_print, example_spec):
+    # fit through pyhf.infer API
+    fit_results = fit.fit(example_spec)
     assert mock_load.call_args_list == [[(example_spec,), {"asimov": False}]]
-    assert mock_pyhf.call_args_list == [[("model", "data"), {"minos": None}]]
+    assert mock_fit.call_args_list == [
+        [("model", "data"), {"minos": None, "custom": False}]
+    ]
     mock_print.assert_called_once()
     assert mock_print.call_args[0][0].bestfit == [1.0]
     assert mock_print.call_args[0][0].uncertainty == [0.1]
     assert mock_print.call_args[0][0].labels == ["par"]
+    assert fit_results.bestfit == [1.0]
 
     # Asimov fit
-    fit.fit(example_spec, asimov=True)
+    fit_results = fit.fit(example_spec, asimov=True)
+    assert mock_fit.call_count == 2
     assert mock_load.call_args == [(example_spec,), {"asimov": True}]
+    assert fit_results.bestfit == [1.0]
 
     # custom fit
-    fit.fit(example_spec, custom=True)
-    mock_custom.assert_called_once()
-    assert mock_custom.call_args == [("model", "data"), {"minos": None}]
-    assert mock_print.call_args[0][0].bestfit == [3.0]
-    assert mock_print.call_args[0][0].uncertainty == [0.3]
+    fit_results = fit.fit(example_spec, custom=True)
+    assert mock_fit.call_count == 3
+    assert mock_fit.call_args == [("model", "data"), {"minos": None, "custom": True}]
+    assert mock_print.call_args[0][0].bestfit == [1.0]
+    assert mock_print.call_args[0][0].uncertainty == [0.1]
+    assert fit_results.bestfit == [1.0]
 
     # parameters for MINOS
-    fit.fit(example_spec, minos=["abc"])
-    assert mock_pyhf.call_args[1] == {"minos": ["abc"]}
-    fit.fit(example_spec, custom=True, minos="abc")
-    assert mock_custom.call_args[1] == {"minos": ["abc"]}
+    fit_results = fit.fit(example_spec, minos=["abc"])
+    assert mock_fit.call_count == 4
+    assert mock_fit.call_args[1] == {"minos": ["abc"], "custom": False}
+    assert fit_results.bestfit == [1.0]
+    fit_results = fit.fit(example_spec, custom=True, minos="abc")
+    assert mock_fit.call_count == 5
+    assert mock_fit.call_args[1] == {"minos": ["abc"], "custom": True}
+    assert fit_results.bestfit == [1.0]
 
 
 @mock.patch(
