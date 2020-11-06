@@ -231,7 +231,7 @@ def test__fit_model(mock_pyhf, mock_custom, example_spec):
     assert np.allclose(fit_results.bestfit, [1.1])
 
     # direct iminuit
-    fit_results = fit._fit_model(model, data, custom=True)
+    fit_results = fit._fit_model(model, data, custom_fit=True)
     assert mock_custom.call_count == 1
     assert mock_custom.call_args[0][0].spec == model.spec
     assert mock_custom.call_args[0][1] == data
@@ -249,7 +249,7 @@ def test__fit_model(mock_pyhf, mock_custom, example_spec):
         init_pars=[1.5, 2.0],
         fix_pars=[False, True],
         minos=["Signal strength"],
-        custom=True,
+        custom_fit=True,
     )
     assert mock_custom.call_count == 2
     assert mock_custom.call_args[0][0].spec == model.spec
@@ -275,7 +275,7 @@ def test_fit(mock_load, mock_fit, mock_print, example_spec):
     fit_results = fit.fit(example_spec)
     assert mock_load.call_args_list == [[(example_spec,), {"asimov": False}]]
     assert mock_fit.call_args_list == [
-        [("model", "data"), {"minos": None, "custom": False}]
+        [("model", "data"), {"minos": None, "custom_fit": False}]
     ]
     mock_print.assert_called_once()
     assert mock_print.call_args[0][0].bestfit == [1.0]
@@ -290,9 +290,12 @@ def test_fit(mock_load, mock_fit, mock_print, example_spec):
     assert fit_results.bestfit == [1.0]
 
     # custom fit
-    fit_results = fit.fit(example_spec, custom=True)
+    fit_results = fit.fit(example_spec, custom_fit=True)
     assert mock_fit.call_count == 3
-    assert mock_fit.call_args == [("model", "data"), {"minos": None, "custom": True}]
+    assert mock_fit.call_args == [
+        ("model", "data"),
+        {"minos": None, "custom_fit": True},
+    ]
     assert mock_print.call_args[0][0].bestfit == [1.0]
     assert mock_print.call_args[0][0].uncertainty == [0.1]
     assert fit_results.bestfit == [1.0]
@@ -300,16 +303,16 @@ def test_fit(mock_load, mock_fit, mock_print, example_spec):
     # parameters for MINOS
     fit_results = fit.fit(example_spec, minos=["abc"])
     assert mock_fit.call_count == 4
-    assert mock_fit.call_args[1] == {"minos": ["abc"], "custom": False}
+    assert mock_fit.call_args[1] == {"minos": ["abc"], "custom_fit": False}
     assert fit_results.bestfit == [1.0]
-    fit_results = fit.fit(example_spec, custom=True, minos="abc")
+    fit_results = fit.fit(example_spec, minos="abc", custom_fit=True)
     assert mock_fit.call_count == 5
-    assert mock_fit.call_args[1] == {"minos": ["abc"], "custom": True}
+    assert mock_fit.call_args[1] == {"minos": ["abc"], "custom_fit": True}
     assert fit_results.bestfit == [1.0]
 
 
 @mock.patch(
-    "cabinetry.fit._fit_model_custom",
+    "cabinetry.fit._fit_model",
     side_effect=[
         fit.FitResults(
             np.asarray([0.9, 1.3]), np.asarray([0.1, 0.1]), ["a", "b"], np.empty(0), 0.0
@@ -349,6 +352,7 @@ def test_ranking(mock_fit, example_spec):
             mock_fit.call_args_list[i][1]["init_pars"], expected_inits[i]
         )
         assert np.allclose(mock_fit.call_args_list[i][1]["fix_pars"], expected_fix)
+        assert mock_fit.call_args_list[i][1]["custom_fit"] is False
 
     # POI removed from fit results
     assert np.allclose(ranking_results.bestfit, [0.9])
@@ -361,12 +365,13 @@ def test_ranking(mock_fit, example_spec):
     assert np.allclose(ranking_results.postfit_up, [0.2])
     assert np.allclose(ranking_results.postfit_down, [-0.2])
 
-    # fixed parameter in ranking
+    # fixed parameter in ranking, custom fit
     example_spec["measurements"][0]["config"]["parameters"][0]["fixed"] = True
-    ranking_results = fit.ranking(example_spec, fit_results)
+    ranking_results = fit.ranking(example_spec, fit_results, custom_fit=True)
     # expect two calls in this ranking (and had 4 before, so 6 total): pre-fit
     # uncertainty is 0 since parameter is fixed, mock post-fit uncertainty is not 0
     assert mock_fit.call_count == 6
+    assert mock_fit.call_args[1]["custom_fit"] is True
     assert np.allclose(ranking_results.prefit_up, [0.0])
     assert np.allclose(ranking_results.prefit_down, [0.0])
     assert np.allclose(ranking_results.postfit_up, [0.2])
@@ -374,7 +379,7 @@ def test_ranking(mock_fit, example_spec):
 
 
 @mock.patch(
-    "cabinetry.fit._fit_model_custom",
+    "cabinetry.fit._fit_model",
     side_effect=[
         fit.FitResults(
             np.asarray([0.9, 1.3]), np.asarray([0.1, 0.1]), [], np.empty(0), 8.0
@@ -406,16 +411,20 @@ def test_scan(mock_fit, example_spec):
 
     assert mock_fit.call_count == 12
     # unconstrained fit
-    assert mock_fit.call_args_list[0][1] == {}
+    assert mock_fit.call_args_list[0][1] == {"custom_fit": False}
     # fits in scan
     for i, scan_val in enumerate(expected_scan_values):
         assert mock_fit.call_args_list[i + 1][1]["init_pars"] == [1.1, scan_val]
         assert mock_fit.call_args_list[i + 1][1]["fix_pars"] == [True, True]
+        assert mock_fit.call_args_list[i + 1][1]["custom_fit"] is False
 
-    # parameter range specified
-    scan_results = fit.scan(example_spec, par_name, par_range=(1.0, 1.5), n_steps=5)
+    # parameter range specified, custom fit
+    scan_results = fit.scan(
+        example_spec, par_name, par_range=(1.0, 1.5), n_steps=5, custom_fit=True
+    )
     expected_custom_scan = np.linspace(1.0, 1.5, 5)
     assert np.allclose(scan_results.parameter_values, expected_custom_scan)
+    assert mock_fit.call_args[1]["custom_fit"] is True
 
     # unknown parameter
     with pytest.raises(ValueError, match="could not find parameter abc in model"):

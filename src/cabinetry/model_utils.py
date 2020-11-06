@@ -53,7 +53,7 @@ def get_parameter_names(model: pyhf.pdf.Model) -> List[str]:
     for parname in model.config.par_order:
         for i_par in range(model.config.param_set(parname).n_parameters):
             labels.append(
-                "{}[bin_{}]".format(parname, i_par)
+                f"{parname}[bin_{i_par}]"
                 if model.config.param_set(parname).n_parameters > 1
                 else parname
             )
