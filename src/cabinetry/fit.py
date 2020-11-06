@@ -5,6 +5,7 @@ import iminuit
 import numpy as np
 import pyhf
 import scipy.optimize
+import scipy.stats
 
 from . import model_utils
 
@@ -318,33 +319,36 @@ def fit(
     fit_results = _fit_model(model, data, minos=minos, custom_fit=custom_fit)
 
     print_results(fit_results)
-    log.debug(f"-2 log(L) = {fit_results.best_twice_nll:.6f} at the best-fit point")
+    log.debug(f"-2 log(L) = {fit_results.best_twice_nll:.6f} at best-fit point")
 
     if goodness_of_fit:
-        log.info("fitting with saturated model")
-        model, data = model_utils.model_and_data(spec, asimov=asimov, saturated=True)
+        log.info("calculating goodness-of-fit with saturated model")
+        model_sat, data = model_utils.model_and_data(
+            spec, asimov=asimov, saturated=True
+        )
 
-        fix_pars = model.config.suggested_fixed()
         # only allow saturated model shapefactors to vary, fix other parameters
-        labels = model_utils.get_parameter_names(model)
-        for i, par_label in enumerate(labels):
-            if "shapefactor_saturated_" not in par_label:
-                fix_pars[i] = True
+        labels = model_utils.get_parameter_names(model_sat)
+        fix_pars = [
+            False if "shapefactor_saturated_" in label else True for label in labels
+        ]
 
-        fit_results_saturated = _fit_model(
-            model, data, fix_pars=fix_pars, custom_fit=custom_fit
+        fit_results_sat = _fit_model(
+            model_sat, data, fix_pars=fix_pars, custom_fit=custom_fit
         )
+        log.debug(f"-2 log(L) = {fit_results_sat.best_twice_nll:.6f} at best-fit point")
 
-        print_results(fit_results_saturated)
-        log.debug(
-            f"-2 log(L) = {fit_results_saturated.best_twice_nll:.6f} at the best-fit"
-            f"point"
-        )
+        delta_nll = (fit_results.best_twice_nll - fit_results_sat.best_twice_nll) / 2
+        log.debug(f"Delta NLL = {delta_nll:.6f}")
 
-        delta_NLL = (
-            fit_results.best_twice_nll - fit_results_saturated.best_twice_nll
-        ) / 2
-        log.info(f"Delta NLL = {delta_NLL:.6f}")
+        # calculate difference in degrees of freedom between fits, given by the number
+        # of bins minus the number of unconstrained parameters
+        n_dof = sum(
+            model.config.channel_nbins.values()
+        ) - model_utils.count_unconstrained_parameters(model)
+        log.debug(f"number of degrees of freedom: {n_dof}")
+        p_val = scipy.stats.chi2.sf(2 * delta_nll, n_dof)
+        log.info(f"p-value for goodness-of-fit test: {p_val*100:.2f}%")
 
     return fit_results
 
