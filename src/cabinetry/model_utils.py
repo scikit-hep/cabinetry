@@ -32,7 +32,7 @@ def model_and_data(
     workspace = pyhf.Workspace(spec)
 
     if saturated:
-        # build a saturated model, with shapefactors in all bins
+        # build a saturated model with shapefactors in all bins
         for region in workspace["channels"]:
             for sample in region["samples"]:
                 sample["modifiers"].append(
@@ -281,7 +281,7 @@ def calculate_stdev(
     return total_stdev
 
 
-def count_unconstrained_parameters(model: pyhf.pdf.Model) -> int:
+def unconstrained_parameter_count(model: pyhf.pdf.Model) -> int:
     """Returns the number of unconstrained parameters in a model.
 
     The number is the sum of all independent parameters in a fit. A shapefactor that

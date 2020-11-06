@@ -139,3 +139,11 @@ def test_calculate_stdev(example_spec, example_spec_multibin):
     expected_stdev = [[8.056054, 1.670629], [2.775377]]
     for i_reg in range(2):
         assert np.allclose(ak.to_list(total_stdev[i_reg]), expected_stdev[i_reg])
+
+
+def test_unconstrained_parameter_count(example_spec, example_spec_shapefactor):
+    model = pyhf.Workspace(example_spec).model()
+    assert model_utils.unconstrained_parameter_count(model) == 1
+
+    model = pyhf.Workspace(example_spec_shapefactor).model()
+    assert model_utils.unconstrained_parameter_count(model) == 3
