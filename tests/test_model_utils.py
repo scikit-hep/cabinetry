@@ -7,7 +7,7 @@ import pyhf
 from cabinetry import model_utils
 
 
-def test_model_and_data(example_spec):
+def test_model_and_data(example_spec, example_spec_multibin):
     model, data = model_utils.model_and_data(example_spec)
     assert model.spec["channels"] == example_spec["channels"]
     assert model.config.modifier_settings == {
@@ -23,6 +23,16 @@ def test_model_and_data(example_spec):
     # without auxdata
     model, data = model_utils.model_and_data(example_spec, with_aux=False)
     assert data == [475]
+
+    # saturated model
+    model, data = model_utils.model_and_data(example_spec_multibin, saturated=True)
+    for channel in model.spec["channels"]:
+        for sample in channel["samples"]:
+            assert sample["modifiers"][-1] == {
+                "name": "shapefactor_saturated_" + channel["name"],
+                "type": "shapefactor",
+                "data": None,
+            }
 
 
 def test_get_parameter_names(example_spec):
