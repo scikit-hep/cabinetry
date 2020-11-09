@@ -495,13 +495,11 @@ def scan(
     return scan_results
 
 
-def _run_minos(
-    minuit_obj: iminuit._libiminuit.Minuit, minos: List[str], labels: List[str]
-) -> None:
+def _run_minos(minuit_obj: iminuit.Minuit, minos: List[str], labels: List[str]) -> None:
     """Determines parameter uncertainties for a list of parameters with MINOS.
 
     Args:
-        minuit_obj (iminuit._libiminuit.Minuit): Minuit instance to use
+        minuit_obj (iminuit.Minuit): Minuit instance to use
         minos (List[str]): parameters for which MINOS is run
         labels (List[str]]): names of all parameters known to ``iminuit``, these names
             are used in output (may be the same as the names under which ``iminiuit``
