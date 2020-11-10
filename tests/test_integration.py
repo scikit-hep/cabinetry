@@ -33,7 +33,7 @@ def test_integration(tmp_path, ntuple_creator, caplog):
     ws = cabinetry.workspace.build(cabinetry_config)
     cabinetry.workspace.save(ws, workspace_path)
     ws = cabinetry.workspace.load(workspace_path)
-    fit_results = cabinetry.fit.fit(ws, minos="Signal_norm")
+    fit_results = cabinetry.fit.fit(ws, minos="Signal_norm", goodness_of_fit=True)
 
     bestfit_expected = [
         1.00102289,
@@ -142,6 +142,7 @@ def test_integration(tmp_path, ntuple_creator, caplog):
     assert np.allclose(fit_results.uncertainty, uncertainty_expected)
     assert np.allclose(fit_results.best_twice_nll, best_twice_nll_expected)
     assert np.allclose(fit_results.corr_mat, corr_mat_expected, rtol=1e-4)
+    assert np.allclose(fit_results.goodness_of_fit, 0.24679939)
 
     # minos result
     assert "Signal_norm                    = 1.6895 -0.9580 +0.9052" in [
