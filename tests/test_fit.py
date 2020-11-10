@@ -264,48 +264,16 @@ def test__fit_model(mock_pyhf, mock_custom, example_spec):
 
 
 @mock.patch("cabinetry.model_utils.unconstrained_parameter_count", return_value=1)
-@mock.patch(
-    "cabinetry.fit._fit_model",
-    return_value=fit.FitResults(
-        np.asarray([1.0]), np.asarray([0.1]), ["par"], np.empty(0), 1.0
-    ),
-)
-def test__goodness_of_fit(mock_fit, mock_count, example_spec_multibin):
+def test__goodness_of_fit(mock_count, example_spec_multibin, caplog):
+    caplog.set_level(logging.DEBUG)
     model, data = model_utils.model_and_data(example_spec_multibin)
 
-    p_val = fit._goodness_of_fit(example_spec_multibin, model, 2.0)
-    assert mock_fit.call_count == 1
-    for i in range(2):
-        assert mock_fit.call_args[0][0].spec["channels"][i]["samples"][0]["modifiers"][
-            -1
-        ] == {
-            "name": f"shapefactor_saturated_region_{i+1}",
-            "type": "shapefactor",
-            "data": None,
-        }
-    assert mock_fit.call_args[0][1] == data
-    assert mock_fit.call_args[1] == {
-        "fix_pars": [True, True, True, False, False, True, False],
-        "custom_fit": False,
-    }
+    p_val = fit._goodness_of_fit(model, data, 9.964913)
     assert mock_count.call_count == 1
     assert mock_count.call_args[0][0].spec == model.spec
     assert mock_count.call_args[1] == {}
-    assert np.allclose(p_val, 0.60653066)
-
-    # Asimov
-    with mock.patch(
-        "cabinetry.model_utils.model_and_data", return_value=(model, data)
-    ) as mock_load:
-        fit._goodness_of_fit(example_spec_multibin, model, 2.0, asimov=True)
-        assert mock_load.call_args[1] == {"asimov": True, "saturated": True}
-
-    # custom fit
-    fit._goodness_of_fit(example_spec_multibin, model, 2.0, custom_fit=True)
-    assert mock_fit.call_args[1] == {
-        "fix_pars": [True, True, True, False, False, True, False],
-        "custom_fit": True,
-    }
+    assert "Delta NLL = 0.084185" in [rec.message for rec in caplog.records]
+    assert np.allclose(p_val, 0.91926079)
 
 
 @mock.patch("cabinetry.fit._goodness_of_fit", return_value=0.1)
@@ -359,9 +327,7 @@ def test_fit(mock_load, mock_fit, mock_print, mock_gof, example_spec):
 
     # goodness-of-fit test
     fit_results_gof = fit.fit(example_spec, goodness_of_fit=True)
-    assert mock_gof.call_args_list == [
-        [(example_spec, "model", 2.0), {"asimov": False, "custom_fit": False}]
-    ]
+    assert mock_gof.call_args_list == [[("model", "data", 2.0), {}]]
     assert fit_results_gof.goodness_of_fit == 0.1
 
 

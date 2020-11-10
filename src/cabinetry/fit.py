@@ -285,43 +285,31 @@ def _fit_model(
 
 
 def _goodness_of_fit(
-    spec: Dict[str, Any],
-    model: pyhf.pdf.Model,
-    best_twice_nll: float,
-    asimov: bool = False,
-    custom_fit: bool = False,
+    model: pyhf.pdf.Model, data: List[float], best_twice_nll: float
 ) -> float:
-    """Calculates goodness-of-fit p-value with a saturated model.
+    """Calculates goodness-of-fit p-value with the saturated model.
 
     Args:
-        spec (Dict[str, Any]): a ``pyhf`` workspace specification
         model (pyhf.pdf.Model): model used in the fit for which goodness-of-fit should
             be calculated
+        data (List[float]): the observed data
         best_twice_nll (float): best-fit -2 log(likelihood) of fit for which goodness-
             of-fit should be calculated
-        asimov (bool, optional): whether to fit the Asimov dataset, defaults to False
-        custom_fit (bool, optional): whether to use the ``pyhf.infer`` API or
-            ``iminuit``, defaults to False (using ``pyhf.infer``)
 
     Returns:
         float: goodness-of-fit p-value
     """
-    log.info("performing fit with saturated model")
-    model_sat, data = model_utils.model_and_data(spec, asimov=asimov, saturated=True)
-
-    # only allow saturated model shapefactors to vary, fix other parameters
-    # this stabilizes the fit and has no impact on the maximum likelihood
-    labels = model_utils.get_parameter_names(model_sat)
-    fix_pars = [
-        False if "shapefactor_saturated_" in label else True for label in labels
-    ]
-
-    fit_results_sat = _fit_model(
-        model_sat, data, fix_pars=fix_pars, custom_fit=custom_fit
+    main_data, aux_data = model.fullpdf_tv.split(pyhf.tensorlib.astensor(data))
+    # Poisson term: log Poisson(data|lambda=data), sum is over log likelihood of bins
+    poisson_ll = sum(pyhf.tensorlib.poisson_dist(main_data).log_prob(main_data))
+    # constraint term: log Gaussian(aux_data|parameters) etc.
+    constraint_ll = model.constraint_logpdf(
+        aux_data, pyhf.tensorlib.astensor(model.config.suggested_init())
     )
+    saturated_nll = -(poisson_ll + constraint_ll)  # saturated likelihood
 
     log.info("calculating goodness-of-fit")
-    delta_nll = (best_twice_nll - fit_results_sat.best_twice_nll) / 2
+    delta_nll = best_twice_nll / 2 - saturated_nll
     log.debug(f"Delta NLL = {delta_nll:.6f}")
 
     # calculate difference in degrees of freedom between fits, given by the number
@@ -376,13 +364,7 @@ def fit(
 
     if goodness_of_fit:
         # calculate goodness-of-fit with saturated model
-        p_val = _goodness_of_fit(
-            spec,
-            model,
-            fit_results.best_twice_nll,
-            asimov=asimov,
-            custom_fit=custom_fit,
-        )
+        p_val = _goodness_of_fit(model, data, fit_results.best_twice_nll)
         fit_results = fit_results._replace(goodness_of_fit=p_val)
 
     return fit_results
