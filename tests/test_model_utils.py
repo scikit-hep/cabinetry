@@ -20,10 +20,6 @@ def test_model_and_data(example_spec, example_spec_multibin):
     model, data = model_utils.model_and_data(example_spec, asimov=True)
     assert data == [51.839756, 1.0]
 
-    # without auxdata
-    model, data = model_utils.model_and_data(example_spec, with_aux=False)
-    assert data == [475]
-
     # saturated model
     model, data = model_utils.model_and_data(example_spec_multibin, saturated=True)
     for channel in model.spec["channels"]:
@@ -33,6 +29,10 @@ def test_model_and_data(example_spec, example_spec_multibin):
                 "type": "shapefactor",
                 "data": None,
             }
+
+    # without auxdata
+    model, data = model_utils.model_and_data(example_spec, with_aux=False)
+    assert data == [475]
 
 
 def test_get_parameter_names(example_spec):
