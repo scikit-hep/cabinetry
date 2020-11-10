@@ -287,7 +287,7 @@ def _fit_model(
 def _goodness_of_fit(
     spec: Dict[str, Any],
     model: pyhf.pdf.Model,
-    fit_results: FitResults,
+    best_twice_nll: float,
     asimov: bool = False,
     custom_fit: bool = False,
 ) -> float:
@@ -297,8 +297,8 @@ def _goodness_of_fit(
         spec (Dict[str, Any]): a ``pyhf`` workspace specification
         model (pyhf.pdf.Model): model used in the fit for which goodness-of-fit should
             be calculated
-        fit_results (FitResults): fit result of fit for which goodness-of-fit should be
-            calculated
+        best_twice_nll (float): best-fit -2 log(likelihood) of fit for which goodness-
+            of-fit should be calculated
         asimov (bool, optional): whether to fit the Asimov dataset, defaults to False
         custom_fit (bool, optional): whether to use the ``pyhf.infer`` API or
             ``iminuit``, defaults to False (using ``pyhf.infer``)
@@ -321,7 +321,7 @@ def _goodness_of_fit(
     )
 
     log.info("calculating goodness-of-fit")
-    delta_nll = (fit_results.best_twice_nll - fit_results_sat.best_twice_nll) / 2
+    delta_nll = (best_twice_nll - fit_results_sat.best_twice_nll) / 2
     log.debug(f"Delta NLL = {delta_nll:.6f}")
 
     # calculate difference in degrees of freedom between fits, given by the number
@@ -377,7 +377,11 @@ def fit(
     if goodness_of_fit:
         # calculate goodness-of-fit with saturated model
         p_val = _goodness_of_fit(
-            spec, model, fit_results, asimov=asimov, custom_fit=custom_fit
+            spec,
+            model,
+            fit_results.best_twice_nll,
+            asimov=asimov,
+            custom_fit=custom_fit,
         )
         fit_results = fit_results._replace(goodness_of_fit=p_val)
 
