@@ -7,7 +7,7 @@ import pyhf
 from cabinetry import model_utils
 
 
-def test_model_and_data(example_spec, example_spec_multibin):
+def test_model_and_data(example_spec):
     model, data = model_utils.model_and_data(example_spec)
     assert model.spec["channels"] == example_spec["channels"]
     assert model.config.modifier_settings == {
