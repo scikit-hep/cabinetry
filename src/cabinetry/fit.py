@@ -287,7 +287,7 @@ def _fit_model(
 def _goodness_of_fit(
     model: pyhf.pdf.Model, data: List[float], best_twice_nll: float
 ) -> float:
-    """Calculates goodness-of-fit p-value with the saturated model.
+    """Calculates goodness-of-fit p-value with a saturated model.
 
     Args:
         model (pyhf.pdf.Model): model used in the fit for which goodness-of-fit should
