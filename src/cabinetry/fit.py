@@ -22,6 +22,7 @@ class FitResults(NamedTuple):
         labels (List[str]): parameter labels
         corr_mat (np.ndarray): parameter correlation matrix
         best_twice_nll (float): -2 log(likelihood) at best-fit point
+        goodess_of_fit (float, optional): goodness-of-fit p-value, defaults to -1
     """
 
     bestfit: np.ndarray
@@ -29,6 +30,7 @@ class FitResults(NamedTuple):
     labels: List[str]
     corr_mat: np.ndarray
     best_twice_nll: float
+    goodness_of_fit: float = -1
 
 
 class RankingResults(NamedTuple):
