@@ -274,6 +274,7 @@ def test__goodness_of_fit(mock_count, example_spec_multibin, caplog):
     assert mock_count.call_args[1] == {}
     assert "Delta NLL = 0.084185" in [rec.message for rec in caplog.records]
     assert np.allclose(p_val, 0.91926079)
+    caplog.clear()
 
 
 @mock.patch("cabinetry.fit._goodness_of_fit", return_value=0.1)
