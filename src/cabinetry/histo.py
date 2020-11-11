@@ -204,7 +204,7 @@ class Histogram(bh.Histogram):
                 f"{not_empty_but_nan}",
             )
 
-    def normalize_to_yield(self, reference_histogram: H) -> np.float64:
+    def normalize_to_yield(self, reference_histogram: H) -> float:
         """Normalizes a histogram to match the yield of a reference.
 
         Returns the normalization factor used to normalize the histogram.
@@ -214,7 +214,7 @@ class Histogram(bh.Histogram):
                 normalize to
 
         Returns:
-            np.float64: the yield ratio: un-normalized yield / normalized yield
+            float: the yield ratio: un-normalized yield / normalized yield
         """
         target_integrated_yield = sum(reference_histogram.yields)
         current_integrated_yield = sum(self.yields)

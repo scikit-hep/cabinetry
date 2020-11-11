@@ -5,6 +5,7 @@ import iminuit
 import numpy as np
 import pyhf
 import scipy.optimize
+import scipy.stats
 
 from . import model_utils
 
@@ -21,6 +22,7 @@ class FitResults(NamedTuple):
         labels (List[str]): parameter labels
         corr_mat (np.ndarray): parameter correlation matrix
         best_twice_nll (float): -2 log(likelihood) at best-fit point
+        goodess_of_fit (float, optional): goodness-of-fit p-value, defaults to -1
     """
 
     bestfit: np.ndarray
@@ -28,6 +30,7 @@ class FitResults(NamedTuple):
     labels: List[str]
     corr_mat: np.ndarray
     best_twice_nll: float
+    goodness_of_fit: float = -1
 
 
 class RankingResults(NamedTuple):
@@ -206,7 +209,7 @@ def _fit_model_custom(
     # this will cause the associated parameter uncertainties to be 0 post-fit
     step_size = [0.1 if not fix_pars[i_par] else 0.0 for i_par in range(len(init_pars))]
 
-    def twice_nll_func(pars: np.ndarray) -> np.float64:
+    def twice_nll_func(pars: np.ndarray) -> float:
         twice_nll = -2 * model.logpdf(pars, data)
         return twice_nll[0]
 
@@ -277,13 +280,54 @@ def _fit_model(
         fit_results = _fit_model_custom(
             model, data, init_pars=init_pars, fix_pars=fix_pars, minos=minos
         )
+    log.debug(f"-2 log(L) = {fit_results.best_twice_nll:.6f} at best-fit point")
     return fit_results
+
+
+def _goodness_of_fit(
+    model: pyhf.pdf.Model, data: List[float], best_twice_nll: float
+) -> float:
+    """Calculates goodness-of-fit p-value with a saturated model.
+
+    Args:
+        model (pyhf.pdf.Model): model used in the fit for which goodness-of-fit should
+            be calculated
+        data (List[float]): the observed data
+        best_twice_nll (float): best-fit -2 log(likelihood) of fit for which goodness-
+            of-fit should be calculated
+
+    Returns:
+        float: goodness-of-fit p-value
+    """
+    main_data, aux_data = model.fullpdf_tv.split(pyhf.tensorlib.astensor(data))
+    # Poisson term: log Poisson(data|lambda=data), sum is over log likelihood of bins
+    poisson_ll = sum(pyhf.tensorlib.poisson_dist(main_data).log_prob(main_data))
+    # constraint term: log Gaussian(aux_data|parameters) etc.
+    constraint_ll = model.constraint_logpdf(
+        aux_data, pyhf.tensorlib.astensor(model.config.suggested_init())
+    )
+    saturated_nll = -(poisson_ll + constraint_ll)  # saturated likelihood
+
+    log.info("calculating goodness-of-fit")
+    delta_nll = best_twice_nll / 2 - saturated_nll
+    log.debug(f"Delta NLL = {delta_nll:.6f}")
+
+    # calculate difference in degrees of freedom between fits, given by the number
+    # of bins minus the number of unconstrained parameters
+    n_dof = sum(
+        model.config.channel_nbins.values()
+    ) - model_utils.unconstrained_parameter_count(model)
+    log.debug(f"number of degrees of freedom: {n_dof}")
+    p_val = scipy.stats.chi2.sf(2 * delta_nll, n_dof)
+    log.info(f"p-value for goodness-of-fit test: {p_val*100:.2f}%")
+    return p_val
 
 
 def fit(
     spec: Dict[str, Any],
     asimov: bool = False,
     minos: Optional[Union[str, List[str]]] = None,
+    goodness_of_fit: bool = False,
     custom_fit: bool = False,
 ) -> FitResults:
     """Performs a  maximum likelihood fit, reports and returns the results.
@@ -297,6 +341,8 @@ def fit(
         asimov (bool, optional): whether to fit the Asimov dataset, defaults to False
         minos (Optional[Union[str, List[str]]], optional): runs the MINOS algorithm for
             all parameters specified in the list, defaults to None (does not run MINOS)
+        goodness_of_fit (bool, optional): calculate goodness of fit with a saturated
+            model (perfectly fits data with shapefactors in all bins), defaults to False
         custom_fit (bool, optional): whether to use the ``pyhf.infer`` API or
             ``iminuit``, defaults to False (using ``pyhf.infer``)
 
@@ -315,7 +361,11 @@ def fit(
     fit_results = _fit_model(model, data, minos=minos, custom_fit=custom_fit)
 
     print_results(fit_results)
-    log.debug(f"-2 log(L) = {fit_results.best_twice_nll:.6f} at the best-fit point")
+
+    if goodness_of_fit:
+        # calculate goodness-of-fit with saturated model
+        p_val = _goodness_of_fit(model, data, fit_results.best_twice_nll)
+        fit_results = fit_results._replace(goodness_of_fit=p_val)
 
     return fit_results
 

@@ -21,6 +21,7 @@ def test_FitResults():
     assert fit_results.labels == labels
     assert np.allclose(fit_results.corr_mat, corr_mat)
     assert fit_results.best_twice_nll == best_twice_nll
+    assert fit_results.goodness_of_fit == -1
 
 
 def test_RankingResults():
@@ -262,6 +263,21 @@ def test__fit_model(mock_pyhf, mock_custom, example_spec):
     assert np.allclose(fit_results.bestfit, [1.2])
 
 
+@mock.patch("cabinetry.model_utils.unconstrained_parameter_count", return_value=1)
+def test__goodness_of_fit(mock_count, example_spec_multibin, caplog):
+    caplog.set_level(logging.DEBUG)
+    model, data = model_utils.model_and_data(example_spec_multibin)
+
+    p_val = fit._goodness_of_fit(model, data, 9.964913)
+    assert mock_count.call_count == 1
+    assert mock_count.call_args[0][0].spec == model.spec
+    assert mock_count.call_args[1] == {}
+    assert "Delta NLL = 0.084185" in [rec.message for rec in caplog.records]
+    assert np.allclose(p_val, 0.91926079)
+    caplog.clear()
+
+
+@mock.patch("cabinetry.fit._goodness_of_fit", return_value=0.1)
 @mock.patch("cabinetry.fit.print_results")
 @mock.patch(
     "cabinetry.fit._fit_model",
@@ -270,7 +286,7 @@ def test__fit_model(mock_pyhf, mock_custom, example_spec):
     ),
 )
 @mock.patch("cabinetry.model_utils.model_and_data", return_value=("model", "data"))
-def test_fit(mock_load, mock_fit, mock_print, example_spec):
+def test_fit(mock_load, mock_fit, mock_print, mock_gof, example_spec):
     # fit through pyhf.infer API
     fit_results = fit.fit(example_spec)
     assert mock_load.call_args_list == [[(example_spec,), {"asimov": False}]]
@@ -309,6 +325,11 @@ def test_fit(mock_load, mock_fit, mock_print, example_spec):
     assert mock_fit.call_count == 5
     assert mock_fit.call_args[1] == {"minos": ["abc"], "custom_fit": True}
     assert fit_results.bestfit == [1.0]
+
+    # goodness-of-fit test
+    fit_results_gof = fit.fit(example_spec, goodness_of_fit=True)
+    assert mock_gof.call_args_list == [[("model", "data", 2.0), {}]]
+    assert fit_results_gof.goodness_of_fit == 0.1
 
 
 @mock.patch(

@@ -261,3 +261,26 @@ def calculate_stdev(
     total_stdev = np.sqrt(total_variance)
     log.debug(f"total stdev is {total_stdev}")
     return total_stdev
+
+
+def unconstrained_parameter_count(model: pyhf.pdf.Model) -> int:
+    """Returns the number of unconstrained parameters in a model.
+
+    The number is the sum of all independent parameters in a fit. A shapefactor that
+    affects multiple bins enters the count once for each independent bin. Parameters
+    that are set to constant are not included in the count.
+
+    Args:
+        model (pyhf.pdf.Model): model to count parameters for
+
+    Returns:
+        int: number of unconstrained parameters
+    """
+    n_pars = 0
+    for parname in model.config.par_order:
+        if (
+            not model.config.param_set(parname).constrained
+            and not model.config.param_set(parname).suggested_fixed
+        ):
+            n_pars += model.config.param_set(parname).n_parameters
+    return n_pars
