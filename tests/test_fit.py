@@ -129,9 +129,9 @@ def test__fit_model_pyhf(mock_minos, example_spec, example_spec_multibin):
     assert np.allclose(fit_results.uncertainty, [0.0, 0.0, 0.20694465, 0.11792837])
     assert np.allclose(fit_results.best_twice_nll, 10.4531891)
 
-    # including minos
+    # including minos, one parameter is unknown
     model, data = model_utils.model_and_data(example_spec)
-    fit_results = fit._fit_model_pyhf(model, data, minos=["Signal strength"])
+    fit_results = fit._fit_model_pyhf(model, data, minos=["Signal strength", "abc"])
     assert mock_minos.call_count == 1
     # first argument to minos call is the Minuit instance
     assert mock_minos.call_args[0][1] == ["x1"]
