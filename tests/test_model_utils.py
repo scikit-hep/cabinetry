@@ -1,4 +1,5 @@
 import copy
+import logging
 
 import awkward1 as ak
 import numpy as np
@@ -154,3 +155,16 @@ def test_unconstrained_parameter_count(example_spec, example_spec_shapefactor):
     )
     model = pyhf.Workspace(example_spec_shapefactor).model()
     assert model_utils.unconstrained_parameter_count(model) == 2
+
+
+def test__get_parameter_index(caplog):
+    caplog.set_level(logging.DEBUG)
+    labels = ["a", "b", "c"]
+    par_name = "b"
+    assert model_utils._get_parameter_index(par_name, labels) == 1
+    assert model_utils._get_parameter_index(par_name, tuple(labels)) == 1
+    caplog.clear()
+
+    assert model_utils._get_parameter_index("x", labels) == -1
+    assert "parameter x not found in model" in [rec.message for rec in caplog.records]
+    caplog.clear()
