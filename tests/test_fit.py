@@ -472,7 +472,6 @@ def test__run_minos(caplog):
         errordef=1,
     )
     m.migrad()
-
     fit._run_minos(m, ["b"], ["a", "b"])
     assert "running MINOS for b" in [rec.message for rec in caplog.records]
     assert "b = 1.5909 -0.7262 +0.4738" in [rec.message for rec in caplog.records]
@@ -490,9 +489,19 @@ def test__run_minos(caplog):
     assert "a = 1.3827 -0.8713 +0.5715" in [rec.message for rec in caplog.records]
     caplog.clear()
 
-    # unknown parameter
-    with pytest.raises(StopIteration):
-        fit._run_minos(m, ["x2"], ["a", "b"])
+    # unknown parameter, MINOS does not run
+    m = iminuit.Minuit.from_array_func(
+        func_to_minimize,
+        [1.0, 1.0],
+        errordef=1,
+    )
+    m.migrad()
+    fit._run_minos(m, ["x2"], ["a", "b"])
+    assert [rec.message for rec in caplog.records] == [
+        "parameter x2 not found in model",
+        "MINOS results:",
+    ]
+    caplog.clear()
 
 
 def test_limit(example_spec_with_background, caplog):
