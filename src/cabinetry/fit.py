@@ -165,10 +165,7 @@ def _fit_model_pyhf(
                 # x0, x1, etc.
                 parameters_translated.append(f"x{par_index}")
 
-        if len(parameters_translated) > 0:
-            _run_minos(result_obj.minuit, parameters_translated, labels)
-        else:
-            log.error(f"cannot run MINOS: parameter(s) {minos} not found in model")
+        _run_minos(result_obj.minuit, parameters_translated, labels)
 
     return fit_results
 
@@ -563,6 +560,9 @@ def _run_minos(minuit_obj: iminuit.Minuit, minos: List[str], labels: List[str]) 
         # get index of current parameter in labels (to translate its name if iminuit
         # did not receive the parameter labels)
         par_index = model_utils._get_parameter_index(par_name, minuit_obj.parameters)
+        if par_index == -1:
+            # parameter not found, skip calculation
+            continue
         log.info(f"running MINOS for {labels[par_index]}")
         minuit_obj.minos(var=par_name)
 
