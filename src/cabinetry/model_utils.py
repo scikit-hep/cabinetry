@@ -292,8 +292,8 @@ def _get_parameter_index(
     """Returns the position of a parameter with a given name in the list of parameters.
 
     Useful together with ``get_parameter_names`` to find the position of a parameter
-    when the name is known. If the parameter is not found, prints an error and returns
-    a default value of -1.
+    when the name is known. If the parameter is not found, logs an error and returns a
+    default value of -1.
 
     Args:
         par_name (str): name of parameter to find in list
