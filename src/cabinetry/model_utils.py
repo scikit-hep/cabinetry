@@ -1,5 +1,5 @@
 import logging
-from typing import Any, Dict, List, Tuple
+from typing import Any, Dict, List, Tuple, Union
 
 import awkward1 as ak
 import numpy as np
@@ -284,3 +284,26 @@ def unconstrained_parameter_count(model: pyhf.pdf.Model) -> int:
         ):
             n_pars += model.config.param_set(parname).n_parameters
     return n_pars
+
+
+def _get_parameter_index(
+    par_name: str, labels: Union[List[str], Tuple[str, ...]]
+) -> int:
+    """Returns the position of a parameter with a given name in the list of parameters.
+
+    Useful together with ``get_parameter_names`` to find the position of a parameter
+    when the name is known. If the parameter is not found, logs an error and returns a
+    default value of -1.
+
+    Args:
+        par_name (str): name of parameter to find in list
+        labels (Union[List[str], Tuple[str, ...]]): list or tuple with all parameter
+            names in the model
+
+    Returns:
+        int: index of parameter
+    """
+    par_index = next((i for i, label in enumerate(labels) if label == par_name), -1)
+    if par_index == -1:
+        log.error(f"parameter {par_name} not found in model")
+    return par_index

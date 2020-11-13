@@ -158,11 +158,12 @@ def _fit_model_pyhf(
 
     if minos is not None:
         parameters_translated = []
-        for i, label in enumerate(labels):
-            if label in minos:
+        for minos_par in minos:
+            par_index = model_utils._get_parameter_index(minos_par, labels)
+            if par_index != -1:
                 # pyhf does not hand over parameter names, all parameters are known as
                 # x0, x1, etc.
-                parameters_translated.append(f"x{i}")
+                parameters_translated.append(f"x{par_index}")
 
         _run_minos(result_obj.minuit, parameters_translated, labels)
 
@@ -504,7 +505,7 @@ def scan(
     fix_pars = model.config.suggested_fixed()
 
     # get index of parameter with name par_name
-    par_index = next((i for i, label in enumerate(labels) if label == par_name), -1)
+    par_index = model_utils._get_parameter_index(par_name, labels)
     if par_index == -1:
         raise ValueError(f"could not find parameter {par_name} in model")
 
@@ -558,9 +559,10 @@ def _run_minos(minuit_obj: iminuit.Minuit, minos: List[str], labels: List[str]) 
     for par_name in minos:
         # get index of current parameter in labels (to translate its name if iminuit
         # did not receive the parameter labels)
-        par_index = next(
-            (i for i, par in enumerate(minuit_obj.parameters) if par == par_name)
-        )
+        par_index = model_utils._get_parameter_index(par_name, minuit_obj.parameters)
+        if par_index == -1:
+            # parameter not found, skip calculation
+            continue
         log.info(f"running MINOS for {labels[par_index]}")
         minuit_obj.minos(var=par_name)
 

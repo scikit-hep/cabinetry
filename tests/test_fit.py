@@ -129,9 +129,9 @@ def test__fit_model_pyhf(mock_minos, example_spec, example_spec_multibin):
     assert np.allclose(fit_results.uncertainty, [0.0, 0.0, 0.20694465, 0.11792837])
     assert np.allclose(fit_results.best_twice_nll, 10.4531891)
 
-    # including minos
+    # including minos, one parameter is unknown
     model, data = model_utils.model_and_data(example_spec)
-    fit_results = fit._fit_model_pyhf(model, data, minos=["Signal strength"])
+    fit_results = fit._fit_model_pyhf(model, data, minos=["Signal strength", "abc"])
     assert mock_minos.call_count == 1
     # first argument to minos call is the Minuit instance
     assert mock_minos.call_args[0][1] == ["x1"]
@@ -472,7 +472,6 @@ def test__run_minos(caplog):
         errordef=1,
     )
     m.migrad()
-
     fit._run_minos(m, ["b"], ["a", "b"])
     assert "running MINOS for b" in [rec.message for rec in caplog.records]
     assert "b = 1.5909 -0.7262 +0.4738" in [rec.message for rec in caplog.records]
@@ -490,9 +489,19 @@ def test__run_minos(caplog):
     assert "a = 1.3827 -0.8713 +0.5715" in [rec.message for rec in caplog.records]
     caplog.clear()
 
-    # unknown parameter
-    with pytest.raises(StopIteration):
-        fit._run_minos(m, ["x2"], ["a", "b"])
+    # unknown parameter, MINOS does not run
+    m = iminuit.Minuit.from_array_func(
+        func_to_minimize,
+        [1.0, 1.0],
+        errordef=1,
+    )
+    m.migrad()
+    fit._run_minos(m, ["x2"], ["a", "b"])
+    assert [rec.message for rec in caplog.records] == [
+        "parameter x2 not found in model",
+        "MINOS results:",
+    ]
+    caplog.clear()
 
 
 def test_limit(example_spec_with_background, caplog):
