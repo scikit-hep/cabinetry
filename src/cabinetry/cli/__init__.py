@@ -221,9 +221,39 @@ def scan(
     cabinetry_visualize.scan(scan_results, figfolder)
 
 
+@click.command()
+@click.argument("ws_spec", type=click.File("r"))
+@click.option("--asimov", is_flag=True, help="fit Asimov dataset (default: False)")
+@click.option(
+    "--tolerance",
+    default=0.01,
+    help="tolerance for convergence to CLs=0.05 (default: 0.01)",
+)
+@click.option(
+    "--figfolder",
+    default="figures",
+    help='folder to save figures to (default: "figures")',
+)
+def limit(
+    ws_spec: io.TextIOWrapper,
+    asimov: bool,
+    tolerance: float,
+    figfolder: str,
+) -> None:
+    """Calculates upper limits for parameter of interest, visualizes CLs distribution.
+
+    WS_SPEC: path to workspace used in fit
+    """
+    _set_logging()
+    ws = json.load(ws_spec)
+    limit_results = cabinetry_fit.limit(ws, asimov=asimov, tolerance=tolerance)
+    cabinetry_visualize.limit(limit_results, figure_folder=figfolder)
+
+
 cabinetry.add_command(templates)
 cabinetry.add_command(postprocess)
 cabinetry.add_command(workspace)
 cabinetry.add_command(fit)
 cabinetry.add_command(ranking)
 cabinetry.add_command(scan)
+cabinetry.add_command(limit)
