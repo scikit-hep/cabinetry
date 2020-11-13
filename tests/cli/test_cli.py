@@ -326,3 +326,68 @@ def test_scan(mock_scan, mock_vis, tmp_path):
         {"par_range": (0.0, 2.0), "n_steps": 21, "asimov": True},
     )
     assert mock_vis.call_args[1] == {"figure_folder": "folder"}
+
+
+@mock.patch("cabinetry.visualize.limit", autospec=True)
+@mock.patch(
+    "cabinetry.fit.limit",
+    return_value=fit.LimitResults(
+        3.0,
+        np.asarray([1.0, 2.0, 3.0, 4.0, 5.0]),
+        np.asarray([0.05]),
+        np.asarray([0.01, 0.02, 0.05, 0.07, 0.10]),
+        np.asarray([3.0]),
+    ),
+    autospec=True,
+)
+def test_limit(mock_limit, mock_vis, tmp_path):
+    workspace = {"workspace": "mock"}
+    workspace_path = str(tmp_path / "workspace.json")
+
+    # need to save workspace to file since click looks for it
+    with open(workspace_path, "w") as f:
+        f.write('{"workspace": "mock"}')
+
+    limit_results = fit.LimitResults(
+        3.0,
+        np.asarray([1.0, 2.0, 3.0, 4.0, 5.0]),
+        np.asarray([0.05]),
+        np.asarray([0.01, 0.02, 0.05, 0.07, 0.10]),
+        np.asarray([3.0]),
+    )
+
+    runner = CliRunner()
+
+    # default
+    result = runner.invoke(cli.limit, [workspace_path])
+    assert result.exit_code == 0
+    assert mock_limit.call_args_list == [
+        ((workspace,), {"asimov": False, "tolerance": 0.01})
+    ]
+    assert mock_vis.call_count == 1
+    assert np.allclose(
+        mock_vis.call_args[0][0].observed_limit, limit_results.observed_limit
+    )
+    assert np.allclose(
+        mock_vis.call_args[0][0].expected_limit, limit_results.expected_limit
+    )
+    assert np.allclose(
+        mock_vis.call_args[0][0].observed_CLs, limit_results.observed_CLs
+    )
+    assert np.allclose(
+        mock_vis.call_args[0][0].expected_CLs, limit_results.expected_CLs
+    )
+    assert np.allclose(mock_vis.call_args[0][0].poi_values, limit_results.poi_values)
+    assert mock_vis.call_args[1] == {"figure_folder": "figures"}
+
+    # Asimov, tolerance, custom folder
+    result = runner.invoke(
+        cli.limit,
+        ["--asimov", "--tolerance", "0.1", "--figfolder", "folder", workspace_path],
+    )
+    assert result.exit_code == 0
+    assert mock_limit.call_args_list[-1] == (
+        (workspace,),
+        {"asimov": True, "tolerance": 0.1},
+    )
+    assert mock_vis.call_args_list[-1][1] == {"figure_folder": "folder"}
