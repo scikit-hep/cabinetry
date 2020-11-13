@@ -263,6 +263,58 @@ def test__fit_model(mock_pyhf, mock_custom, example_spec):
     assert np.allclose(fit_results.bestfit, [1.2])
 
 
+def test__run_minos(caplog):
+    caplog.set_level(logging.DEBUG)
+
+    def func_to_minimize(pars):
+        # mock NLL
+        return (
+            np.sum(
+                np.power(pars - 2 * np.ones_like(pars), 2)
+                + np.power(pars - 1 * np.ones_like(pars), 4)
+            )
+            + pars[0]
+        )
+
+    m = iminuit.Minuit.from_array_func(
+        func_to_minimize,
+        [1.0, 1.0],
+        name=["a", "b"],
+        errordef=1,
+    )
+    m.migrad()
+    fit._run_minos(m, ["b"], ["a", "b"])
+    assert "running MINOS for b" in [rec.message for rec in caplog.records]
+    assert "b = 1.5909 -0.7262 +0.4738" in [rec.message for rec in caplog.records]
+    caplog.clear()
+
+    # proper labels not known to iminuit
+    m = iminuit.Minuit.from_array_func(
+        func_to_minimize,
+        [1.0, 1.0],
+        errordef=1,
+    )
+    m.migrad()
+    fit._run_minos(m, ["x0"], ["a", "b"])
+    assert "running MINOS for a" in [rec.message for rec in caplog.records]
+    assert "a = 1.3827 -0.8713 +0.5715" in [rec.message for rec in caplog.records]
+    caplog.clear()
+
+    # unknown parameter, MINOS does not run
+    m = iminuit.Minuit.from_array_func(
+        func_to_minimize,
+        [1.0, 1.0],
+        errordef=1,
+    )
+    m.migrad()
+    fit._run_minos(m, ["x2"], ["a", "b"])
+    assert [rec.message for rec in caplog.records] == [
+        "parameter x2 not found in model",
+        "MINOS results:",
+    ]
+    caplog.clear()
+
+
 @mock.patch("cabinetry.model_utils.unconstrained_parameter_count", return_value=1)
 def test__goodness_of_fit(mock_count, example_spec_multibin, caplog):
     caplog.set_level(logging.DEBUG)
@@ -450,58 +502,6 @@ def test_scan(mock_fit, example_spec):
     # unknown parameter
     with pytest.raises(ValueError, match="could not find parameter abc in model"):
         fit.scan(example_spec, "abc")
-
-
-def test__run_minos(caplog):
-    caplog.set_level(logging.DEBUG)
-
-    def func_to_minimize(pars):
-        # mock NLL
-        return (
-            np.sum(
-                np.power(pars - 2 * np.ones_like(pars), 2)
-                + np.power(pars - 1 * np.ones_like(pars), 4)
-            )
-            + pars[0]
-        )
-
-    m = iminuit.Minuit.from_array_func(
-        func_to_minimize,
-        [1.0, 1.0],
-        name=["a", "b"],
-        errordef=1,
-    )
-    m.migrad()
-    fit._run_minos(m, ["b"], ["a", "b"])
-    assert "running MINOS for b" in [rec.message for rec in caplog.records]
-    assert "b = 1.5909 -0.7262 +0.4738" in [rec.message for rec in caplog.records]
-    caplog.clear()
-
-    # proper labels not known to iminuit
-    m = iminuit.Minuit.from_array_func(
-        func_to_minimize,
-        [1.0, 1.0],
-        errordef=1,
-    )
-    m.migrad()
-    fit._run_minos(m, ["x0"], ["a", "b"])
-    assert "running MINOS for a" in [rec.message for rec in caplog.records]
-    assert "a = 1.3827 -0.8713 +0.5715" in [rec.message for rec in caplog.records]
-    caplog.clear()
-
-    # unknown parameter, MINOS does not run
-    m = iminuit.Minuit.from_array_func(
-        func_to_minimize,
-        [1.0, 1.0],
-        errordef=1,
-    )
-    m.migrad()
-    fit._run_minos(m, ["x2"], ["a", "b"])
-    assert [rec.message for rec in caplog.records] == [
-        "parameter x2 not found in model",
-        "MINOS results:",
-    ]
-    caplog.clear()
 
 
 def test_limit(example_spec_with_background, caplog):
