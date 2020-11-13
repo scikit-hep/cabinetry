@@ -115,7 +115,7 @@ def fit(
     corrmat: bool,
     figfolder: str,
 ) -> None:
-    """Fits a workspace and optionally visualize the results.
+    """Fits a workspace and optionally visualizes the results.
 
     WS_SPEC: path to workspace used in fit
     """
@@ -227,3 +227,4 @@ cabinetry.add_command(workspace)
 cabinetry.add_command(fit)
 cabinetry.add_command(ranking)
 cabinetry.add_command(scan)
+# cabinetry.add_command(limit)
