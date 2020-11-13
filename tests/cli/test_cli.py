@@ -121,12 +121,43 @@ def test_fit(mock_fit, mock_pulls, mock_corrmat, tmp_path):
     # default
     result = runner.invoke(cli.fit, [workspace_path])
     assert result.exit_code == 0
-    assert mock_fit.call_args_list == [((workspace,), {"asimov": False})]
+    assert mock_fit.call_args_list == [
+        ((workspace,), {"asimov": False, "minos": None, "goodness_of_fit": False})
+    ]
 
     # Asimov
     result = runner.invoke(cli.fit, ["--asimov", workspace_path])
     assert result.exit_code == 0
-    assert mock_fit.call_args_list[-1] == ((workspace,), {"asimov": True})
+    assert mock_fit.call_args_list[-1] == (
+        (workspace,),
+        {"asimov": True, "minos": None, "goodness_of_fit": False},
+    )
+
+    # MINOS for one parameter
+    result = runner.invoke(cli.fit, ["--minos", "par", workspace_path])
+    assert result.exit_code == 0
+    assert mock_fit.call_args_list[-1] == (
+        (workspace,),
+        {"asimov": False, "minos": ["par"], "goodness_of_fit": False},
+    )
+
+    # MINOS for multiple parameters
+    result = runner.invoke(
+        cli.fit, ["--minos", "par_a", "--minos", "par_b", workspace_path]
+    )
+    assert result.exit_code == 0
+    assert mock_fit.call_args_list[-1] == (
+        (workspace,),
+        {"asimov": False, "minos": ["par_a", "par_b"], "goodness_of_fit": False},
+    )
+
+    # goodness-of-fit
+    result = runner.invoke(cli.fit, ["--goodness_of_fit", workspace_path])
+    assert result.exit_code == 0
+    assert mock_fit.call_args_list[-1] == (
+        (workspace,),
+        {"asimov": False, "minos": None, "goodness_of_fit": True},
+    )
 
     # pull plot
     result = runner.invoke(cli.fit, ["--pulls", workspace_path])
