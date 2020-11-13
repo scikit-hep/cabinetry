@@ -285,6 +285,38 @@ def _fit_model(
     return fit_results
 
 
+def _run_minos(minuit_obj: iminuit.Minuit, minos: List[str], labels: List[str]) -> None:
+    """Determines parameter uncertainties for a list of parameters with MINOS.
+
+    Args:
+        minuit_obj (iminuit.Minuit): Minuit instance to use
+        minos (List[str]): parameters for which MINOS is run
+        labels (List[str]]): names of all parameters known to ``iminuit``, these names
+            are used in output (may be the same as the names under which ``iminiuit``
+            knows parameters)
+    """
+    for par_name in minos:
+        # get index of current parameter in labels (to translate its name if iminuit
+        # did not receive the parameter labels)
+        par_index = model_utils._get_parameter_index(par_name, minuit_obj.parameters)
+        if par_index == -1:
+            # parameter not found, skip calculation
+            continue
+        log.info(f"running MINOS for {labels[par_index]}")
+        minuit_obj.minos(var=par_name)
+
+    log.info("MINOS results:")
+    max_label_length = max([len(label) for label in labels])
+    minos_unc = minuit_obj.np_merrors()
+    for i_par, unc_down, unc_up in zip(range(len(labels)), minos_unc[0], minos_unc[1]):
+        # the uncertainties are 0.0 by default if MINOS has not been run
+        if unc_up != 0.0 or unc_down != 0.0:
+            log.info(
+                f"{labels[i_par].ljust(max_label_length)} = "
+                f"{minuit_obj.np_values()[i_par]:.4f} -{unc_down:.4f} +{unc_up:.4f}"
+            )
+
+
 def _goodness_of_fit(
     model: pyhf.pdf.Model, data: List[float], best_twice_nll: float
 ) -> float:
@@ -544,38 +576,6 @@ def scan(
 
     scan_results = ScanResults(par_name, par_mle, par_unc, scan_values, delta_nlls)
     return scan_results
-
-
-def _run_minos(minuit_obj: iminuit.Minuit, minos: List[str], labels: List[str]) -> None:
-    """Determines parameter uncertainties for a list of parameters with MINOS.
-
-    Args:
-        minuit_obj (iminuit.Minuit): Minuit instance to use
-        minos (List[str]): parameters for which MINOS is run
-        labels (List[str]]): names of all parameters known to ``iminuit``, these names
-            are used in output (may be the same as the names under which ``iminiuit``
-            knows parameters)
-    """
-    for par_name in minos:
-        # get index of current parameter in labels (to translate its name if iminuit
-        # did not receive the parameter labels)
-        par_index = model_utils._get_parameter_index(par_name, minuit_obj.parameters)
-        if par_index == -1:
-            # parameter not found, skip calculation
-            continue
-        log.info(f"running MINOS for {labels[par_index]}")
-        minuit_obj.minos(var=par_name)
-
-    log.info("MINOS results:")
-    max_label_length = max([len(label) for label in labels])
-    minos_unc = minuit_obj.np_merrors()
-    for i_par, unc_down, unc_up in zip(range(len(labels)), minos_unc[0], minos_unc[1]):
-        # the uncertainties are 0.0 by default if MINOS has not been run
-        if unc_up != 0.0 or unc_down != 0.0:
-            log.info(
-                f"{labels[i_par].ljust(max_label_length)} = "
-                f"{minuit_obj.np_values()[i_par]:.4f} -{unc_down:.4f} +{unc_up:.4f}"
-            )
 
 
 def limit(
