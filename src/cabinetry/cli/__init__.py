@@ -88,6 +88,15 @@ def workspace(config: io.TextIOWrapper, ws_spec: io.TextIOWrapper) -> None:
 @click.command()
 @click.argument("ws_spec", type=click.File("r"))
 @click.option("--asimov", is_flag=True, help="fit Asimov dataset (default: False)")
+@click.option(
+    "--minos",
+    type=str,
+    multiple=True,
+    help="run MINOS for a parameter (default: disabled)",
+)
+@click.option(
+    "--goodness_of_fit", is_flag=True, help="calculate goodness-of-fit (default: False)"
+)
 @click.option("--pulls", is_flag=True, help="produce pull plot (default: False)")
 @click.option(
     "--corrmat", is_flag=True, help="produce correlation matrix (default: False)"
@@ -95,18 +104,31 @@ def workspace(config: io.TextIOWrapper, ws_spec: io.TextIOWrapper) -> None:
 @click.option(
     "--figfolder",
     default="figures/",
-    help="folder to save figures to (default: figures/)",
+    help='folder to save figures to (default: "figures")',
 )
 def fit(
-    ws_spec: io.TextIOWrapper, asimov: bool, pulls: bool, corrmat: bool, figfolder: str
+    ws_spec: io.TextIOWrapper,
+    asimov: bool,
+    minos: Tuple[str, ...],
+    goodness_of_fit: bool,
+    pulls: bool,
+    corrmat: bool,
+    figfolder: str,
 ) -> None:
     """Fits a workspace and optionally visualize the results.
 
     WS_SPEC: path to workspace used in fit
     """
     _set_logging()
+    # convert minos argument to None if no parameter is specified, otherwise to a list
+    if len(minos) == 0:
+        minos_converted = None
+    else:
+        minos_converted = list(minos)
     ws = json.load(ws_spec)
-    fit_results = cabinetry_fit.fit(ws, asimov=asimov)
+    fit_results = cabinetry_fit.fit(
+        ws, asimov=asimov, minos=minos_converted, goodness_of_fit=goodness_of_fit
+    )
     if pulls:
         cabinetry_visualize.pulls(fit_results, figfolder)
     if corrmat:
