@@ -162,20 +162,28 @@ def test_fit(mock_fit, mock_pulls, mock_corrmat, tmp_path):
     # pull plot
     result = runner.invoke(cli.fit, ["--pulls", workspace_path])
     assert result.exit_code == 0
-    assert mock_pulls.call_args_list == [((fit_results, "figures/"), {})]
+    assert mock_pulls.call_args_list == [((fit_results,), {"figure_folder": "figures"})]
 
     # correlation matrix plot
     result = runner.invoke(cli.fit, ["--corrmat", workspace_path])
     assert result.exit_code == 0
-    assert mock_corrmat.call_args_list == [((fit_results, "figures/"), {})]
+    assert mock_corrmat.call_args_list == [
+        ((fit_results,), {"figure_folder": "figures"})
+    ]
 
     # both plots, different folder
     result = runner.invoke(
-        cli.fit, ["--figfolder", "folder/", "--pulls", "--corrmat", workspace_path]
+        cli.fit, ["--figfolder", "folder", "--pulls", "--corrmat", workspace_path]
     )
     assert result.exit_code == 0
-    assert mock_corrmat.call_args_list[-1] == ((fit_results, "folder/"), {})
-    assert mock_pulls.call_args_list[-1] == ((fit_results, "folder/"), {})
+    assert mock_corrmat.call_args_list[-1] == (
+        (fit_results,),
+        {"figure_folder": "folder"},
+    )
+    assert mock_pulls.call_args_list[-1] == (
+        (fit_results,),
+        {"figure_folder": "folder"},
+    )
 
 
 @mock.patch("cabinetry.visualize.ranking", autospec=True)
@@ -225,19 +233,17 @@ def test_ranking(mock_fit, mock_rank, mock_vis, tmp_path):
     assert np.allclose(mock_vis.call_args[0][0].prefit_down, [[0.8]])
     assert np.allclose(mock_vis.call_args[0][0].postfit_up, [[1.1]])
     assert np.allclose(mock_vis.call_args[0][0].postfit_down, [[0.9]])
-    assert mock_vis.call_args[0][1] == "figures/"
-    assert mock_vis.call_args[1] == {"max_pars": 10}
+    assert mock_vis.call_args[1] == {"figure_folder": "figures", "max_pars": 10}
 
     # Asimov, maximum amount of parameters, custom folder
     result = runner.invoke(
         cli.ranking,
-        ["--asimov", "--max_pars", 3, "--figfolder", "folder/", workspace_path],
+        ["--asimov", "--max_pars", 3, "--figfolder", "folder", workspace_path],
     )
     assert result.exit_code == 0
     assert mock_fit.call_args_list[-1] == ((workspace,), {"asimov": True})
     assert mock_rank.call_args_list[-1] == ((workspace, fit_results), {"asimov": True})
-    assert mock_vis.call_args_list[-1][1] == {"max_pars": 3}
-    assert mock_vis.call_args_list[-1][0][1] == "folder/"
+    assert mock_vis.call_args_list[-1][1] == {"figure_folder": "folder", "max_pars": 3}
 
 
 @mock.patch("cabinetry.visualize.scan", autospec=True)
@@ -275,7 +281,7 @@ def test_scan(mock_scan, mock_vis, tmp_path):
         mock_vis.call_args[0][0].parameter_values, scan_results.parameter_values
     )
     assert np.allclose(mock_vis.call_args[0][0].delta_nlls, scan_results.delta_nlls)
-    assert mock_vis.call_args[0][1] == "figures/"
+    assert mock_vis.call_args[1] == {"figure_folder": "figures"}
 
     # only one bound
     with pytest.raises(
@@ -309,7 +315,7 @@ def test_scan(mock_scan, mock_vis, tmp_path):
             21,
             "--asimov",
             "--figfolder",
-            "folder/",
+            "folder",
             workspace_path,
             par_name,
         ],
@@ -319,4 +325,4 @@ def test_scan(mock_scan, mock_vis, tmp_path):
         (workspace, par_name),
         {"par_range": (0.0, 2.0), "n_steps": 21, "asimov": True},
     )
-    assert mock_vis.call_args[0][1] == "folder/"
+    assert mock_vis.call_args[1] == {"figure_folder": "folder"}
