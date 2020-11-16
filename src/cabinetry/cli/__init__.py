@@ -103,7 +103,7 @@ def workspace(config: io.TextIOWrapper, ws_spec: io.TextIOWrapper) -> None:
 )
 @click.option(
     "--figfolder",
-    default="figures/",
+    default="figures",
     help='folder to save figures to (default: "figures")',
 )
 def fit(
@@ -130,9 +130,9 @@ def fit(
         ws, asimov=asimov, minos=minos_converted, goodness_of_fit=goodness_of_fit
     )
     if pulls:
-        cabinetry_visualize.pulls(fit_results, figfolder)
+        cabinetry_visualize.pulls(fit_results, figure_folder=figfolder)
     if corrmat:
-        cabinetry_visualize.correlation_matrix(fit_results, figfolder)
+        cabinetry_visualize.correlation_matrix(fit_results, figure_folder=figfolder)
 
 
 @click.command()
@@ -143,8 +143,8 @@ def fit(
 )
 @click.option(
     "--figfolder",
-    default="figures/",
-    help="folder to save figures to (default: figures/)",
+    default="figures",
+    help='folder to save figures to (default: "figures")',
 )
 def ranking(
     ws_spec: io.TextIOWrapper, asimov: bool, max_pars: int, figfolder: str
@@ -157,7 +157,9 @@ def ranking(
     ws = json.load(ws_spec)
     fit_results = cabinetry_fit.fit(ws, asimov=asimov)
     ranking_results = cabinetry_fit.ranking(ws, fit_results, asimov=asimov)
-    cabinetry_visualize.ranking(ranking_results, figfolder, max_pars=max_pars)
+    cabinetry_visualize.ranking(
+        ranking_results, figure_folder=figfolder, max_pars=max_pars
+    )
 
 
 @click.command()
@@ -179,8 +181,8 @@ def ranking(
 @click.option("--asimov", is_flag=True, help="fit Asimov dataset (default: False)")
 @click.option(
     "--figfolder",
-    default="figures/",
-    help="folder to save figures to (default: figures/)",
+    default="figures",
+    help='folder to save figures to (default: "figures")',
 )
 def scan(
     ws_spec: io.TextIOWrapper,
@@ -218,7 +220,36 @@ def scan(
     scan_results = cabinetry_fit.scan(
         ws, par_name, par_range=par_range, n_steps=n_steps, asimov=asimov
     )
-    cabinetry_visualize.scan(scan_results, figfolder)
+    cabinetry_visualize.scan(scan_results, figure_folder=figfolder)
+
+
+@click.command()
+@click.argument("ws_spec", type=click.File("r"))
+@click.option("--asimov", is_flag=True, help="fit Asimov dataset (default: False)")
+@click.option(
+    "--tolerance",
+    default=0.01,
+    help="tolerance for convergence to CLs=0.05 (default: 0.01)",
+)
+@click.option(
+    "--figfolder",
+    default="figures",
+    help='folder to save figures to (default: "figures")',
+)
+def limit(
+    ws_spec: io.TextIOWrapper,
+    asimov: bool,
+    tolerance: float,
+    figfolder: str,
+) -> None:
+    """Calculates upper limits for parameter of interest, visualizes CLs distribution.
+
+    WS_SPEC: path to workspace used in fit
+    """
+    _set_logging()
+    ws = json.load(ws_spec)
+    limit_results = cabinetry_fit.limit(ws, asimov=asimov, tolerance=tolerance)
+    cabinetry_visualize.limit(limit_results, figure_folder=figfolder)
 
 
 cabinetry.add_command(templates)
@@ -227,3 +258,4 @@ cabinetry.add_command(workspace)
 cabinetry.add_command(fit)
 cabinetry.add_command(ranking)
 cabinetry.add_command(scan)
+cabinetry.add_command(limit)
