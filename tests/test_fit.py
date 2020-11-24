@@ -99,7 +99,7 @@ def test__fit_model_pyhf(mock_minos, example_spec, example_spec_multibin):
     model, data = model_utils.model_and_data(example_spec)
     fit_results = fit._fit_model_pyhf(model, data)
     assert np.allclose(fit_results.bestfit, [1.1, 8.32984849])
-    assert np.allclose(fit_results.uncertainty, [0.0, 0.38099445])
+    assert np.allclose(fit_results.uncertainty, [0.0, 0.38153046])
     assert fit_results.labels == ["staterror_Signal-Region", "Signal strength"]
     assert np.allclose(fit_results.best_twice_nll, 7.90080379)
     assert np.allclose(fit_results.corr_mat, [[0.0, 0.0], [0.0, 1.0]])
