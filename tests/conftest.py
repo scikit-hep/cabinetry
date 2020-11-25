@@ -1,5 +1,5 @@
 import pytest
-import uproot
+import uproot3 as uproot
 
 
 class Utils:
