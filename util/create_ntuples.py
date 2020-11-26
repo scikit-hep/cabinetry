@@ -3,7 +3,7 @@ import os
 
 import matplotlib.pyplot as plt
 import numpy as np
-import uproot
+import uproot3 as uproot
 
 
 def toy_distribution(noncentral, multiplier, offset, num_events):

@@ -1,6 +1,6 @@
 from setuptools import setup
 
-extras_require = {"contrib": ["matplotlib", "uproot", "uproot4>=0.0.19"]}
+extras_require = {"contrib": ["matplotlib", "uproot3", "uproot4>=0.0.19"]}
 extras_require["test"] = sorted(
     set(
         extras_require["contrib"]
