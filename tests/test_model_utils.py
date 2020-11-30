@@ -139,7 +139,7 @@ def test_calculate_stdev(example_spec, example_spec_multibin):
     total_stdev = model_utils.calculate_stdev(model, parameters, uncertainty, corr_mat)
     expected_stdev = [[8.056054, 1.670629], [2.775377]]
     for i_reg in range(2):
-        assert np.allclose(ak.to_list(total_stdev[i_reg]), expected_stdev[i_reg])
+        assert np.allclose(total_stdev[i_reg], expected_stdev[i_reg])
 
 
 def test_unconstrained_parameter_count(example_spec, example_spec_shapefactor):

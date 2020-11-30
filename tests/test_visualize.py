@@ -120,7 +120,7 @@ def test_data_MC_from_histograms(mock_load, mock_draw, mock_stdev):
     "cabinetry.configuration.get_region_dict",
     return_value={"Name": "region", "Variable": "x"},
 )
-@mock.patch("cabinetry.model_utils.calculate_stdev", return_value=np.asarray([[0.3]]))
+@mock.patch("cabinetry.model_utils.calculate_stdev", return_value=[[0.3]])
 @mock.patch(
     "cabinetry.model_utils.get_prefit_uncertainties",
     return_value=([0.04956657, 0.0]),
