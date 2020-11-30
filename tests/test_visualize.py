@@ -120,6 +120,7 @@ def test_data_MC_from_histograms(mock_load, mock_draw, mock_stdev):
     "cabinetry.configuration.get_region_dict",
     return_value={"Name": "region", "Variable": "x"},
 )
+@mock.patch("cabinetry.table._yields")
 @mock.patch("cabinetry.model_utils.calculate_stdev", return_value=[[0.3]])
 @mock.patch(
     "cabinetry.model_utils.get_prefit_uncertainties",
@@ -130,7 +131,14 @@ def test_data_MC_from_histograms(mock_load, mock_draw, mock_stdev):
     return_value=([1.0, 1.0]),
 )
 def test_data_MC(
-    mock_asimov, mock_unc, mock_stdev, mock_dict, mock_bins, mock_draw, example_spec
+    mock_asimov,
+    mock_unc,
+    mock_stdev,
+    mock_table,
+    mock_dict,
+    mock_bins,
+    mock_draw,
+    example_spec,
 ):
     config = {}
     figure_folder = "tmp"
@@ -154,6 +162,14 @@ def test_data_MC(
         mock_stdev.call_args_list[0][0][3], np.asarray([[1.0, 0.0], [0.0, 1.0]])
     )
     assert mock_stdev.call_args_list[0][1] == {}
+
+    # yield table
+    assert mock_table.call_count == 1
+    assert mock_table.call_args_list[0][0][0].spec == model_spec
+    assert mock_table.call_args_list[0][0][1] == [np.asarray([[51.839756]])]
+    assert mock_table.call_args_list[0][0][2] == [[0.3]]
+    assert mock_table.call_args_list[0][0][3] == [np.asarray([475])]
+    assert mock_table.call_args_list[0][1] == {}
 
     assert mock_dict.call_args_list == [[(config, "Signal Region"), {}]]
     assert mock_bins.call_args_list == [[({"Name": "region", "Variable": "x"},), {}]]
@@ -218,6 +234,10 @@ def test_data_MC(
         "tmp/Signal-Region_postfit.pdf"
     )
     assert mock_draw.call_args_list[1][1] == {"log_scale": False}
+
+    # no yield table
+    visualize.data_MC(config, example_spec, include_table=False)
+    assert mock_table.call_count == 2  # 2 calls from before
 
     # unknown plotting method
     with pytest.raises(NotImplementedError, match="unknown backend: unknown"):
