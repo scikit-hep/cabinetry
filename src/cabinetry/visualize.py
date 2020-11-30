@@ -9,6 +9,7 @@ from . import configuration
 from . import fit
 from . import histo
 from . import model_utils
+from . import table
 from . import template_builder
 
 
@@ -116,6 +117,7 @@ def data_MC(
     figure_folder: Union[str, pathlib.Path] = "figures",
     fit_results: Optional[fit.FitResults] = None,
     log_scale: Optional[bool] = None,
+    include_table: bool = True,
     method: str = "matplotlib",
 ) -> None:
     """Draws pre- and post-fit data/MC histograms from a ``pyhf`` workspace.
@@ -130,6 +132,8 @@ def data_MC(
             defaults to None (then the pre-fit configuration is drawn)
         log_scale (Optional[bool], optional): whether to use logarithmic vertical axis,
             defaults to None (automatically determine whether to use linear/log scale)
+        include_table (bool, optional): whether to also output a yield table, defaults
+            to True
         method (str, optional): backend to use for plotting, defaults to "matplotlib"
 
     Raises:
@@ -168,9 +172,16 @@ def data_MC(
         model, param_values, param_uncertainty, corr_mat
     )
 
-    for i_chan, channel_name in enumerate(
-        model.config.channels
-    ):  # process channel by channel
+    if include_table:
+        # show yield table
+        if prefit:
+            log.info("generating pre-fit yield table")
+        else:
+            log.info("generating post-fit yield table")
+        table._yields(model, model_yields, total_stdev_model, data)
+
+    # process channel by channel
+    for i_chan, channel_name in enumerate(model.config.channels):
         histogram_dict_list = []  # one dict per region/channel
 
         # get the region dictionary from the config for binning / variable name
