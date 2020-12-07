@@ -9,7 +9,7 @@ from . import configuration
 from . import fit
 from . import histo
 from . import model_utils
-from . import table
+from . import tabulate
 from . import template_builder
 
 
@@ -178,7 +178,7 @@ def data_MC(
             log.info("generating pre-fit yield table")
         else:
             log.info("generating post-fit yield table")
-        table._yields(model, model_yields, total_stdev_model, data)
+        tabulate._yields(model, model_yields, total_stdev_model, data)
 
     # process channel by channel
     for i_chan, channel_name in enumerate(model.config.channels):
