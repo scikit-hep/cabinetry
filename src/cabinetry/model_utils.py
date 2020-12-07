@@ -178,7 +178,7 @@ def calculate_stdev(
     parameters: np.ndarray,
     uncertainty: np.ndarray,
     corr_mat: np.ndarray,
-) -> ak.highlevel.Array:
+) -> List[List[float]]:
     """Calculates the symmetrized yield standard deviation of a model.
 
     Args:
@@ -189,7 +189,7 @@ def calculate_stdev(
         corr_mat (np.ndarray): correlation matrix
 
     Returns:
-        ak.highlevel.Array: array of channels, each channel is an array of standard
+        List[List[float]]: list of channels, each channel is a list of standard
         deviations per bin
     """
     # indices where to split to separate all bins into regions
@@ -260,7 +260,7 @@ def calculate_stdev(
     # convert to standard deviation
     total_stdev = np.sqrt(total_variance)
     log.debug(f"total stdev is {total_stdev}")
-    return total_stdev
+    return ak.to_list(total_stdev)
 
 
 def unconstrained_parameter_count(model: pyhf.pdf.Model) -> int:
