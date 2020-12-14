@@ -1,7 +1,7 @@
 import logging
 from typing import Any, Dict, List, Tuple, Union
 
-import awkward1 as ak
+import awkward as ak
 import numpy as np
 import pyhf
 
