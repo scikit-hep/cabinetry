@@ -1,10 +1,10 @@
 import pathlib
 from typing import List, Optional, Tuple
 
-import awkward1 as ak
+import awkward as ak
 import boost_histogram as bh
 import numpy as np
-import uproot4 as uproot
+import uproot
 
 
 def from_uproot(

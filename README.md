@@ -24,7 +24,7 @@ An incomplete list of interesting tools to interface:
 
 - [ServiceX](https://github.com/ssl-hep/ServiceX) for data delivery,
 - [coffea](https://github.com/CoffeaTeam/coffea) for histogram processing,
-- [uproot](https://github.com/scikit-hep/uproot) for reading [ROOT](https://root.cern.ch/) files,
+- [uproot](https://github.com/scikit-hep/uproot4) for reading [ROOT](https://root.cern.ch/) files,
 - for building likelihood functions (captured in so-called workspaces in [RooFit](https://root.cern.ch/roofit)) and inference:
   - [RooFit](https://root.cern.ch/roofit) to model probability distributions,
   - [RooStats](http://cds.cern.ch/record/1289965) for statistical tools,

@@ -31,7 +31,7 @@ jobs:
       run: |
         python -m pytest -r sx
 
-  awkward1:
+  awkward:
 
     runs-on: ${{ matrix.os }}
     strategy:
@@ -55,7 +55,7 @@ jobs:
       run: |
         python -m pytest -r sx
 
-  uproot4:
+  uproot:
 
     runs-on: ${{ matrix.os }}
     strategy:
