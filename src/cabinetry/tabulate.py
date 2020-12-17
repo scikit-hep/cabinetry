@@ -9,17 +9,22 @@ import tabulate
 log = logging.getLogger(__name__)
 
 
-def _header_name(channel_name: str, i_bin: int) -> str:
+def _header_name(channel_name: str, i_bin: int, unique: bool = True) -> str:
     """Constructs the header name for a column in a yield table.
+
+    There are two modes: by default the names are unique (to be used as keys). With
+    ``unique=False``, the region names are skipped for bins beyond the first bin (for
+    less redundant output).
 
     Args:
         channel_name (str): name of the channel (phase space region)
         i_bin (int): index of bin in channel
+        unique (bool, optional): whether to return a unique key, defaults to True
 
     Returns:
         str: the header name to be used for the column
     """
-    if i_bin == 0:
+    if i_bin == 0 or unique:
         header_name = f"{channel_name}\nbin {i_bin+1}"
     else:
         header_name = f"\nbin {i_bin+1}"
@@ -45,6 +50,7 @@ def _yields(
         List[Dict[str, Any]]: yield table for use with the ``tabulate`` package
     """
     table = []  # table containing all yields
+    headers = {}  # headers with nicer formatting for output
 
     # rows for each individual sample
     for i_sam, sample_name in enumerate(model.config.samples):
@@ -66,20 +72,22 @@ def _yields(
     for i_chan, channel_name in enumerate(model.config.channels):
         total_model = np.sum(model_yields[i_chan], axis=0)  # sum over samples
         for i_bin in range(model.config.channel_nbins[channel_name]):
+            header_name = _header_name(channel_name, i_bin)
+            headers.update(
+                {header_name: _header_name(channel_name, i_bin, unique=False)}
+            )
             total_dict.update(
                 {
-                    _header_name(channel_name, i_bin): f"{total_model[i_bin]:.2f} "
+                    header_name: f"{total_model[i_bin]:.2f} "
                     f"\u00B1 {total_stdev_model[i_chan][i_bin]:.2f}"
                 }
             )
-            data_dict.update(
-                {_header_name(channel_name, i_bin): f"{data[i_chan][i_bin]:.2f}"}
-            )
+            data_dict.update({header_name: f"{data[i_chan][i_bin]:.2f}"})
     table += [total_dict, data_dict]
 
     log.info(
         "yield table:\n"
-        + tabulate.tabulate(table, headers="keys", tablefmt="fancy_grid")
+        + tabulate.tabulate(table, headers=headers, tablefmt="fancy_grid")
     )
 
     return table
