@@ -9,11 +9,12 @@ from cabinetry import tabulate
     "test_input, expected",
     [
         (("abc", 0), "abc\nbin 1"),
-        (("abc", 2), "\nbin 3"),
+        (("abc", 2), "abc\nbin 3"),
     ],
 )
 def test__header_name(test_input, expected):
     assert tabulate._header_name(*test_input) == expected
+    assert tabulate._header_name("abc", 2, unique=False) == "\nbin 3"
 
 
 def test__yields(example_spec_multibin, example_spec_with_background):
@@ -28,19 +29,19 @@ def test__yields(example_spec_multibin, example_spec_with_background):
         {
             "sample": "Signal",
             "region_1\nbin 1": "25.00",
-            "\nbin 2": "5.00",
+            "region_1\nbin 2": "5.00",
             "region_2\nbin 1": "8.00",
         },
         {
             "sample": "total",
             "region_1\nbin 1": "25.00 \u00B1 5.00",
-            "\nbin 2": "5.00 \u00B1 2.00",
+            "region_1\nbin 2": "5.00 \u00B1 2.00",
             "region_2\nbin 1": "8.00 \u00B1 1.00",
         },
         {
             "sample": "data",
             "region_1\nbin 1": "35.00",
-            "\nbin 2": "8.00",
+            "region_1\nbin 2": "8.00",
             "region_2\nbin 1": "10.00",
         },
     ]
