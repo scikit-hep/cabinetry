@@ -294,8 +294,8 @@ def pulls(
             parameter labels
         figure_folder (Union[str, pathlib.Path], optional): path to the folder to save
             figures in, defaults to "figures"
-        exclude (Optional[Union[str, List[str]]], optional): parameter or list/tuple of
-            parameters to exclude from plot, defaults to None (nothing excluded)
+        exclude (Optional[Union[str, List[str], Tuple[str, ...]]], optional): parameter
+            or parameters to exclude from plot, defaults to None (nothing excluded)
         method (str, optional): backend to use for plotting, defaults to "matplotlib"
 
     Raises:
