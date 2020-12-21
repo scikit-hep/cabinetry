@@ -324,6 +324,22 @@ def test_pulls(mock_draw):
     assert mock_draw.call_args[0][3] == figure_path
     assert mock_draw.call_args[1] == {}
 
+    # filtering single parameter instead of list
+    visualize.pulls(
+        fit_results,
+        figure_folder=folder_path,
+        exclude=exclude[0],
+        method="matplotlib",
+    )
+    assert np.allclose(mock_draw.call_args[0][0], filtered_bestfit)
+    assert np.allclose(mock_draw.call_args[0][1], filtered_uncertainty)
+    assert np.any(
+        [
+            mock_draw.call_args[0][2][i] == filtered_labels[i]
+            for i in range(len(filtered_labels))
+        ]
+    )
+
     # without filtering via list, but with staterror removal
     # and fixed parameter removal
     fit_results.uncertainty[0] = 0.0
