@@ -116,7 +116,7 @@ def _fit_model_pyhf(
     data: List[float],
     init_pars: Optional[List[float]] = None,
     fix_pars: Optional[List[bool]] = None,
-    minos: Optional[List[str]] = None,
+    minos: Optional[Union[List[str], Tuple[str, ...]]] = None,
 ) -> FitResults:
     """Uses the ``pyhf.infer`` API to perform a maximum likelihood fit.
 
@@ -131,8 +131,9 @@ def _fit_model_pyhf(
             defaults to None (use ``pyhf`` suggested inits)
         fix_pars (Optional[List[bool]], optional): list of booleans specifying which
             parameters are held constant, defaults to None (use ``pyhf`` suggestion)
-        minos (Optional[List[str]], optional): runs the MINOS algorithm for all
-            parameters specified in the list, defaults to None (does not run MINOS)
+        minos (Optional[Union[List[str], Tuple[str, ...]]], optional): runs the MINOS
+            algorithm for all parameters specified, defaults to None (does not run
+            MINOS)
 
     Returns:
         FitResults: object storing relevant fit results
@@ -175,7 +176,7 @@ def _fit_model_custom(
     data: List[float],
     init_pars: Optional[List[float]] = None,
     fix_pars: Optional[List[bool]] = None,
-    minos: Optional[List[str]] = None,
+    minos: Optional[Union[List[str], Tuple[str, ...]]] = None,
 ) -> FitResults:
     """Uses ``iminuit`` directly to perform a maximum likelihood fit.
 
@@ -190,8 +191,9 @@ def _fit_model_custom(
             defaults to None (use ``pyhf`` suggested inits)
         fix_pars (Optional[List[bool]], optional): list of booleans specifying which
             parameters are held constant, defaults to None (use ``pyhf`` suggestion)
-        minos (Optional[List[str]], optional): runs the MINOS algorithm for all
-            parameters specified in the list, defaults to None (does not run MINOS)
+        minos (Optional[Union[List[str], Tuple[str, ...]]], optional): runs the MINOS
+            algorithm for all parameters specified, defaults to None (does not run
+            MINOS)
 
     Returns:
         FitResults: object storing relevant fit results
@@ -247,7 +249,7 @@ def _fit_model(
     data: List[float],
     init_pars: Optional[List[float]] = None,
     fix_pars: Optional[List[bool]] = None,
-    minos: Optional[List[str]] = None,
+    minos: Optional[Union[List[str], Tuple[str, ...]]] = None,
     custom_fit: bool = False,
 ) -> FitResults:
     """Interface for maximum likelihood fits through ``pyhf.infer`` API or ``iminuit``.
@@ -263,8 +265,9 @@ def _fit_model(
             defaults to None (use ``pyhf`` suggested inits)
         fix_pars (Optional[List[bool]], optional): list of booleans specifying which
             parameters are held constant, defaults to None (use ``pyhf`` suggestion)
-        minos (Optional[List[str]], optional): runs the MINOS algorithm for all
-            parameters specified in the list, defaults to None (does not run MINOS)
+        minos (Optional[Union[List[str], Tuple[str, ...]]], optional): runs the MINOS
+            algorithm for all parameters specified, defaults to None (does not run
+            MINOS)
         custom_fit (bool, optional): whether to use the ``pyhf.infer`` API or
             ``iminuit``, defaults to False (using ``pyhf.infer``)
 
@@ -285,12 +288,16 @@ def _fit_model(
     return fit_results
 
 
-def _run_minos(minuit_obj: iminuit.Minuit, minos: List[str], labels: List[str]) -> None:
+def _run_minos(
+    minuit_obj: iminuit.Minuit,
+    minos: Union[List[str], Tuple[str, ...]],
+    labels: List[str],
+) -> None:
     """Determines parameter uncertainties for a list of parameters with MINOS.
 
     Args:
         minuit_obj (iminuit.Minuit): Minuit instance to use
-        minos (List[str]): parameters for which MINOS is run
+        minos (Union[List[str], Tuple[str, ...]]): parameters for which MINOS is run
         labels (List[str]]): names of all parameters known to ``iminuit``, these names
             are used in output (may be the same as the names under which ``iminiuit``
             knows parameters)
@@ -359,7 +366,7 @@ def _goodness_of_fit(
 def fit(
     spec: Dict[str, Any],
     asimov: bool = False,
-    minos: Optional[Union[str, List[str]]] = None,
+    minos: Optional[Union[str, List[str], Tuple[str, ...]]] = None,
     goodness_of_fit: bool = False,
     custom_fit: bool = False,
 ) -> FitResults:
@@ -372,8 +379,9 @@ def fit(
     Args:
         spec (Dict[str, Any]): a ``pyhf`` workspace specification
         asimov (bool, optional): whether to fit the Asimov dataset, defaults to False
-        minos (Optional[Union[str, List[str]]], optional): runs the MINOS algorithm for
-            all parameters specified in the list, defaults to None (does not run MINOS)
+        minos (Optional[Union[str, List[str], Tuple[str, ...]]], optional): runs the
+            MINOS algorithm for all parameters specified, defaults to None (does not run
+            MINOS)
         goodness_of_fit (bool, optional): calculate goodness of fit with a saturated
             model (perfectly fits data with shapefactors in all bins), defaults to False
         custom_fit (bool, optional): whether to use the ``pyhf.infer`` API or
@@ -386,8 +394,8 @@ def fit(
 
     model, data = model_utils.model_and_data(spec, asimov=asimov)
 
-    # convert minos parameter to list, if a parameter is specified and is not a list
-    if minos is not None and not isinstance(minos, list):
+    # convert minos parameter to list if a single parameter is specified as string
+    if minos is not None and isinstance(minos, str):
         minos = [minos]
 
     # perform fit

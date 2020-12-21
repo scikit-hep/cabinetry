@@ -295,7 +295,7 @@ def test_pulls(mock_draw):
     bestfit = np.asarray([0.8, 1.0, 1.05, 1.1])
     uncertainty = np.asarray([0.9, 1.0, 0.03, 0.7])
     labels = ["a", "b", "staterror_region[bin_0]", "c"]
-    exclude_list = ["a"]
+    exclude = ["a"]
     folder_path = "tmp"
     fit_results = fit.FitResults(bestfit, uncertainty, labels, np.empty(0), 1.0)
 
@@ -308,7 +308,7 @@ def test_pulls(mock_draw):
     visualize.pulls(
         fit_results,
         figure_folder=folder_path,
-        exclude_list=exclude_list,
+        exclude=exclude,
         method="matplotlib",
     )
 
@@ -323,6 +323,22 @@ def test_pulls(mock_draw):
     )
     assert mock_draw.call_args[0][3] == figure_path
     assert mock_draw.call_args[1] == {}
+
+    # filtering single parameter instead of list
+    visualize.pulls(
+        fit_results,
+        figure_folder=folder_path,
+        exclude=exclude[0],
+        method="matplotlib",
+    )
+    assert np.allclose(mock_draw.call_args[0][0], filtered_bestfit)
+    assert np.allclose(mock_draw.call_args[0][1], filtered_uncertainty)
+    assert np.any(
+        [
+            mock_draw.call_args[0][2][i] == filtered_labels[i]
+            for i in range(len(filtered_labels))
+        ]
+    )
 
     # without filtering via list, but with staterror removal
     # and fixed parameter removal
@@ -349,7 +365,7 @@ def test_pulls(mock_draw):
         visualize.pulls(
             fit_results,
             figure_folder=folder_path,
-            exclude_list=exclude_list,
+            exclude=exclude,
             method="unknown",
         )
 

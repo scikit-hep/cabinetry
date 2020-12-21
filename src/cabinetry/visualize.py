@@ -1,7 +1,7 @@
 import glob
 import logging
 import pathlib
-from typing import Any, Dict, List, Optional, Union
+from typing import Any, Dict, List, Optional, Tuple, Union
 
 import numpy as np
 
@@ -284,7 +284,7 @@ def correlation_matrix(
 def pulls(
     fit_results: fit.FitResults,
     figure_folder: Union[str, pathlib.Path] = "figures",
-    exclude_list: Optional[List[str]] = None,
+    exclude: Optional[Union[str, List[str], Tuple[str, ...]]] = None,
     method: str = "matplotlib",
 ) -> None:
     """Draws a pull plot of parameter results and uncertainties.
@@ -294,8 +294,8 @@ def pulls(
             parameter labels
         figure_folder (Union[str, pathlib.Path], optional): path to the folder to save
             figures in, defaults to "figures"
-        exclude_list (Optional[List[str]], optional): list of parameters to exclude from
-            plot, defaults to None (nothing excluded)
+        exclude (Optional[Union[str, List[str], Tuple[str, ...]]], optional): parameter
+            or parameters to exclude from plot, defaults to None (nothing excluded)
         method (str, optional): backend to use for plotting, defaults to "matplotlib"
 
     Raises:
@@ -304,21 +304,27 @@ def pulls(
     figure_path = pathlib.Path(figure_folder) / "pulls.pdf"
     labels_np = np.asarray(fit_results.labels)
 
-    if exclude_list is None:
-        exclude_list = []
+    if exclude is None:
+        exclude_set = set()
+    elif isinstance(exclude, str):
+        exclude_set = {exclude}
+    else:
+        exclude_set = set(exclude)
 
     # exclude fixed parameters from pull plot
-    exclude_list += [
-        label
-        for i_np, label in enumerate(labels_np)
-        if fit_results.uncertainty[i_np] == 0.0
-    ]
+    exclude_set.update(
+        [
+            label
+            for i_np, label in enumerate(labels_np)
+            if fit_results.uncertainty[i_np] == 0.0
+        ]
+    )
 
     # exclude staterror parameters from pull plot (they are centered at 1)
-    exclude_list += [label for label in labels_np if label[0:10] == "staterror_"]
+    exclude_set.update([label for label in labels_np if label[0:10] == "staterror_"])
 
-    # filter out parameters
-    mask = [True if label not in exclude_list else False for label in labels_np]
+    # filter out user-specified parameters
+    mask = [True if label not in exclude_set else False for label in labels_np]
     bestfit = fit_results.bestfit[mask]
     uncertainty = fit_results.uncertainty[mask]
     labels_np = labels_np[mask]
