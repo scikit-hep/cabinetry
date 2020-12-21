@@ -295,7 +295,7 @@ def test_pulls(mock_draw):
     bestfit = np.asarray([0.8, 1.0, 1.05, 1.1])
     uncertainty = np.asarray([0.9, 1.0, 0.03, 0.7])
     labels = ["a", "b", "staterror_region[bin_0]", "c"]
-    exclude_list = ["a"]
+    exclude = ["a"]
     folder_path = "tmp"
     fit_results = fit.FitResults(bestfit, uncertainty, labels, np.empty(0), 1.0)
 
@@ -308,7 +308,7 @@ def test_pulls(mock_draw):
     visualize.pulls(
         fit_results,
         figure_folder=folder_path,
-        exclude_list=exclude_list,
+        exclude=exclude,
         method="matplotlib",
     )
 
@@ -349,7 +349,7 @@ def test_pulls(mock_draw):
         visualize.pulls(
             fit_results,
             figure_folder=folder_path,
-            exclude_list=exclude_list,
+            exclude=exclude,
             method="unknown",
         )
 
