@@ -87,7 +87,11 @@ def _yields(
 
     log.info(
         "yield table:\n"
-        + tabulate.tabulate(table, headers=headers, tablefmt="fancy_grid")
+        + tabulate.tabulate(
+            table,
+            headers=headers,  # type: ignore
+            tablefmt="fancy_grid",
+        )
     )
 
     return table
