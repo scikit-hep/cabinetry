@@ -671,7 +671,7 @@ def limit(
                 poi,
                 data,
                 model,
-                qtilde=True,
+                test_stat="qtilde",
                 return_expected_set=True,
                 par_bounds=par_bounds,
             )
