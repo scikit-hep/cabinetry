@@ -1,3 +1,7 @@
+.. image:: _static/cabinetry_logo_small.png
+  :width: 480
+  :alt: cabinetry logo
+
 cabinetry
 ==============================
 
