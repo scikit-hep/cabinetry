@@ -682,7 +682,7 @@ def limit(
             f"{model.config.poi_name} = {poi:.4f}, {limit_label} CLs = "
             f"{current_CLs:.4f}"
         )
-        return np.abs(current_CLs - 0.05)
+        return current_CLs - 0.05
 
     # calculate all limits, one by one: observed, expected -2 sigma, expected -1 sigma,
     # expected, expected +1 sigma, expected +2 sigma
@@ -701,25 +701,24 @@ def limit(
         log.info(f"determining {limit_label} upper limit")
 
         # find the 95% CL upper limit
-        res = scipy.optimize.minimize_scalar(
+        res = scipy.optimize.root_scalar(
             _CLs_distance_to_crossing,
             bracket=bracket,
             args=(data, model, i_limit, limit_label),
-            method="brent",
+            method="brentq",
             options={"xtol": tolerance, "maxiter": 100},
         )
-        if (not res.success) or (res.fun > tolerance):
+        if not res.converged:
             log.error(
-                f"failed to converge after {res.nfev} steps, distance from CLS=0.05 is "
-                f"{res.fun:.4f}"
+                f"failed to converge after {res.function_calls} steps: {res.flag}"
             )
             all_converged = False
         else:
-            log.info(f"successfully converged after {res.nfev} steps")
+            log.info(f"successfully converged after {res.function_calls} steps")
 
-        log.info(f"{limit_label} upper limit: {res.x:.4f}")
-        all_limits.append(res.x)
-        steps_total += res.nfev
+        log.info(f"{limit_label} upper limit: {res.root:.4f}")
+        all_limits.append(res.root)
+        steps_total += res.function_calls
 
         # determine the starting bracket for the next limit calculation
         if i_limit < 5:
@@ -733,7 +732,7 @@ def limit(
             # for i_limit = 0, the next limit will be expected -2 sigma, corresponding
             # to expected_CLs_np[:, 0] etc.
             next_bracket: List[float] = np.interp(
-                [0.06, 0.04], expected_CLs_np[:, i_limit][::-1], poi_list_np[::-1]
+                [0.07, 0.03], expected_CLs_np[:, i_limit][::-1], poi_list_np[::-1]
             ).tolist()
             # if the interpolation fails and the lower/upper bound are the same, then
             # offset both values to avoid getting stuck
