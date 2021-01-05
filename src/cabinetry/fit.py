@@ -588,9 +588,10 @@ def scan(
 
 def limit(
     spec: Dict[str, Any],
-    bracket: Optional[List[float]] = None,
+    bracket: Optional[Union[List[float], Tuple[float, float]]] = None,
     asimov: bool = False,
     tolerance: float = 0.01,
+    maxiter: int = 100,
 ) -> LimitResults:
     """Calculates observed and expected 95% confidence level upper parameter limits.
 
@@ -599,13 +600,15 @@ def limit(
 
     Args:
         spec (Dict[str, Any]): a ``pyhf`` workspace specification
-        bracket (Optional[List[float]], optional): the two POI values used to start the
-            observed limit determination, example: ``[1.0, 2.0]`` (final POI values may
-            lie outside this bracket), the two values must not be the same, defaults to
-            None (then uses ``[0.5, 1.5]`` as default)
+        bracket (Optional[Union[List[float], Tuple[float, float]]], optional): the two
+            POI values used to start the observed limit determination, the limit must
+            lie between these values and the values must not be the same, defaults to
+            None (then uses ``(0.01, 10.0)`` as default)
         asimov (bool, optional): whether to fit the Asimov dataset, defaults to False
-        tolerance (float, optional): tolerance for convergence to CLs=0.05, defaults to
-            0.01
+        tolerance (float, optional): tolerance in POI value for convergence to CLs=0.05,
+            defaults to 0.01
+        maxiter (int, optional): maximum number of steps for limit finding, defaults to
+            100
 
     Raises:
         ValueError: if lower and upper bracket value are the same
@@ -613,8 +616,10 @@ def limit(
     Returns:
         LimitResults: observed and expected limits, CLs values, and scanned points
     """
+    bracket_left_default = 0.01
+    bracket_right_default = 10.0
     if bracket is None:
-        bracket = [0.5, 1.5]
+        bracket = (bracket_left_default, bracket_right_default)
     elif bracket[0] == bracket[1]:
         raise ValueError(f"the two bracket values must not be the same: " f"{bracket}")
 
@@ -631,19 +636,21 @@ def limit(
     poi_list = []  # scanned POI values
     observed_CLs_list = []  # observed CLs values, one entry per scan point
     expected_CLs_list = []  # expected CLs values, 5 per point (with 1 and 2 sigma band)
+    cache_CLs: Dict[float, tuple] = {}  # cache to avoid re-fitting
 
-    def _CLs_distance_to_crossing(
+    def _CLs_minus_threshold(
         poi: float,
         data: List[float],
         model: pyhf.pdf.Model,
         which_limit: int,
         limit_label: str,
     ) -> float:
-        """Objective function to minimize in order to find CLs=0.05 crossing.
+        """The root of this function is the POI value at the CLs=0.05 crossing.
 
         Each observed and expected CLs result is also appended to lists, useful for
         visualization and to optimize the starting bracket for subsequent calculations.
-        For POI values below 0, returns the maximum possible distance of 0.95.
+        Returns 0.95 for POI values below 0. Makes use of an external cache to avoid
+        re-fitting with known POI values.
 
         Args:
             poi (float): value for parameter of interest
@@ -657,32 +664,37 @@ def limit(
         Returns:
             float: absolute value of difference to CLs=0.05
         """
-        if poi < 0:
+        if poi <= 0:
             # no fit needed for negative POI value, return a default value
             log.debug(
-                f"optimizer used {model.config.poi_name} = {poi:.4f}, skipping fit and "
-                f"setting CLs = 1"
+                f"skipping fit for {model.config.poi_name} = {poi:.4f}, setting CLs = 1"
             )
             return 0.95  # corresponds to distance of CLs = 1 to target CLs = 0.05
-        results = pyhf.infer.hypotest(
-            poi,
-            data,
-            model,
-            qtilde=True,
-            return_expected_set=True,
-            par_bounds=par_bounds,
-        )
-        observed = float(results[0])
-        expected = np.asarray(results[1])
-        poi_list.append(poi)
-        observed_CLs_list.append(observed)
-        expected_CLs_list.append(expected)
+        cache = cache_CLs.get(poi)
+        if cache:
+            observed, expected = cache  # use result from cache
+        else:
+            # calculate CLs
+            results = pyhf.infer.hypotest(
+                poi,
+                data,
+                model,
+                qtilde=True,
+                return_expected_set=True,
+                par_bounds=par_bounds,
+            )
+            observed = float(results[0])
+            expected = np.asarray(results[1])
+            poi_list.append(poi)
+            observed_CLs_list.append(observed)
+            expected_CLs_list.append(expected)
+            cache_CLs.update({poi: (observed, expected)})
         current_CLs = np.hstack((observed, expected))[which_limit]
         log.debug(
             f"{model.config.poi_name} = {poi:.4f}, {limit_label} CLs = "
-            f"{current_CLs:.4f}"
+            f"{current_CLs:.4f}{' (cached)' if cache else ''}"
         )
-        return np.abs(current_CLs - 0.05)
+        return current_CLs - 0.05
 
     # calculate all limits, one by one: observed, expected -2 sigma, expected -1 sigma,
     # expected, expected +1 sigma, expected +2 sigma
@@ -700,46 +712,59 @@ def limit(
     for i_limit, limit_label in enumerate(limit_labels):
         log.info(f"determining {limit_label} upper limit")
 
-        # find the 95% CL upper limit
-        res = scipy.optimize.minimize_scalar(
-            _CLs_distance_to_crossing,
-            bracket=bracket,
-            args=(data, model, i_limit, limit_label),
-            method="brent",
-            options={"xtol": tolerance, "maxiter": 100},
-        )
-        if (not res.success) or (res.fun > tolerance):
+        try:
+            # find the 95% CL upper limit
+            res = scipy.optimize.root_scalar(
+                _CLs_minus_threshold,
+                bracket=bracket,
+                args=(data, model, i_limit, limit_label),
+                method="brentq",
+                options={"xtol": tolerance, "maxiter": maxiter},
+            )
+        except ValueError:
+            # invalid starting bracket is most common issue
             log.error(
-                f"failed to converge after {res.nfev} steps, distance from CLS=0.05 is "
-                f"{res.fun:.4f}"
+                f"CLs values at {bracket[0]:.4f} and {bracket[1]:.4f} do not bracket "
+                f"CLs=0.05, try a different starting bracket"
+            )
+            raise
+
+        if not res.converged:
+            log.error(
+                f"failed to converge after {res.function_calls} steps: {res.flag}"
             )
             all_converged = False
         else:
-            log.info(f"successfully converged after {res.nfev} steps")
+            log.info(f"successfully converged after {res.function_calls} steps")
 
-        log.info(f"{limit_label} upper limit: {res.x:.4f}")
-        all_limits.append(res.x)
-        steps_total += res.nfev
+        log.info(f"{limit_label} upper limit: {res.root:.4f}")
+        all_limits.append(res.root)
+        steps_total += res.function_calls
 
         # determine the starting bracket for the next limit calculation
         if i_limit < 5:
-            # get sorted list of POI values and associated expected CLs
-            sorted_indices = np.argsort(poi_list)
-            expected_CLs_np = np.asarray(expected_CLs_list)[sorted_indices]
-            poi_list_np = np.asarray(poi_list)[sorted_indices]
+            # list of POI values and associated expected CLs
+            exp_CLs_next = np.asarray(expected_CLs_list)[:, i_limit]
 
-            # interpolate to get expected CLs=0.06 and CLs=0.04 positions, inverted as
-            # np.interp expects function to increase
-            # for i_limit = 0, the next limit will be expected -2 sigma, corresponding
-            # to expected_CLs_np[:, 0] etc.
-            next_bracket: List[float] = np.interp(
-                [0.06, 0.04], expected_CLs_np[:, i_limit][::-1], poi_list_np[::-1]
-            ).tolist()
-            # if the interpolation fails and the lower/upper bound are the same, then
-            # offset both values to avoid getting stuck
-            if next_bracket[0] == next_bracket[1]:
-                next_bracket = [next_bracket[0] - 1, next_bracket[1] + 1]
-            bracket = next_bracket
+            # left: CLs has to be > 0.05, mask out values where CLs <= 0.05
+            masked_CLs_left = np.where(exp_CLs_next <= 0.05, 1, exp_CLs_next)
+            if sum(masked_CLs_left != 1) == 0:
+                # all values are below 0.05, pick default lower bound
+                bracket_left = bracket_left_default
+            else:
+                # find closest to CLs = 0.05 from above
+                bracket_left = poi_list[np.argmin(masked_CLs_left)]
+
+            # right: CLs has to be < 0.05, mask out values where CLs >= 0.05
+            masked_CLs_right = np.where(exp_CLs_next >= 0.05, -1, exp_CLs_next)
+            if sum(masked_CLs_right != -1) == 0:
+                # all values are above 0.05, pick default upper bound
+                bracket_right = bracket_right_default
+            else:
+                # find closest to CLs=0.05 from below
+                bracket_right = poi_list[np.argmax(masked_CLs_right)]
+
+            bracket = (bracket_left, bracket_right)
 
     # report all results
     log.info(f"total of {steps_total} steps to calculate all limits")

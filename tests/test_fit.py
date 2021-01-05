@@ -1,4 +1,5 @@
 import logging
+import re
 from unittest import mock
 
 import iminuit
@@ -508,43 +509,39 @@ def test_limit(example_spec_with_background, caplog):
     caplog.set_level(logging.DEBUG)
 
     # expected values for results
-    observed_limit = 0.748
-    expected_limit = [0.300, 0.410, 0.583, 0.833, 1.159]
+    observed_limit = 0.749
+    expected_limit = [0.302, 0.410, 0.581, 0.831, 1.160]
 
     limit_results = fit.limit(example_spec_with_background)
     assert np.allclose(limit_results.observed_limit, observed_limit, rtol=1e-2)
     assert np.allclose(limit_results.expected_limit, expected_limit, rtol=1e-2)
     # compare a few CLs values
-    assert np.allclose(limit_results.observed_CLs[0], 0.707447)
+    assert np.allclose(limit_results.observed_CLs[0], 0.972186)
     assert np.allclose(
         limit_results.expected_CLs[0],
-        [0.240884, 0.386364, 0.586467, 0.803260, 0.948896],
+        [0.917884, 0.946283, 0.971391, 0.989500, 0.997946],
     )
-    assert np.allclose(limit_results.poi_values[0], 0.152476)
+    assert np.allclose(limit_results.poi_values[0], 0.01)
     assert np.allclose(limit_results.observed_CLs[-1], 0.0)
     assert np.allclose(limit_results.expected_CLs[-1], [0.0, 0.0, 0.0, 0.0, 0.0])
-    assert np.allclose(limit_results.poi_values[-1], 4.736068)
+    assert np.allclose(limit_results.poi_values[-1], 10.0)
     # verify that POI values are sorted
     assert np.allclose(limit_results.poi_values, sorted(limit_results.poi_values))
     caplog.clear()
 
-    # accesses negative POI values since upper bracket is too high
+    # access negative POI values with lower bracket below zero
     limit_results = fit.limit(
-        example_spec_with_background, bracket=[1, 5], tolerance=0.05
+        example_spec_with_background, bracket=(-1, 5), tolerance=0.05
     )
-    assert (
-        "optimizer used Signal strength = -5.4721, skipping fit and setting CLs = 1"
-        in [rec.message for rec in caplog.records]
-    )
+    assert "skipping fit for Signal strength = -1.0000, setting CLs = 1" in [
+        rec.message for rec in caplog.records
+    ]
     assert np.allclose(limit_results.observed_limit, observed_limit, rtol=5e-2)
     assert np.allclose(limit_results.expected_limit, expected_limit, rtol=5e-2)
     caplog.clear()
 
-    # convergence issues due to choice of bracket (needs larger bounds)
-    example_spec_with_background["measurements"][0]["config"]["parameters"][0][
-        "bounds"
-    ] = [[0.0, 500.0]]
-    fit.limit(example_spec_with_background, bracket=[10, 50])
+    # convergence issues due to number of iterations
+    fit.limit(example_spec_with_background, bracket=(0.1, 1), maxiter=1)
     assert "one or more calculations did not converge, check log" in [
         rec.message for rec in caplog.records
     ]
@@ -555,10 +552,22 @@ def test_limit(example_spec_with_background, caplog):
         "inits"
     ] = [0.0]
     limit_results = fit.limit(example_spec_with_background, asimov=True)
-    assert np.allclose(limit_results.observed_limit, 0.587, rtol=1e-2)
+    assert np.allclose(limit_results.observed_limit, 0.584, rtol=2e-2)
     assert np.allclose(limit_results.expected_limit, expected_limit, rtol=2e-2)
+    caplog.clear()
+
+    # bracket does not contain root
+    with pytest.raises(
+        ValueError, match=re.escape("f(a) and f(b) must have different signs")
+    ):
+        fit.limit(example_spec_with_background, bracket=(1.0, 2.0))
+        assert (
+            "CLs values at 1.000 and 2.000 do not bracket CLs=0.05, try a different "
+            "starting bracket" in [rec.message for rec in caplog.records]
+        )
     caplog.clear()
 
     # bracket with identical values
     with pytest.raises(ValueError, match="the two bracket values must not be the same"):
-        fit.limit(example_spec_with_background, bracket=[3.0, 3.0])
+        fit.limit(example_spec_with_background, bracket=(3.0, 3.0))
+    caplog.clear()
