@@ -591,6 +591,7 @@ def limit(
     bracket: Optional[Union[List[float], Tuple[float, float]]] = None,
     asimov: bool = False,
     tolerance: float = 0.01,
+    maxiter: int = 100,
 ) -> LimitResults:
     """Calculates observed and expected 95% confidence level upper parameter limits.
 
@@ -606,6 +607,8 @@ def limit(
         asimov (bool, optional): whether to fit the Asimov dataset, defaults to False
         tolerance (float, optional): tolerance in POI value for convergence to CLs=0.05,
             defaults to 0.01
+        maxiter (int, optional): maximum number of steps for limit finding, defaults to
+            100
 
     Raises:
         ValueError: if lower and upper bracket value are the same
@@ -664,8 +667,7 @@ def limit(
         if poi <= 0:
             # no fit needed for negative POI value, return a default value
             log.debug(
-                f"optimizer used {model.config.poi_name} = {poi:.4f}, skipping fit and "
-                f"setting CLs = 1"
+                f"skipping fit for {model.config.poi_name} = {poi:.4f}, setting CLs = 1"
             )
             return 0.95  # corresponds to distance of CLs = 1 to target CLs = 0.05
         cache = cache_CLs.get(poi)
@@ -717,7 +719,7 @@ def limit(
                 bracket=bracket,
                 args=(data, model, i_limit, limit_label),
                 method="brentq",
-                options={"xtol": tolerance, "maxiter": 100},
+                options={"xtol": tolerance, "maxiter": maxiter},
             )
         except ValueError:
             # invalid starting bracket is most common issue
