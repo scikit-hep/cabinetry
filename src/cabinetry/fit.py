@@ -604,8 +604,8 @@ def limit(
             lie between these values and the values must not be the same, defaults to
             None (then uses ``(0.01, 10.0)`` as default)
         asimov (bool, optional): whether to fit the Asimov dataset, defaults to False
-        tolerance (float, optional): tolerance for convergence to CLs=0.05, defaults to
-            0.01
+        tolerance (float, optional): tolerance in POI value for convergence to CLs=0.05,
+            defaults to 0.01
 
     Raises:
         ValueError: if lower and upper bracket value are the same
