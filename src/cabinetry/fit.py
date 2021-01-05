@@ -603,7 +603,8 @@ def limit(
         bracket (Optional[Union[List[float], Tuple[float, float]]], optional): the two
             POI values used to start the observed limit determination, the limit must
             lie between these values and the values must not be the same, defaults to
-            None (then uses ``(0.01, 10.0)`` as default)
+            None (then uses ``0.01`` as default lower value and the upper POI bound
+            specified in the measurement as default upper value)
         asimov (bool, optional): whether to fit the Asimov dataset, defaults to False
         tolerance (float, optional): tolerance in POI value for convergence to CLs=0.05,
             defaults to 0.01
@@ -616,13 +617,6 @@ def limit(
     Returns:
         LimitResults: observed and expected limits, CLs values, and scanned points
     """
-    bracket_left_default = 0.01
-    bracket_right_default = 10.0
-    if bracket is None:
-        bracket = (bracket_left_default, bracket_right_default)
-    elif bracket[0] == bracket[1]:
-        raise ValueError(f"the two bracket values must not be the same: " f"{bracket}")
-
     pyhf.set_backend("numpy", pyhf.optimize.minuit_optimizer(verbose=False))
     model, data = model_utils.model_and_data(spec, asimov=asimov)
 
@@ -632,6 +626,14 @@ def limit(
     par_bounds = model.config.suggested_bounds()
     par_bounds[model.config.poi_index] = [0, par_bounds[model.config.poi_index][1]]
     log.debug("setting lower parameter bound for POI to 0")
+
+    # set default bracket to (0.01, upper POI bound in measurement) if needed
+    bracket_left_default = 0.01
+    bracket_right_default = par_bounds[model.config.poi_index][1]
+    if bracket is None:
+        bracket = (bracket_left_default, bracket_right_default)
+    elif bracket[0] == bracket[1]:
+        raise ValueError(f"the two bracket values must not be the same: " f"{bracket}")
 
     poi_list = []  # scanned POI values
     observed_CLs_list = []  # observed CLs values, one entry per scan point

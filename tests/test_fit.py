@@ -512,19 +512,24 @@ def test_limit(example_spec_with_background, caplog):
     observed_limit = 0.749
     expected_limit = [0.302, 0.410, 0.581, 0.831, 1.160]
 
+    # modify workspace to include custom POI range
+    example_spec_with_background["measurements"][0]["config"]["parameters"][0][
+        "bounds"
+    ] = [[0, 8]]
+
     limit_results = fit.limit(example_spec_with_background)
     assert np.allclose(limit_results.observed_limit, observed_limit, rtol=1e-2)
     assert np.allclose(limit_results.expected_limit, expected_limit, rtol=1e-2)
     # compare a few CLs values
-    assert np.allclose(limit_results.observed_CLs[0], 0.972186)
+    assert np.allclose(limit_results.observed_CLs[0], 0.972168)
     assert np.allclose(
         limit_results.expected_CLs[0],
-        [0.917884, 0.946283, 0.971391, 0.989500, 0.997946],
+        [0.917830, 0.946246, 0.971371, 0.989493, 0.997945],
     )
     assert np.allclose(limit_results.poi_values[0], 0.01)
     assert np.allclose(limit_results.observed_CLs[-1], 0.0)
     assert np.allclose(limit_results.expected_CLs[-1], [0.0, 0.0, 0.0, 0.0, 0.0])
-    assert np.allclose(limit_results.poi_values[-1], 10.0)
+    assert np.allclose(limit_results.poi_values[-1], 8.0)  # from custom POI range
     # verify that POI values are sorted
     assert np.allclose(limit_results.poi_values, sorted(limit_results.poi_values))
     caplog.clear()
