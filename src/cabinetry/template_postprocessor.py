@@ -27,16 +27,31 @@ def _fix_stat_unc(histogram: histo.Histogram, name: str) -> None:
         histogram.stdev = np.nan_to_num(histogram.stdev, nan=0.0)
 
 
-def apply_postprocessing(histogram: histo.Histogram, name: str) -> histo.Histogram:
+def _smooth(histogram: histo.Histogram, name: str) -> None:
+    """Applies smoothing to a histogram.
+
+    Modifies the histogram handed over in the argument
+
+    Args:
+        histogram (histo.Histogram): histogram to smooth
+        name (str): histogram name for logging
+    """
+    log.debug(f"applying smoothing to {name}")
+    ...  # does nothing yet
+
+
+def apply_postprocessing(
+    histogram: histo.Histogram, name: str, smooth: bool
+) -> histo.Histogram:
     """Returns a new histogram with post-processing applied.
 
     The histogram handed to the function stays unchanged. A copy of the histogram
-    receives post-processing (currently only the stat. uncertainty fix) and is then
-    returned.
+    receives post-processing and is then returned.
 
     Args:
         histogram (cabinetry.histo.Histogram): the histogram to postprocess
         name (str): histogram name for logging
+        smooth (bool): whether to apply smoothing
 
     Returns:
         cabinetry.histo.Histogram: the fixed histogram
@@ -44,6 +59,8 @@ def apply_postprocessing(histogram: histo.Histogram, name: str) -> histo.Histogr
     # copy histogram to new object to leave it unchanged
     adjusted_histogram = copy.deepcopy(histogram)
     _fix_stat_unc(adjusted_histogram, name)
+    if smooth:
+        _smooth(histogram, name)
     return adjusted_histogram
 
 
@@ -83,7 +100,8 @@ def _get_postprocessor(histogram_folder: pathlib.Path) -> route.ProcessorFunc:
             template=template,
         )
         histogram_name = histo.build_name(region, sample, systematic, template)
-        new_histogram = apply_postprocessing(histogram, histogram_name)
+        smooth = systematic.get("Smooth", False)
+        new_histogram = apply_postprocessing(histogram, histogram_name, smooth)
         histogram.validate(histogram_name)
         new_histo_path = histogram_folder / (histogram_name + "_modified")
         new_histogram.save(new_histo_path)

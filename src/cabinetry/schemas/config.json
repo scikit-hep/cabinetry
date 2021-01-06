@@ -226,6 +226,10 @@
                 "Down": {
                     "description": "template for \"down\" variation",
                     "$ref": "#/definitions/template"
+                },
+                "Smooth": {
+                    "description": "apply smoothing",
+                    "type": "boolean"
                 }
             },
             "additionalProperties": false
