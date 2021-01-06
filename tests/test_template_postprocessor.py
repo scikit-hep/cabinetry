@@ -28,24 +28,27 @@ def test_apply_postprocessing():
     histogram = histo.Histogram.from_arrays([1, 2, 3], [1, 1], [float("nan"), 0.2])
     name = "test_histo"
     fixed_stdev = [0.0, 0.2]
-    fixed_histogram = template_postprocessor.apply_postprocessing(histogram, name)
+    fixed_histogram = template_postprocessor.apply_postprocessing(
+        histogram, name, False
+    )
+
+    # refactor to only test calls to functions that apply postprocessing
+
     assert np.allclose(fixed_histogram.stdev, fixed_stdev)
     # the original histogram should be unchanged
     np.testing.assert_equal(histogram.stdev, [float("nan"), 0.2])
 
 
-@mock.patch(
-    "cabinetry.template_postprocessor.apply_postprocessing",
-    return_value="new_histogram",
-)
 @mock.patch("cabinetry.histo.build_name", return_value="histo_name")
-def test__get_postprocessor(mock_name, mock_apply):
+def test__get_postprocessor(mock_name):
     postprocessor = template_postprocessor._get_postprocessor(pathlib.Path("path"))
 
     region = {"Name": "region"}
     sample = {"Name": "sample"}
     systematic = {"Name": "systematic"}
     template = "Up"
+
+    # need to add tests for smoothing logic
 
     mock_original_histogram = mock.MagicMock()
     mock_new_histogram = mock.MagicMock()
@@ -68,7 +71,7 @@ def test__get_postprocessor(mock_name, mock_apply):
             ]  # histogram was created
 
             assert mock_postprocessing.call_args_list == [
-                ((mock_original_histogram, "histo_name"), {})
+                ((mock_original_histogram, "histo_name", False), {})
             ]  # postprocessing was executed
 
             assert mock_new_histogram.save.call_args_list == [
