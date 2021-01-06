@@ -635,10 +635,7 @@ def limit(
     elif bracket[0] == bracket[1]:
         raise ValueError(f"the two bracket values must not be the same: " f"{bracket}")
 
-    poi_list = []  # scanned POI values
-    observed_CLs_list = []  # observed CLs values, one entry per scan point
-    expected_CLs_list = []  # expected CLs values, 5 per point (with 1 and 2 sigma band)
-    cache_CLs: Dict[float, tuple] = {}  # cache to avoid re-fitting
+    cache_CLs: Dict[float, tuple] = {}  # cache storing all relevant results
 
     def _CLs_minus_threshold(
         poi: float,
@@ -649,10 +646,8 @@ def limit(
     ) -> float:
         """The root of this function is the POI value at the CLs=0.05 crossing.
 
-        Each observed and expected CLs result is also appended to lists, useful for
-        visualization and to optimize the starting bracket for subsequent calculations.
         Returns 0.95 for POI values below 0. Makes use of an external cache to avoid
-        re-fitting with known POI values.
+        re-fitting with known POI values and to store all relevant values.
 
         Args:
             poi (float): value for parameter of interest
@@ -685,11 +680,8 @@ def limit(
                 return_expected_set=True,
                 par_bounds=par_bounds,
             )
-            observed = float(results[0])
-            expected = np.asarray(results[1])
-            poi_list.append(poi)
-            observed_CLs_list.append(observed)
-            expected_CLs_list.append(expected)
+            observed = float(results[0])  # 1 value per scan point
+            expected = np.asarray(results[1])  # 5 per point (with 1 and 2 sigma bands)
             cache_CLs.update({poi: (observed, expected)})
         current_CLs = np.hstack((observed, expected))[which_limit]
         log.debug(
@@ -745,8 +737,10 @@ def limit(
 
         # determine the starting bracket for the next limit calculation
         if i_limit < 5:
-            # list of POI values and associated expected CLs
-            exp_CLs_next = np.asarray(expected_CLs_list)[:, i_limit]
+            # expected CLs values for next limit type that have been calculated already
+            exp_CLs_next = np.asarray([exp[i_limit] for _, exp in cache_CLs.values()])
+            # associated POI values
+            poi_list = list(cache_CLs.keys())
 
             # left: CLs has to be > 0.05, mask out values where CLs <= 0.05
             masked_CLs_left = np.where(exp_CLs_next <= 0.05, 1, exp_CLs_next)
@@ -777,9 +771,10 @@ def limit(
         log.info(f"{limit_label.ljust(17)}: {all_limits[i_limit]:.4f}")
 
     # sort all CLs values and scanned POI points by increasing POI value
+    poi_list = list(cache_CLs.keys())
     sorted_indices = np.argsort(poi_list)
-    observed_CLs_np = np.asarray(observed_CLs_list)[sorted_indices]
-    expected_CLs_np = np.asarray(expected_CLs_list)[sorted_indices]
+    observed_CLs_np = np.asarray([obs for obs, _ in cache_CLs.values()])[sorted_indices]
+    expected_CLs_np = np.asarray([exp for _, exp in cache_CLs.values()])[sorted_indices]
     poi_list_np = np.asarray(poi_list)[sorted_indices]
 
     limit_results = LimitResults(
