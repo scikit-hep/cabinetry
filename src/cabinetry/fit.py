@@ -148,6 +148,7 @@ def _fit_model_pyhf(
         return_uncertainties=True,
         return_result_obj=True,
     )
+    log.info(f"MINUIT status:\n{result_obj.minuit.fmin}")
 
     bestfit = result[:, 0]
     uncertainty = result[:, 1]
@@ -231,6 +232,7 @@ def _fit_model_custom(
     m.tol /= 10
     m.migrad()
     m.hesse()
+    log.info(f"MINUIT status:\n{m.fmin}")
 
     bestfit = np.asarray(m.values)
     uncertainty = np.asarray(m.errors)
