@@ -277,12 +277,12 @@ def test__run_minos(caplog):
             + pars[0]
         )
 
-    m = iminuit.Minuit.from_array_func(
+    m = iminuit.Minuit(
         func_to_minimize,
         [1.0, 1.0],
         name=["a", "b"],
-        errordef=1,
     )
+    m.errordef = 1
     m.migrad()
     fit._run_minos(m, ["b"], ["a", "b"])
     assert "running MINOS for b" in [rec.message for rec in caplog.records]
@@ -290,11 +290,11 @@ def test__run_minos(caplog):
     caplog.clear()
 
     # proper labels not known to iminuit
-    m = iminuit.Minuit.from_array_func(
+    m = iminuit.Minuit(
         func_to_minimize,
         [1.0, 1.0],
-        errordef=1,
     )
+    m.errordef = 1
     m.migrad()
     fit._run_minos(m, ["x0"], ["a", "b"])
     assert "running MINOS for a" in [rec.message for rec in caplog.records]
@@ -302,11 +302,11 @@ def test__run_minos(caplog):
     caplog.clear()
 
     # unknown parameter, MINOS does not run
-    m = iminuit.Minuit.from_array_func(
+    m = iminuit.Minuit(
         func_to_minimize,
         [1.0, 1.0],
-        errordef=1,
     )
+    m.errordef = 1
     m.migrad()
     fit._run_minos(m, ["x2"], ["a", "b"])
     assert [rec.message for rec in caplog.records] == [

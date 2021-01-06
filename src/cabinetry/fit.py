@@ -152,7 +152,7 @@ def _fit_model_pyhf(
     bestfit = result[:, 0]
     uncertainty = result[:, 1]
     labels = model_utils.get_parameter_names(model)
-    corr_mat = result_obj.minuit.np_matrix(correlation=True, skip_fixed=False)
+    corr_mat = result_obj.hess_inv.correlation()
     best_twice_nll = float(result_obj.fun)  # convert 0-dim np.ndarray to float
 
     fit_results = FitResults(bestfit, uncertainty, labels, corr_mat, best_twice_nll)
@@ -216,24 +216,25 @@ def _fit_model_custom(
         twice_nll = -2 * model.logpdf(pars, data)
         return twice_nll[0]
 
-    m = iminuit.Minuit.from_array_func(
+    m = iminuit.Minuit(
         twice_nll_func,
         init_pars,
-        error=step_size,
-        limit=par_bounds,
-        fix=fix_pars,
         name=labels,
-        errordef=1,
-        print_level=1,
     )
+    m.errors = step_size
+    m.limits = par_bounds
+    m.fixed = fix_pars
+    m.errordef = 1
+    m.print_level = 1
+
     # decrease tolerance (goal: EDM < 0.002*tol*errordef), default tolerance is 0.1
     m.tol /= 10
     m.migrad()
     m.hesse()
 
-    bestfit = m.np_values()
-    uncertainty = m.np_errors()
-    corr_mat = m.np_matrix(correlation=True, skip_fixed=False)
+    bestfit = np.asarray(m.values)
+    uncertainty = np.asarray(m.errors)
+    corr_mat = m.covariance.correlation()
     best_twice_nll = m.fval
 
     fit_results = FitResults(bestfit, uncertainty, labels, corr_mat, best_twice_nll)
@@ -307,20 +308,20 @@ def _run_minos(
         # did not receive the parameter labels)
         par_index = model_utils._get_parameter_index(par_name, minuit_obj.parameters)
         if par_index == -1:
-            # parameter not found, skip calculation
+            # parameter not found, skip calculation (can only happen with custom fit)
             continue
         log.info(f"running MINOS for {labels[par_index]}")
-        minuit_obj.minos(var=par_name)
+        minuit_obj.minos(par_name)
 
     log.info("MINOS results:")
     max_label_length = max([len(label) for label in labels])
-    minos_unc = minuit_obj.np_merrors()
-    for i_par, unc_down, unc_up in zip(range(len(labels)), minos_unc[0], minos_unc[1]):
-        # the uncertainties are 0.0 by default if MINOS has not been run
-        if unc_up != 0.0 or unc_down != 0.0:
+    minos_unc = [minuit_obj.params[i].merror for i in range(minuit_obj.npar)]
+    for i_par, unc in zip(range(len(labels)), minos_unc):
+        # if MINOS has not been run, entries are None
+        if unc is not None:
             log.info(
                 f"{labels[i_par]:<{max_label_length}} = "
-                f"{minuit_obj.np_values()[i_par]: .4f} {-unc_down:.4f} {unc_up:+.4f}"
+                f"{minuit_obj.values[i_par]: .4f} {unc[0]:+.4f} {unc[1]:+.4f}"
             )
 
 
