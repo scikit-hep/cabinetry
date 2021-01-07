@@ -94,6 +94,22 @@ class LimitResults(NamedTuple):
     poi_values: np.ndarray
 
 
+class SignificanceResults(NamedTuple):
+    """Collects results from a discovery significance calculation in one object.
+
+    Args:
+        observed_p_value (float): observed p-value
+        observed_significance (float): observed significance
+        expected_p_value (float): expected/median p-value
+        expected_significance (float): expected/median significance
+    """
+
+    observed_p_value: float
+    observed_significance: float
+    expected_p_value: float
+    expected_significance: float
+
+
 def print_results(
     fit_results: FitResults,
 ) -> None:
@@ -783,3 +799,37 @@ def limit(
         poi_arr,
     )
     return limit_results
+
+
+def significance(spec: Dict[str, Any], asimov: bool = False) -> SignificanceResults:
+    """Calculates the discovery significance of a positive signal.
+
+    Observed and expected p-value and significance are identical by construction when
+    fitting the Asimov dataset.
+
+    Args:
+        spec (Dict[str, Any]): a ``pyhf`` workspace specification
+        asimov (bool, optional): whether to fit the Asimov dataset, defaults to False
+    """
+    pyhf.set_backend("numpy", pyhf.optimize.minuit_optimizer(verbose=True))
+
+    model, data = model_utils.model_and_data(spec, asimov=asimov)
+
+    log.info("calculating discovery significance")
+    obs_p_val, exp_p_val = pyhf.infer.hypotest(
+        0.0, data, model, test_stat="q0", return_expected=True
+    )
+    obs_p_val = float(obs_p_val)
+    exp_p_val = float(exp_p_val)
+    obs_significance = scipy.stats.norm.isf(obs_p_val, 0, 1)
+    exp_significance = scipy.stats.norm.isf(exp_p_val, 0, 1)
+
+    log.info(f"observed p-value: {obs_p_val:.6f}")
+    log.info(f"observed significance: {obs_significance:.2f}")
+    log.info(f"expected p-value: {exp_p_val:.6f}")
+    log.info(f"expected significance: {exp_significance:.2f}")
+
+    significance_results = SignificanceResults(
+        obs_p_val, obs_significance, exp_p_val, exp_significance
+    )
+    return significance_results

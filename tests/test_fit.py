@@ -77,6 +77,20 @@ def test_LimitResults():
     assert np.allclose(limit_results.poi_values, poi_values)
 
 
+def test_SignificanceResults():
+    obs_p_val = 0.05
+    obs_significance = 2
+    exp_p_val = 0.32
+    exp_significance = 1
+    significance_results = fit.SignificanceResults(
+        obs_p_val, obs_significance, exp_p_val, exp_significance
+    )
+    assert significance_results.observed_p_value == obs_p_val
+    assert significance_results.observed_significance == obs_significance
+    assert significance_results.expected_p_value == exp_p_val
+    assert significance_results.expected_significance == exp_significance
+
+
 def test_print_results(caplog):
     caplog.set_level(logging.DEBUG)
 
@@ -607,3 +621,18 @@ def test_limit(example_spec_with_background, caplog):
     with pytest.raises(ValueError, match="the two bracket values must not be the same"):
         fit.limit(model, data, bracket=(3.0, 3.0))
     caplog.clear()
+
+
+def test_significance(example_spec_with_background):
+    significance_results = fit.significance(example_spec_with_background)
+    assert np.allclose(significance_results.observed_p_value, 0.23773068)
+    assert np.allclose(significance_results.observed_significance, 0.71362132)
+    assert np.allclose(significance_results.expected_p_value, 0.00049159)
+    assert np.allclose(significance_results.expected_significance, 3.29529432)
+
+    # Asimov dataset, observed = expected
+    significance_results = fit.significance(example_spec_with_background, asimov=True)
+    assert np.allclose(significance_results.observed_p_value, 0.00031984)
+    assert np.allclose(significance_results.observed_significance, 3.41421033)
+    assert np.allclose(significance_results.expected_p_value, 0.00031984)
+    assert np.allclose(significance_results.expected_significance, 3.41421033)
