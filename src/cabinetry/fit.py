@@ -320,7 +320,7 @@ def _run_minos(
         if unc_up != 0.0 or unc_down != 0.0:
             log.info(
                 f"{labels[i_par]:<{max_label_length}} = "
-                f"{minuit_obj.np_values()[i_par]: .4f} -{unc_down:.4f} +{unc_up:.4f}"
+                f"{minuit_obj.np_values()[i_par]: .4f} {-unc_down:.4f} {unc_up:+.4f}"
             )
 
 
