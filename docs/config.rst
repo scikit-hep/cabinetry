@@ -30,10 +30,12 @@ Details about the setting blocks:
 Common options:
 ---------------
 
-.. jsonschema:: ../src/cabinetry/schemas/config.json#/definitions/template
+.. jsonschema:: ../src/cabinetry/schemas/config.json#/definitions/template_setting
 
 .. jsonschema:: ../src/cabinetry/schemas/config.json#/definitions/samples_setting
 
 .. jsonschema:: ../src/cabinetry/schemas/config.json#/definitions/samplepaths_setting
 
+.. jsonschema:: ../src/cabinetry/schemas/config.json#/definitions/regions_setting
 
+.. jsonschema:: ../src/cabinetry/schemas/config.json#/definitions/smoothing_setting
