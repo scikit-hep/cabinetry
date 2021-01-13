@@ -106,7 +106,7 @@ def print_results(
     log.info("fit results (with symmetric uncertainties):")
     for i, label in enumerate(fit_results.labels):
         log.info(
-            f"{label.ljust(max_label_length)}: {fit_results.bestfit[i]: .4f} +/- "
+            f"{label:<{max_label_length}} = {fit_results.bestfit[i]: .4f} +/- "
             f"{fit_results.uncertainty[i]:.4f}"
         )
 
@@ -319,8 +319,8 @@ def _run_minos(
         # the uncertainties are 0.0 by default if MINOS has not been run
         if unc_up != 0.0 or unc_down != 0.0:
             log.info(
-                f"{labels[i_par].ljust(max_label_length)} = "
-                f"{minuit_obj.np_values()[i_par]:.4f} -{unc_down:.4f} +{unc_up:.4f}"
+                f"{labels[i_par]:<{max_label_length}} = "
+                f"{minuit_obj.np_values()[i_par]: .4f} {-unc_down:.4f} {unc_up:+.4f}"
             )
 
 
@@ -359,7 +359,7 @@ def _goodness_of_fit(
     ) - model_utils.unconstrained_parameter_count(model)
     log.debug(f"number of degrees of freedom: {n_dof}")
     p_val = scipy.stats.chi2.sf(2 * delta_nll, n_dof)
-    log.info(f"p-value for goodness-of-fit test: {p_val*100:.2f}%")
+    log.info(f"p-value for goodness-of-fit test: {p_val:.2%}")
     return p_val
 
 
