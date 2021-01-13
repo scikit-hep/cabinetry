@@ -1,12 +1,13 @@
 import copy
 import logging
 import pathlib
-from typing import Any, Dict
+from typing import Any, Dict, Optional
 
 import numpy as np
 
 from . import histo
 from . import route
+from . import smooth
 
 
 log = logging.getLogger(__name__)
@@ -27,21 +28,63 @@ def _fix_stat_unc(histogram: histo.Histogram, name: str) -> None:
         histogram.stdev = np.nan_to_num(histogram.stdev, nan=0.0)
 
 
-def _smooth(histogram: histo.Histogram, name: str) -> None:
-    """Applies smoothing to a histogram.
+def _apply_353QH_twice(histogram: histo.Histogram, name: str) -> None:
+    """Applies the "353QH, twice" smoothing algorithm to a histogram.
 
-    Modifies the histogram handed over in the argument
+    Modifies the histogram handed over in the argument. Statistical uncertainties are
+    unchanged. The total yield stays unchanged.
 
     Args:
         histogram (histo.Histogram): histogram to smooth
         name (str): histogram name for logging
     """
     log.debug(f"applying smoothing to {name}")
-    ...  # does nothing yet
+    smooth_yields: np.ndarray = smooth.smooth_353QH_twice(histogram.yields)
+    # scale to match original yield
+    smooth_yields *= sum(histogram.yields) / sum(smooth_yields)
+    histogram.yields = smooth_yields
+
+
+def _get_smoothing_algorithm(
+    region: Dict[str, Any], sample: Dict[str, Any], systematic: Dict[str, Any]
+) -> Optional[str]:
+    """Returns name of algorithm to use for smoothing, or None otherwise.
+
+    Args:
+        region (Dict[str, Any]): specifying region information
+        sample (Dict[str, Any]): specifying sample information
+        systematic (Dict[str, Any]): specifying systematic information
+
+    Returns:
+        Optional[str]: name of smoothing algorithm or None
+    """
+    smoothing = systematic.get("Smoothing", None)
+    if smoothing is None:
+        return None
+    else:
+        smoothing_regions = smoothing.get("Regions", False)
+        if smoothing_regions:
+            # if regions are specified, only smooth those regions
+            if not isinstance(smoothing_regions, list):
+                smoothing_regions = [smoothing_regions]
+            if region["Name"] not in smoothing_regions:
+                return None
+
+        smoothing_samples = smoothing.get("Samples", False)
+        if smoothing_samples:
+            # if samples are specified, only smooth those samples
+            if not isinstance(smoothing_samples, list):
+                smoothing_samples = [smoothing_samples]
+            if sample["Name"] not in smoothing_samples:
+                return None
+
+        # smoothing algorithm needs to be applied
+        smoothing_alg = smoothing["Algorithm"]
+        return smoothing_alg
 
 
 def apply_postprocessing(
-    histogram: histo.Histogram, name: str, smooth: bool
+    histogram: histo.Histogram, name: str, smoothing_alg: Optional[str] = None
 ) -> histo.Histogram:
     """Returns a new histogram with post-processing applied.
 
@@ -51,7 +94,8 @@ def apply_postprocessing(
     Args:
         histogram (cabinetry.histo.Histogram): the histogram to postprocess
         name (str): histogram name for logging
-        smooth (bool): whether to apply smoothing
+        smoothing_alg (Optional[str]): name of smoothing algorithm to apply, defaults to
+            None (do not apply any smoothing)
 
     Returns:
         cabinetry.histo.Histogram: the fixed histogram
@@ -59,8 +103,8 @@ def apply_postprocessing(
     # copy histogram to new object to leave it unchanged
     adjusted_histogram = copy.deepcopy(histogram)
     _fix_stat_unc(adjusted_histogram, name)
-    if smooth:
-        _smooth(histogram, name)
+    if smoothing_alg == "353QH, twice":
+        _apply_353QH_twice(adjusted_histogram, name)
     return adjusted_histogram
 
 
@@ -100,8 +144,10 @@ def _get_postprocessor(histogram_folder: pathlib.Path) -> route.ProcessorFunc:
             template=template,
         )
         histogram_name = histo.build_name(region, sample, systematic, template)
-        smooth = systematic.get("Smooth", False)
-        new_histogram = apply_postprocessing(histogram, histogram_name, smooth)
+        smoothing_alg = _get_smoothing_algorithm(region, sample, systematic)
+        new_histogram = apply_postprocessing(
+            histogram, histogram_name, smoothing_alg=smoothing_alg
+        )
         histogram.validate(histogram_name)
         new_histo_path = histogram_folder / (histogram_name + "_modified")
         new_histogram.save(new_histo_path)
