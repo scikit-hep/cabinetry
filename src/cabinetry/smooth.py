@@ -1,6 +1,6 @@
 import logging
 import statistics
-from typing import List, Union
+from typing import List, TypeVar
 
 import numpy as np
 
@@ -8,9 +8,10 @@ import numpy as np
 log = logging.getLogger(__name__)
 
 
-def smooth_353QH_twice(
-    hist: Union[List[float], np.ndarray]
-) -> Union[List[float], np.ndarray]:
+T = TypeVar("T", List[float], np.ndarray)
+
+
+def smooth_353QH_twice(hist: T) -> T:
     """Runs the 353QH algorithm twice and returns smooth version of the input.
 
     For documentation see these proceedings https://cds.cern.ch/record/186223/ on page

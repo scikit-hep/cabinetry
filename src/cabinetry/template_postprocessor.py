@@ -39,7 +39,7 @@ def _apply_353QH_twice(histogram: histo.Histogram, name: str) -> None:
         name (str): histogram name for logging
     """
     log.debug(f"applying smoothing to {name}")
-    smooth_yields: np.ndarray = smooth.smooth_353QH_twice(histogram.yields)
+    smooth_yields = smooth.smooth_353QH_twice(histogram.yields)
     # scale to match original yield
     smooth_yields *= sum(histogram.yields) / sum(smooth_yields)
     histogram.yields = smooth_yields
