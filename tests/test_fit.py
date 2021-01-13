@@ -86,8 +86,8 @@ def test_print_results(caplog):
     fit_results = fit.FitResults(bestfit, uncertainty, labels, np.empty(0), 0.0)
 
     fit.print_results(fit_results)
-    assert "param_A:  1.0000 +/- 0.1000" in [rec.message for rec in caplog.records]
-    assert "param_B:  2.0000 +/- 0.3000" in [rec.message for rec in caplog.records]
+    assert "param_A =  1.0000 +/- 0.1000" in [rec.message for rec in caplog.records]
+    assert "param_B =  2.0000 +/- 0.3000" in [rec.message for rec in caplog.records]
     caplog.clear()
 
 
@@ -286,7 +286,7 @@ def test__run_minos(caplog):
     m.migrad()
     fit._run_minos(m, ["b"], ["a", "b"])
     assert "running MINOS for b" in [rec.message for rec in caplog.records]
-    assert "b = 1.5909 -0.7262 +0.4738" in [rec.message for rec in caplog.records]
+    assert "b =  1.5909 -0.7262 +0.4738" in [rec.message for rec in caplog.records]
     caplog.clear()
 
     # proper labels not known to iminuit
@@ -298,7 +298,7 @@ def test__run_minos(caplog):
     m.migrad()
     fit._run_minos(m, ["x0"], ["a", "b"])
     assert "running MINOS for a" in [rec.message for rec in caplog.records]
-    assert "a = 1.3827 -0.8713 +0.5715" in [rec.message for rec in caplog.records]
+    assert "a =  1.3827 -0.8713 +0.5715" in [rec.message for rec in caplog.records]
     caplog.clear()
 
     # unknown parameter, MINOS does not run
