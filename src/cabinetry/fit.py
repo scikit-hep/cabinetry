@@ -359,7 +359,7 @@ def _goodness_of_fit(
     ) - model_utils.unconstrained_parameter_count(model)
     log.debug(f"number of degrees of freedom: {n_dof}")
     p_val = scipy.stats.chi2.sf(2 * delta_nll, n_dof)
-    log.info(f"p-value for goodness-of-fit test: {p_val*100:.2f}%")
+    log.info(f"p-value for goodness-of-fit test: {p_val:.2%}")
     return p_val
 
 
