@@ -431,6 +431,8 @@ def test_ranking(mock_draw):
     side_effect=[
         MockHistogram([0.0, 1.0], [2.0], [0.2]),
         MockHistogram([0.0, 1.0], [3.0], [0.3]),
+        MockHistogram([0.0, 1.0], [4.0], [0.4]),
+        MockHistogram([0.0, 1.0], [5.0], [0.5]),
     ]
     * 3,
 )
@@ -470,14 +472,23 @@ def test_templates(mock_draw, mock_histo_config, mock_histo_path, tmp_path):
     assert mock_histo_config.call_args_list == [
         [(tmp_path, region, sample, {"Name": "Nominal"}), {}]
     ]
-    assert mock_histo_path.call_args_list == [[(down_path,), {}], [(up_path,), {}]]
+    down_path_orig = pathlib.Path(str(down_path).replace("_modified", ""))
+    up_path_orig = pathlib.Path(str(up_path).replace("_modified", ""))
+    assert mock_histo_path.call_args_list == [
+        [(down_path_orig,), {}],
+        [(down_path,), {}],
+        [(up_path_orig,), {}],
+        [(up_path,), {}],
+    ]
 
     nominal = {"yields": [1.0], "stdev": [0.1]}
-    up = {"yields": [3.0], "stdev": [0.3]}
+    up = {"yields": [4.0], "stdev": [0.4]}
+    up_mod = {"yields": [5.0], "stdev": [0.5]}
     down = {"yields": [2.0], "stdev": [0.2]}
+    down_mod = {"yields": [3.0], "stdev": [0.3]}
     bins = [0.0, 1.0]
     assert mock_draw.call_args_list == [
-        [(nominal, up, down, bins, "x", figure_path), {}]
+        [(nominal, up, up_mod, down, down_mod, bins, "x", figure_path), {}]
     ]
 
     # unknown plotting method
