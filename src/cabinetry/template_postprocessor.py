@@ -28,21 +28,28 @@ def _fix_stat_unc(histogram: histo.Histogram, name: str) -> None:
         histogram.stdev = np.nan_to_num(histogram.stdev, nan=0.0)
 
 
-def _apply_353QH_twice(histogram: histo.Histogram, name: str) -> None:
-    """Applies the "353QH, twice" smoothing algorithm to a histogram.
+def _apply_353QH_twice(
+    variation: histo.Histogram, nominal: histo.Histogram, name: str
+) -> None:
+    """Smooths systematic template histogram with the "353QH, twice" algorithm.
 
-    Modifies the histogram handed over in the argument. Statistical uncertainties are
-    unchanged. The total yield stays unchanged.
+    The algorithm is applied to the ratio of systematic variation / nominal. The nominal
+    histogram stays the same, while the variation histogram is modified. Statistical
+    uncertainties do not change (and the algorithm is not aware of statistical
+    uncertainties). The total yield of the variation histogram stays unchanged.
 
     Args:
-        histogram (histo.Histogram): histogram to smooth
+        variation (histo.Histogram): histogram of systematic variation
+        nominal (histo.Histogram): associated nominal histogram
         name (str): histogram name for logging
     """
     log.debug(f"applying smoothing to {name}")
-    smooth_yields = smooth.smooth_353QH_twice(histogram.yields)
-    # scale to match original yield
-    smooth_yields *= sum(histogram.yields) / sum(smooth_yields)
-    histogram.yields = smooth_yields
+    # smooth relative effect of systematic (systematic/nominal)
+    smooth_var = (
+        smooth.smooth_353QH_twice(variation.yields / nominal.yields) * nominal.yields
+    )
+    # scale to match original sum of yields of variation
+    variation.yields = smooth_var * sum(variation.yields) / sum(smooth_var)
 
 
 def _get_smoothing_algorithm(
@@ -84,7 +91,10 @@ def _get_smoothing_algorithm(
 
 
 def apply_postprocessing(
-    histogram: histo.Histogram, name: str, smoothing_alg: Optional[str] = None
+    histogram: histo.Histogram,
+    name: str,
+    smoothing_alg: Optional[str] = None,
+    nominal_histogram: Optional[histo.Histogram] = None,
 ) -> histo.Histogram:
     """Returns a new histogram with post-processing applied.
 
@@ -96,16 +106,20 @@ def apply_postprocessing(
         name (str): histogram name for logging
         smoothing_alg (Optional[str]): name of smoothing algorithm to apply, defaults to
             None (do not apply any smoothing)
+        nominal_histogram (Optional[cabinetry.histo.Histogram]): nominal histogram
+            (needed for smoothing), defaults to None
 
     Returns:
         cabinetry.histo.Histogram: the fixed histogram
     """
     # copy histogram to new object to leave it unchanged
-    adjusted_histogram = copy.deepcopy(histogram)
-    _fix_stat_unc(adjusted_histogram, name)
+    modified_histogram = copy.deepcopy(histogram)
+    _fix_stat_unc(modified_histogram, name)
     if smoothing_alg == "353QH, twice":
-        _apply_353QH_twice(adjusted_histogram, name)
-    return adjusted_histogram
+        if nominal_histogram is None:
+            raise ValueError("cannot apply smoothing, nominal histogram missing")
+        _apply_353QH_twice(modified_histogram, nominal_histogram, name)
+    return modified_histogram
 
 
 def _get_postprocessor(histogram_folder: pathlib.Path) -> route.ProcessorFunc:
@@ -144,9 +158,21 @@ def _get_postprocessor(histogram_folder: pathlib.Path) -> route.ProcessorFunc:
             template=template,
         )
         histogram_name = histo.build_name(region, sample, systematic, template)
+
         smoothing_alg = _get_smoothing_algorithm(region, sample, systematic)
+        if smoothing_alg is None:
+            nominal_histogram = None
+        else:
+            # to apply smoothing, the associated nominal histogram is needed
+            nominal_histogram = histo.Histogram.from_config(
+                histogram_folder, region, sample, {"Name": "Nominal"}, modified=False
+            )
+
         new_histogram = apply_postprocessing(
-            histogram, histogram_name, smoothing_alg=smoothing_alg
+            histogram,
+            histogram_name,
+            smoothing_alg=smoothing_alg,
+            nominal_histogram=nominal_histogram,
         )
         histogram.validate(histogram_name)
         new_histo_path = histogram_folder / (histogram_name + "_modified")
