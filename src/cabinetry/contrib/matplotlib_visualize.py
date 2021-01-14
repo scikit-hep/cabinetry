@@ -391,9 +391,9 @@ def ranking(
 def templates(
     nominal_histo: Dict[str, np.ndarray],
     up_histo_orig: Dict[str, np.ndarray],
-    up_histo: Dict[str, np.ndarray],
+    up_histo_mod: Dict[str, np.ndarray],
     down_histo_orig: Dict[str, np.ndarray],
-    down_histo: Dict[str, np.ndarray],
+    down_histo_mod: Dict[str, np.ndarray],
     bin_edges: np.ndarray,
     variable: str,
     figure_path: pathlib.Path,
@@ -405,9 +405,9 @@ def templates(
     Args:
         nominal_histo (Dict[str, np.ndarray]): the nominal template
         up_histo_orig (Dict[str, np.ndarray]): original "up" variation
-        up_histo (Dict[str, np.ndarray]): "up" variation after post-processing
+        up_histo_mod (Dict[str, np.ndarray]): "up" variation after post-processing
         down_histo_orig (Dict[str, np.ndarray]): original "down" variation
-        down_histo (Dict[str, np.ndarray]): "down" variation after post-processing
+        down_histo_mod (Dict[str, np.ndarray]): "down" variation after post-processing
         bin_edges (np.ndarray): bin edges of histogram
         variable (str): variable name for the horizontal axis
         figure_path (pathlib.Path): path where figure should be saved
@@ -446,9 +446,9 @@ def templates(
     all_templates = [
         nominal_histo,
         up_histo_orig,
-        up_histo,
+        up_histo_mod,
         down_histo_orig,
-        down_histo,
+        down_histo_mod,
     ]
     labels = [
         "nominal",
