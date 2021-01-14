@@ -8,7 +8,8 @@ import numpy as np
 log = logging.getLogger(__name__)
 
 
-T = TypeVar("T", List[float], np.ndarray)
+# typeguard raises errors in tests when using List[float] instead of list
+T = TypeVar("T", list, np.ndarray)
 
 
 def _medians_353(zz: Union[List[float], np.ndarray], nbins: int) -> None:
@@ -48,10 +49,10 @@ def smooth_353QH_twice(hist: T) -> T:
     the ROOT implementation https://root.cern.ch/doc/master/TH1_8cxx_source.html#l06725.
 
     Args:
-        hist (Union[List[float], np.ndarray]): array to smooth
+        hist (Union[list, np.ndarray]): array to smooth
 
     Returns:
-        Union[List[float], np.ndarray]: smooth version of input
+        Union[list, np.ndarray]: smooth version of input
     """
     nbins = len(hist)
     if nbins < 3:
