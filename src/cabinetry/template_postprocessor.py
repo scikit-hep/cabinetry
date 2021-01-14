@@ -68,26 +68,26 @@ def _get_smoothing_algorithm(
     smoothing = systematic.get("Smoothing", None)
     if smoothing is None:
         return None
-    else:
-        smoothing_regions = smoothing.get("Regions", False)
-        if smoothing_regions:
-            # if regions are specified, only smooth those regions
-            if not isinstance(smoothing_regions, list):
-                smoothing_regions = [smoothing_regions]
-            if region["Name"] not in smoothing_regions:
-                return None
 
-        smoothing_samples = smoothing.get("Samples", False)
-        if smoothing_samples:
-            # if samples are specified, only smooth those samples
-            if not isinstance(smoothing_samples, list):
-                smoothing_samples = [smoothing_samples]
-            if sample["Name"] not in smoothing_samples:
-                return None
+    smoothing_regions = smoothing.get("Regions", False)
+    if smoothing_regions:
+        # if regions are specified, only smooth those regions
+        if not isinstance(smoothing_regions, list):
+            smoothing_regions = [smoothing_regions]
+        if region["Name"] not in smoothing_regions:
+            return None
 
-        # smoothing algorithm needs to be applied
-        smoothing_alg = smoothing["Algorithm"]
-        return smoothing_alg
+    smoothing_samples = smoothing.get("Samples", False)
+    if smoothing_samples:
+        # if samples are specified, only smooth those samples
+        if not isinstance(smoothing_samples, list):
+            smoothing_samples = [smoothing_samples]
+        if sample["Name"] not in smoothing_samples:
+            return None
+
+    # smoothing algorithm needs to be applied
+    smoothing_alg = smoothing["Algorithm"]
+    return smoothing_alg
 
 
 def apply_postprocessing(
