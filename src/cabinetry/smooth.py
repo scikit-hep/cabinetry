@@ -1,6 +1,6 @@
 import logging
 import statistics
-from typing import List, TypeVar
+from typing import List, TypeVar, Union
 
 import numpy as np
 
@@ -9,6 +9,34 @@ log = logging.getLogger(__name__)
 
 
 T = TypeVar("T", List[float], np.ndarray)
+
+
+def _medians_353(zz: Union[List[float], np.ndarray], nbins: int) -> None:
+    """Applies running median smoothing with window sizes 3, 5, 3 to input.
+
+    Args:
+        zz (Union[List[float], np.ndarray]): array to smooth
+        nbins (int): number of bins in array
+    """
+    for i_median in range(3):
+        yy = zz.copy()  # yy stays constant at each step in the loop
+        medianType = 3 if i_median != 1 else 5
+        ifirst = 1 if i_median != 1 else 2
+        ilast = nbins - 1 if i_median != 1 else nbins - 2
+        # do central elements first in (ifirst, ilast) range
+        for ii in range(ifirst, ilast):
+            zz[ii] = statistics.median(yy[ii - ifirst : ii - ifirst + medianType])
+
+        if i_median == 0:  # first median 3
+            # first bin, proceedings use y_1 (=yy[0]), while ROOT uses zz[0]
+            zz[0] = statistics.median([3 * zz[1] - 2 * zz[2], yy[0], zz[1]])
+            # last bin, proceedings use y_n (=yy[-1]), while ROOT uses zz[-1]
+            zz[-1] = statistics.median([zz[-2], yy[-1], 3 * zz[-2] - 2 * zz[-3]])
+
+        if i_median == 1:  # median 5
+            zz[1] = statistics.median(yy[0:3])
+            # second to last bin
+            zz[-2] = statistics.median(yy[-3:])
 
 
 def smooth_353QH_twice(hist: T) -> T:
@@ -34,25 +62,7 @@ def smooth_353QH_twice(hist: T) -> T:
 
     for i_353QH in range(2):  # run 353QH twice
         # do running median with window sizes 3, 5, 3
-        for kk in range(3):
-            yy = zz.copy()  # yy stays constant at each step in the loop
-            medianType = 3 if kk != 1 else 5
-            ifirst = 1 if kk != 1 else 2
-            ilast = nbins - 1 if kk != 1 else nbins - 2
-            # do central elements first in (ifirst, ilast) range
-            for ii in range(ifirst, ilast):
-                zz[ii] = statistics.median(yy[ii - ifirst : ii - ifirst + medianType])
-
-            if kk == 0:  # first median 3
-                # first bin, proceedings use y_1 (=yy[0]), while ROOT uses zz[0]
-                zz[0] = statistics.median([3 * zz[1] - 2 * zz[2], yy[0], zz[1]])
-                # last bin, proceedings use y_n (=yy[-1]), while ROOT uses zz[-1]
-                zz[-1] = statistics.median([zz[-2], yy[-1], 3 * zz[-2] - 2 * zz[-3]])
-
-            if kk == 1:  # median 5
-                zz[1] = statistics.median(yy[0:3])
-                # second to last bin
-                zz[-2] = statistics.median(yy[-3:])
+        _medians_353(zz, nbins)
 
         yy = zz.copy()
 
