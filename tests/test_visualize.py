@@ -482,13 +482,13 @@ def test_templates(mock_draw, mock_histo_config, mock_histo_path, tmp_path):
     ]
 
     nominal = {"yields": [1.0], "stdev": [0.1]}
-    up = {"yields": [4.0], "stdev": [0.4]}
+    up_orig = {"yields": [4.0], "stdev": [0.4]}
     up_mod = {"yields": [5.0], "stdev": [0.5]}
-    down = {"yields": [2.0], "stdev": [0.2]}
+    down_orig = {"yields": [2.0], "stdev": [0.2]}
     down_mod = {"yields": [3.0], "stdev": [0.3]}
     bins = [0.0, 1.0]
     assert mock_draw.call_args_list == [
-        [(nominal, up, up_mod, down, down_mod, bins, "x", figure_path), {}]
+        [(nominal, up_orig, up_mod, down_orig, down_mod, bins, "x", figure_path), {}]
     ]
 
     # unknown plotting method

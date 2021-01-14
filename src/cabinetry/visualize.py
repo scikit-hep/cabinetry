@@ -467,17 +467,20 @@ def templates(
 
                 # extract original and modified (after post-processing) variation
                 # histograms, if they exist
-                up = {}
+                up_orig = {}
                 up_mod = {}
-                down = {}
+                down_orig = {}
                 down_mod = {}
                 for variation_path in variation_paths:
                     # original variation, before post-processing
                     variation_path_orig = pathlib.Path(
                         str(variation_path).replace("_modified", "")
                     )
-                    var_histo = histo.Histogram.from_path(variation_path_orig)
-                    var = {"yields": var_histo.yields, "stdev": var_histo.stdev}
+                    var_histo_orig = histo.Histogram.from_path(variation_path_orig)
+                    var_orig = {
+                        "yields": var_histo_orig.yields,
+                        "stdev": var_histo_orig.stdev,
+                    }
 
                     # variation after post-processing
                     var_histo_mod = histo.Histogram.from_path(variation_path)
@@ -486,10 +489,10 @@ def templates(
                         "stdev": var_histo_mod.stdev,
                     }
                     if "Up" in variation_path.parts[-1]:
-                        up.update(var)
+                        up_orig.update(var_orig)
                         up_mod.update(var_mod)
                     else:
-                        down.update(var)
+                        down_orig.update(var_orig)
                         down_mod.update(var_mod)
 
                 figure_name = (
@@ -506,7 +509,14 @@ def templates(
                     from .contrib import matplotlib_visualize
 
                     matplotlib_visualize.templates(
-                        nominal, up, up_mod, down, down_mod, bins, variable, figure_path
+                        nominal,
+                        up_orig,
+                        up_mod,
+                        down_orig,
+                        down_mod,
+                        bins,
+                        variable,
+                        figure_path,
                     )
 
                 else:
