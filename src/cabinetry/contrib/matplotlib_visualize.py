@@ -390,7 +390,9 @@ def ranking(
 
 def templates(
     nominal_histo: Dict[str, np.ndarray],
+    up_histo_orig: Dict[str, np.ndarray],
     up_histo: Dict[str, np.ndarray],
+    down_histo_orig: Dict[str, np.ndarray],
     down_histo: Dict[str, np.ndarray],
     bin_edges: np.ndarray,
     variable: str,
@@ -402,8 +404,10 @@ def templates(
 
     Args:
         nominal_histo (Dict[str, np.ndarray]): the nominal template
-        up_histo (Dict[str, np.ndarray]): the "up" variation
-        down_histo (Dict[str, np.ndarray]): the "down" variation
+        up_histo_orig (Dict[str, np.ndarray]): original "up" variation
+        up_histo (Dict[str, np.ndarray]): "up" variation after post-processing
+        down_histo_orig (Dict[str, np.ndarray]): original "down" variation
+        down_histo (Dict[str, np.ndarray]): "down" variation after post-processing
         bin_edges (np.ndarray): bin edges of histogram
         variable (str): variable name for the horizontal axis
         figure_path (pathlib.Path): path where figure should be saved
@@ -437,10 +441,22 @@ def templates(
         hatch=3 * "/",
     )
 
-    colors = ["black", "C0", "C1"]
-    linestyles = ["-", "--", "-."]
-    all_templates = [nominal_histo, up_histo, down_histo]
-    labels = ["nominal", "up", "down"]
+    colors = ["black", "C0", "C0", "C1", "C1"]
+    linestyles = ["-", ":", "--", ":", "--"]
+    all_templates = [
+        nominal_histo,
+        up_histo_orig,
+        up_histo,
+        down_histo_orig,
+        down_histo,
+    ]
+    labels = [
+        "nominal",
+        "up (original)",
+        "up (modified)",
+        "down (original)",
+        "down (modified)",
+    ]
 
     # x positions for lines drawn showing the template distributions
     line_x = [y for y in bin_edges for _ in range(2)][1:-1]
@@ -518,7 +534,7 @@ def templates(
     for axis in [ax1.xaxis, ax1.yaxis, ax2.xaxis, ax2.yaxis]:
         axis.set_minor_locator(mpl.ticker.AutoMinorLocator())
 
-    ax1.legend(frameon=False, fontsize="large")
+    ax1.legend(frameon=False, fontsize="large", ncol=2)
 
     max_yield = max([max(template["yields"]) for template in all_templates if template])
 
