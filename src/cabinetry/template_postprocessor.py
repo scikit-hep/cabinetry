@@ -14,7 +14,7 @@ log = logging.getLogger(__name__)
 
 
 def _fix_stat_unc(histogram: histo.Histogram, name: str) -> None:
-    """Replaces nan stat. unc. by zero for a histogram.
+    """Replaces NaN statistical uncertainties by zero for a histogram.
 
     Modifies the histogram handed over in the argument.
 
@@ -99,18 +99,19 @@ def apply_postprocessing(
     """Returns a new histogram with post-processing applied.
 
     The histogram handed to the function stays unchanged. A copy of the histogram
-    receives post-processing and is then returned.
+    receives post-processing and is then returned. The postprocessing consists of a fix
+    for NaN statistical uncertainties and optional smoothing.
 
     Args:
         histogram (cabinetry.histo.Histogram): the histogram to postprocess
         name (str): histogram name for logging
         smoothing_algorithm (Optional[str]): name of smoothing algorithm to apply,
-            defaults to None (do not apply any smoothing)
+            defaults to None (no smoothing done)
         nominal_histogram (Optional[cabinetry.histo.Histogram]): nominal histogram
             (needed for smoothing), defaults to None
 
     Returns:
-        cabinetry.histo.Histogram: the fixed histogram
+        cabinetry.histo.Histogram: the histogram with post-processing applied
     """
     # copy histogram to new object to leave it unchanged
     modified_histogram = copy.deepcopy(histogram)
