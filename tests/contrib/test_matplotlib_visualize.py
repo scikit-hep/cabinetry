@@ -118,15 +118,31 @@ def test_templates(tmp_path):
         "yields": np.asarray([1.0, 1.2]),
         "stdev": np.asarray([0.05, 0.06]),
     }
-    up_histo = {"yields": np.asarray([1.1, 1.4]), "stdev": np.asarray([0.05, 0.07])}
-    down_histo = {"yields": np.asarray([0.8, 0.9]), "stdev": np.asarray([0.06, 0.07])}
+    up_histo_orig = {
+        "yields": np.asarray([1.2, 1.7]),
+        "stdev": np.asarray([0.05, 0.07]),
+    }
+    up_histo_mod = {
+        "yields": np.asarray([1.3, 1.6]),
+        "stdev": np.asarray([0.05, 0.07]),
+    }
+    down_histo_orig = {
+        "yields": np.asarray([0.9, 0.9]),
+        "stdev": np.asarray([0.06, 0.07]),
+    }
+    down_histo_mod = {
+        "yields": np.asarray([0.85, 0.95]),
+        "stdev": np.asarray([0.06, 0.07]),
+    }
     bin_edges = np.asarray([0.0, 1.0, 2.0])
     variable = "x"
 
     matplotlib_visualize.templates(
         nominal_histo,
-        up_histo,
-        down_histo,
+        up_histo_orig,
+        up_histo_mod,
+        down_histo_orig,
+        down_histo_mod,
         bin_edges,
         variable,
         fname,
@@ -138,7 +154,9 @@ def test_templates(tmp_path):
     # only single variation specified
     matplotlib_visualize.templates(
         nominal_histo,
-        up_histo,
+        up_histo_orig,
+        up_histo_mod,
+        {},
         {},
         bin_edges,
         variable,

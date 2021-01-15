@@ -405,7 +405,10 @@ def templates(
     figure_folder: Union[str, pathlib.Path] = "figures",
     method: str = "matplotlib",
 ) -> None:
-    """Visualizes template histograms for systematic variations.
+    """Visualizes template histograms (after post-processing) for systematic variations.
+
+    The original template histogram for systematic variations (before post-processing)
+    is also included in the visualization.
 
     Args:
         config (Dict[str, Any]): cabinetry configuration
@@ -462,16 +465,35 @@ def templates(
                 variable = region["Variable"]
                 nominal = {"yields": nominal_histo.yields, "stdev": nominal_histo.stdev}
 
-                # extract variation histograms if they exist
-                up = {}
-                down = {}
+                # extract original and modified (after post-processing) variation
+                # histograms, if they exist
+                up_orig = {}
+                up_mod = {}
+                down_orig = {}
+                down_mod = {}
                 for variation_path in variation_paths:
-                    var_histo = histo.Histogram.from_path(variation_path)
-                    var = {"yields": var_histo.yields, "stdev": var_histo.stdev}
+                    # original variation, before post-processing
+                    variation_path_orig = pathlib.Path(
+                        str(variation_path).replace("_modified", "")
+                    )
+                    var_histo_orig = histo.Histogram.from_path(variation_path_orig)
+                    var_orig = {
+                        "yields": var_histo_orig.yields,
+                        "stdev": var_histo_orig.stdev,
+                    }
+
+                    # variation after post-processing
+                    var_histo_mod = histo.Histogram.from_path(variation_path)
+                    var_mod = {
+                        "yields": var_histo_mod.yields,
+                        "stdev": var_histo_mod.stdev,
+                    }
                     if "Up" in variation_path.parts[-1]:
-                        up.update(var)
+                        up_orig.update(var_orig)
+                        up_mod.update(var_mod)
                     else:
-                        down.update(var)
+                        down_orig.update(var_orig)
+                        down_mod.update(var_mod)
 
                 figure_name = (
                     region["Name"]
@@ -487,7 +509,14 @@ def templates(
                     from .contrib import matplotlib_visualize
 
                     matplotlib_visualize.templates(
-                        nominal, up, down, bins, variable, figure_path
+                        nominal,
+                        up_orig,
+                        up_mod,
+                        down_orig,
+                        down_mod,
+                        bins,
+                        variable,
+                        figure_path,
                     )
 
                 else:

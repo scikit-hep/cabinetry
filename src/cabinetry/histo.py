@@ -129,6 +129,15 @@ class Histogram(bh.Histogram):
         """
         return self.view().value
 
+    @yields.setter
+    def yields(self, value: np.ndarray) -> None:
+        """Updates the yields per bin.
+
+        Args:
+            value (np.ndarray): yields to set
+        """
+        self.view().value = value
+
     @property
     def stdev(self) -> np.ndarray:
         """Returns the stat. uncertainty per histogram bin.

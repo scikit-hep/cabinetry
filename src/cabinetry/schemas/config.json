@@ -102,8 +102,8 @@
         },
         "region": {
             "title": "Region",
-            "description": "a region of phase space",
             "$$target": "#/definitions/region",
+            "description": "a region of phase space",
             "type": "object",
             "required": ["Name", "Filter", "Variable", "Binning"],
             "properties": {
@@ -138,8 +138,8 @@
         },
         "sample": {
             "title": "Sample",
-            "description": "a sample of a specific process or data",
             "$$target": "#/definitions/sample",
+            "description": "a sample of a specific process or data",
             "type": "object",
             "required": ["Name", "Tree"],
             "properties": {
@@ -168,8 +168,8 @@
         },
         "normfactor": {
             "title": "NormFactor",
-            "description": "a normalization factor affecting one or more samples",
             "$$target": "#/definitions/normfactor",
+            "description": "a normalization factor affecting one or more samples",
             "type": "object",
             "required": ["Name", "Samples"],
             "properties": {
@@ -201,8 +201,8 @@
         },
         "systematic": {
             "title": "Systematic",
-            "description": "a systematic uncertainty",
             "$$target": "#/definitions/systematic",
+            "description": "a systematic uncertainty",
             "type": "object",
             "required": ["Name", "Samples", "Type", "Up", "Down"],
             "properties": {
@@ -221,18 +221,22 @@
                 },
                 "Up": {
                     "description": "template for \"up\" variation",
-                    "$ref": "#/definitions/template"
+                    "$ref": "#/definitions/template_setting"
                 },
                 "Down": {
                     "description": "template for \"down\" variation",
-                    "$ref": "#/definitions/template"
+                    "$ref": "#/definitions/template_setting"
+                },
+                "Smoothing": {
+                    "description": "smoothing to apply",
+                    "$ref": "#/definitions/smoothing_setting"
                 }
             },
             "additionalProperties": false
         },
-        "template": {
+        "template_setting": {
             "title": "Template",
-            "$$target": "#/definitions/template",
+            "$$target": "#/definitions/template_setting",
             "description": "a systematics template (up/down)",
             "type": "object",
             "properties": {
@@ -300,6 +304,50 @@
                     "uniqueItems": true
                 }
             ]
+        },
+        "regions_setting": {
+            "title": "Regions setting",
+            "$$target": "#/definitions/regions_setting",
+            "description": "name(s) of region(s)",
+            "oneOf": [
+                {
+                    "description": "single region",
+                    "type": "string"
+                },
+                {
+                    "description": "list of regions",
+                    "type": "array",
+                    "minItems": 1,
+                    "items": {
+                        "description": "single region",
+                        "type": "string"
+                    },
+                    "uniqueItems": true
+                }
+            ]
+        },
+        "smoothing_setting": {
+            "title": "Smoothing setting",
+            "$$target": "#/definitions/smoothing_setting",
+            "description": "smoothing settings for template histograms",
+            "type": "object",
+            "required": ["Algorithm"],
+            "properties": {
+                "Algorithm": {
+                    "description": "name of smoothing algorithm to use",
+                    "type": "string",
+                    "enum": ["353QH, twice"]
+                },
+                "Regions": {
+                    "description": "regions to apply smoothing in",
+                    "$ref": "#/definitions/regions_setting"
+                },
+                "Samples": {
+                    "description": "samples to apply smoothing to",
+                    "$ref": "#/definitions/samples_setting"
+                }
+            },
+            "additionalProperties": false
         }
     },
     "additionalProperties": false

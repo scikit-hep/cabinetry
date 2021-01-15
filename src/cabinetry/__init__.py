@@ -1,6 +1,7 @@
 from . import configuration  # NOQA
 from . import fit  # NOQA
 from . import route  # NOQA
+from . import smooth  # NOQA
 from . import tabulate  # NOQA
 from . import template_builder  # NOQA
 from . import template_postprocessor  # NOQA
