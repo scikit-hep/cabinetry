@@ -33,7 +33,7 @@ def _apply_353QH_twice(
 ) -> None:
     """Smooths systematic template histogram with the "353QH, twice" algorithm.
 
-    The algorithm is applied to the ratio of systematic variation / nominal. The nominal
+    The algorithm is applied to the ratio systematic variation / nominal. The nominal
     histogram stays the same, while the variation histogram is modified. Statistical
     uncertainties do not change (and the algorithm is not aware of statistical
     uncertainties). The total yield of the variation histogram stays unchanged.
