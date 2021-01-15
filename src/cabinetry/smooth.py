@@ -46,7 +46,8 @@ def smooth_353QH_twice(hist: T) -> T:
     For documentation see these proceedings https://cds.cern.ch/record/186223/ on page
     292. The algorithm runs twice to avoid over-smoothing peaks and valleys. The
     algorithm is not aware of statistical uncertainties per entry in the array. See also
-    the ROOT implementation https://root.cern.ch/doc/master/TH1_8cxx_source.html#l06725.
+    https://root.cern.ch/doc/master/classTH1.html#aeb935cae10dbf9cd484bee1b6a549f83 for
+    the ROOT implementation.
 
     Args:
         hist (Union[list, np.ndarray]): array to smooth
