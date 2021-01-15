@@ -76,9 +76,9 @@ def test_apply_postprocessing(mock_stat, mock_smooth):
 
     # call to stat. unc. fix
     assert mock_stat.call_count == 1
-    assert mock_stat.call_args[0][1] == name
     assert np.allclose(mock_stat.call_args[0][0].yields, histogram.yields)
     assert np.allclose(mock_stat.call_args[0][0].stdev, histogram.stdev, equal_nan=True)
+    assert mock_stat.call_args[0][1] == name
     assert mock_stat.call_args[1] == {}
 
     # call to smoothing
