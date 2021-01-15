@@ -116,10 +116,13 @@ def apply_postprocessing(
     # copy histogram to new object to leave it unchanged
     modified_histogram = copy.deepcopy(histogram)
     _fix_stat_unc(modified_histogram, name)
-    if smoothing_algorithm == "353QH, twice":
-        if nominal_histogram is None:
-            raise ValueError("cannot apply smoothing, nominal histogram missing")
-        _apply_353QH_twice(modified_histogram, nominal_histogram, name)
+    if smoothing_algorithm is not None:
+        if smoothing_algorithm == "353QH, twice":
+            if nominal_histogram is None:
+                raise ValueError("cannot apply smoothing, nominal histogram missing")
+            _apply_353QH_twice(modified_histogram, nominal_histogram, name)
+        else:
+            log.warning(f"unknown smoothing algorithm {smoothing_algorithm}")
     return modified_histogram
 
 

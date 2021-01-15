@@ -1,3 +1,4 @@
+import logging
 import pathlib
 from unittest import mock
 
@@ -66,7 +67,8 @@ def test__get_smoothing_algorithm():
 
 @mock.patch("cabinetry.template_postprocessor._apply_353QH_twice")
 @mock.patch("cabinetry.template_postprocessor._fix_stat_unc")
-def test_apply_postprocessing(mock_stat, mock_smooth):
+def test_apply_postprocessing(mock_stat, mock_smooth, caplog):
+    caplog.set_level(logging.DEBUG)
     histogram = histo.Histogram.from_arrays([1, 2, 3], [1, 1], [float("nan"), 0.2])
     nom_hist = histo.Histogram.from_arrays([1, 2, 3], [2, 2], [0.1, 0.2])
     name = "test_histo"
@@ -105,6 +107,8 @@ def test_apply_postprocessing(mock_stat, mock_smooth):
     )
     assert mock_stat.call_count == 2
     assert mock_smooth.call_count == 1
+    assert "unknown smoothing algorithm abc" in [rec.message for rec in caplog.records]
+    caplog.clear()
 
     # known smoothing, but no nominal histogram
     with pytest.raises(
