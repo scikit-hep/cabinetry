@@ -95,7 +95,7 @@ def test_apply_postprocessing(mock_stat, mock_smooth):
     # the original histogram should be unchanged
     assert np.allclose(histogram.yields, [1, 1])
     assert np.allclose(histogram.stdev, [float("nan"), 0.2], equal_nan=True)
-    # original and modified histogram should match
+    # original and modified histogram should match (modifications were mocked out)
     assert np.allclose(histogram.yields, modified_histogram.yields)
     assert np.allclose(histogram.stdev, modified_histogram.stdev, equal_nan=True)
 
