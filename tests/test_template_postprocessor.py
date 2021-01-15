@@ -71,7 +71,7 @@ def test_apply_postprocessing(mock_stat, mock_smooth):
     nom_hist = histo.Histogram.from_arrays([1, 2, 3], [2, 2], [0.1, 0.2])
     name = "test_histo"
     modified_histogram = template_postprocessor.apply_postprocessing(
-        histogram, name, smoothing_alg="353QH, twice", nominal_histogram=nom_hist
+        histogram, name, smoothing_algorithm="353QH, twice", nominal_histogram=nom_hist
     )
 
     # call to stat. unc. fix
@@ -101,7 +101,7 @@ def test_apply_postprocessing(mock_stat, mock_smooth):
 
     # unknown smoothing algorithm
     _ = template_postprocessor.apply_postprocessing(
-        histogram, name, smoothing_alg="abc", nominal_histogram=nom_hist
+        histogram, name, smoothing_algorithm="abc", nominal_histogram=nom_hist
     )
     assert mock_stat.call_count == 2
     assert mock_smooth.call_count == 1
@@ -111,7 +111,7 @@ def test_apply_postprocessing(mock_stat, mock_smooth):
         ValueError, match="cannot apply smoothing, nominal histogram missing"
     ):
         _ = template_postprocessor.apply_postprocessing(
-            histogram, name, smoothing_alg="353QH, twice", nominal_histogram=None
+            histogram, name, smoothing_algorithm="353QH, twice", nominal_histogram=None
         )
 
 
@@ -156,7 +156,7 @@ def test__get_postprocessor(mock_name):
             assert mock_postprocessing.call_args_list == [
                 (
                     (mock_original_histogram, "histo_name"),
-                    {"smoothing_alg": None, "nominal_histogram": None},
+                    {"smoothing_algorithm": None, "nominal_histogram": None},
                 )
             ]  # postprocessing was executed
 
@@ -185,7 +185,7 @@ def test__get_postprocessor(mock_name):
             assert mock_postprocessing.call_args == (
                 (mock_original_histogram, "histo_name"),
                 {
-                    "smoothing_alg": "353QH, twice",
+                    "smoothing_algorithm": "353QH, twice",
                     "nominal_histogram": mock_original_histogram,
                 },
             )

@@ -86,14 +86,14 @@ def _get_smoothing_algorithm(
             return None
 
     # smoothing algorithm needs to be applied
-    smoothing_alg = smoothing["Algorithm"]
-    return smoothing_alg
+    smoothing_algorithm = smoothing["Algorithm"]
+    return smoothing_algorithm
 
 
 def apply_postprocessing(
     histogram: histo.Histogram,
     name: str,
-    smoothing_alg: Optional[str] = None,
+    smoothing_algorithm: Optional[str] = None,
     nominal_histogram: Optional[histo.Histogram] = None,
 ) -> histo.Histogram:
     """Returns a new histogram with post-processing applied.
@@ -104,8 +104,8 @@ def apply_postprocessing(
     Args:
         histogram (cabinetry.histo.Histogram): the histogram to postprocess
         name (str): histogram name for logging
-        smoothing_alg (Optional[str]): name of smoothing algorithm to apply, defaults to
-            None (do not apply any smoothing)
+        smoothing_algorithm (Optional[str]): name of smoothing algorithm to apply,
+            defaults to None (do not apply any smoothing)
         nominal_histogram (Optional[cabinetry.histo.Histogram]): nominal histogram
             (needed for smoothing), defaults to None
 
@@ -115,7 +115,7 @@ def apply_postprocessing(
     # copy histogram to new object to leave it unchanged
     modified_histogram = copy.deepcopy(histogram)
     _fix_stat_unc(modified_histogram, name)
-    if smoothing_alg == "353QH, twice":
+    if smoothing_algorithm == "353QH, twice":
         if nominal_histogram is None:
             raise ValueError("cannot apply smoothing, nominal histogram missing")
         _apply_353QH_twice(modified_histogram, nominal_histogram, name)
@@ -159,8 +159,8 @@ def _get_postprocessor(histogram_folder: pathlib.Path) -> route.ProcessorFunc:
         )
         histogram_name = histo.build_name(region, sample, systematic, template)
 
-        smoothing_alg = _get_smoothing_algorithm(region, sample, systematic)
-        if smoothing_alg is None:
+        smoothing_algorithm = _get_smoothing_algorithm(region, sample, systematic)
+        if smoothing_algorithm is None:
             nominal_histogram = None
         else:
             # to apply smoothing, the associated nominal histogram is needed
@@ -171,7 +171,7 @@ def _get_postprocessor(histogram_folder: pathlib.Path) -> route.ProcessorFunc:
         new_histogram = apply_postprocessing(
             histogram,
             histogram_name,
-            smoothing_alg=smoothing_alg,
+            smoothing_algorithm=smoothing_algorithm,
             nominal_histogram=nominal_histogram,
         )
         histogram.validate(histogram_name)
