@@ -110,6 +110,13 @@ def test_apply_postprocessing(mock_stat, mock_smooth, caplog):
     assert "unknown smoothing algorithm abc" in [rec.message for rec in caplog.records]
     caplog.clear()
 
+    # no smoothing
+    _ = template_postprocessor.apply_postprocessing(
+        histogram, name, smoothing_algorithm=None, nominal_histogram=None
+    )
+    assert mock_stat.call_count == 3
+    assert mock_smooth.call_count == 1
+
     # known smoothing, but no nominal histogram
     with pytest.raises(
         ValueError, match="cannot apply smoothing, nominal histogram missing"
