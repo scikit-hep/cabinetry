@@ -128,8 +128,6 @@ def test__get_postprocessor(mock_name):
     systematic = {"Name": "systematic"}
     template = "Up"
 
-    # need to add tests for smoothing logic
-
     mock_original_histogram = mock.MagicMock()
     mock_new_histogram = mock.MagicMock()
     with mock.patch(
