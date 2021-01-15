@@ -334,7 +334,7 @@
             "required": ["Algorithm"],
             "properties": {
                 "Algorithm": {
-                    "description": "override for nominal setting",
+                    "description": "name of smoothing algorithm to use",
                     "type": "string",
                     "enum": ["353QH, twice"]
                 },
