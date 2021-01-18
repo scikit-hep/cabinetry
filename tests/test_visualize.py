@@ -103,9 +103,19 @@ def test_data_MC_from_histograms(mock_load, mock_draw, mock_stdev):
                 [0.0, 1.0],
                 figure_folder / "reg_1_prefit.pdf",
             ),
-            {"log_scale": None},
+            {"log_scale": None, "log_scale_x": False},
         )
     ]
+
+    # custom log scale settings
+    visualize.data_MC_from_histograms(
+        config,
+        figure_folder=figure_folder,
+        method="matplotlib",
+        log_scale=True,
+        log_scale_x=True,
+    )
+    assert mock_draw.call_args[1] == {"log_scale": True, "log_scale_x": True}
 
     # other plotting method
     with pytest.raises(NotImplementedError, match="unknown backend: unknown"):
@@ -195,7 +205,7 @@ def test_data_MC(
     assert mock_draw.call_args_list[0][0][3] == pathlib.Path(
         "tmp/Signal-Region_prefit.pdf"
     )
-    assert mock_draw.call_args_list[0][1] == {"log_scale": None}
+    assert mock_draw.call_args_list[0][1] == {"log_scale": None, "log_scale_x": False}
 
     # post-fit plot and custom scale
     fit_results = fit.FitResults(
@@ -233,7 +243,7 @@ def test_data_MC(
     assert mock_draw.call_args_list[1][0][3] == pathlib.Path(
         "tmp/Signal-Region_postfit.pdf"
     )
-    assert mock_draw.call_args_list[1][1] == {"log_scale": False}
+    assert mock_draw.call_args_list[1][1] == {"log_scale": False, "log_scale_x": False}
 
     # no yield table
     visualize.data_MC(config, example_spec, include_table=False)
