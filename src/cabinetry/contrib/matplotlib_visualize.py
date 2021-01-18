@@ -155,14 +155,10 @@ def data_MC(
     # lowest MC yield in single bin (not considering empty bins)
     y_min = np.min(total_yield[np.nonzero(total_yield)])
 
-    # determine scale setting, unless it is provided
-    if log_scale is None:
-        # if yields vary over more than 2 orders of magnitude, set y-axis to log scale
-        log_scale = (y_max / y_min) > 100
-
-    # set vertical axis scale and limits
-    if log_scale:
-        # use log scale
+    # use log scale if it is requested, otherwise determine scale setting:
+    # if yields vary over more than 2 orders of magnitude, set y-axis to log scale
+    if log_scale or (log_scale is None and (y_max / y_min) > 100):
+        # log vertical axis scale and limits
         ax1.set_yscale("log")
         ax1.set_ylim([y_min / 10, y_max * 10])
         # add "_log" to the figure name
