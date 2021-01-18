@@ -16,6 +16,7 @@ def data_MC(
     bin_edges: np.ndarray,
     figure_path: pathlib.Path,
     log_scale: Optional[bool] = None,
+    log_scale_x: bool = False,
 ) -> None:
     """Draws a data/MC histogram with uncertainty bands and ratio panel.
 
@@ -29,6 +30,8 @@ def data_MC(
         log_scale (Optional[bool], optional): whether to use a logarithmic vertical
             axis, defaults to None (automatically determine whether to use linear or log
             scale)
+        log_scale_x (bool, optional): whether to use logarithmic horizontal axis,
+            defaults to False
     """
     mc_histograms_yields = []
     mc_labels = []
@@ -67,6 +70,13 @@ def data_MC(
     bin_left_edges = bin_edges[:-1]
     bin_width = bin_right_edges - bin_left_edges
     bin_centers = 0.5 * (bin_left_edges + bin_right_edges)
+    if log_scale_x:
+        # center data visually in bins if horizontal log scale is used
+        bin_centers_data = np.power(
+            10, 0.5 * (np.log10(bin_left_edges * bin_right_edges))
+        )
+    else:
+        bin_centers_data = bin_centers
     mc_containers = []
     for mc_sample_yield in mc_histograms_yields:
         mc_container = ax1.bar(
@@ -98,7 +108,7 @@ def data_MC(
 
     # plot data
     data_container = ax1.errorbar(
-        bin_centers,
+        bin_centers_data,
         data_histogram_yields,
         yerr=data_histogram_stdev,
         fmt="o",
@@ -131,7 +141,11 @@ def data_MC(
     data_model_ratio = data_histogram_yields / total_yield
     data_model_ratio_unc = data_histogram_stdev / total_yield
     ax2.errorbar(
-        bin_centers, data_model_ratio, yerr=data_model_ratio_unc, fmt="o", color="k"
+        bin_centers_data,
+        data_model_ratio,
+        yerr=data_model_ratio_unc,
+        fmt="o",
+        color="k",
     )
 
     # get the highest single bin yield, from the sum of MC or data
@@ -160,6 +174,11 @@ def data_MC(
         # do not use log scale
         ax1.set_ylim([0, y_max * 1.5])  # 50% headroom
 
+    # log scale for horizontal axes
+    if log_scale_x:
+        ax1.set_xscale("log")
+        ax2.set_xscale("log")
+
     # MC contributions in inverse order, such that first legend entry corresponds to
     # the last (highest) contribution to the stack
     all_containers = mc_containers[::-1] + [mc_unc_container, data_container]
@@ -169,6 +188,7 @@ def data_MC(
     ax1.set_xlim(bin_left_edges[0], bin_right_edges[-1])
     ax1.set_ylabel("events")
     ax1.set_xticklabels([])
+    ax1.set_xticklabels([], minor=True)
     ax1.tick_params(axis="both", which="major", pad=8)  # tick label - axis padding
     ax1.tick_params(direction="in", top=True, right=True, which="both")
 
