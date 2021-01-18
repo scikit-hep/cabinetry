@@ -52,6 +52,7 @@ def data_MC_from_histograms(
     config: Dict[str, Any],
     figure_folder: Union[str, pathlib.Path] = "figures",
     log_scale: Optional[bool] = None,
+    log_scale_x: bool = False,
     method: str = "matplotlib",
 ) -> None:
     """Draws pre-fit data/MC histograms, using histograms created by cabinetry.
@@ -64,6 +65,8 @@ def data_MC_from_histograms(
             figures in, defaults to "figures"
         log_scale (Optional[bool], optional): whether to use logarithmic vertical axis,
             defaults to None (automatically determine whether to use linear/log scale)
+        log_scale_x (bool, optional): whether to use logarithmic horizontal axis,
+            defaults to False
         method (str, optional): backend to use for plotting, defaults to "matplotlib"
 
     Raises:
@@ -106,6 +109,7 @@ def data_MC_from_histograms(
                 bin_edges,
                 figure_path,
                 log_scale=log_scale,
+                log_scale_x=log_scale_x,
             )
         else:
             raise NotImplementedError(f"unknown backend: {method}")
@@ -117,6 +121,7 @@ def data_MC(
     figure_folder: Union[str, pathlib.Path] = "figures",
     fit_results: Optional[fit.FitResults] = None,
     log_scale: Optional[bool] = None,
+    log_scale_x: bool = False,
     include_table: bool = True,
     method: str = "matplotlib",
 ) -> None:
@@ -132,6 +137,8 @@ def data_MC(
             defaults to None (then the pre-fit configuration is drawn)
         log_scale (Optional[bool], optional): whether to use logarithmic vertical axis,
             defaults to None (automatically determine whether to use linear/log scale)
+        log_scale_x (bool, optional): whether to use logarithmic horizontal axis,
+            defaults to False
         include_table (bool, optional): whether to also output a yield table, defaults
             to True
         method (str, optional): backend to use for plotting, defaults to "matplotlib"
@@ -226,6 +233,7 @@ def data_MC(
                 bin_edges,
                 figure_path,
                 log_scale=log_scale,
+                log_scale_x=log_scale_x,
             )
         else:
             raise NotImplementedError(f"unknown backend: {method}")
