@@ -170,9 +170,9 @@ def data_MC(
         ax1.set_ylim([0, y_max * 1.5])  # 50% headroom
 
     # log scale for horizontal axes
-    if log_scale_x:
-        ax1.set_xscale("log")
-        ax2.set_xscale("log")
+    # if log_scale_x:
+    #     ax1.set_xscale("log")
+    #     ax2.set_xscale("log")
 
     # MC contributions in inverse order, such that first legend entry corresponds to
     # the last (highest) contribution to the stack
