@@ -168,10 +168,7 @@ def data_MC(
     )
 
     # get the highest single bin yield, from the sum of MC or data
-    y_max = max(
-        np.max(total_yield),
-        np.max([h["yields"] for h in histogram_dict_list if h["isData"]]),
-    )
+    y_max = max(np.max(total_yield), np.max(data_histogram_yields))
     # lowest MC yield in single bin (not considering empty bins)
     y_min = np.min(total_yield[np.nonzero(total_yield)])
 
@@ -190,9 +187,9 @@ def data_MC(
         ax1.set_ylim([0, y_max * 1.5])  # 50% headroom
 
     # log scale for horizontal axes
-    # if log_scale_x:
-    #     ax1.set_xscale("log")
-    #     ax2.set_xscale("log")
+    if log_scale_x:
+        ax1.set_xscale("log")
+        ax2.set_xscale("log")
 
     # MC contributions in inverse order, such that first legend entry corresponds to
     # the last (highest) contribution to the stack
