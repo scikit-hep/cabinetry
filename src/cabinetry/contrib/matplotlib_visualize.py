@@ -93,8 +93,14 @@ def data_MC(
     bin_left_edges = bin_edges[:-1]
     bin_width = bin_right_edges - bin_left_edges
     # center data visually in bins if horizontal log scale is used
-    bin_centers, bin_centers_data = _get_bin_centers(
-        bin_left_edges, bin_right_edges, log_scale_x=log_scale_x
+    # bin_centers, bin_centers_data = _get_bin_centers(
+    #     bin_left_edges, bin_right_edges, log_scale_x=log_scale_x
+    # )
+    bin_centers = 0.5 * (bin_left_edges + bin_right_edges)
+    bin_centers_data = (
+        np.power(10, 0.5 * (np.log10(bin_left_edges * bin_right_edges)))
+        if log_scale_x
+        else bin_centers
     )
     mc_containers = []
     for mc_sample_yield in mc_histograms_yields:
