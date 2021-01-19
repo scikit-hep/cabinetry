@@ -6,28 +6,6 @@ import numpy as np
 from cabinetry.contrib import matplotlib_visualize
 
 
-def test__get_bin_centers():
-    bin_left_edges = np.asarray([0, 1, 2])
-    bin_right_edges = np.asarray([1, 2, 3])
-    bin_centers, visual_centers = matplotlib_visualize._get_bin_centers(
-        bin_left_edges, bin_right_edges
-    )
-    expected_centers = np.asarray([0.5, 1.5, 2.5])
-    np.testing.assert_equal(bin_centers, expected_centers)
-    np.testing.assert_equal(visual_centers, expected_centers)
-
-    # log scale
-    bin_left_edges = np.asarray([1, 10, 100])
-    bin_right_edges = np.asarray([10, 100, 1000])
-    bin_centers, visual_centers = matplotlib_visualize._get_bin_centers(
-        bin_left_edges, bin_right_edges, log_scale_x=True
-    )
-    expected_centers = np.asarray([5.5, 55, 550])
-    expected_visual_centers = np.asarray([3.162278, 31.622777, 316.227766])
-    np.testing.assert_equal(bin_centers, expected_centers)
-    assert np.allclose(visual_centers, expected_visual_centers)
-
-
 def test_data_MC(tmp_path):
     fname = tmp_path / "fig.pdf"
     histo_dict_list = [

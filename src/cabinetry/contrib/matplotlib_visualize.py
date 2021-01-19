@@ -1,6 +1,6 @@
 import logging
 import pathlib
-from typing import Any, Dict, List, Optional, Tuple, Union
+from typing import Any, Dict, List, Optional, Union
 
 import matplotlib as mpl
 import matplotlib.pyplot as plt
@@ -8,29 +8,6 @@ import numpy as np
 
 
 log = logging.getLogger(__name__)
-
-
-def _get_bin_centers(
-    bin_left_edges: np.ndarray, bin_right_edges: np.ndarray, log_scale_x: bool = False
-) -> Tuple[np.ndarray, np.ndarray]:
-    """Returns bin centers and visual bin centers (useful for log scale plots).
-
-    Args:
-        bin_left_edges (np.ndarray): left edges of bins
-        bin_right_edges (np.ndarray): right edges of bin
-        log_scale_x (bool, optional): whether x-scale is logarithmic, defaults to False
-
-    Returns:
-        Tuple[np.ndarray, np.ndarray]: tuple of bin centers (means of left and right
-        edges) and visual centers (visually centered in plot)
-    """
-    bin_centers = 0.5 * (bin_left_edges + bin_right_edges)
-    visual_centers = (
-        np.power(10, 0.5 * (np.log10(bin_left_edges * bin_right_edges)))
-        if log_scale_x
-        else bin_centers
-    )
-    return bin_centers, visual_centers
 
 
 def data_MC(
@@ -92,11 +69,8 @@ def data_MC(
     bin_right_edges = bin_edges[1:]
     bin_left_edges = bin_edges[:-1]
     bin_width = bin_right_edges - bin_left_edges
-    # center data visually in bins if horizontal log scale is used
-    # bin_centers, bin_centers_data = _get_bin_centers(
-    #     bin_left_edges, bin_right_edges, log_scale_x=log_scale_x
-    # )
     bin_centers = 0.5 * (bin_left_edges + bin_right_edges)
+    # center data visually in bins if horizontal log scale is used
     bin_centers_data = (
         np.power(10, 0.5 * (np.log10(bin_left_edges * bin_right_edges)))
         if log_scale_x
