@@ -10,4 +10,4 @@ from . import visualize  # NOQA
 from . import workspace  # NOQA
 
 
-__version__ = "0.1.7"
+__version__ = "0.1.8"
