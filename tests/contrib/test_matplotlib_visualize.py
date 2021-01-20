@@ -38,11 +38,12 @@ def test_data_MC(tmp_path):
     histo_dict_list_log[0]["yields"] = np.asarray([2000, 14])
     histo_dict_list_log[2]["yields"] = np.asarray([2010, 15])
     total_model_unc_log = np.asarray([50, 1.5])
+    bin_edges_log = np.asarray([10, 100, 1000])
     fname_log = fname.with_name(fname.stem + "_log" + fname.suffix)
 
     # automatic log scale
     matplotlib_visualize.data_MC(
-        histo_dict_list_log, total_model_unc_log, bin_edges, fname
+        histo_dict_list_log, total_model_unc_log, bin_edges_log, fname, log_scale_x=True
     )
     assert (
         compare_images("tests/contrib/reference/data_MC_log.pdf", str(fname_log), 0)
@@ -59,7 +60,12 @@ def test_data_MC(tmp_path):
 
     # log scale forced
     matplotlib_visualize.data_MC(
-        histo_dict_list_log, total_model_unc_log, bin_edges, fname, log_scale=True
+        histo_dict_list_log,
+        total_model_unc_log,
+        bin_edges_log,
+        fname,
+        log_scale=True,
+        log_scale_x=True,
     )
     assert (
         compare_images("tests/contrib/reference/data_MC_log.pdf", str(fname_log), 0)
