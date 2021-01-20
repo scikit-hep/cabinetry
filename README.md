@@ -1,4 +1,4 @@
-<div align="center"><img src="docs/_static/cabinetry_logo_small.png" alt="cabinetry logo"></div>
+<div align="center"><img src="https://raw.githubusercontent.com/alexander-held/cabinetry/master/docs/_static/cabinetry_logo_small.png" alt="cabinetry logo"></div>
 
 [![CI status](https://github.com/alexander-held/cabinetry/workflows/CI/badge.svg)](https://github.com/alexander-held/cabinetry/actions?query=workflow%3ACI)
 [![Documentation Status](https://readthedocs.org/projects/cabinetry/badge/?version=latest)](https://cabinetry.readthedocs.io/en/latest/?badge=latest)
