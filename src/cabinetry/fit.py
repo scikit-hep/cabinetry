@@ -392,7 +392,7 @@ def fit(
     """
     log.info("performing maximum likelihood fit")
 
-    model, data = model_utils.model_and_data(spec, asimov=asimov)
+    data, model = model_utils.data_and_model(spec, asimov=asimov)
 
     # convert minos parameter to list if a single parameter is specified as string
     if minos is not None and isinstance(minos, str):
@@ -437,7 +437,7 @@ def ranking(
     Returns:
         RankingResults: fit results for parameters, and pre- and post-fit impacts
     """
-    model, data = model_utils.model_and_data(spec, asimov=asimov)
+    data, model = model_utils.data_and_model(spec, asimov=asimov)
     labels = model_utils.get_parameter_names(model)
     prefit_unc = model_utils.get_prefit_uncertainties(model)
     nominal_poi = fit_results.bestfit[model.config.poi_index]
@@ -539,7 +539,7 @@ def scan(
         ScanResults: includes parameter name, scanned values and 2*log(likelihood)
         offset
     """
-    model, data = model_utils.model_and_data(spec, asimov=asimov)
+    data, model = model_utils.data_and_model(spec, asimov=asimov)
     labels = model_utils.get_parameter_names(model)
     init_pars = model.config.suggested_init()
     fix_pars = model.config.suggested_fixed()
@@ -618,7 +618,7 @@ def limit(
         LimitResults: observed and expected limits, CLs values, and scanned points
     """
     pyhf.set_backend("numpy", pyhf.optimize.minuit_optimizer(verbose=False))
-    model, data = model_utils.model_and_data(spec, asimov=asimov)
+    data, model = model_utils.data_and_model(spec, asimov=asimov)
 
     log.info(f"calculating upper limit for {model.config.poi_name}")
 

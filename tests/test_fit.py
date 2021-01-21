@@ -96,7 +96,7 @@ def test_print_results(caplog):
 @pytest.mark.filterwarnings("ignore::RuntimeWarning")
 @mock.patch("cabinetry.fit._run_minos")
 def test__fit_model_pyhf(mock_minos, example_spec, example_spec_multibin):
-    model, data = model_utils.model_and_data(example_spec)
+    data, model = model_utils.data_and_model(example_spec)
     fit_results = fit._fit_model_pyhf(model, data)
     assert np.allclose(fit_results.bestfit, [1.1, 8.32984849])
     assert np.allclose(fit_results.uncertainty, [0.0, 0.38099445])
@@ -105,7 +105,7 @@ def test__fit_model_pyhf(mock_minos, example_spec, example_spec_multibin):
     assert np.allclose(fit_results.corr_mat, [[0.0, 0.0], [0.0, 1.0]])
 
     # Asimov fit, with fixed gamma (fixed not to Asimov MLE)
-    model, data = model_utils.model_and_data(example_spec, asimov=True)
+    data, model = model_utils.data_and_model(example_spec, asimov=True)
     fit_results = fit._fit_model_pyhf(model, data)
     # the gamma factor is multiplicative and fixed to 1.1, so the
     # signal strength needs to be 1/1.1 to compensate
@@ -116,7 +116,7 @@ def test__fit_model_pyhf(mock_minos, example_spec, example_spec_multibin):
     assert np.allclose(fit_results.corr_mat, [[0.0, 0.0], [0.0, 1.0]])
 
     # parameters held constant via keyword argument
-    model, data = model_utils.model_and_data(example_spec_multibin)
+    data, model = model_utils.data_and_model(example_spec_multibin)
     init_pars = model.config.suggested_init()
     init_pars[0] = 0.9
     init_pars[1] = 1.1
@@ -131,7 +131,7 @@ def test__fit_model_pyhf(mock_minos, example_spec, example_spec_multibin):
     assert np.allclose(fit_results.best_twice_nll, 10.4531891)
 
     # including minos, one parameter is unknown
-    model, data = model_utils.model_and_data(example_spec)
+    data, model = model_utils.data_and_model(example_spec)
     fit_results = fit._fit_model_pyhf(model, data, minos=["Signal strength", "abc"])
     assert mock_minos.call_count == 1
     # first argument to minos call is the Minuit instance
@@ -143,7 +143,7 @@ def test__fit_model_pyhf(mock_minos, example_spec, example_spec_multibin):
 @pytest.mark.filterwarnings("ignore::RuntimeWarning")
 @mock.patch("cabinetry.fit._run_minos")
 def test__fit_model_custom(mock_minos, example_spec, example_spec_multibin):
-    model, data = model_utils.model_and_data(example_spec)
+    data, model = model_utils.data_and_model(example_spec)
     fit_results = fit._fit_model_custom(model, data)
     assert np.allclose(fit_results.bestfit, [1.1, 8.32985794])
     assert np.allclose(fit_results.uncertainty, [0.0, 0.38153392])
@@ -152,7 +152,7 @@ def test__fit_model_custom(mock_minos, example_spec, example_spec_multibin):
     assert np.allclose(fit_results.corr_mat, [[0.0, 0.0], [0.0, 1.0]])
 
     # Asimov fit, with fixed gamma (fixed not to Asimov MLE)
-    model, data = model_utils.model_and_data(example_spec, asimov=True)
+    data, model = model_utils.data_and_model(example_spec, asimov=True)
     fit_results = fit._fit_model_custom(model, data)
     # the gamma factor is multiplicative and fixed to 1.1, so the
     # signal strength needs to be 1/1.1 to compensate
@@ -163,7 +163,7 @@ def test__fit_model_custom(mock_minos, example_spec, example_spec_multibin):
     assert np.allclose(fit_results.corr_mat, [[0.0, 0.0], [0.0, 1.0]])
 
     # parameters held constant via keyword argument
-    model, data = model_utils.model_and_data(example_spec_multibin)
+    data, model = model_utils.data_and_model(example_spec_multibin)
     init_pars = model.config.suggested_init()
     init_pars[0] = 0.9
     init_pars[1] = 1.1
@@ -178,7 +178,7 @@ def test__fit_model_custom(mock_minos, example_spec, example_spec_multibin):
     assert np.allclose(fit_results.best_twice_nll, 10.45318909)
 
     # including minos
-    model, data = model_utils.model_and_data(example_spec)
+    data, model = model_utils.data_and_model(example_spec)
     fit_results = fit._fit_model_custom(model, data, minos=["Signal strength"])
     assert mock_minos.call_count == 1
     # first argument to minos call is the Minuit instance
@@ -200,7 +200,7 @@ def test__fit_model_custom(mock_minos, example_spec, example_spec_multibin):
     ),
 )
 def test__fit_model(mock_pyhf, mock_custom, example_spec):
-    model, data = model_utils.model_and_data(example_spec)
+    data, model = model_utils.data_and_model(example_spec)
 
     # pyhf API
     fit_results = fit._fit_model(model, data)
@@ -319,7 +319,7 @@ def test__run_minos(caplog):
 @mock.patch("cabinetry.model_utils.unconstrained_parameter_count", return_value=1)
 def test__goodness_of_fit(mock_count, example_spec_multibin, caplog):
     caplog.set_level(logging.DEBUG)
-    model, data = model_utils.model_and_data(example_spec_multibin)
+    data, model = model_utils.data_and_model(example_spec_multibin)
 
     p_val = fit._goodness_of_fit(model, data, 9.964913)
     assert mock_count.call_count == 1
@@ -338,7 +338,7 @@ def test__goodness_of_fit(mock_count, example_spec_multibin, caplog):
         np.asarray([1.0]), np.asarray([0.1]), ["par"], np.empty(0), 2.0
     ),
 )
-@mock.patch("cabinetry.model_utils.model_and_data", return_value=("model", "data"))
+@mock.patch("cabinetry.model_utils.data_and_model", return_value=("data", "model"))
 def test_fit(mock_load, mock_fit, mock_print, mock_gof, example_spec):
     # fit through pyhf.infer API
     fit_results = fit.fit(example_spec)

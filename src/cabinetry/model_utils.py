@@ -9,10 +9,10 @@ import pyhf
 log = logging.getLogger(__name__)
 
 
-def model_and_data(
+def data_and_model(
     spec: Dict[str, Any], asimov: bool = False, with_aux: bool = True
-) -> Tuple[pyhf.pdf.Model, List[float]]:
-    """Returns model and data for a ``pyhf`` workspace specification.
+) -> Tuple[List[float], pyhf.pdf.Model]:
+    """Returns data and model for a ``pyhf`` workspace specification.
 
     Args:
         spec (Dict[str, Any]): a ``pyhf`` workspace specification
@@ -20,9 +20,9 @@ def model_and_data(
         with_aux (bool, optional): whether to also return auxdata, defaults to True
 
     Returns:
-        Tuple[pyhf.pdf.Model, List[float]]:
-            - a HistFactory-style model in ``pyhf`` format
+        Tuple[List[float], pyhf.pdf.Model]:
             - the data (plus auxdata if requested) for the model
+            - a HistFactory-style model in ``pyhf`` format
     """
     workspace = pyhf.Workspace(spec)
     model = workspace.model(
@@ -35,7 +35,7 @@ def model_and_data(
         data = workspace.data(model, with_aux=with_aux)
     else:
         data = build_Asimov_data(model, with_aux=with_aux)
-    return model, data
+    return data, model
 
 
 def get_parameter_names(model: pyhf.pdf.Model) -> List[str]:
