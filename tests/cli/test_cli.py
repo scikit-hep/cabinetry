@@ -243,7 +243,7 @@ def test_ranking(mock_util, mock_fit, mock_rank, mock_vis, tmp_path):
     assert result.exit_code == 0
     assert mock_util.call_args_list == [((workspace,), {"asimov": False})]
     assert mock_fit.call_args_list == [(("model", "data"), {})]
-    assert mock_rank.call_args_list == [((workspace, fit_results), {"asimov": False})]
+    assert mock_rank.call_args_list == [(("model", "data", fit_results), {})]
     assert mock_vis.call_count == 1
     assert np.allclose(mock_vis.call_args[0][0].prefit_up, [[1.2]])
     assert np.allclose(mock_vis.call_args[0][0].prefit_down, [[0.8]])
@@ -259,7 +259,7 @@ def test_ranking(mock_util, mock_fit, mock_rank, mock_vis, tmp_path):
     assert result.exit_code == 0
     assert mock_util.call_args_list[-1] == ((workspace,), {"asimov": True})
     assert mock_fit.call_args_list[-1] == (("model", "data"), {})
-    assert mock_rank.call_args_list[-1] == ((workspace, fit_results), {"asimov": True})
+    assert mock_rank.call_args_list[-1] == (("model", "data", fit_results), {})
     assert mock_vis.call_args_list[-1][1] == {"figure_folder": "folder", "max_pars": 3}
 
 

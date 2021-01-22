@@ -410,13 +410,15 @@ def test_ranking(mock_fit, example_spec):
     uncertainty = np.asarray([0.02, 0.1])
     labels = ["staterror", "mu"]
     fit_results = fit.FitResults(bestfit, uncertainty, labels, np.empty(0), 0.0)
-    ranking_results = fit.ranking(example_spec, fit_results)
+    model, data = model_utils.model_and_data(example_spec)
+    ranking_results = fit.ranking(model, data, fit_results)
 
     # correct call to fit
     expected_fix = [True, False]
     expected_inits = [[0.94956657, 1.0], [0.85043343, 1.0], [0.92, 1.0], [0.88, 1.0]]
     assert mock_fit.call_count == 4
     for i in range(4):
+        assert mock_fit.call_args_list[i][0] == (model, data)
         assert np.allclose(
             mock_fit.call_args_list[i][1]["init_pars"], expected_inits[i]
         )
@@ -436,7 +438,8 @@ def test_ranking(mock_fit, example_spec):
 
     # fixed parameter in ranking, custom fit
     example_spec["measurements"][0]["config"]["parameters"][0]["fixed"] = True
-    ranking_results = fit.ranking(example_spec, fit_results, custom_fit=True)
+    model, data = model_utils.model_and_data(example_spec)
+    ranking_results = fit.ranking(model, data, fit_results, custom_fit=True)
     # expect two calls in this ranking (and had 4 before, so 6 total): pre-fit
     # uncertainty is 0 since parameter is fixed, mock post-fit uncertainty is not 0
     assert mock_fit.call_count == 6

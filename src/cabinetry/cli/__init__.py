@@ -159,7 +159,7 @@ def ranking(
     ws = json.load(ws_spec)
     model, data = cabinetry_model_utils.model_and_data(ws, asimov=asimov)
     fit_results = cabinetry_fit.fit(model, data)
-    ranking_results = cabinetry_fit.ranking(ws, fit_results, asimov=asimov)
+    ranking_results = cabinetry_fit.ranking(model, data, fit_results)
     cabinetry_visualize.ranking(
         ranking_results, figure_folder=figfolder, max_pars=max_pars
     )
