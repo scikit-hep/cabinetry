@@ -205,7 +205,8 @@ def test_integration(tmp_path, ntuple_creator, caplog):
 
     # parameter scan
     scan_results = cabinetry.fit.scan(
-        ws,
+        model,
+        data,
         "Signal_norm",
         par_range=(1.18967971, 2.18967971),
         n_steps=3,

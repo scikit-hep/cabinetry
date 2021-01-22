@@ -472,9 +472,10 @@ def test_scan(mock_fit, example_spec):
     expected_scan_values = np.linspace(1.1, 1.5, 11)
     # -2 log(L) from unconstrained fit subtracted from expected NLLs
     expected_delta_nlls = np.abs(np.linspace(-5, 5, 11))
+    model, data = model_utils.model_and_data(example_spec)
 
     par_name = "Signal strength"
-    scan_results = fit.scan(example_spec, par_name)
+    scan_results = fit.scan(model, data, par_name)
     assert scan_results.name == par_name
     assert scan_results.bestfit == 1.3
     assert scan_results.uncertainty == 0.1
@@ -483,16 +484,18 @@ def test_scan(mock_fit, example_spec):
 
     assert mock_fit.call_count == 12
     # unconstrained fit
+    assert mock_fit.call_args_list[0][0] == ((model, data))
     assert mock_fit.call_args_list[0][1] == {"custom_fit": False}
     # fits in scan
     for i, scan_val in enumerate(expected_scan_values):
+        assert mock_fit.call_args_list[i + 1][0] == ((model, data))
         assert mock_fit.call_args_list[i + 1][1]["init_pars"] == [1.1, scan_val]
         assert mock_fit.call_args_list[i + 1][1]["fix_pars"] == [True, True]
         assert mock_fit.call_args_list[i + 1][1]["custom_fit"] is False
 
     # parameter range specified, custom fit
     scan_results = fit.scan(
-        example_spec, par_name, par_range=(1.0, 1.5), n_steps=5, custom_fit=True
+        model, data, par_name, par_range=(1.0, 1.5), n_steps=5, custom_fit=True
     )
     expected_custom_scan = np.linspace(1.0, 1.5, 5)
     assert np.allclose(scan_results.parameter_values, expected_custom_scan)
@@ -500,7 +503,7 @@ def test_scan(mock_fit, example_spec):
 
     # unknown parameter
     with pytest.raises(ValueError, match="could not find parameter abc in model"):
-        fit.scan(example_spec, "abc")
+        fit.scan(model, data, "abc")
 
 
 def test_limit(example_spec_with_background, caplog):

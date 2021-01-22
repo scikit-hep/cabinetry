@@ -269,7 +269,12 @@ def test_ranking(mock_util, mock_fit, mock_rank, mock_vis, tmp_path):
     return_value=fit.ScanResults("par", 1.0, 0.1, np.asarray([1.5]), np.asarray([3.5])),
     autospec=True,
 )
-def test_scan(mock_scan, mock_vis, tmp_path):
+@mock.patch(
+    "cabinetry.model_utils.model_and_data",
+    return_value=("model", "data"),
+    autospec=True,
+)
+def test_scan(mock_util, mock_scan, mock_vis, tmp_path):
     workspace = {"workspace": "mock"}
     workspace_path = str(tmp_path / "workspace.json")
 
@@ -287,8 +292,9 @@ def test_scan(mock_scan, mock_vis, tmp_path):
     # default
     result = runner.invoke(cli.scan, [workspace_path, par_name])
     assert result.exit_code == 0
+    assert mock_util.call_args_list == [((workspace,), {"asimov": False})]
     assert mock_scan.call_args_list == [
-        ((workspace, par_name), {"par_range": None, "n_steps": 11, "asimov": False})
+        (("model", "data", par_name), {"par_range": None, "n_steps": 11})
     ]
     assert mock_vis.call_count == 1
     assert mock_vis.call_args[0][0].name == scan_results.name
@@ -338,9 +344,10 @@ def test_scan(mock_scan, mock_vis, tmp_path):
         ],
     )
     assert result.exit_code == 0
+    assert mock_util.call_args_list[-1] == ((workspace,), {"asimov": True})
     assert mock_scan.call_args_list[-1] == (
-        (workspace, par_name),
-        {"par_range": (0.0, 2.0), "n_steps": 21, "asimov": True},
+        ("model", "data", par_name),
+        {"par_range": (0.0, 2.0), "n_steps": 21},
     )
     assert mock_vis.call_args[1] == {"figure_folder": "folder"}
 

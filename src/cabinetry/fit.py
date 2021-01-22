@@ -503,11 +503,11 @@ def ranking(
 
 
 def scan(
-    spec: Dict[str, Any],
+    model: pyhf.pdf.Model,
+    data: List[float],
     par_name: str,
     par_range: Optional[Tuple[float, float]] = None,
     n_steps: int = 11,
-    asimov: bool = False,
     custom_fit: bool = False,
 ) -> ScanResults:
     """Performs a likelihood scan over the specified parameter.
@@ -518,12 +518,12 @@ def scan(
     each point in the scan and the global minimum.
 
     Args:
-        spec (Dict[str, Any]): a ``pyhf`` workspace specification
+        model (pyhf.pdf.Model): model to use in fits
+        data (List[float]): data (including auxdata) the model is fit to
         par_name (str): name of parameter to scan over
         par_range (Optional[Tuple[float, float]], optional): upper and lower bounds of
             parameter in scan, defaults to None (automatically determine bounds)
         n_steps (int, optional): number of steps in scan, defaults to 10
-        asimov (bool, optional): whether to fit the Asimov dataset, defaults to False
         custom_fit (bool, optional): whether to use the ``pyhf.infer`` API or
             ``iminuit``, defaults to False (using ``pyhf.infer``)
 
@@ -534,7 +534,6 @@ def scan(
         ScanResults: includes parameter name, scanned values and 2*log(likelihood)
         offset
     """
-    model, data = model_utils.model_and_data(spec, asimov=asimov)
     labels = model_utils.get_parameter_names(model)
     init_pars = model.config.suggested_init()
     fix_pars = model.config.suggested_fixed()

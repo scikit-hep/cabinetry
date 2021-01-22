@@ -220,8 +220,9 @@ def scan(
         par_range = None
 
     ws = json.load(ws_spec)
+    model, data = cabinetry_model_utils.model_and_data(ws, asimov=asimov)
     scan_results = cabinetry_fit.scan(
-        ws, par_name, par_range=par_range, n_steps=n_steps, asimov=asimov
+        model, data, par_name, par_range=par_range, n_steps=n_steps
     )
     cabinetry_visualize.scan(scan_results, figure_folder=figfolder)
 
