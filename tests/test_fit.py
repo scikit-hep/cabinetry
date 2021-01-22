@@ -517,8 +517,9 @@ def test_limit(example_spec_with_background, caplog):
     example_spec_with_background["measurements"][0]["config"]["parameters"][0][
         "bounds"
     ] = [[0, 8]]
+    model, data = model_utils.model_and_data(example_spec_with_background)
 
-    limit_results = fit.limit(example_spec_with_background)
+    limit_results = fit.limit(model, data)
     assert np.allclose(limit_results.observed_limit, observed_limit, rtol=1e-2)
     assert np.allclose(limit_results.expected_limit, expected_limit, rtol=1e-2)
     # compare a few CLs values
@@ -536,9 +537,7 @@ def test_limit(example_spec_with_background, caplog):
     caplog.clear()
 
     # access negative POI values with lower bracket below zero
-    limit_results = fit.limit(
-        example_spec_with_background, bracket=(-1, 5), tolerance=0.05
-    )
+    limit_results = fit.limit(model, data, bracket=(-1, 5), tolerance=0.05)
     assert "skipping fit for Signal strength = -1.0000, setting CLs = 1" in [
         rec.message for rec in caplog.records
     ]
@@ -547,7 +546,7 @@ def test_limit(example_spec_with_background, caplog):
     caplog.clear()
 
     # convergence issues due to number of iterations
-    fit.limit(example_spec_with_background, bracket=(0.1, 1), maxiter=1)
+    fit.limit(model, data, bracket=(0.1, 1), maxiter=1)
     assert "one or more calculations did not converge, check log" in [
         rec.message for rec in caplog.records
     ]
@@ -557,7 +556,8 @@ def test_limit(example_spec_with_background, caplog):
     example_spec_with_background["measurements"][0]["config"]["parameters"][0][
         "inits"
     ] = [0.0]
-    limit_results = fit.limit(example_spec_with_background, asimov=True)
+    model, data = model_utils.model_and_data(example_spec_with_background, asimov=True)
+    limit_results = fit.limit(model, data)
     assert np.allclose(limit_results.observed_limit, 0.584, rtol=2e-2)
     assert np.allclose(limit_results.expected_limit, expected_limit, rtol=2e-2)
     caplog.clear()
@@ -566,7 +566,7 @@ def test_limit(example_spec_with_background, caplog):
     with pytest.raises(
         ValueError, match=re.escape("f(a) and f(b) must have different signs")
     ):
-        fit.limit(example_spec_with_background, bracket=(1.0, 2.0))
+        fit.limit(model, data, bracket=(1.0, 2.0))
         assert (
             "CLs values at 1.000 and 2.000 do not bracket CLs=0.05, try a different "
             "starting bracket" in [rec.message for rec in caplog.records]
@@ -575,5 +575,5 @@ def test_limit(example_spec_with_background, caplog):
 
     # bracket with identical values
     with pytest.raises(ValueError, match="the two bracket values must not be the same"):
-        fit.limit(example_spec_with_background, bracket=(3.0, 3.0))
+        fit.limit(model, data, bracket=(3.0, 3.0))
     caplog.clear()

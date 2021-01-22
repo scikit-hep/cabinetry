@@ -1,5 +1,5 @@
 import logging
-from typing import Any, Dict, List, NamedTuple, Optional, Tuple, Union
+from typing import Dict, List, NamedTuple, Optional, Tuple, Union
 
 import iminuit
 import numpy as np
@@ -581,9 +581,9 @@ def scan(
 
 
 def limit(
-    spec: Dict[str, Any],
+    model: pyhf.pdf.Model,
+    data: List[float],
     bracket: Optional[Union[List[float], Tuple[float, float]]] = None,
-    asimov: bool = False,
     tolerance: float = 0.01,
     maxiter: int = 100,
 ) -> LimitResults:
@@ -593,13 +593,13 @@ def limit(
     Brent's algorithm is used to automatically determine POI values to be tested.
 
     Args:
-        spec (Dict[str, Any]): a ``pyhf`` workspace specification
+        model (pyhf.pdf.Model): model to use in fits
+        data (List[float]): data (including auxdata) the model is fit to
         bracket (Optional[Union[List[float], Tuple[float, float]]], optional): the two
             POI values used to start the observed limit determination, the limit must
             lie between these values and the values must not be the same, defaults to
             None (then uses ``0.01`` as default lower value and the upper POI bound
             specified in the measurement as default upper value)
-        asimov (bool, optional): whether to fit the Asimov dataset, defaults to False
         tolerance (float, optional): tolerance in POI value for convergence to CLs=0.05,
             defaults to 0.01
         maxiter (int, optional): maximum number of steps for limit finding, defaults to
@@ -612,7 +612,6 @@ def limit(
         LimitResults: observed and expected limits, CLs values, and scanned points
     """
     pyhf.set_backend("numpy", pyhf.optimize.minuit_optimizer(verbose=False))
-    model, data = model_utils.model_and_data(spec, asimov=asimov)
 
     log.info(f"calculating upper limit for {model.config.poi_name}")
 

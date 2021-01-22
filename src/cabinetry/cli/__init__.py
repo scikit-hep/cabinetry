@@ -252,7 +252,8 @@ def limit(
     """
     _set_logging()
     ws = json.load(ws_spec)
-    limit_results = cabinetry_fit.limit(ws, asimov=asimov, tolerance=tolerance)
+    model, data = cabinetry_model_utils.model_and_data(ws, asimov=asimov)
+    limit_results = cabinetry_fit.limit(model, data, tolerance=tolerance)
     cabinetry_visualize.limit(limit_results, figure_folder=figfolder)
 
 

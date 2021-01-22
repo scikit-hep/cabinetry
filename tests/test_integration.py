@@ -218,7 +218,7 @@ def test_integration(tmp_path, ntuple_creator, caplog):
     )
 
     # upper limit, this calculation is slow
-    limit_results = cabinetry.fit.limit(ws, bracket=(0.5, 3.5), tolerance=0.05)
+    limit_results = cabinetry.fit.limit(model, data, bracket=(0.5, 3.5), tolerance=0.05)
     assert np.allclose(limit_results.observed_limit, 3.1502, rtol=1e-2)
     assert np.allclose(
         limit_results.expected_limit,
