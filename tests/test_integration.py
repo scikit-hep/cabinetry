@@ -33,7 +33,10 @@ def test_integration(tmp_path, ntuple_creator, caplog):
     ws = cabinetry.workspace.build(cabinetry_config)
     cabinetry.workspace.save(ws, workspace_path)
     ws = cabinetry.workspace.load(workspace_path)
-    fit_results = cabinetry.fit.fit(ws, minos="Signal_norm", goodness_of_fit=True)
+    model, data = cabinetry.model_utils.model_and_data(ws)
+    fit_results = cabinetry.fit.fit(
+        model, data, minos="Signal_norm", goodness_of_fit=True
+    )
 
     bestfit_expected = [
         1.00102289,

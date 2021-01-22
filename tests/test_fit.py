@@ -338,13 +338,14 @@ def test__goodness_of_fit(mock_count, example_spec_multibin, caplog):
         np.asarray([1.0]), np.asarray([0.1]), ["par"], np.empty(0), 2.0
     ),
 )
-@mock.patch("cabinetry.model_utils.model_and_data", return_value=("model", "data"))
-def test_fit(mock_load, mock_fit, mock_print, mock_gof, example_spec):
+def test_fit(mock_fit, mock_print, mock_gof):
+    model = mock.MagicMock()
+    data = mock.MagicMock()
+
     # fit through pyhf.infer API
-    fit_results = fit.fit(example_spec)
-    assert mock_load.call_args_list == [[(example_spec,), {"asimov": False}]]
+    fit_results = fit.fit(model, data)
     assert mock_fit.call_args_list == [
-        [("model", "data"), {"minos": None, "custom_fit": False}]
+        [(model, data), {"minos": None, "custom_fit": False}]
     ]
     mock_print.assert_called_once()
     assert mock_print.call_args[0][0].bestfit == [1.0]
@@ -352,17 +353,11 @@ def test_fit(mock_load, mock_fit, mock_print, mock_gof, example_spec):
     assert mock_print.call_args[0][0].labels == ["par"]
     assert fit_results.bestfit == [1.0]
 
-    # Asimov fit
-    fit_results = fit.fit(example_spec, asimov=True)
-    assert mock_fit.call_count == 2
-    assert mock_load.call_args == [(example_spec,), {"asimov": True}]
-    assert fit_results.bestfit == [1.0]
-
     # custom fit
-    fit_results = fit.fit(example_spec, custom_fit=True)
-    assert mock_fit.call_count == 3
+    fit_results = fit.fit(model, data, custom_fit=True)
+    assert mock_fit.call_count == 2
     assert mock_fit.call_args == [
-        ("model", "data"),
+        (model, data),
         {"minos": None, "custom_fit": True},
     ]
     assert mock_print.call_args[0][0].bestfit == [1.0]
@@ -370,18 +365,18 @@ def test_fit(mock_load, mock_fit, mock_print, mock_gof, example_spec):
     assert fit_results.bestfit == [1.0]
 
     # parameters for MINOS
-    fit_results = fit.fit(example_spec, minos=["abc"])
-    assert mock_fit.call_count == 4
+    fit_results = fit.fit(model, data, minos=["abc"])
+    assert mock_fit.call_count == 3
     assert mock_fit.call_args[1] == {"minos": ["abc"], "custom_fit": False}
     assert fit_results.bestfit == [1.0]
-    fit_results = fit.fit(example_spec, minos="abc", custom_fit=True)
-    assert mock_fit.call_count == 5
+    fit_results = fit.fit(model, data, minos="abc", custom_fit=True)
+    assert mock_fit.call_count == 4
     assert mock_fit.call_args[1] == {"minos": ["abc"], "custom_fit": True}
     assert fit_results.bestfit == [1.0]
 
     # goodness-of-fit test
-    fit_results_gof = fit.fit(example_spec, goodness_of_fit=True)
-    assert mock_gof.call_args_list == [[("model", "data", 2.0), {}]]
+    fit_results_gof = fit.fit(model, data, goodness_of_fit=True)
+    assert mock_gof.call_args_list == [[(model, data, 2.0), {}]]
     assert fit_results_gof.goodness_of_fit == 0.1
 
 

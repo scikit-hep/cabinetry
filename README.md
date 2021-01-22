@@ -62,7 +62,8 @@ cabinetry.template_postprocessor.run(cabinetry_config)
 ws = cabinetry.workspace.build(cabinetry_config)
 
 # run a fit
-fit_results = cabinetry.fit.fit(ws)
+model, data = cabinetry.model_utils.model_and_data(ws)
+fit_results = cabinetry.fit.fit(model, data)
 
 # visualize the post-fit model prediction and data
 cabinetry.visualize.data_MC(cabinetry_config, ws, fit_results=fit_results)

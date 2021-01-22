@@ -364,21 +364,20 @@ def _goodness_of_fit(
 
 
 def fit(
-    spec: Dict[str, Any],
-    asimov: bool = False,
+    model: pyhf.pdf.Model,
+    data: List[float],
     minos: Optional[Union[str, List[str], Tuple[str, ...]]] = None,
     goodness_of_fit: bool = False,
     custom_fit: bool = False,
 ) -> FitResults:
     """Performs a  maximum likelihood fit, reports and returns the results.
 
-    The ``asimov`` flag allows to fit the Asimov dataset instead of observed data.
     Depending on the ``custom_fit`` keyword argument, this uses either the
-    ``pyhf.infer`` API or ``iminuit`` directly for more control over the minimization.
+    ``pyhf.infer`` API or ``iminuit`` directly.
 
     Args:
-        spec (Dict[str, Any]): a ``pyhf`` workspace specification
-        asimov (bool, optional): whether to fit the Asimov dataset, defaults to False
+        model (pyhf.pdf.Model): model to use in fit
+        data (List[float]): data (including auxdata) the model is fit to
         minos (Optional[Union[str, List[str], Tuple[str, ...]]], optional): runs the
             MINOS algorithm for all parameters specified, defaults to None (does not run
             MINOS)
@@ -391,8 +390,6 @@ def fit(
         FitResults: object storing relevant fit results
     """
     log.info("performing maximum likelihood fit")
-
-    model, data = model_utils.model_and_data(spec, asimov=asimov)
 
     # convert minos parameter to list if a single parameter is specified as string
     if minos is not None and isinstance(minos, str):
