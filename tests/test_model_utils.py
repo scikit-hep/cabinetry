@@ -8,21 +8,21 @@ import pyhf
 from cabinetry import model_utils
 
 
-def test_data_and_model(example_spec):
-    data, model = model_utils.data_and_model(example_spec)
-    assert data == [475, 1.0]
+def test_model_and_data(example_spec):
+    model, data = model_utils.model_and_data(example_spec)
     assert model.spec["channels"] == example_spec["channels"]
     assert model.config.modifier_settings == {
         "normsys": {"interpcode": "code4"},
         "histosys": {"interpcode": "code4p"},
     }
+    assert data == [475, 1.0]
 
     # requesting Asimov dataset
-    data, model = model_utils.data_and_model(example_spec, asimov=True)
+    model, data = model_utils.model_and_data(example_spec, asimov=True)
     assert data == [51.839756, 1.0]
 
     # without auxdata
-    data, model = model_utils.data_and_model(example_spec, with_aux=False)
+    model, data = model_utils.model_and_data(example_spec, with_aux=False)
     assert data == [475]
 
 
