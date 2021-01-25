@@ -37,7 +37,8 @@ if __name__ == "__main__":
 
     # run a fit
     ws = cabinetry.workspace.load(workspace_path)
-    fit_results = cabinetry.fit.fit(ws)
+    model, data = cabinetry.model_utils.model_and_data(ws)
+    fit_results = cabinetry.fit.fit(model, data)
 
     # visualize pulls and correlation matrix
     cabinetry.visualize.pulls(fit_results)

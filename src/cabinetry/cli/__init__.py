@@ -9,6 +9,7 @@ import yaml
 
 from .. import configuration as cabinetry_configuration
 from .. import fit as cabinetry_fit
+from .. import model_utils as cabinetry_model_utils
 from .. import template_builder as cabinetry_template_builder
 from .. import template_postprocessor as cabinetry_template_postprocessor
 from .. import visualize as cabinetry_visualize
@@ -126,8 +127,9 @@ def fit(
     else:
         minos_converted = list(minos)
     ws = json.load(ws_spec)
+    model, data = cabinetry_model_utils.model_and_data(ws, asimov=asimov)
     fit_results = cabinetry_fit.fit(
-        ws, asimov=asimov, minos=minos_converted, goodness_of_fit=goodness_of_fit
+        model, data, minos=minos_converted, goodness_of_fit=goodness_of_fit
     )
     if pulls:
         cabinetry_visualize.pulls(fit_results, figure_folder=figfolder)
@@ -155,8 +157,9 @@ def ranking(
     """
     _set_logging()
     ws = json.load(ws_spec)
-    fit_results = cabinetry_fit.fit(ws, asimov=asimov)
-    ranking_results = cabinetry_fit.ranking(ws, fit_results, asimov=asimov)
+    model, data = cabinetry_model_utils.model_and_data(ws, asimov=asimov)
+    fit_results = cabinetry_fit.fit(model, data)
+    ranking_results = cabinetry_fit.ranking(model, data, fit_results)
     cabinetry_visualize.ranking(
         ranking_results, figure_folder=figfolder, max_pars=max_pars
     )
@@ -217,8 +220,9 @@ def scan(
         par_range = None
 
     ws = json.load(ws_spec)
+    model, data = cabinetry_model_utils.model_and_data(ws, asimov=asimov)
     scan_results = cabinetry_fit.scan(
-        ws, par_name, par_range=par_range, n_steps=n_steps, asimov=asimov
+        model, data, par_name, par_range=par_range, n_steps=n_steps
     )
     cabinetry_visualize.scan(scan_results, figure_folder=figfolder)
 
@@ -248,7 +252,8 @@ def limit(
     """
     _set_logging()
     ws = json.load(ws_spec)
-    limit_results = cabinetry_fit.limit(ws, asimov=asimov, tolerance=tolerance)
+    model, data = cabinetry_model_utils.model_and_data(ws, asimov=asimov)
+    limit_results = cabinetry_fit.limit(model, data, tolerance=tolerance)
     cabinetry_visualize.limit(limit_results, figure_folder=figfolder)
 
 

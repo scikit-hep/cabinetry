@@ -338,13 +338,14 @@ def test__goodness_of_fit(mock_count, example_spec_multibin, caplog):
         np.asarray([1.0]), np.asarray([0.1]), ["par"], np.empty(0), 2.0
     ),
 )
-@mock.patch("cabinetry.model_utils.model_and_data", return_value=("model", "data"))
-def test_fit(mock_load, mock_fit, mock_print, mock_gof, example_spec):
+def test_fit(mock_fit, mock_print, mock_gof):
+    model = mock.MagicMock()
+    data = mock.MagicMock()
+
     # fit through pyhf.infer API
-    fit_results = fit.fit(example_spec)
-    assert mock_load.call_args_list == [[(example_spec,), {"asimov": False}]]
+    fit_results = fit.fit(model, data)
     assert mock_fit.call_args_list == [
-        [("model", "data"), {"minos": None, "custom_fit": False}]
+        [(model, data), {"minos": None, "custom_fit": False}]
     ]
     mock_print.assert_called_once()
     assert mock_print.call_args[0][0].bestfit == [1.0]
@@ -352,17 +353,11 @@ def test_fit(mock_load, mock_fit, mock_print, mock_gof, example_spec):
     assert mock_print.call_args[0][0].labels == ["par"]
     assert fit_results.bestfit == [1.0]
 
-    # Asimov fit
-    fit_results = fit.fit(example_spec, asimov=True)
-    assert mock_fit.call_count == 2
-    assert mock_load.call_args == [(example_spec,), {"asimov": True}]
-    assert fit_results.bestfit == [1.0]
-
     # custom fit
-    fit_results = fit.fit(example_spec, custom_fit=True)
-    assert mock_fit.call_count == 3
+    fit_results = fit.fit(model, data, custom_fit=True)
+    assert mock_fit.call_count == 2
     assert mock_fit.call_args == [
-        ("model", "data"),
+        (model, data),
         {"minos": None, "custom_fit": True},
     ]
     assert mock_print.call_args[0][0].bestfit == [1.0]
@@ -370,18 +365,18 @@ def test_fit(mock_load, mock_fit, mock_print, mock_gof, example_spec):
     assert fit_results.bestfit == [1.0]
 
     # parameters for MINOS
-    fit_results = fit.fit(example_spec, minos=["abc"])
-    assert mock_fit.call_count == 4
+    fit_results = fit.fit(model, data, minos=["abc"])
+    assert mock_fit.call_count == 3
     assert mock_fit.call_args[1] == {"minos": ["abc"], "custom_fit": False}
     assert fit_results.bestfit == [1.0]
-    fit_results = fit.fit(example_spec, minos="abc", custom_fit=True)
-    assert mock_fit.call_count == 5
+    fit_results = fit.fit(model, data, minos="abc", custom_fit=True)
+    assert mock_fit.call_count == 4
     assert mock_fit.call_args[1] == {"minos": ["abc"], "custom_fit": True}
     assert fit_results.bestfit == [1.0]
 
     # goodness-of-fit test
-    fit_results_gof = fit.fit(example_spec, goodness_of_fit=True)
-    assert mock_gof.call_args_list == [[("model", "data", 2.0), {}]]
+    fit_results_gof = fit.fit(model, data, goodness_of_fit=True)
+    assert mock_gof.call_args_list == [[(model, data, 2.0), {}]]
     assert fit_results_gof.goodness_of_fit == 0.1
 
 
@@ -415,13 +410,15 @@ def test_ranking(mock_fit, example_spec):
     uncertainty = np.asarray([0.02, 0.1])
     labels = ["staterror", "mu"]
     fit_results = fit.FitResults(bestfit, uncertainty, labels, np.empty(0), 0.0)
-    ranking_results = fit.ranking(example_spec, fit_results)
+    model, data = model_utils.model_and_data(example_spec)
+    ranking_results = fit.ranking(model, data, fit_results)
 
     # correct call to fit
     expected_fix = [True, False]
     expected_inits = [[0.94956657, 1.0], [0.85043343, 1.0], [0.92, 1.0], [0.88, 1.0]]
     assert mock_fit.call_count == 4
     for i in range(4):
+        assert mock_fit.call_args_list[i][0] == (model, data)
         assert np.allclose(
             mock_fit.call_args_list[i][1]["init_pars"], expected_inits[i]
         )
@@ -441,7 +438,8 @@ def test_ranking(mock_fit, example_spec):
 
     # fixed parameter in ranking, custom fit
     example_spec["measurements"][0]["config"]["parameters"][0]["fixed"] = True
-    ranking_results = fit.ranking(example_spec, fit_results, custom_fit=True)
+    model, data = model_utils.model_and_data(example_spec)
+    ranking_results = fit.ranking(model, data, fit_results, custom_fit=True)
     # expect two calls in this ranking (and had 4 before, so 6 total): pre-fit
     # uncertainty is 0 since parameter is fixed, mock post-fit uncertainty is not 0
     assert mock_fit.call_count == 6
@@ -474,9 +472,10 @@ def test_scan(mock_fit, example_spec):
     expected_scan_values = np.linspace(1.1, 1.5, 11)
     # -2 log(L) from unconstrained fit subtracted from expected NLLs
     expected_delta_nlls = np.abs(np.linspace(-5, 5, 11))
+    model, data = model_utils.model_and_data(example_spec)
 
     par_name = "Signal strength"
-    scan_results = fit.scan(example_spec, par_name)
+    scan_results = fit.scan(model, data, par_name)
     assert scan_results.name == par_name
     assert scan_results.bestfit == 1.3
     assert scan_results.uncertainty == 0.1
@@ -485,16 +484,18 @@ def test_scan(mock_fit, example_spec):
 
     assert mock_fit.call_count == 12
     # unconstrained fit
+    assert mock_fit.call_args_list[0][0] == ((model, data))
     assert mock_fit.call_args_list[0][1] == {"custom_fit": False}
     # fits in scan
     for i, scan_val in enumerate(expected_scan_values):
+        assert mock_fit.call_args_list[i + 1][0] == ((model, data))
         assert mock_fit.call_args_list[i + 1][1]["init_pars"] == [1.1, scan_val]
         assert mock_fit.call_args_list[i + 1][1]["fix_pars"] == [True, True]
         assert mock_fit.call_args_list[i + 1][1]["custom_fit"] is False
 
     # parameter range specified, custom fit
     scan_results = fit.scan(
-        example_spec, par_name, par_range=(1.0, 1.5), n_steps=5, custom_fit=True
+        model, data, par_name, par_range=(1.0, 1.5), n_steps=5, custom_fit=True
     )
     expected_custom_scan = np.linspace(1.0, 1.5, 5)
     assert np.allclose(scan_results.parameter_values, expected_custom_scan)
@@ -502,7 +503,7 @@ def test_scan(mock_fit, example_spec):
 
     # unknown parameter
     with pytest.raises(ValueError, match="could not find parameter abc in model"):
-        fit.scan(example_spec, "abc")
+        fit.scan(model, data, "abc")
 
 
 def test_limit(example_spec_with_background, caplog):
@@ -516,8 +517,9 @@ def test_limit(example_spec_with_background, caplog):
     example_spec_with_background["measurements"][0]["config"]["parameters"][0][
         "bounds"
     ] = [[0, 8]]
+    model, data = model_utils.model_and_data(example_spec_with_background)
 
-    limit_results = fit.limit(example_spec_with_background)
+    limit_results = fit.limit(model, data)
     assert np.allclose(limit_results.observed_limit, observed_limit, rtol=1e-2)
     assert np.allclose(limit_results.expected_limit, expected_limit, rtol=1e-2)
     # compare a few CLs values
@@ -535,9 +537,7 @@ def test_limit(example_spec_with_background, caplog):
     caplog.clear()
 
     # access negative POI values with lower bracket below zero
-    limit_results = fit.limit(
-        example_spec_with_background, bracket=(-1, 5), tolerance=0.05
-    )
+    limit_results = fit.limit(model, data, bracket=(-1, 5), tolerance=0.05)
     assert "skipping fit for Signal strength = -1.0000, setting CLs = 1" in [
         rec.message for rec in caplog.records
     ]
@@ -546,7 +546,7 @@ def test_limit(example_spec_with_background, caplog):
     caplog.clear()
 
     # convergence issues due to number of iterations
-    fit.limit(example_spec_with_background, bracket=(0.1, 1), maxiter=1)
+    fit.limit(model, data, bracket=(0.1, 1), maxiter=1)
     assert "one or more calculations did not converge, check log" in [
         rec.message for rec in caplog.records
     ]
@@ -556,7 +556,8 @@ def test_limit(example_spec_with_background, caplog):
     example_spec_with_background["measurements"][0]["config"]["parameters"][0][
         "inits"
     ] = [0.0]
-    limit_results = fit.limit(example_spec_with_background, asimov=True)
+    model, data = model_utils.model_and_data(example_spec_with_background, asimov=True)
+    limit_results = fit.limit(model, data)
     assert np.allclose(limit_results.observed_limit, 0.584, rtol=2e-2)
     assert np.allclose(limit_results.expected_limit, expected_limit, rtol=2e-2)
     caplog.clear()
@@ -565,7 +566,7 @@ def test_limit(example_spec_with_background, caplog):
     with pytest.raises(
         ValueError, match=re.escape("f(a) and f(b) must have different signs")
     ):
-        fit.limit(example_spec_with_background, bracket=(1.0, 2.0))
+        fit.limit(model, data, bracket=(1.0, 2.0))
         assert (
             "CLs values at 1.000 and 2.000 do not bracket CLs=0.05, try a different "
             "starting bracket" in [rec.message for rec in caplog.records]
@@ -574,5 +575,5 @@ def test_limit(example_spec_with_background, caplog):
 
     # bracket with identical values
     with pytest.raises(ValueError, match="the two bracket values must not be the same"):
-        fit.limit(example_spec_with_background, bracket=(3.0, 3.0))
+        fit.limit(model, data, bracket=(3.0, 3.0))
     caplog.clear()

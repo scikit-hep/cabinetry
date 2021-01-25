@@ -1,5 +1,5 @@
 import logging
-from typing import Any, Dict, List, NamedTuple, Optional, Tuple, Union
+from typing import Dict, List, NamedTuple, Optional, Tuple, Union
 
 import iminuit
 import numpy as np
@@ -364,21 +364,20 @@ def _goodness_of_fit(
 
 
 def fit(
-    spec: Dict[str, Any],
-    asimov: bool = False,
+    model: pyhf.pdf.Model,
+    data: List[float],
     minos: Optional[Union[str, List[str], Tuple[str, ...]]] = None,
     goodness_of_fit: bool = False,
     custom_fit: bool = False,
 ) -> FitResults:
     """Performs a  maximum likelihood fit, reports and returns the results.
 
-    The ``asimov`` flag allows to fit the Asimov dataset instead of observed data.
     Depending on the ``custom_fit`` keyword argument, this uses either the
-    ``pyhf.infer`` API or ``iminuit`` directly for more control over the minimization.
+    ``pyhf.infer`` API or ``iminuit`` directly.
 
     Args:
-        spec (Dict[str, Any]): a ``pyhf`` workspace specification
-        asimov (bool, optional): whether to fit the Asimov dataset, defaults to False
+        model (pyhf.pdf.Model): model to use in fit
+        data (List[float]): data (including auxdata) the model is fit to
         minos (Optional[Union[str, List[str], Tuple[str, ...]]], optional): runs the
             MINOS algorithm for all parameters specified, defaults to None (does not run
             MINOS)
@@ -391,8 +390,6 @@ def fit(
         FitResults: object storing relevant fit results
     """
     log.info("performing maximum likelihood fit")
-
-    model, data = model_utils.model_and_data(spec, asimov=asimov)
 
     # convert minos parameter to list if a single parameter is specified as string
     if minos is not None and isinstance(minos, str):
@@ -412,32 +409,28 @@ def fit(
 
 
 def ranking(
-    spec: Dict[str, Any],
+    model: pyhf.pdf.Model,
+    data: List[float],
     fit_results: FitResults,
-    asimov: bool = False,
     custom_fit: bool = False,
 ) -> RankingResults:
     """Calculates the impact of nuisance parameters on the parameter of interest (POI).
 
     The impact is given by the difference in the POI between the nominal fit, and a fit
     where the nuisance parameter is held constant at its nominal value plus/minus its
-    associated uncertainty. The ``asimov`` flag determines which dataset is used to
-    calculate the impact. To calculate the proper Asimov impact, the ``fit_results``
-    should come from a fit to the Asimov dataset. The "pre-fit impact" is obtained by
-    varying the nuisance parameters by their uncertainty given by their constraint term.
+    associated uncertainty. The "pre-fit impact" is obtained by varying the nuisance
+    parameters by their uncertainty given by their constraint term.
 
     Args:
-        spec (Dict[str, Any]): a ``pyhf`` workspace specification
+        model (pyhf.pdf.Model): model to use in fits
+        data (List[float]): data (including auxdata) the model is fit to
         fit_results (FitResults): fit results to use for ranking
-        asimov (bool, optional): whether to fit the Asimov dataset, defaults
-            to False
         custom_fit (bool, optional): whether to use the ``pyhf.infer`` API or
             ``iminuit``, defaults to False (using ``pyhf.infer``)
 
     Returns:
         RankingResults: fit results for parameters, and pre- and post-fit impacts
     """
-    model, data = model_utils.model_and_data(spec, asimov=asimov)
     labels = model_utils.get_parameter_names(model)
     prefit_unc = model_utils.get_prefit_uncertainties(model)
     nominal_poi = fit_results.bestfit[model.config.poi_index]
@@ -508,11 +501,11 @@ def ranking(
 
 
 def scan(
-    spec: Dict[str, Any],
+    model: pyhf.pdf.Model,
+    data: List[float],
     par_name: str,
     par_range: Optional[Tuple[float, float]] = None,
     n_steps: int = 11,
-    asimov: bool = False,
     custom_fit: bool = False,
 ) -> ScanResults:
     """Performs a likelihood scan over the specified parameter.
@@ -523,12 +516,12 @@ def scan(
     each point in the scan and the global minimum.
 
     Args:
-        spec (Dict[str, Any]): a ``pyhf`` workspace specification
+        model (pyhf.pdf.Model): model to use in fits
+        data (List[float]): data (including auxdata) the model is fit to
         par_name (str): name of parameter to scan over
         par_range (Optional[Tuple[float, float]], optional): upper and lower bounds of
             parameter in scan, defaults to None (automatically determine bounds)
         n_steps (int, optional): number of steps in scan, defaults to 10
-        asimov (bool, optional): whether to fit the Asimov dataset, defaults to False
         custom_fit (bool, optional): whether to use the ``pyhf.infer`` API or
             ``iminuit``, defaults to False (using ``pyhf.infer``)
 
@@ -539,7 +532,6 @@ def scan(
         ScanResults: includes parameter name, scanned values and 2*log(likelihood)
         offset
     """
-    model, data = model_utils.model_and_data(spec, asimov=asimov)
     labels = model_utils.get_parameter_names(model)
     init_pars = model.config.suggested_init()
     fix_pars = model.config.suggested_fixed()
@@ -587,9 +579,9 @@ def scan(
 
 
 def limit(
-    spec: Dict[str, Any],
+    model: pyhf.pdf.Model,
+    data: List[float],
     bracket: Optional[Union[List[float], Tuple[float, float]]] = None,
-    asimov: bool = False,
     tolerance: float = 0.01,
     maxiter: int = 100,
 ) -> LimitResults:
@@ -599,13 +591,13 @@ def limit(
     Brent's algorithm is used to automatically determine POI values to be tested.
 
     Args:
-        spec (Dict[str, Any]): a ``pyhf`` workspace specification
+        model (pyhf.pdf.Model): model to use in fits
+        data (List[float]): data (including auxdata) the model is fit to
         bracket (Optional[Union[List[float], Tuple[float, float]]], optional): the two
             POI values used to start the observed limit determination, the limit must
             lie between these values and the values must not be the same, defaults to
             None (then uses ``0.01`` as default lower value and the upper POI bound
             specified in the measurement as default upper value)
-        asimov (bool, optional): whether to fit the Asimov dataset, defaults to False
         tolerance (float, optional): tolerance in POI value for convergence to CLs=0.05,
             defaults to 0.01
         maxiter (int, optional): maximum number of steps for limit finding, defaults to
@@ -618,7 +610,6 @@ def limit(
         LimitResults: observed and expected limits, CLs values, and scanned points
     """
     pyhf.set_backend("numpy", pyhf.optimize.minuit_optimizer(verbose=False))
-    model, data = model_utils.model_and_data(spec, asimov=asimov)
 
     log.info(f"calculating upper limit for {model.config.poi_name}")
 
@@ -639,8 +630,8 @@ def limit(
 
     def _CLs_minus_threshold(
         poi: float,
-        data: List[float],
         model: pyhf.pdf.Model,
+        data: List[float],
         which_limit: int,
         limit_label: str,
     ) -> float:
@@ -651,8 +642,8 @@ def limit(
 
         Args:
             poi (float): value for parameter of interest
-            data (List[float]): data to fit to
-            model (pyhf.pdf.Model): model to fit to data
+            model (pyhf.pdf.Model): model to use in fits
+            data (List[float]): data (including auxdata) the model is fit to
             which_limit (int): which limit to run, 0: observed, 1: expected -2 sigma, 2:
                 expected -1 sigma, 3: expected, 4: expected +1 sigma, 5: expected +2
                 sigma
@@ -711,7 +702,7 @@ def limit(
             res = scipy.optimize.root_scalar(
                 _CLs_minus_threshold,
                 bracket=bracket,
-                args=(data, model, i_limit, limit_label),
+                args=(model, data, i_limit, limit_label),
                 method="brentq",
                 options={"xtol": tolerance, "maxiter": maxiter},
             )

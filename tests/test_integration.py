@@ -33,7 +33,10 @@ def test_integration(tmp_path, ntuple_creator, caplog):
     ws = cabinetry.workspace.build(cabinetry_config)
     cabinetry.workspace.save(ws, workspace_path)
     ws = cabinetry.workspace.load(workspace_path)
-    fit_results = cabinetry.fit.fit(ws, minos="Signal_norm", goodness_of_fit=True)
+    model, data = cabinetry.model_utils.model_and_data(ws)
+    fit_results = cabinetry.fit.fit(
+        model, data, minos="Signal_norm", goodness_of_fit=True
+    )
 
     bestfit_expected = [
         1.00102289,
@@ -150,7 +153,7 @@ def test_integration(tmp_path, ntuple_creator, caplog):
     ]
 
     # nuisance parameter ranking
-    ranking_results = cabinetry.fit.ranking(ws, fit_results, custom_fit=True)
+    ranking_results = cabinetry.fit.ranking(model, data, fit_results, custom_fit=True)
     assert np.allclose(
         ranking_results.prefit_up,
         [
@@ -202,7 +205,8 @@ def test_integration(tmp_path, ntuple_creator, caplog):
 
     # parameter scan
     scan_results = cabinetry.fit.scan(
-        ws,
+        model,
+        data,
         "Signal_norm",
         par_range=(1.18967971, 2.18967971),
         n_steps=3,
@@ -214,7 +218,7 @@ def test_integration(tmp_path, ntuple_creator, caplog):
     )
 
     # upper limit, this calculation is slow
-    limit_results = cabinetry.fit.limit(ws, bracket=(0.5, 3.5), tolerance=0.05)
+    limit_results = cabinetry.fit.limit(model, data, bracket=(0.5, 3.5), tolerance=0.05)
     assert np.allclose(limit_results.observed_limit, 3.1502, rtol=1e-2)
     assert np.allclose(
         limit_results.expected_limit,
