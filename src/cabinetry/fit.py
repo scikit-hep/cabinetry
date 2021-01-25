@@ -632,8 +632,8 @@ def limit(
 
     def _CLs_minus_threshold(
         poi: float,
-        data: List[float],
         model: pyhf.pdf.Model,
+        data: List[float],
         which_limit: int,
         limit_label: str,
     ) -> float:
@@ -644,8 +644,8 @@ def limit(
 
         Args:
             poi (float): value for parameter of interest
-            data (List[float]): data to fit to
-            model (pyhf.pdf.Model): model to fit to data
+            model (pyhf.pdf.Model): model to use in fits
+            data (List[float]): data (including auxdata) the model is fit to
             which_limit (int): which limit to run, 0: observed, 1: expected -2 sigma, 2:
                 expected -1 sigma, 3: expected, 4: expected +1 sigma, 5: expected +2
                 sigma
@@ -704,7 +704,7 @@ def limit(
             res = scipy.optimize.root_scalar(
                 _CLs_minus_threshold,
                 bracket=bracket,
-                args=(data, model, i_limit, limit_label),
+                args=(model, data, i_limit, limit_label),
                 method="brentq",
                 options={"xtol": tolerance, "maxiter": maxiter},
             )
