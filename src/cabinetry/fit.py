@@ -418,10 +418,8 @@ def ranking(
 
     The impact is given by the difference in the POI between the nominal fit, and a fit
     where the nuisance parameter is held constant at its nominal value plus/minus its
-    associated uncertainty. The ``asimov`` flag determines which dataset is used to
-    calculate the impact. To calculate the proper Asimov impact, the ``fit_results``
-    should come from a fit to the Asimov dataset. The "pre-fit impact" is obtained by
-    varying the nuisance parameters by their uncertainty given by their constraint term.
+    associated uncertainty. The "pre-fit impact" is obtained by varying the nuisance
+    parameters by their uncertainty given by their constraint term.
 
     Args:
         model (pyhf.pdf.Model): model to use in fits
