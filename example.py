@@ -18,21 +18,21 @@ if __name__ == "__main__":
         raise SystemExit
 
     # import example config file
-    cabinetry_config = cabinetry.configuration.load("config_example.yml")
-    cabinetry.configuration.print_overview(cabinetry_config)
+    config = cabinetry.configuration.load("config_example.yml")
+    cabinetry.configuration.print_overview(config)
 
     # create template histograms
-    cabinetry.template_builder.create_histograms(cabinetry_config, method="uproot")
+    cabinetry.template_builder.create_histograms(config, method="uproot")
 
     # perform histogram post-processing
-    cabinetry.template_postprocessor.run(cabinetry_config)
+    cabinetry.template_postprocessor.run(config)
 
     # visualize systematics templates
-    cabinetry.visualize.templates(cabinetry_config)
+    cabinetry.visualize.templates(config)
 
     # build a workspace and save to file
     workspace_path = "workspaces/example_workspace.json"
-    ws = cabinetry.workspace.build(cabinetry_config)
+    ws = cabinetry.workspace.build(config)
     cabinetry.workspace.save(ws, workspace_path)
 
     # run a fit
@@ -45,5 +45,5 @@ if __name__ == "__main__":
     cabinetry.visualize.correlation_matrix(fit_results)
 
     # visualize pre- and post-fit distributions
-    cabinetry.visualize.data_MC(cabinetry_config, ws)
-    cabinetry.visualize.data_MC(cabinetry_config, ws, fit_results=fit_results)
+    cabinetry.visualize.data_MC(model, data, config=config)
+    cabinetry.visualize.data_MC(model, data, config=config, fit_results=fit_results)
