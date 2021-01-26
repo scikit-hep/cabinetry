@@ -209,6 +209,7 @@ def test_integration(tmp_path, ntuple_creator, caplog):
             -1.10138138,
             -0.89692663,
         ],
+        atol=2e-5,
     )
     assert np.allclose(
         ranking_results.postfit_down,
@@ -221,6 +222,7 @@ def test_integration(tmp_path, ntuple_creator, caplog):
             0.84367903,
             0.76574073,
         ],
+        atol=2e-5,
     )
 
     # parameter scan
