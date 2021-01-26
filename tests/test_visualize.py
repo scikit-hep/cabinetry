@@ -3,10 +3,10 @@ import pathlib
 from unittest import mock
 
 import numpy as np
-import pyhf
 import pytest
 
 from cabinetry import fit
+from cabinetry import model_utils
 from cabinetry import visualize
 
 
@@ -150,22 +150,22 @@ def test_data_MC(
     mock_draw,
     example_spec,
 ):
-    config = {}
+    config = {"config": "abc"}
     figure_folder = "tmp"
-    model_spec = pyhf.Workspace(example_spec).model().spec
+    model, data = model_utils.model_and_data(example_spec)
 
     # pre-fit plot
-    visualize.data_MC(config, example_spec, figure_folder=figure_folder)
+    visualize.data_MC(model, data, config=config, figure_folder=figure_folder)
 
     # Asimov parameter calculation and pre-fit uncertainties
     assert mock_stdev.call_count == 1
-    assert mock_asimov.call_args_list[0][0][0].spec == model_spec
+    assert mock_asimov.call_args_list[0][0][0] == model
     assert mock_unc.call_count == 1
-    assert mock_unc.call_args_list[0][0][0].spec == model_spec
+    assert mock_unc.call_args_list[0][0][0] == model
 
     # call to stdev calculation
     assert mock_stdev.call_count == 1
-    assert mock_stdev.call_args_list[0][0][0].spec == model_spec
+    assert mock_stdev.call_args_list[0][0][0] == model
     assert np.allclose(mock_stdev.call_args_list[0][0][1], [1.0, 1.0])
     assert np.allclose(mock_stdev.call_args_list[0][0][2], [0.04956657, 0.0])
     assert np.allclose(
@@ -175,10 +175,10 @@ def test_data_MC(
 
     # yield table
     assert mock_table.call_count == 1
-    assert mock_table.call_args_list[0][0][0].spec == model_spec
+    assert mock_table.call_args_list[0][0][0] == model
     assert mock_table.call_args_list[0][0][1] == [np.asarray([[51.839756]])]
     assert mock_table.call_args_list[0][0][2] == [[0.3]]
-    assert mock_table.call_args_list[0][0][3] == [np.asarray([475])]
+    assert mock_table.call_args_list[0][0][3] == [data[0]]
     assert mock_table.call_args_list[0][1] == {}
 
     assert mock_dict.call_args_list == [[(config, "Signal Region"), {}]]
@@ -194,14 +194,14 @@ def test_data_MC(
         {
             "label": "Data",
             "isData": True,
-            "yields": np.asarray([475]),
+            "yields": np.asarray(data[:1]),
             "variable": "x",
         },
     ]
     assert mock_draw.call_count == 1
     assert mock_draw.call_args_list[0][0][0] == expected_histograms
     assert np.allclose(mock_draw.call_args_list[0][0][1], np.asarray([0.3]))
-    assert np.allclose(mock_draw.call_args_list[0][0][2], np.asarray([1, 2]))
+    np.testing.assert_equal(mock_draw.call_args_list[0][0][2], np.asarray([1, 2]))
     assert mock_draw.call_args_list[0][0][3] == pathlib.Path(
         "tmp/Signal-Region_prefit.pdf"
     )
@@ -216,8 +216,9 @@ def test_data_MC(
         0.0,
     )
     visualize.data_MC(
-        config,
-        example_spec,
+        model,
+        data,
+        config=config,
         figure_folder=figure_folder,
         fit_results=fit_results,
         log_scale=False,
@@ -227,7 +228,7 @@ def test_data_MC(
 
     # call to stdev calculation
     assert mock_stdev.call_count == 2
-    assert mock_stdev.call_args_list[1][0][0].spec == model_spec
+    assert mock_stdev.call_args_list[1][0][0] == model
     assert np.allclose(mock_stdev.call_args_list[1][0][1], [1.01, 1.1])
     assert np.allclose(mock_stdev.call_args_list[1][0][2], [0.03, 0.1])
     assert np.allclose(
@@ -239,20 +240,27 @@ def test_data_MC(
     # yield at best-fit point is different from pre-fit
     assert np.allclose(mock_draw.call_args_list[1][0][0][0]["yields"], 57.59396892)
     assert np.allclose(mock_draw.call_args_list[1][0][1], np.asarray([0.3]))
-    assert np.allclose(mock_draw.call_args_list[1][0][2], np.asarray([1, 2]))
+    np.testing.assert_equal(mock_draw.call_args_list[1][0][2], np.asarray([1, 2]))
     assert mock_draw.call_args_list[1][0][3] == pathlib.Path(
         "tmp/Signal-Region_postfit.pdf"
     )
     assert mock_draw.call_args_list[1][1] == {"log_scale": False, "log_scale_x": False}
 
     # no yield table
-    visualize.data_MC(config, example_spec, include_table=False)
+    visualize.data_MC(model, data, config=config, include_table=False)
     assert mock_table.call_count == 2  # 2 calls from before
+
+    # no config specified, default variable name and bin edges, data without auxdata
+    visualize.data_MC(model, data[:1])
+    assert mock_draw.call_args[0][0][0]["variable"] == "bin"
+    assert mock_draw.call_args[0][0][1]["variable"] == "bin"
+    assert mock_draw.call_args[0][0][1]["yields"] == np.asarray(data[:1])
+    np.testing.assert_equal(mock_draw.call_args[0][2], np.asarray([0, 1]))
 
     # unknown plotting method
     with pytest.raises(NotImplementedError, match="unknown backend: unknown"):
         visualize.data_MC(
-            config, example_spec, figure_folder=figure_folder, method="unknown"
+            model, data, config=config, figure_folder=figure_folder, method="unknown"
         )
 
 
