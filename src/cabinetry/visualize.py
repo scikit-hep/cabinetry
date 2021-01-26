@@ -138,8 +138,9 @@ def data_MC(
         model (pyhf.pdf.Model): model to visualize
         data (List[float]): data to include in visualization, can either include auxdata
             (the auxdata is then stripped internally) or only observed yields
-        config (Optional[Dict[str, Any]]): cabinetry configuration needed for binning
-            and axis labels, defaults to None (uses a default binning and labels then)
+        config (Optional[Dict[str, Any]], optional): cabinetry configuration needed for
+            binning and axis labels, defaults to None (uses a default binning and labels
+            then)
         figure_folder (Union[str, pathlib.Path], optional): path to the folder to save
             figures in, defaults to "figures"
         fit_results (Optional[fit.FitResults]): parameter configuration to use for plot,
