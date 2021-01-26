@@ -4,6 +4,7 @@ import pathlib
 from typing import Any, Dict, List, Optional, Tuple, Union
 
 import numpy as np
+import pyhf
 
 from . import configuration
 from . import fit
@@ -116,8 +117,9 @@ def data_MC_from_histograms(
 
 
 def data_MC(
-    config: Dict[str, Any],
-    spec: Dict[str, Any],
+    model: pyhf.pdf.Model,
+    data: List[float],
+    config: Optional[Dict[str, Any]] = None,
     figure_folder: Union[str, pathlib.Path] = "figures",
     fit_results: Optional[fit.FitResults] = None,
     log_scale: Optional[bool] = None,
@@ -125,11 +127,20 @@ def data_MC(
     include_table: bool = True,
     method: str = "matplotlib",
 ) -> None:
-    """Draws pre- and post-fit data/MC histograms from a ``pyhf`` workspace.
+    """Draws pre- and post-fit data/MC histograms for a ``pyhf`` model and data.
+
+    The ``config`` argument is optional, but required to determine correct axis labels
+    and binning. The information is not stored in the model, and default values are
+    used if no ``config`` is supplied. This allows quickly plotting distributions for
+    models that were not created with ``cabinetry``, and for which no config exists.
 
     Args:
-        config (Dict[str, Any]): cabinetry configuration
-        spec (Dict[str, Any]): ``pyhf`` workspace specification
+        model (pyhf.pdf.Model): model to visualize
+        data (List[float]): data to include in visualization, can either include auxdata
+            (the auxdata is then stripped internally) or only observed yields
+        config (Optional[Dict[str, Any]], optional): cabinetry configuration needed for
+            binning and axis labels, defaults to None (uses a default binning and labels
+            then)
         figure_folder (Union[str, pathlib.Path], optional): path to the folder to save
             figures in, defaults to "figures"
         fit_results (Optional[fit.FitResults]): parameter configuration to use for plot,
@@ -146,7 +157,12 @@ def data_MC(
     Raises:
         NotImplementedError: when trying to plot with a method that is not supported
     """
-    model, data_combined = model_utils.model_and_data(spec, with_aux=False)
+    n_bins_total = sum(model.config.channel_nbins.values())
+    if len(data) != n_bins_total:
+        # strip auxdata, only observed yields are needed
+        data_combined = data[:n_bins_total]
+    else:
+        data_combined = data
 
     if fit_results is not None:
         # fit results specified, draw a post-fit plot with them applied
@@ -172,7 +188,8 @@ def data_MC(
     # and the second index is the sample
     region_split_indices = model_utils._get_channel_boundary_indices(model)
     model_yields = np.split(yields_combined, region_split_indices, axis=1)
-    data = np.split(data_combined, region_split_indices)  # data just indexed by channel
+    # data is only indexed by channel
+    data_per_channel = np.split(data_combined, region_split_indices)
 
     # calculate the total standard deviation of the model prediction, index: channel
     total_stdev_model = model_utils.calculate_stdev(
@@ -185,16 +202,21 @@ def data_MC(
             log.info("generating pre-fit yield table")
         else:
             log.info("generating post-fit yield table")
-        tabulate._yields(model, model_yields, total_stdev_model, data)
+        tabulate._yields(model, model_yields, total_stdev_model, data_per_channel)
 
     # process channel by channel
     for i_chan, channel_name in enumerate(model.config.channels):
         histogram_dict_list = []  # one dict per region/channel
 
-        # get the region dictionary from the config for binning / variable name
-        region_dict = configuration.get_region_dict(config, channel_name)
-        bin_edges = template_builder._get_binning(region_dict)
-        variable = region_dict["Variable"]
+        if config is not None:
+            # get the region dictionary from the config for binning / variable name
+            region_dict = configuration.get_region_dict(config, channel_name)
+            bin_edges = template_builder._get_binning(region_dict)
+            variable = region_dict["Variable"]
+        else:
+            # fall back to defaults
+            bin_edges = np.arange(len(data_per_channel[i_chan]) + 1)
+            variable = "bin"
 
         for i_sam, sample_name in enumerate(model.config.samples):
             histogram_dict_list.append(
@@ -211,7 +233,7 @@ def data_MC(
             {
                 "label": "Data",
                 "isData": True,
-                "yields": data[i_chan],
+                "yields": data_per_channel[i_chan],
                 "variable": variable,
             }
         )

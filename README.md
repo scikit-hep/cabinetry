@@ -50,23 +50,23 @@ To run the following example, first generate the input files via the script `uti
 ```python
 import cabinetry
 
-cabinetry_config = cabinetry.configuration.load("config_example.yml")
+config = cabinetry.configuration.load("config_example.yml")
 
 # create template histograms
-cabinetry.template_builder.create_histograms(cabinetry_config)
+cabinetry.template_builder.create_histograms(config)
 
 # perform histogram post-processing
-cabinetry.template_postprocessor.run(cabinetry_config)
+cabinetry.template_postprocessor.run(config)
 
 # build a workspace
-ws = cabinetry.workspace.build(cabinetry_config)
+ws = cabinetry.workspace.build(config)
 
 # run a fit
 model, data = cabinetry.model_utils.model_and_data(ws)
 fit_results = cabinetry.fit.fit(model, data)
 
 # visualize the post-fit model prediction and data
-cabinetry.visualize.data_MC(cabinetry_config, ws, fit_results=fit_results)
+cabinetry.visualize.data_MC(model, data, config=config, fit_results=fit_results)
 ```
 
 The above is an abbreviated version of an example included in `example.py`, which shows how to use `cabinetry`.
