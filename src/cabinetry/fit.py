@@ -587,7 +587,7 @@ def limit(
 ) -> LimitResults:
     """Calculates observed and expected 95% confidence level upper parameter limits.
 
-    Limits are calculated for the parameter of interest (POI) defined in the workspace.
+    Limits are calculated for the parameter of interest (POI) defined in the model.
     Brent's algorithm is used to automatically determine POI values to be tested.
 
     Args:
