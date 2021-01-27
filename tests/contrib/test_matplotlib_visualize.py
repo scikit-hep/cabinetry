@@ -181,6 +181,10 @@ def test_scan(tmp_path):
     matplotlib_visualize.scan(par_name, par_mle, par_unc, par_vals, par_nlls, fname)
     assert compare_images("tests/contrib/reference/scan.pdf", str(fname), 0) is None
 
+    # no 68% CL / 95% CL text
+    par_nlls = np.asarray([0.1, 0.04, 0.0, 0.04, 0.1])
+    matplotlib_visualize.scan(par_name, par_mle, par_unc, par_vals, par_nlls, fname)
+
 
 def test_limit(tmp_path):
     fname = tmp_path / "fig.pdf"

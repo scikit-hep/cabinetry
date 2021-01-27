@@ -595,28 +595,33 @@ def scan(
     mpl.style.use("seaborn-colorblind")
     fig, ax = plt.subplots()
 
-    # line through y=1 and y=4 to show confidence intervals
+    y_lim = max(par_nlls) * 1.2  # upper y-axis limit, 20% headroom
+
+    # lines through y=1 and y=4 to show confidence intervals
     ax.plot([par_vals[0], par_vals[-1]], [1, 1], ":", color="gray")
     ax.plot([par_vals[0], par_vals[-1]], [4, 4], ":", color="gray")
 
     # position for text - right edge of the figure, with slight padding
     text_x_pos = par_vals[-1] - 0.01 * (par_vals[-1] - par_vals[0])
-    ax.text(
-        text_x_pos,
-        1.0,
-        "68% CL",
-        horizontalalignment="right",
-        verticalalignment="bottom",
-        color="gray",
-    )
-    ax.text(
-        text_x_pos,
-        4.0,
-        "95% CL",
-        horizontalalignment="right",
-        verticalalignment="bottom",
-        color="gray",
-    )
+    # only draw text if it fits in the figure
+    if y_lim >= 1:
+        ax.text(
+            text_x_pos,
+            1.0,
+            "68% CL",
+            horizontalalignment="right",
+            verticalalignment="bottom",
+            color="gray",
+        )
+    if y_lim >= 4:
+        ax.text(
+            text_x_pos,
+            4.0,
+            "95% CL",
+            horizontalalignment="right",
+            verticalalignment="bottom",
+            color="gray",
+        )
 
     # Gaussian at best-fit parameter value for reference
     val_grid = np.linspace(par_vals[0], par_vals[-1], 100)
@@ -640,7 +645,7 @@ def scan(
     ax.set_xlabel(par_name)
     ax.set_xlim(par_vals[0], par_vals[-1])
     ax.set_ylabel(r"$-2 \Delta \log(L)$")
-    ax.set_ylim(0, max(par_nlls) * 1.2)
+    ax.set_ylim(0, y_lim)
     ax.tick_params(axis="both", which="major", pad=8)
     ax.tick_params(direction="in", top=True, right=True, which="both")
 
