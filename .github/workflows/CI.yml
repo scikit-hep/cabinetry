@@ -44,7 +44,6 @@ jobs:
         python example.py
     - name: Test with pytest and generate coverage report
       run: |
-        sudo apt-get install ghostscript  # for pdf comparison
         pytest --cov-report=xml
     - name: Upload coverage to codecov
       if: matrix.python-version == 3.7
