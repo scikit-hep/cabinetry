@@ -433,7 +433,7 @@ def ranking(
         RankingResults: fit results for parameters, and pre- and post-fit impacts
     """
     if fit_results is None:
-        fit_results = fit(model, data, custom_fit=custom_fit)
+        fit_results = _fit_model(model, data, custom_fit=custom_fit)
 
     labels = model_utils.get_parameter_names(model)
     prefit_unc = model_utils.get_prefit_uncertainties(model)
