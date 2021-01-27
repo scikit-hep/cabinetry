@@ -395,12 +395,22 @@ def test_fit(mock_fit, mock_print, mock_gof):
         fit.FitResults(
             np.asarray([0.9, 0.8]), np.asarray([0.1, 0.1]), ["a", "b"], np.empty(0), 0.0
         ),
-        # for second fit with fixed parameter
+        # for second ranking call with fixed parameter
         fit.FitResults(
             np.asarray([0.9, 1.2]), np.asarray([0.1, 0.1]), ["a", "b"], np.empty(0), 0.0
         ),
         fit.FitResults(
             np.asarray([0.9, 0.8]), np.asarray([0.1, 0.1]), ["a", "b"], np.empty(0), 0.0
+        ),
+        # for third ranking call without reference results
+        fit.FitResults(
+            np.asarray([0.9, 1.0]), np.asarray([0.3, 0.3]), ["a", "b"], np.empty(0), 0.0
+        ),
+        fit.FitResults(
+            np.asarray([0.9, 1.3]), np.asarray([0.1, 0.1]), ["a", "b"], np.empty(0), 0.0
+        ),
+        fit.FitResults(
+            np.asarray([0.9, 0.7]), np.asarray([0.1, 0.1]), ["a", "b"], np.empty(0), 0.0
         ),
     ],
 )
@@ -448,6 +458,26 @@ def test_ranking(mock_fit, example_spec):
     assert np.allclose(ranking_results.prefit_down, [0.0])
     assert np.allclose(ranking_results.postfit_up, [0.2])
     assert np.allclose(ranking_results.postfit_down, [-0.2])
+
+    # no reference results
+    ranking_results = fit.ranking(model, data, custom_fit=True)
+    assert mock_fit.call_count == 9
+    # reference fit
+    assert mock_fit.call_args_list[-3] == ((model, data), {"custom_fit": True})
+    # fits for impact
+    assert mock_fit.call_args_list[-2][0] == (model, data)
+    assert np.allclose(mock_fit.call_args_list[-2][1]["init_pars"], [1.2, 1.0])
+    assert mock_fit.call_args_list[-2][1]["fix_pars"] == [True, False]
+    assert mock_fit.call_args_list[-2][1]["custom_fit"] is True
+    assert mock_fit.call_args_list[-1][0] == (model, data)
+    assert np.allclose(mock_fit.call_args_list[-1][1]["init_pars"], [0.6, 1.0])
+    assert mock_fit.call_args_list[-1][1]["fix_pars"] == [True, False]
+    assert mock_fit.call_args_list[-1][1]["custom_fit"] is True
+    # ranking results
+    assert np.allclose(ranking_results.prefit_up, [0.0])
+    assert np.allclose(ranking_results.prefit_down, [0.0])
+    assert np.allclose(ranking_results.postfit_up, [0.3])
+    assert np.allclose(ranking_results.postfit_down, [-0.3])
 
 
 @mock.patch(
