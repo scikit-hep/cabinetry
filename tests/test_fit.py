@@ -421,7 +421,7 @@ def test_ranking(mock_fit, example_spec):
     labels = ["staterror", "mu"]
     fit_results = fit.FitResults(bestfit, uncertainty, labels, np.empty(0), 0.0)
     model, data = model_utils.model_and_data(example_spec)
-    ranking_results = fit.ranking(model, data, fit_results)
+    ranking_results = fit.ranking(model, data, fit_results=fit_results)
 
     # correct call to fit
     expected_fix = [True, False]
@@ -449,7 +449,7 @@ def test_ranking(mock_fit, example_spec):
     # fixed parameter in ranking, custom fit
     example_spec["measurements"][0]["config"]["parameters"][0]["fixed"] = True
     model, data = model_utils.model_and_data(example_spec)
-    ranking_results = fit.ranking(model, data, fit_results, custom_fit=True)
+    ranking_results = fit.ranking(model, data, fit_results=fit_results, custom_fit=True)
     # expect two calls in this ranking (and had 4 before, so 6 total): pre-fit
     # uncertainty is 0 since parameter is fixed, mock post-fit uncertainty is not 0
     assert mock_fit.call_count == 6
