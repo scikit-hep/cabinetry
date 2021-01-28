@@ -411,7 +411,7 @@ def fit(
 def ranking(
     model: pyhf.pdf.Model,
     data: List[float],
-    fit_results: FitResults,
+    fit_results: Optional[FitResults] = None,
     custom_fit: bool = False,
 ) -> RankingResults:
     """Calculates the impact of nuisance parameters on the parameter of interest (POI).
@@ -424,13 +424,17 @@ def ranking(
     Args:
         model (pyhf.pdf.Model): model to use in fits
         data (List[float]): data (including auxdata) the model is fit to
-        fit_results (FitResults): fit results to use for ranking
+        fit_results (Optional[FitResults], optional): nominal fit results to use for
+            ranking, if not specified will repeat nominal fit, defaults to None
         custom_fit (bool, optional): whether to use the ``pyhf.infer`` API or
             ``iminuit``, defaults to False (using ``pyhf.infer``)
 
     Returns:
         RankingResults: fit results for parameters, and pre- and post-fit impacts
     """
+    if fit_results is None:
+        fit_results = _fit_model(model, data, custom_fit=custom_fit)
+
     labels = model_utils.get_parameter_names(model)
     prefit_unc = model_utils.get_prefit_uncertainties(model)
     nominal_poi = fit_results.bestfit[model.config.poi_index]
