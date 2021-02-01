@@ -213,11 +213,13 @@ def calculate_stdev(
         # total model distribution with this parameter varied up
         up_combined = model.expected_data(up_pars, include_auxdata=False)
         up_yields = np.split(up_combined, region_split_indices)
+        up_yields += [np.asarray([sum(chan_yields)]) for chan_yields in up_yields]
         up_variations.append(up_yields)
 
         # total model distribution with this parameter varied down
         down_combined = model.expected_data(down_pars, include_auxdata=False)
         down_yields = np.split(down_combined, region_split_indices)
+        down_yields += [np.asarray([sum(chan_yields)]) for chan_yields in down_yields]
         down_variations.append(down_yields)
 
     # convert to awkward arrays for further processing
@@ -225,9 +227,11 @@ def calculate_stdev(
     down_variations = ak.from_iter(down_variations)
 
     # total variance, indices are: channel, bin
+    n_channels = len(model.config.channels)
     total_variance_list = [
-        np.zeros(shape=(model.config.channel_nbins[ch])) for ch in model.config.channels
+        np.zeros(shape=model.config.channel_nbins[ch]) for ch in model.config.channels
     ]  # list of arrays, each array has as many entries as there are bins
+    total_variance_list += [np.zeros(shape=1) for _ in range(n_channels)]
     total_variance = ak.from_iter(total_variance_list)
 
     # loop over parameters to sum up total variance
@@ -259,8 +263,9 @@ def calculate_stdev(
 
     # convert to standard deviation
     total_stdev = np.sqrt(total_variance)
-    log.debug(f"total stdev is {total_stdev}")
-    return ak.to_list(total_stdev)
+    log.debug(f"total stdev is {total_stdev[:n_channels]}")
+    log.debug(f"total stdev per channel is {total_stdev[n_channels:]}")
+    return ak.to_list(total_stdev[:n_channels])
 
 
 def unconstrained_parameter_count(model: pyhf.pdf.Model) -> int:
