@@ -60,7 +60,11 @@ def smooth_353QH_twice(hist: T) -> T:
         log.warning("at least three points needed for smoothing, no smoothing applied")
         return hist
 
-    zz = np.asarray(hist.copy())
+    if isinstance(hist, np.ndarray):
+        # ensure dtype is not int to avoid rounding in smooth histogram
+        hist = hist.astype("float")
+
+    zz = np.array(hist, dtype=float, copy=True)
 
     for i_353QH in range(2):  # run 353QH twice
         # do running median with window sizes 3, 5, 3
