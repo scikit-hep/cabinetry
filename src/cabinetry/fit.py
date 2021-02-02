@@ -735,7 +735,7 @@ def limit(
             # expected CLs values for next limit type that have been calculated already
             exp_CLs_next = np.asarray([exp[i_limit] for _, exp in cache_CLs.values()])
             # associated POI values
-            poi_list = list(cache_CLs.keys())
+            poi_arr = np.fromiter(cache_CLs.keys(), dtype=float)
 
             # left: CLs has to be > 0.05, mask out values where CLs <= 0.05
             masked_CLs_left = np.where(exp_CLs_next <= 0.05, 1, exp_CLs_next)
@@ -744,7 +744,7 @@ def limit(
                 bracket_left = bracket_left_default
             else:
                 # find closest to CLs = 0.05 from above
-                bracket_left = poi_list[np.argmin(masked_CLs_left)]
+                bracket_left = poi_arr[np.argmin(masked_CLs_left)]
 
             # right: CLs has to be < 0.05, mask out values where CLs >= 0.05
             masked_CLs_right = np.where(exp_CLs_next >= 0.05, -1, exp_CLs_next)
@@ -753,7 +753,7 @@ def limit(
                 bracket_right = bracket_right_default
             else:
                 # find closest to CLs=0.05 from below
-                bracket_right = poi_list[np.argmax(masked_CLs_right)]
+                bracket_right = poi_arr[np.argmax(masked_CLs_right)]
 
             bracket = (bracket_left, bracket_right)
 
@@ -766,17 +766,17 @@ def limit(
         log.info(f"{limit_label.ljust(17)}: {all_limits[i_limit]:.4f}")
 
     # sort all CLs values and scanned POI points by increasing POI value
-    poi_list = list(cache_CLs.keys())
-    sorted_indices = np.argsort(poi_list)
+    poi_arr = np.fromiter(cache_CLs.keys(), dtype=float)
+    sorted_indices = np.argsort(poi_arr)
     observed_CLs_np = np.asarray([obs for obs, _ in cache_CLs.values()])[sorted_indices]
     expected_CLs_np = np.asarray([exp for _, exp in cache_CLs.values()])[sorted_indices]
-    poi_list_np = np.asarray(poi_list)[sorted_indices]
+    poi_arr = poi_arr[sorted_indices]
 
     limit_results = LimitResults(
         all_limits[0],
         np.asarray(all_limits[1:]),
         observed_CLs_np,
         expected_CLs_np,
-        poi_list_np,
+        poi_arr,
     )
     return limit_results
