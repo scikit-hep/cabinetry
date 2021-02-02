@@ -60,7 +60,7 @@ def smooth_353QH_twice(hist: T) -> T:
         log.warning("at least three points needed for smoothing, no smoothing applied")
         return hist
 
-    zz = hist.copy()
+    zz = np.asarray(hist.copy())
 
     for i_353QH in range(2):  # run 353QH twice
         # do running median with window sizes 3, 5, 3
@@ -92,7 +92,7 @@ def smooth_353QH_twice(hist: T) -> T:
             # algorithm has been run once
             rr = zz.copy()  # save computed values
             # calculate residuals: (original) - (after 353QH)
-            zz = [hist[ii] - zz[ii] for ii in range(0, nbins)]
+            zz = np.asarray([hist[ii] - zz[ii] for ii in range(0, nbins)])
             # zz is now "rough", while rr is "smooth"
 
         # "twicing": run 353QH again on "rough" zz and add to "smooth" rr
