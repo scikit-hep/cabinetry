@@ -45,7 +45,7 @@ def _total_yield_uncertainty(stdev_list: List[np.ndarray]) -> np.ndarray:
     Returns:
         np.array: absolute stat. uncertainty of stack of samples
     """
-    tot_unc = np.sqrt(np.sum(np.power(stdev_list, 2), axis=0))
+    tot_unc = np.sqrt(np.sum(np.power(np.asarray(stdev_list), 2), axis=0))
     return tot_unc
 
 

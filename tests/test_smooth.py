@@ -20,11 +20,19 @@ def test__medians_353(orig, mod):
 
 def test_smooth_353QH_twice(caplog):
     caplog.set_level(logging.DEBUG)
-    assert np.allclose(smooth.smooth_353QH_twice([1, 3, 2, 5]), [1, 2, 3.25, 5])
+    hist_smooth = smooth.smooth_353QH_twice([1, 3, 2, 5])
+    assert isinstance(hist_smooth, list)
+    assert np.allclose(hist_smooth, [1, 2, 3.25, 5])
     assert np.allclose(
         smooth.smooth_353QH_twice([1, 3, 2, 5, 11, 3, 8]),
         [1.0, 2.125, 3.66666675, 5.08333349, 6.16666651, 7.375, 8.0],
     )
+
+    # with np.ndarray
+    hist_smooth = smooth.smooth_353QH_twice(np.asarray([1, 3, 2, 5]))
+    assert isinstance(hist_smooth, np.ndarray)
+    assert hist_smooth.dtype == float
+    assert np.allclose(hist_smooth, [1, 2, 3.25, 5])
     caplog.clear()
 
     assert np.allclose(smooth.smooth_353QH_twice([1, 3]), [1, 3])
