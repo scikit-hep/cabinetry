@@ -184,15 +184,20 @@ def data_MC(
         param_values, return_by_sample=True
     )  # all channels concatenated
 
-    # slice the yields into an array where the first index is the channel,
-    # and the second index is the sample
+    # slice the yields into list of lists (of lists) where first index is channel,
+    # second index is sample (and third index is bin)
     region_split_indices = model_utils._get_channel_boundary_indices(model)
-    model_yields = np.split(yields_combined, region_split_indices, axis=1)
-    # data is only indexed by channel
-    data_per_channel = np.split(data_combined, region_split_indices)
+    model_yields = np.asarray(
+        np.split(yields_combined, region_split_indices, axis=1)
+    ).tolist()
+    # data is only indexed by channel (and bin)
+    data_per_channel = np.asarray(
+        np.split(data_combined, region_split_indices)
+    ).tolist()
 
-    # calculate the total standard deviation of the model prediction, index: channel
-    total_stdev_model = model_utils.calculate_stdev(
+    # calculate the total standard deviation of the model prediction
+    # indices: channel (and bin) for per-bin uncertainties, bin for per-channel
+    total_stdev_model_bins, total_stdev_model_channels = model_utils.calculate_stdev(
         model, param_values, param_uncertainty, corr_mat
     )
 
@@ -202,7 +207,19 @@ def data_MC(
             log.info("generating pre-fit yield table")
         else:
             log.info("generating post-fit yield table")
-        tabulate._yields(model, model_yields, total_stdev_model, data_per_channel)
+        tabulate._yields_per_bin(
+            model, model_yields, total_stdev_model_bins, data_per_channel
+        )
+
+        # yields per channel
+        model_yields_per_channel = np.sum(model_yields, axis=-1).tolist()
+        data_per_channel_summed = [sum(d) for d in data_per_channel]
+        tabulate._yields_per_channel(
+            model,
+            model_yields_per_channel,
+            total_stdev_model_channels,
+            data_per_channel_summed,
+        )
 
     # process channel by channel
     for i_chan, channel_name in enumerate(model.config.channels):
@@ -251,7 +268,7 @@ def data_MC(
                 )
             matplotlib_visualize.data_MC(
                 histogram_dict_list,
-                np.asarray(total_stdev_model[i_chan]),
+                np.asarray(total_stdev_model_bins[i_chan]),
                 bin_edges,
                 figure_path,
                 log_scale=log_scale,

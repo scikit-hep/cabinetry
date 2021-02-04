@@ -1,7 +1,6 @@
 import copy
 import logging
 
-import awkward as ak
 import numpy as np
 import pyhf
 
@@ -110,19 +109,21 @@ def test_calculate_stdev(example_spec, example_spec_multibin):
     uncertainty = np.asarray([0.1, 0.1])
     corr_mat = np.asarray([[1.0, 0.2], [0.2, 1.0]])
 
-    total_stdev = model_utils.calculate_stdev(model, parameters, uncertainty, corr_mat)
-    expected_stdev = [[8.03767016]]
-    assert np.allclose(ak.to_list(total_stdev), expected_stdev)
+    total_stdev_bin, total_stdev_chan = model_utils.calculate_stdev(
+        model, parameters, uncertainty, corr_mat
+    )
+    assert np.allclose(total_stdev_bin, [[8.03767016]])
+    assert np.allclose(total_stdev_chan, [8.03767016])
 
     # pre-fit
     parameters = np.asarray([1.0, 1.0])
     uncertainty = np.asarray([0.0495665682, 0.0])
     diag_corr_mat = np.diag([1.0, 1.0])
-    total_stdev = model_utils.calculate_stdev(
+    total_stdev_bin, total_stdev_chan = model_utils.calculate_stdev(
         model, parameters, uncertainty, diag_corr_mat
     )
-    expected_stdev = [[2.56951880]]  # the staterror
-    assert np.allclose(ak.to_list(total_stdev), expected_stdev)
+    assert np.allclose(total_stdev_bin, [[2.56951880]])  # the staterror
+    assert np.allclose(total_stdev_chan, [2.56951880])
 
     # multiple channels, bins, staterrors
     model = pyhf.Workspace(example_spec_multibin).model()
@@ -136,10 +137,14 @@ def test_calculate_stdev(example_spec, example_spec_multibin):
             [0.1, 0.3, 0.3, 1.0],
         ]
     )
-    total_stdev = model_utils.calculate_stdev(model, parameters, uncertainty, corr_mat)
-    expected_stdev = [[8.056054, 1.670629], [2.775377]]
+    total_stdev_bin, total_stdev_chan = model_utils.calculate_stdev(
+        model, parameters, uncertainty, corr_mat
+    )
+    expected_stdev_bin = [[8.056054, 1.670629], [2.775377]]
+    expected_stdev_chan = [9.585327, 2.775377]
     for i_reg in range(2):
-        assert np.allclose(total_stdev[i_reg], expected_stdev[i_reg])
+        assert np.allclose(total_stdev_bin[i_reg], expected_stdev_bin[i_reg])
+        assert np.allclose(total_stdev_chan[i_reg], expected_stdev_chan[i_reg])
 
 
 def test_unconstrained_parameter_count(example_spec, example_spec_shapefactor):

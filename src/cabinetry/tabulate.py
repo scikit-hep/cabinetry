@@ -31,20 +31,20 @@ def _header_name(channel_name: str, i_bin: int, unique: bool = True) -> str:
     return header_name
 
 
-def _yields(
+def _yields_per_bin(
     model: pyhf.pdf.Model,
-    model_yields: List[np.ndarray],
+    model_yields: List[List[List[float]]],
     total_stdev_model: List[List[float]],
-    data: List[np.ndarray],
+    data: List[List[float]],
 ) -> List[Dict[str, Any]]:
     """Outputs and returns a yield table with predicted and observed yields per bin.
 
     Args:
         model (pyhf.pdf.Model): the model which the table corresponds to
-        model_yields (List[np.ndarray]): yields per channel, sample, and bin
+        model_yields (List[List[List[float]]]): yields per channel, sample, and bin
         total_stdev_model (List[List[float]]): total model standard deviation per
             channel and bin
-        data (List[np.ndarray]): data yield per channel and bin
+        data (List[List[float]]): data yield per channel and bin
 
     Returns:
         List[Dict[str, Any]]: yield table for use with the ``tabulate`` package
@@ -86,12 +86,62 @@ def _yields(
     table += [total_dict, data_dict]
 
     log.info(
-        "yield table:\n"
+        "yields per bin:\n"
         + tabulate.tabulate(
             table,
             headers=headers,  # type: ignore
             tablefmt="fancy_grid",
         )
     )
+    return table
 
+
+def _yields_per_channel(
+    model: pyhf.pdf.Model,
+    model_yields: List[List[float]],
+    total_stdev_model: List[float],
+    data: List[float],
+) -> List[Dict[str, Any]]:
+    """Outputs and returns a yield table with predicted and observed - per channel.
+
+    Args:
+        model (pyhf.pdf.Model): the model which the table corresponds to
+        model_yields (List[List[float]]): yields per channel and sample
+        total_stdev_model (List[float]): total model standard deviation per channel
+        data (List[float]): data yield per channel
+
+    Returns:
+        List[Dict[str, Any]]: yield table for use with the ``tabulate`` package
+    """
+    table = []  # table containing all yields
+
+    # rows for each individual sample
+    for i_sam, sample_name in enumerate(model.config.samples):
+        sample_dict = {"sample": sample_name}  # one dict per sample
+        for i_chan, channel_name in enumerate(model.config.channels):
+            sample_dict.update({channel_name: f"{model_yields[i_chan][i_sam]:.2f}"})
+        table.append(sample_dict)
+
+    # dicts for total model prediction and data
+    total_dict = {"sample": "total"}
+    data_dict = {"sample": "data"}
+    for i_chan, channel_name in enumerate(model.config.channels):
+        total_model = np.sum(model_yields[i_chan], axis=0)  # sum over samples
+        total_dict.update(
+            {
+                channel_name: f"{total_model:.2f} "
+                f"\u00B1 {total_stdev_model[i_chan]:.2f}"
+            }
+        )
+        data_dict.update({channel_name: f"{data[i_chan]:.2f}"})
+    table += [total_dict, data_dict]
+
+    log.info(
+        "yields per channel:\n"
+        + tabulate.tabulate(
+            table,
+            headers="keys",
+            tablefmt="fancy_grid",
+        )
+    )
     return table

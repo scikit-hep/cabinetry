@@ -178,8 +178,13 @@ def calculate_stdev(
     parameters: np.ndarray,
     uncertainty: np.ndarray,
     corr_mat: np.ndarray,
-) -> List[List[float]]:
-    """Calculates the symmetrized yield standard deviation of a model.
+) -> Tuple[List[List[float]], List[float]]:
+    """Calculates symmetrized yield standard deviation of a model, per bin and channel.
+
+    Returns both the uncertainties per bin (in a list of channels), and the uncertainty
+    of the total yield per channel (again, for a list of channels). To calculate the
+    uncertainties for the total yield, the function internally treats the sum of yields
+    per channel like another channel with one bin.
 
     Args:
         model (pyhf.pdf.Model): the model for which to calculate the standard deviations
@@ -189,8 +194,9 @@ def calculate_stdev(
         corr_mat (np.ndarray): correlation matrix
 
     Returns:
-        List[List[float]]: list of channels, each channel is a list of standard
-        deviations per bin
+        Tuple[List[List[float]], List[float]]:
+            - list of channels, each channel is a list of standard deviations per bin
+            - list of standard deviations per channel
     """
     # indices where to split to separate all bins into regions
     region_split_indices = _get_channel_boundary_indices(model)
@@ -198,6 +204,9 @@ def calculate_stdev(
     # the lists up_variations and down_variations will contain the model distributions
     # with all parameters varied individually within uncertainties
     # indices: variation, channel, bin
+    # following the channels contained in the model, there are additional entries with
+    # yields summed per channel (internally treated like additional channels) to get the
+    # per-channel uncertainties
     up_variations = []
     down_variations = []
 
@@ -213,12 +222,14 @@ def calculate_stdev(
         # total model distribution with this parameter varied up
         up_combined = model.expected_data(up_pars, include_auxdata=False)
         up_yields = np.split(up_combined, region_split_indices)
+        # append list of yields summed per channel
         up_yields += [np.asarray([sum(chan_yields)]) for chan_yields in up_yields]
         up_variations.append(up_yields)
 
         # total model distribution with this parameter varied down
         down_combined = model.expected_data(down_pars, include_auxdata=False)
         down_yields = np.split(down_combined, region_split_indices)
+        # append list of yields summed per channel
         down_yields += [np.asarray([sum(chan_yields)]) for chan_yields in down_yields]
         down_variations.append(down_yields)
 
@@ -229,9 +240,10 @@ def calculate_stdev(
     # total variance, indices are: channel, bin
     n_channels = len(model.config.channels)
     total_variance_list = [
-        np.zeros(shape=model.config.channel_nbins[ch]) for ch in model.config.channels
+        np.zeros(model.config.channel_nbins[ch]) for ch in model.config.channels
     ]  # list of arrays, each array has as many entries as there are bins
-    total_variance_list += [np.zeros(shape=1) for _ in range(n_channels)]
+    # append placeholders for total yield uncertainty per channel
+    total_variance_list += [np.asarray([0]) for _ in range(n_channels)]
     total_variance = ak.from_iter(total_variance_list)
 
     # loop over parameters to sum up total variance
@@ -261,11 +273,12 @@ def calculate_stdev(
                 # factor of two below is there since loop is only over half the matrix
                 total_variance = total_variance + 2 * (corr * sym_unc_i * sym_unc_j)
 
-    # convert to standard deviation
-    total_stdev = np.sqrt(total_variance)
-    log.debug(f"total stdev is {total_stdev[:n_channels]}")
-    log.debug(f"total stdev per channel is {total_stdev[n_channels:]}")
-    return ak.to_list(total_stdev[:n_channels])
+    # convert to standard deviation per bins and per channels
+    total_stdev_per_bin = np.sqrt(total_variance[:n_channels])
+    total_stdev_per_channel = ak.flatten(np.sqrt(total_variance[n_channels:]))
+    log.debug(f"total stdev is {total_stdev_per_bin}")
+    log.debug(f"total stdev per channel is {total_stdev_per_channel}")
+    return ak.to_list(total_stdev_per_bin), ak.to_list(total_stdev_per_channel)
 
 
 def unconstrained_parameter_count(model: pyhf.pdf.Model) -> int:

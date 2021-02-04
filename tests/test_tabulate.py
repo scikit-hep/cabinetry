@@ -1,4 +1,3 @@
-import numpy as np
 import pyhf
 import pytest
 
@@ -17,14 +16,14 @@ def test__header_name(test_input, expected):
     assert tabulate._header_name("abc", 2, unique=False) == "\nbin 3"
 
 
-def test__yields(example_spec_multibin, example_spec_with_background):
+def test__yields_per_bin(example_spec_multibin, example_spec_with_background):
     # multiple channels
     model = pyhf.Workspace(example_spec_multibin).model()
-    yields = [np.asarray([[25.0, 5.0]]), np.asarray([[8.0]])]
+    yields = [[[25.0, 5.0]], [[8.0]]]
     total_stdev = [[5.0, 2.0], [1.0]]
-    data = [np.asarray([35, 8]), np.asarray([10])]
+    data = [[35, 8], [10]]
 
-    yield_table = tabulate._yields(model, yields, total_stdev, data)
+    yield_table = tabulate._yields_per_bin(model, yields, total_stdev, data)
     assert yield_table == [
         {
             "sample": "Signal",
@@ -48,11 +47,11 @@ def test__yields(example_spec_multibin, example_spec_with_background):
 
     # multiple samples
     model = pyhf.Workspace(example_spec_with_background).model()
-    yields = [np.asarray([[150.0], [50.0]])]
+    yields = [[[150.0], [50.0]]]
     total_stdev = [[8.60]]
-    data = [np.asarray([160])]
+    data = [[160]]
 
-    yield_table = tabulate._yields(model, yields, total_stdev, data)
+    yield_table = tabulate._yields_per_bin(model, yields, total_stdev, data)
     assert yield_table == [
         {"sample": "Background", "Signal Region\nbin 1": "150.00"},
         {"sample": "Signal", "Signal Region\nbin 1": "50.00"},
