@@ -3,6 +3,7 @@ import logging
 import pathlib
 from typing import Any, Dict, List, Optional, Tuple, Union
 
+import awkward as ak
 import numpy as np
 import pyhf
 
@@ -187,13 +188,13 @@ def data_MC(
     # slice the yields into list of lists (of lists) where first index is channel,
     # second index is sample (and third index is bin)
     region_split_indices = model_utils._get_channel_boundary_indices(model)
-    model_yields = np.asarray(
-        np.split(yields_combined, region_split_indices, axis=1)
-    ).tolist()
+    model_yields = [
+        m.tolist() for m in np.split(yields_combined, region_split_indices, axis=1)
+    ]
     # data is only indexed by channel (and bin)
-    data_per_channel = np.asarray(
-        np.split(data_combined, region_split_indices)
-    ).tolist()
+    data_per_channel = [
+        d.tolist() for d in np.split(data_combined, region_split_indices)
+    ]
 
     # calculate the total standard deviation of the model prediction
     # indices: channel (and bin) for per-bin uncertainties, bin for per-channel
@@ -212,7 +213,7 @@ def data_MC(
         )
 
         # yields per channel
-        model_yields_per_channel = np.sum(model_yields, axis=-1).tolist()
+        model_yields_per_channel = np.sum(ak.from_iter(model_yields), axis=-1).tolist()
         data_per_channel_summed = [sum(d) for d in data_per_channel]
         tabulate._yields_per_channel(
             model,
