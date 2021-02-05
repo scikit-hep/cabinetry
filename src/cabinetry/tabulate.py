@@ -102,7 +102,7 @@ def _yields_per_channel(
     total_stdev_model: List[float],
     data: List[float],
 ) -> List[Dict[str, Any]]:
-    """Outputs and returns a yield table with predicted and observed - per channel.
+    """Outputs and returns a yield table with predicted and observed yields per channel.
 
     Args:
         model (pyhf.pdf.Model): the model which the table corresponds to
