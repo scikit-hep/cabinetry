@@ -192,9 +192,7 @@ def data_MC(
         m.tolist() for m in np.split(yields_combined, region_split_indices, axis=1)
     ]
     # data is only indexed by channel (and bin)
-    data_per_channel = [
-        d.tolist() for d in np.split(data_combined, region_split_indices)
-    ]
+    data_yields = [d.tolist() for d in np.split(data_combined, region_split_indices)]
 
     # calculate the total standard deviation of the model prediction
     # indices: channel (and bin) for per-bin uncertainties, channel for per-channel
@@ -209,17 +207,17 @@ def data_MC(
         else:
             log.info("generating post-fit yield table")
         tabulate._yields_per_bin(
-            model, model_yields, total_stdev_model_bins, data_per_channel
+            model, model_yields, total_stdev_model_bins, data_yields
         )
 
         # yields per channel
         model_yields_per_channel = np.sum(ak.from_iter(model_yields), axis=-1).tolist()
-        data_per_channel_summed = [sum(d) for d in data_per_channel]
+        data_per_channel = [sum(d) for d in data_yields]
         tabulate._yields_per_channel(
             model,
             model_yields_per_channel,
             total_stdev_model_channels,
-            data_per_channel_summed,
+            data_per_channel,
         )
 
     # process channel by channel
@@ -233,7 +231,7 @@ def data_MC(
             variable = region_dict["Variable"]
         else:
             # fall back to defaults
-            bin_edges = np.arange(len(data_per_channel[i_chan]) + 1)
+            bin_edges = np.arange(len(data_yields[i_chan]) + 1)
             variable = "bin"
 
         for i_sam, sample_name in enumerate(model.config.samples):
@@ -251,7 +249,7 @@ def data_MC(
             {
                 "label": "Data",
                 "isData": True,
-                "yields": data_per_channel[i_chan],
+                "yields": data_yields[i_chan],
                 "variable": variable,
             }
         )
