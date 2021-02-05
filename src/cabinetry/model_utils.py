@@ -273,7 +273,7 @@ def calculate_stdev(
                 # factor of two below is there since loop is only over half the matrix
                 total_variance = total_variance + 2 * (corr * sym_unc_i * sym_unc_j)
 
-    # convert to standard deviation per bins and per channels
+    # convert to standard deviations per bin and per channel
     total_stdev_per_bin = np.sqrt(total_variance[:n_channels])
     total_stdev_per_channel = ak.flatten(np.sqrt(total_variance[n_channels:]))
     log.debug(f"total stdev is {total_stdev_per_bin}")
