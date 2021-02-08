@@ -808,8 +808,8 @@ def significance(model: pyhf.pdf.Model, data: List[float]) -> SignificanceResult
     fitting the Asimov dataset.
 
     Args:
-        spec (Dict[str, Any]): a ``pyhf`` workspace specification
-        asimov (bool, optional): whether to fit the Asimov dataset, defaults to False
+        model (pyhf.pdf.Model): model to use in fits
+        data (List[float]): data (including auxdata) the model is fit to
     """
     pyhf.set_backend("numpy", pyhf.optimize.minuit_optimizer(verbose=True))
 
