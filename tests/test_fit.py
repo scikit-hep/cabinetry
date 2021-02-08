@@ -624,14 +624,16 @@ def test_limit(example_spec_with_background, caplog):
 
 
 def test_significance(example_spec_with_background):
-    significance_results = fit.significance(example_spec_with_background)
+    model, data = model_utils.model_and_data(example_spec_with_background)
+    significance_results = fit.significance(model, data)
     assert np.allclose(significance_results.observed_p_value, 0.23773068)
     assert np.allclose(significance_results.observed_significance, 0.71362132)
     assert np.allclose(significance_results.expected_p_value, 0.00049159)
     assert np.allclose(significance_results.expected_significance, 3.29529432)
 
     # Asimov dataset, observed = expected
-    significance_results = fit.significance(example_spec_with_background, asimov=True)
+    model, data = model_utils.model_and_data(example_spec_with_background, asimov=True)
+    significance_results = fit.significance(model, data)
     assert np.allclose(significance_results.observed_p_value, 0.00031984)
     assert np.allclose(significance_results.observed_significance, 3.41421033)
     assert np.allclose(significance_results.expected_p_value, 0.00031984)

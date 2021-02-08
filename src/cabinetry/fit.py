@@ -801,7 +801,7 @@ def limit(
     return limit_results
 
 
-def significance(spec: Dict[str, Any], asimov: bool = False) -> SignificanceResults:
+def significance(model: pyhf.pdf.Model, data: List[float]) -> SignificanceResults:
     """Calculates the discovery significance of a positive signal.
 
     Observed and expected p-value and significance are identical by construction when
@@ -812,8 +812,6 @@ def significance(spec: Dict[str, Any], asimov: bool = False) -> SignificanceResu
         asimov (bool, optional): whether to fit the Asimov dataset, defaults to False
     """
     pyhf.set_backend("numpy", pyhf.optimize.minuit_optimizer(verbose=True))
-
-    model, data = model_utils.model_and_data(spec, asimov=asimov)
 
     log.info("calculating discovery significance")
     obs_p_val, exp_p_val = pyhf.infer.hypotest(
