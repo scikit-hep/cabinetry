@@ -17,10 +17,6 @@ def test_integration(tmp_path, ntuple_creator, caplog):
     """The purpose of this integration test is to check whether the
     steps run without error and whether the fit result is as expected.
     """
-    import sys
-
-    if sys.version_info[1] == 7:
-        raise SystemExit
     ntuple_creator(str(tmp_path))
 
     cabinetry_config = cabinetry.configuration.load("config_example.yml")
