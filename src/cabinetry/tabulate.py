@@ -89,7 +89,7 @@ def _yields_per_bin(
         "yields per bin:\n"
         + tabulate.tabulate(
             table,
-            headers=headers,  # type: ignore
+            headers=headers,
             tablefmt="fancy_grid",
         )
     )
