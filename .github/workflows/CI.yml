@@ -27,7 +27,7 @@ jobs:
     - name: Install cabinetry and dependencies
       run: |
         python -m pip install --upgrade pip setuptools wheel
-        python -m pip install .[test]
+        python -m pip install --extra-index-url https://test.pypi.org/simple/ .[test]
     - name: Static code analysis with flake8 and mypy
       run: |
         # stop the build if there are Python syntax errors or undefined names
