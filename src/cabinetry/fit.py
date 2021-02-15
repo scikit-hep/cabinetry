@@ -600,7 +600,7 @@ def limit(
         bracket (Optional[Union[List[float], Tuple[float, float]]], optional): the two
             POI values used to start the observed limit determination, the limit must
             lie between these values and the values must not be the same, defaults to
-            None (then uses ``0.01`` as default lower value and the upper POI bound
+            None (then uses ``0.1`` as default lower value and the upper POI bound
             specified in the measurement as default upper value)
         tolerance (float, optional): tolerance in POI value for convergence to CLs=0.05,
             defaults to 0.01
@@ -622,8 +622,8 @@ def limit(
     par_bounds[model.config.poi_index] = [0, par_bounds[model.config.poi_index][1]]
     log.debug("setting lower parameter bound for POI to 0")
 
-    # set default bracket to (0.01, upper POI bound in measurement) if needed
-    bracket_left_default = 0.01
+    # set default bracket to (0.1, upper POI bound in measurement) if needed
+    bracket_left_default = 0.1
     bracket_right_default = par_bounds[model.config.poi_index][1]
     if bracket is None:
         bracket = (bracket_left_default, bracket_right_default)
