@@ -541,7 +541,7 @@ def test_limit(example_spec_with_background, caplog):
 
     # expected values for results
     observed_limit = 0.749
-    expected_limit = [0.302, 0.410, 0.581, 0.831, 1.160]
+    expected_limit = [0.303, 0.411, 0.581, 0.833, 1.160]
 
     # modify workspace to include custom POI range
     example_spec_with_background["measurements"][0]["config"]["parameters"][0][
@@ -553,12 +553,12 @@ def test_limit(example_spec_with_background, caplog):
     assert np.allclose(limit_results.observed_limit, observed_limit, rtol=1e-2)
     assert np.allclose(limit_results.expected_limit, expected_limit, rtol=1e-2)
     # compare a few CLs values
-    assert np.allclose(limit_results.observed_CLs[0], 0.972168)
+    assert np.allclose(limit_results.observed_CLs[0], 0.780874)
     assert np.allclose(
         limit_results.expected_CLs[0],
-        [0.917830, 0.946246, 0.971371, 0.989493, 0.997945],
+        [0.402421, 0.548538, 0.719383, 0.878530, 0.971678],
     )
-    assert np.allclose(limit_results.poi_values[0], 0.01)
+    assert np.allclose(limit_results.poi_values[0], 0.1)
     assert np.allclose(limit_results.observed_CLs[-1], 0.0)
     assert np.allclose(limit_results.expected_CLs[-1], [0.0, 0.0, 0.0, 0.0, 0.0])
     assert np.allclose(limit_results.poi_values[-1], 8.0)  # from custom POI range
@@ -588,7 +588,7 @@ def test_limit(example_spec_with_background, caplog):
     ] = [0.0]
     model, data = model_utils.model_and_data(example_spec_with_background, asimov=True)
     limit_results = fit.limit(model, data)
-    assert np.allclose(limit_results.observed_limit, 0.584, rtol=2e-2)
+    assert np.allclose(limit_results.observed_limit, 0.586, rtol=2e-2)
     assert np.allclose(limit_results.expected_limit, expected_limit, rtol=2e-2)
     caplog.clear()
 
