@@ -78,9 +78,9 @@ def test_LimitResults():
 
 
 def test_SignificanceResults():
-    obs_p_val = 0.05
+    obs_p_val = 0.02
     obs_significance = 2
-    exp_p_val = 0.32
+    exp_p_val = 0.16
     exp_significance = 1
     significance_results = fit.SignificanceResults(
         obs_p_val, obs_significance, exp_p_val, exp_significance
