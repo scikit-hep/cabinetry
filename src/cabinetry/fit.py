@@ -154,7 +154,7 @@ def _fit_model_pyhf(
     Returns:
         FitResults: object storing relevant fit results
     """
-    pyhf.set_backend("numpy", pyhf.optimize.minuit_optimizer(verbose=True))
+    pyhf.set_backend("numpy", pyhf.optimize.minuit_optimizer(verbose=1))
 
     result, result_obj = pyhf.infer.mle.fit(
         data,
@@ -215,7 +215,7 @@ def _fit_model_custom(
     Returns:
         FitResults: object storing relevant fit results
     """
-    pyhf.set_backend("numpy", pyhf.optimize.minuit_optimizer(verbose=True))
+    pyhf.set_backend("numpy", pyhf.optimize.minuit_optimizer(verbose=1))
 
     # use init_pars provided in function argument if they exist, else use default
     init_pars = init_pars or model.config.suggested_init()
@@ -632,7 +632,7 @@ def limit(
     Returns:
         LimitResults: observed and expected limits, CLs values, and scanned points
     """
-    pyhf.set_backend("numpy", pyhf.optimize.minuit_optimizer(verbose=False))
+    pyhf.set_backend("numpy", pyhf.optimize.minuit_optimizer(verbose=1))
 
     log.info(f"calculating upper limit for {model.config.poi_name}")
 
@@ -811,7 +811,7 @@ def significance(model: pyhf.pdf.Model, data: List[float]) -> SignificanceResult
         model (pyhf.pdf.Model): model to use in fits
         data (List[float]): data (including auxdata) the model is fit to
     """
-    pyhf.set_backend("numpy", pyhf.optimize.minuit_optimizer(verbose=True))
+    pyhf.set_backend("numpy", pyhf.optimize.minuit_optimizer(verbose=1))
 
     log.info("calculating discovery significance")
     obs_p_val, exp_p_val = pyhf.infer.hypotest(
