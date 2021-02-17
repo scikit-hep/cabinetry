@@ -94,6 +94,22 @@ class LimitResults(NamedTuple):
     poi_values: np.ndarray
 
 
+class SignificanceResults(NamedTuple):
+    """Collects results from a discovery significance calculation in one object.
+
+    Args:
+        observed_p_value (float): observed p-value
+        observed_significance (float): observed significance
+        expected_p_value (float): expected/median p-value
+        expected_significance (float): expected/median significance
+    """
+
+    observed_p_value: float
+    observed_significance: float
+    expected_p_value: float
+    expected_significance: float
+
+
 def print_results(
     fit_results: FitResults,
 ) -> None:
@@ -138,7 +154,7 @@ def _fit_model_pyhf(
     Returns:
         FitResults: object storing relevant fit results
     """
-    pyhf.set_backend("numpy", pyhf.optimize.minuit_optimizer(verbose=True))
+    pyhf.set_backend("numpy", pyhf.optimize.minuit_optimizer(verbose=1))
 
     result, result_obj = pyhf.infer.mle.fit(
         data,
@@ -199,7 +215,7 @@ def _fit_model_custom(
     Returns:
         FitResults: object storing relevant fit results
     """
-    pyhf.set_backend("numpy", pyhf.optimize.minuit_optimizer(verbose=True))
+    pyhf.set_backend("numpy", pyhf.optimize.minuit_optimizer(verbose=1))
 
     # use init_pars provided in function argument if they exist, else use default
     init_pars = init_pars or model.config.suggested_init()
@@ -616,7 +632,7 @@ def limit(
     Returns:
         LimitResults: observed and expected limits, CLs values, and scanned points
     """
-    pyhf.set_backend("numpy", pyhf.optimize.minuit_optimizer(verbose=False))
+    pyhf.set_backend("numpy", pyhf.optimize.minuit_optimizer(verbose=1))
 
     log.info(f"calculating upper limit for {model.config.poi_name}")
 
@@ -783,3 +799,34 @@ def limit(
         poi_arr,
     )
     return limit_results
+
+
+def significance(model: pyhf.pdf.Model, data: List[float]) -> SignificanceResults:
+    """Calculates the discovery significance of a positive signal.
+
+    Observed and expected p-values and significances are both calculated and reported.
+
+    Args:
+        model (pyhf.pdf.Model): model to use in fits
+        data (List[float]): data (including auxdata) the model is fit to
+    """
+    pyhf.set_backend("numpy", pyhf.optimize.minuit_optimizer(verbose=1))
+
+    log.info("calculating discovery significance")
+    obs_p_val, exp_p_val = pyhf.infer.hypotest(
+        0.0, data, model, test_stat="q0", return_expected=True
+    )
+    obs_p_val = float(obs_p_val)
+    exp_p_val = float(exp_p_val)
+    obs_significance = scipy.stats.norm.isf(obs_p_val, 0, 1)
+    exp_significance = scipy.stats.norm.isf(exp_p_val, 0, 1)
+
+    log.info(f"observed p-value: {obs_p_val:.8%}")
+    log.info(f"observed significance: {obs_significance:.3f}")
+    log.info(f"expected p-value: {exp_p_val:.8%}")
+    log.info(f"expected significance: {exp_significance:.3f}")
+
+    significance_results = SignificanceResults(
+        obs_p_val, obs_significance, exp_p_val, exp_significance
+    )
+    return significance_results

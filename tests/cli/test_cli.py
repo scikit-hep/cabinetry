@@ -422,3 +422,32 @@ def test_limit(mock_util, mock_limit, mock_vis, tmp_path):
     assert mock_util.call_args_list[-1] == ((workspace,), {"asimov": True})
     assert mock_limit.call_args_list[-1] == (("model", "data"), {"tolerance": 0.1})
     assert mock_vis.call_args_list[-1][1] == {"figure_folder": "folder"}
+
+
+@mock.patch("cabinetry.fit.significance", autospec=True)
+@mock.patch(
+    "cabinetry.model_utils.model_and_data",
+    return_value=("model", "data"),
+    autospec=True,
+)
+def test_significance(mock_util, mock_sig, tmp_path):
+    workspace = {"workspace": "mock"}
+    workspace_path = str(tmp_path / "workspace.json")
+
+    # need to save workspace to file since click looks for it
+    with open(workspace_path, "w") as f:
+        f.write('{"workspace": "mock"}')
+
+    runner = CliRunner()
+
+    # default
+    result = runner.invoke(cli.significance, [workspace_path])
+    assert result.exit_code == 0
+    assert mock_util.call_args_list == [((workspace,), {"asimov": False})]
+    assert mock_sig.call_args_list == [(("model", "data"), {})]
+
+    # Asimov
+    result = runner.invoke(cli.significance, ["--asimov", workspace_path])
+    assert result.exit_code == 0
+    assert mock_util.call_args_list[-1] == ((workspace,), {"asimov": True})
+    assert mock_sig.call_args_list[-1] == (("model", "data"), {})

@@ -247,3 +247,10 @@ def test_integration(tmp_path, ntuple_creator, caplog):
         [1.0054, 1.3975, 1.9689, 2.7174, 3.5426],
         rtol=1e-2,
     )
+
+    # discovery significance
+    significance_results = cabinetry.fit.significance(model, data)
+    np.allclose(significance_results.observed_p_value, 0.03583662)
+    np.allclose(significance_results.observed_significance, 1.80118813)
+    np.allclose(significance_results.expected_p_value, 0.14775040)
+    np.allclose(significance_results.expected_significance, 1.04613046)
