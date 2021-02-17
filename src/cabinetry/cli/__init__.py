@@ -246,7 +246,7 @@ def limit(
     tolerance: float,
     figfolder: str,
 ) -> None:
-    """Calculates upper limits for parameter of interest, visualizes CLs distribution.
+    """Calculates upper limits, visualizes CLs distribution.
 
     WS_SPEC: path to workspace used in fit
     """
@@ -257,6 +257,23 @@ def limit(
     cabinetry_visualize.limit(limit_results, figure_folder=figfolder)
 
 
+@click.command()
+@click.argument("ws_spec", type=click.File("r"))
+@click.option("--asimov", is_flag=True, help="fit Asimov dataset (default: False)")
+def significance(
+    ws_spec: io.TextIOWrapper,
+    asimov: bool,
+) -> None:
+    """Calculates observed and expected discovery significance.
+
+    WS_SPEC: path to workspace used in fit
+    """
+    _set_logging()
+    ws = json.load(ws_spec)
+    model, data = cabinetry_model_utils.model_and_data(ws, asimov=asimov)
+    _ = cabinetry_fit.significance(model, data)
+
+
 cabinetry.add_command(templates)
 cabinetry.add_command(postprocess)
 cabinetry.add_command(workspace)
@@ -264,3 +281,4 @@ cabinetry.add_command(fit)
 cabinetry.add_command(ranking)
 cabinetry.add_command(scan)
 cabinetry.add_command(limit)
+cabinetry.add_command(significance)
