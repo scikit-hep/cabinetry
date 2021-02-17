@@ -446,7 +446,7 @@ def test_significance(mock_util, mock_sig, tmp_path):
     assert mock_util.call_args_list == [((workspace,), {"asimov": False})]
     assert mock_sig.call_args_list == [(("model", "data"), {})]
 
-    # Asimov, tolerance, custom folder
+    # Asimov
     result = runner.invoke(cli.significance, ["--asimov", workspace_path])
     assert result.exit_code == 0
     assert mock_util.call_args_list[-1] == ((workspace,), {"asimov": True})
