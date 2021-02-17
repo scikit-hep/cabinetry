@@ -14,7 +14,7 @@ extras_require["test"] = sorted(
             "flake8-import-order",
             "flake8-print",
             "mypy",
-            "typeguard",
+            "typeguard<2.11",  # NamedTuple compatibility in Python 3.7
             "black==20.8b1",
         ]
     )
