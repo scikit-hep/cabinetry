@@ -246,7 +246,7 @@ def limit(
     tolerance: float,
     figfolder: str,
 ) -> None:
-    """Calculates upper limits, visualizes CLs distribution.
+    """Calculates upper limits and visualizes CLs distribution.
 
     WS_SPEC: path to workspace used in fit
     """
