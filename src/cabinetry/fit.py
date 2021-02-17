@@ -804,8 +804,7 @@ def limit(
 def significance(model: pyhf.pdf.Model, data: List[float]) -> SignificanceResults:
     """Calculates the discovery significance of a positive signal.
 
-    Observed and expected p-value and significance are identical by construction when
-    fitting the Asimov dataset.
+    Observed and expected p-values and significances are both calculated and reported.
 
     Args:
         model (pyhf.pdf.Model): model to use in fits
