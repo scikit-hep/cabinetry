@@ -822,10 +822,10 @@ def significance(model: pyhf.pdf.Model, data: List[float]) -> SignificanceResult
     obs_significance = scipy.stats.norm.isf(obs_p_val, 0, 1)
     exp_significance = scipy.stats.norm.isf(exp_p_val, 0, 1)
 
-    log.info(f"observed p-value: {obs_p_val:.6f}")
-    log.info(f"observed significance: {obs_significance:.2f}")
-    log.info(f"expected p-value: {exp_p_val:.6f}")
-    log.info(f"expected significance: {exp_significance:.2f}")
+    log.info(f"observed p-value: {obs_p_val:.8%}")
+    log.info(f"observed significance: {obs_significance:.3f}")
+    log.info(f"expected p-value: {exp_p_val:.8%}")
+    log.info(f"expected significance: {exp_significance:.3f}")
 
     significance_results = SignificanceResults(
         obs_p_val, obs_significance, exp_p_val, exp_significance
