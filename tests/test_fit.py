@@ -99,7 +99,7 @@ def test__fit_model_pyhf(mock_minos, example_spec, example_spec_multibin):
     model, data = model_utils.model_and_data(example_spec)
     fit_results = fit._fit_model_pyhf(model, data)
     assert np.allclose(fit_results.bestfit, [1.1, 8.32984849])
-    assert np.allclose(fit_results.uncertainty, [0.0, 0.38099445])
+    assert np.allclose(fit_results.uncertainty, [0.0, 0.38153046])
     assert fit_results.labels == ["staterror_Signal-Region", "Signal strength"]
     assert np.allclose(fit_results.best_twice_nll, 7.90080379)
     assert np.allclose(fit_results.corr_mat, [[0.0, 0.0], [0.0, 1.0]])
@@ -110,7 +110,7 @@ def test__fit_model_pyhf(mock_minos, example_spec, example_spec_multibin):
     # the gamma factor is multiplicative and fixed to 1.1, so the
     # signal strength needs to be 1/1.1 to compensate
     assert np.allclose(fit_results.bestfit, [1.1, 0.90917877])
-    assert np.allclose(fit_results.uncertainty, [0.0, 0.12623179])
+    assert np.allclose(fit_results.uncertainty, [0.0, 0.12623183])
     assert fit_results.labels == ["staterror_Signal-Region", "Signal strength"]
     assert np.allclose(fit_results.best_twice_nll, 5.68851093)
     assert np.allclose(fit_results.corr_mat, [[0.0, 0.0], [0.0, 1.0]])
@@ -127,7 +127,7 @@ def test__fit_model_pyhf(mock_minos, example_spec, example_spec_multibin):
         model, data, init_pars=init_pars, fix_pars=fix_pars
     )
     assert np.allclose(fit_results.bestfit, [0.9, 1.1, 1.48041923, 0.97511112])
-    assert np.allclose(fit_results.uncertainty, [0.0, 0.0, 0.20694465, 0.11792837])
+    assert np.allclose(fit_results.uncertainty, [0.0, 0.0, 0.20694409, 0.11792805])
     assert np.allclose(fit_results.best_twice_nll, 10.4531891)
 
     # including minos, one parameter is unknown
@@ -277,12 +277,12 @@ def test__run_minos(caplog):
             + pars[0]
         )
 
-    m = iminuit.Minuit.from_array_func(
+    m = iminuit.Minuit(
         func_to_minimize,
         [1.0, 1.0],
         name=["a", "b"],
-        errordef=1,
     )
+    m.errordef = 1
     m.migrad()
     fit._run_minos(m, ["b"], ["a", "b"])
     assert "running MINOS for b" in [rec.message for rec in caplog.records]
@@ -290,11 +290,11 @@ def test__run_minos(caplog):
     caplog.clear()
 
     # proper labels not known to iminuit
-    m = iminuit.Minuit.from_array_func(
+    m = iminuit.Minuit(
         func_to_minimize,
         [1.0, 1.0],
-        errordef=1,
     )
+    m.errordef = 1
     m.migrad()
     fit._run_minos(m, ["x0"], ["a", "b"])
     assert "running MINOS for a" in [rec.message for rec in caplog.records]
@@ -302,11 +302,11 @@ def test__run_minos(caplog):
     caplog.clear()
 
     # unknown parameter, MINOS does not run
-    m = iminuit.Minuit.from_array_func(
+    m = iminuit.Minuit(
         func_to_minimize,
         [1.0, 1.0],
-        errordef=1,
     )
+    m.errordef = 1
     m.migrad()
     fit._run_minos(m, ["x2"], ["a", "b"])
     assert [rec.message for rec in caplog.records] == [
