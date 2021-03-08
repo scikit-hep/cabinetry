@@ -1,6 +1,6 @@
 from setuptools import setup
 
-extras_require = {"contrib": ["matplotlib", "uproot3", "uproot~=4.0"]}
+extras_require = {"contrib": ["matplotlib", "uproot3", "uproot>=4.0"]}
 extras_require["test"] = sorted(
     set(
         extras_require["contrib"]
@@ -14,7 +14,7 @@ extras_require["test"] = sorted(
             "flake8-import-order",
             "flake8-print",
             "mypy",
-            "typeguard<2.11",  # NamedTuple compatibility in Python 3.7
+            "typeguard!=2.11",  # NamedTuple compatibility in Python 3.7
             "black==20.8b1",
         ]
     )
