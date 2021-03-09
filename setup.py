@@ -6,7 +6,7 @@ extras_require["test"] = sorted(
         extras_require["contrib"]
         + [
             "pytest",
-            "pytest-cov>=2.5.1",
+            "pytest-cov>=2.6.1",  # no_cover support
             "pydocstyle",
             "check-manifest",
             "flake8",
