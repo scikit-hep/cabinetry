@@ -451,3 +451,62 @@ def test_significance(mock_util, mock_sig, tmp_path):
     assert result.exit_code == 0
     assert mock_util.call_args_list[-1] == ((workspace,), {"asimov": True})
     assert mock_sig.call_args_list[-1] == (("model", "data"), {})
+
+
+@mock.patch("cabinetry.visualize.data_MC", autospec=True)
+@mock.patch(
+    "cabinetry.fit.fit",
+    return_value=fit.FitResults(
+        np.asarray([1.0]), np.asarray([0.1]), ["label"], np.asarray([[1.0]]), 1.0
+    ),
+    autospec=True,
+)
+@mock.patch("cabinetry.configuration.validate", autospec=True)
+@mock.patch(
+    "cabinetry.model_utils.model_and_data",
+    return_value=("model", "data"),
+    autospec=True,
+)
+def test_data_mc(mock_util, mock_validate, mock_fit, mock_vis, cli_helpers, tmp_path):
+    workspace = {"workspace": "mock"}
+    workspace_path = str(tmp_path / "workspace.json")
+
+    # need to save workspace to file since click looks for it
+    with open(workspace_path, "w") as f:
+        f.write('{"workspace": "mock"}')
+
+    runner = CliRunner()
+
+    # default
+    result = runner.invoke(cli.data_mc, [workspace_path])
+    assert result.exit_code == 0
+    assert mock_util.call_args_list == [((workspace,), {})]
+    assert mock_validate.call_count == 0
+    assert mock_fit.call_count == 0
+    assert mock_vis.call_args_list == [
+        (
+            ("model", "data"),
+            {"config": None, "figure_folder": "figures", "fit_results": None},
+        )
+    ]
+
+    # with config, post-fit, custom figure folder
+    config = {"General": {"Measurement": "test_config"}}
+    config_path = str(tmp_path / "config.yml")
+    cli_helpers.write_config(config_path, config)
+    fit_results = fit.FitResults(
+        np.asarray([1.0]), np.asarray([0.1]), ["label"], np.asarray([[1.0]]), 1.0
+    )
+
+    result = runner.invoke(
+        cli.data_mc,
+        [workspace_path, "--config", config_path, "--postfit", "--figfolder", "folder"],
+    )
+    assert result.exit_code == 0
+    assert mock_util.call_args_list[-1] == ((workspace,), {})
+    assert mock_validate.call_args_list == [((config,), {})]
+    assert mock_fit.call_args_list == [(("model", "data"), {})]
+    assert mock_vis.call_args_list[-1] == (
+        ("model", "data"),
+        {"config": config, "figure_folder": "folder", "fit_results": fit_results},
+    )

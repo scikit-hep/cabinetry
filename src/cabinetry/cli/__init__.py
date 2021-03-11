@@ -274,6 +274,49 @@ def significance(
     _ = cabinetry_fit.significance(model, data)
 
 
+@click.command()
+@click.argument("ws_spec", type=click.File("r"))
+@click.option("--config", type=click.File("r"), help="cabinetry configuration file")
+@click.option(
+    "--postfit", is_flag=True, help="visualize post-fit model (default: pre-fit model)"
+)
+@click.option(
+    "--figfolder",
+    default="figures",
+    help='folder to save figures to (default: "figures")',
+)
+def data_mc(
+    ws_spec: io.TextIOWrapper,
+    config: Optional[io.TextIOWrapper],
+    postfit: bool,
+    figfolder: str,
+) -> None:
+    """Visualizes distributions of fit model and observed data.
+
+    WS_SPEC: path to workspace
+    """
+    _set_logging()
+    ws = json.load(ws_spec)
+    model, data = cabinetry_model_utils.model_and_data(ws)
+
+    if config is not None:
+        cabinetry_config = yaml.safe_load(config)
+        cabinetry_configuration.validate(cabinetry_config)
+    else:
+        cabinetry_config = None
+
+    # optionally perform maximum likelihood fit to obtain post-fit model
+    fit_results = cabinetry_fit.fit(model, data) if postfit else None
+
+    cabinetry_visualize.data_MC(
+        model,
+        data,
+        config=cabinetry_config,
+        figure_folder=figfolder,
+        fit_results=fit_results,
+    )
+
+
 cabinetry.add_command(templates)
 cabinetry.add_command(postprocess)
 cabinetry.add_command(workspace)
@@ -282,3 +325,4 @@ cabinetry.add_command(ranking)
 cabinetry.add_command(scan)
 cabinetry.add_command(limit)
 cabinetry.add_command(significance)
+cabinetry.add_command(data_mc)
