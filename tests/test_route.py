@@ -174,7 +174,7 @@ def test_Router__find_template_builder_match(processor_examples):
         @functools.wraps(func)
         def wrapper(reg, sam, sys, tem):
             # return the bin yield of the histogram to have something to compare
-            return func(reg, sam, sys, tem).view().value
+            return func(reg, sam, sys, tem).values()
 
         return wrapper
 

@@ -127,7 +127,7 @@ class Histogram(bh.Histogram):
         Returns:
             numpy.ndarray: yields per bin
         """
-        return self.view().value
+        return self.values()
 
     @yields.setter
     def yields(self, value: np.ndarray) -> None:
@@ -136,7 +136,7 @@ class Histogram(bh.Histogram):
         Args:
             value (np.ndarray): yields to set
         """
-        self.view().value = value
+        self.view().value = value  # type: ignore
 
     @property
     def stdev(self) -> np.ndarray:
@@ -145,7 +145,7 @@ class Histogram(bh.Histogram):
         Returns:
             numpy.ndarray: stat. uncertainty per bin
         """
-        return np.sqrt(self.view().variance)
+        return np.sqrt(self.variances())  # type: ignore
 
     @stdev.setter
     def stdev(self, value: np.ndarray) -> None:
@@ -154,7 +154,7 @@ class Histogram(bh.Histogram):
         Args:
             value (numpy.ndarray): the standard deviation
         """
-        self.view().variance = value ** 2
+        self.view().variance = value ** 2  # type: ignore
 
     @property
     def bins(self) -> np.ndarray:
@@ -229,7 +229,7 @@ class Histogram(bh.Histogram):
         current_integrated_yield = sum(self.yields)
         normalization_ratio = current_integrated_yield / target_integrated_yield
         # update integrated yield to match target
-        self.view().value /= normalization_ratio
+        self.view().value /= normalization_ratio  # type: ignore
         return normalization_ratio
 
 

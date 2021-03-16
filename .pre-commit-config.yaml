@@ -9,12 +9,12 @@ repos:
     -   id: mypy
         files: src/cabinetry
 -   repo: https://gitlab.com/pycqa/flake8
-    rev: 3.8.4
+    rev: 3.9.0
     hooks:
     -   id: flake8
         additional_dependencies: [flake8-bugbear, flake8-import-order, flake8-print]
 -   repo: https://github.com/asottile/pyupgrade
-    rev: v2.10.0
+    rev: v2.10.1
     hooks:
     -   id: pyupgrade
         args: ["--py37-plus"]
