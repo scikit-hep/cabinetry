@@ -6,6 +6,8 @@ from typing import Any, Dict, List, Type, TypeVar, Union
 import boost_histogram as bh
 import numpy as np
 
+import cabinetry
+
 
 log = logging.getLogger(__name__)
 
@@ -13,7 +15,7 @@ log = logging.getLogger(__name__)
 H = TypeVar("H", bound="Histogram")
 
 
-class Histogram(bh.Histogram):
+class Histogram(bh.Histogram, family=cabinetry):
     """Holds histogram information, extends boost_histogram.Histogram."""
 
     @classmethod
