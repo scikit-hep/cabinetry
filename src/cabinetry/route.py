@@ -137,7 +137,7 @@ class Router:
         """
         return self._register_processor(
             self.template_builders, region_name, sample_name, systematic_name, template
-        )
+        )  # type: ignore
 
     @staticmethod
     def _find_match(
@@ -217,7 +217,7 @@ class Router:
 
         if match is not None:
             # if user-defined function was found, wrap and return it
-            return self.template_builder_wrapper(match)
+            return self.template_builder_wrapper(match)  # type: ignore
         return None
 
 

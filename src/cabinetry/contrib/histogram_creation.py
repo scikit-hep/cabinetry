@@ -100,6 +100,6 @@ def _bin_data(
     """
     hist = bh.Histogram(bh.axis.Variable(bins), storage=bh.storage.Weight())
     hist.fill(observables, weight=weights)
-    yields = hist.view().value
-    stdev = np.sqrt(hist.view().variance)
+    yields = hist.values()
+    stdev = np.sqrt(hist.variances())  # type: ignore
     return yields, stdev

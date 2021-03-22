@@ -28,14 +28,16 @@ jobs:
       run: |
         python -m pip install --upgrade pip setuptools wheel
         python -m pip install .[test]
-    - name: Static code analysis with flake8 and mypy
+    - name: Static code analysis with flake8
       run: |
         # stop the build if there are Python syntax errors or undefined names
         flake8 src/cabinetry --select=E9,F63,F7,F82 --show-source
         # check for additional issues flagged by flake8
         flake8
-        # run mypy for type checking
-        mypy
+    - name: Type checking with mypy
+      if: matrix.python-version != 3.7
+      run: |
+        mypy  # 3.7 not supported due to boost-histogram
     - name: Format with Black
       run: |
         black --check --diff --verbose .

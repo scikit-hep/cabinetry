@@ -1,5 +1,6 @@
 import logging
 
+import boost_histogram as bh
 import numpy as np
 import pytest
 
@@ -75,6 +76,23 @@ class HistogramHelpers:
 @pytest.fixture
 def histogram_helpers():
     return HistogramHelpers
+
+
+# test properties
+def test_Histogram(example_histograms):
+    bins, yields, stdev = example_histograms.normal()
+    h_orig = bh.Histogram(bh.axis.Variable(bins), storage=bh.storage.Weight())
+    h_orig[...] = np.stack([np.asarray(yields), np.asarray(stdev) ** 2], axis=-1)
+    h = histo.Histogram(h_orig)
+    np.testing.assert_equal(h.bins, bins)
+    np.testing.assert_equal(h.yields, yields)
+    np.testing.assert_equal(h.stdev, stdev)
+    new_yields = np.asarray([3, 4])
+    new_stdev = np.asarray([0.5, 0.5])
+    h.yields = new_yields
+    h.stdev = new_stdev
+    np.testing.assert_equal(h.yields, new_yields)
+    np.testing.assert_equal(h.stdev, new_stdev)
 
 
 def test_Histogram_from_arrays(example_histograms):

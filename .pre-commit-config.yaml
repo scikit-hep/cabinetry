@@ -8,13 +8,14 @@ repos:
     hooks:
     -   id: mypy
         files: src/cabinetry
+        additional_dependencies: ["numpy>=1.20", "boost-histogram>=1.0.1"]
 -   repo: https://gitlab.com/pycqa/flake8
-    rev: 3.8.4
+    rev: 3.9.0
     hooks:
     -   id: flake8
         additional_dependencies: [flake8-bugbear, flake8-import-order, flake8-print]
 -   repo: https://github.com/asottile/pyupgrade
-    rev: v2.10.0
+    rev: v2.11.0
     hooks:
     -   id: pyupgrade
         args: ["--py37-plus"]
