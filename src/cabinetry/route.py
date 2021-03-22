@@ -1,6 +1,6 @@
 import fnmatch
 import logging
-from typing import Any, Callable, Dict, List, Optional, Union
+from typing import Any, Callable, Dict, List, Optional
 
 import boost_histogram as bh
 
@@ -19,10 +19,6 @@ ProcessorFunc = Callable[[Dict[str, Any], Dict[str, Any], Dict[str, Any], str], 
 UserTemplateFunc = Callable[
     [Dict[str, Any], Dict[str, Any], Dict[str, Any], str], bh.Histogram
 ]
-
-# type of a generic function that takes sample-region-systematic-template, and
-# may return None or a boost_histogram.Histogram
-GenericProcessorFunc = Union[ProcessorFunc, UserTemplateFunc]
 
 # type of a function called with names of region-sample-systematic-template,
 # which returns either a ProcessorFunc or None
@@ -64,7 +60,7 @@ class Router:
         sample_name: Optional[str],
         systematic_name: Optional[str],
         template: Optional[str],
-    ) -> Callable[[GenericProcessorFunc], GenericProcessorFunc]:
+    ) -> Callable[[UserTemplateFunc], UserTemplateFunc]:
         """Decorator for registering a custom processor function.
 
         Args:
@@ -78,7 +74,7 @@ class Router:
                 None to apply to all templates
 
         Returns:
-            Callable[[GenericProcessorFunc], GenericProcessorFunc]: the function to
+            Callable[[UserTemplateFunc], UserTemplateFunc]: the function to
             register a processor
         """
         if region_name is None:
@@ -90,13 +86,13 @@ class Router:
         if template is None:
             template = "*"
 
-        def _register(func: GenericProcessorFunc) -> GenericProcessorFunc:
+        def _register(func: UserTemplateFunc) -> UserTemplateFunc:
             """Registers a processor function to be applied when matching a pattern.
 
             The pattern is specified by region-sample-systematic-template.
 
             Args:
-                func (GenericProcessorFunc): the function to register
+                func (UserTemplateFunc): the function to register
             """
             processor_list.append(
                 {
@@ -137,7 +133,7 @@ class Router:
         """
         return self._register_processor(
             self.template_builders, region_name, sample_name, systematic_name, template
-        )  # type: ignore
+        )
 
     @staticmethod
     def _find_match(
@@ -146,7 +142,7 @@ class Router:
         sample_name: str,
         systematic_name: str,
         template: str,
-    ) -> Optional[GenericProcessorFunc]:
+    ) -> Optional[UserTemplateFunc]:
         """Returns a function matching the provided specification.
 
         Args:
@@ -157,7 +153,7 @@ class Router:
             template (str): template name
 
         Returns:
-            Optional[GenericProcessorFunc]: processor function matching the description,
+            Optional[UserTemplateFunc]: processor function matching the description,
             or None if no matches are found
         """
         matches = []
@@ -217,7 +213,7 @@ class Router:
 
         if match is not None:
             # if user-defined function was found, wrap and return it
-            return self.template_builder_wrapper(match)  # type: ignore
+            return self.template_builder_wrapper(match)
         return None
 
 
