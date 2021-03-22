@@ -61,7 +61,9 @@ class Router:
         systematic_name: Optional[str],
         template: Optional[str],
     ) -> Callable[[UserTemplateFunc], UserTemplateFunc]:
-        """Decorator for registering a custom processor function.
+        """Decorator for registering a template builder function.
+
+        The function is added to the list provided as function argument.
 
         Args:
             region_name  (Optional[str]): name of the region to apply the function to,
@@ -116,6 +118,9 @@ class Router:
         template: Optional[str] = None,
     ) -> Callable[[Callable], UserTemplateFunc]:
         """Decorator for registering a template builder function.
+
+        The function is added to the list stored in the ``template_builders`` member
+        variable.
 
         Args:
             region_name (Optional[str], optional): name of the region to apply the
