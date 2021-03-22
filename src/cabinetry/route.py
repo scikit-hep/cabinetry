@@ -17,7 +17,7 @@ ProcessorFunc = Callable[[Dict[str, Any], Dict[str, Any], Dict[str, Any], str], 
 # type of a user-defined function for template processing, takes sample-region-
 # systematic-template, returns a boost_histogram.Histogram
 UserTemplateFunc = Callable[
-    [Dict[str, Any], Dict[str, Any], Dict[str, Any], str], Optional[bh.Histogram]
+    [Dict[str, Any], Dict[str, Any], Dict[str, Any], str], bh.Histogram
 ]
 
 # type of a generic function that takes sample-region-systematic-template, and
@@ -137,7 +137,7 @@ class Router:
         """
         return self._register_processor(
             self.template_builders, region_name, sample_name, systematic_name, template
-        )
+        )  # type: ignore
 
     @staticmethod
     def _find_match(
@@ -217,7 +217,7 @@ class Router:
 
         if match is not None:
             # if user-defined function was found, wrap and return it
-            return self.template_builder_wrapper(match)
+            return self.template_builder_wrapper(match)  # type: ignore
         return None
 
 
