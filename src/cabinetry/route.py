@@ -116,7 +116,7 @@ class Router:
         sample_name: Optional[str] = None,
         systematic_name: Optional[str] = None,
         template: Optional[str] = None,
-    ) -> Callable[[Callable], UserTemplateFunc]:
+    ) -> Callable[[UserTemplateFunc], UserTemplateFunc]:
         """Decorator for registering a template builder function.
 
         The function is added to the list stored in the ``template_builders`` member
@@ -133,8 +133,8 @@ class Router:
                 function to, defaults to None (apply to all templates)
 
         Returns:
-            Callable[[Callable], UserTemplateFunc]: the generic function to register a
-            processor
+            Callable[[UserTemplateFunc], UserTemplateFunc]: the function to register a
+            a processor
         """
         return self._register_processor(
             self.template_builders, region_name, sample_name, systematic_name, template
@@ -189,7 +189,7 @@ class Router:
     def _find_template_builder_match(
         self, region_name: str, sample_name: str, systematic_name: str, template: str
     ) -> Optional[ProcessorFunc]:
-        """Returns a template builder function matching the provided specification.
+        """Returns wrapped template builder function matching provided specification.
 
         If no matches are found, returns None. Wraps the user-defined function in the
         provided wrapper, if no wrapper is found raises an error.
