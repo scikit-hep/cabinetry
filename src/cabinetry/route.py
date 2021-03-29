@@ -61,7 +61,7 @@ class Router:
         systematic_name: Optional[str],
         template: Optional[str],
     ) -> Callable[[UserTemplateFunc], UserTemplateFunc]:
-        """Decorator for registering a processor function.
+        """Decorator for registering a custom processor function.
 
         The function is added to the list provided as function argument. Currently this
         function is used only for template builder functions, but could be used for
