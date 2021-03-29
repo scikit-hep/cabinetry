@@ -1,6 +1,6 @@
 import fnmatch
 import logging
-from typing import Any, Callable, Dict, List, Optional, Union
+from typing import Any, Callable, Dict, List, Optional
 
 import boost_histogram as bh
 
@@ -19,10 +19,6 @@ ProcessorFunc = Callable[[Dict[str, Any], Dict[str, Any], Dict[str, Any], str], 
 UserTemplateFunc = Callable[
     [Dict[str, Any], Dict[str, Any], Dict[str, Any], str], bh.Histogram
 ]
-
-# type of a generic function that takes sample-region-systematic-template, and
-# may return None or a boost_histogram.Histogram
-GenericProcessorFunc = Union[ProcessorFunc, UserTemplateFunc]
 
 # type of a function called with names of region-sample-systematic-template,
 # which returns either a ProcessorFunc or None
@@ -64,8 +60,13 @@ class Router:
         sample_name: Optional[str],
         systematic_name: Optional[str],
         template: Optional[str],
-    ) -> Callable[[GenericProcessorFunc], GenericProcessorFunc]:
+    ) -> Callable[[UserTemplateFunc], UserTemplateFunc]:
         """Decorator for registering a custom processor function.
+
+        The function is added to the list provided as function argument. Currently this
+        function is used only for template builder functions, but could be used for
+        additional types of functions as well. This requires extending the return type
+        accordingly.
 
         Args:
             region_name  (Optional[str]): name of the region to apply the function to,
@@ -78,7 +79,7 @@ class Router:
                 None to apply to all templates
 
         Returns:
-            Callable[[GenericProcessorFunc], GenericProcessorFunc]: the function to
+            Callable[[UserTemplateFunc], UserTemplateFunc]: the function to
             register a processor
         """
         if region_name is None:
@@ -90,13 +91,15 @@ class Router:
         if template is None:
             template = "*"
 
-        def _register(func: GenericProcessorFunc) -> GenericProcessorFunc:
+        def _register(func: UserTemplateFunc) -> UserTemplateFunc:
             """Registers a processor function to be applied when matching a pattern.
 
-            The pattern is specified by region-sample-systematic-template.
+            The pattern is specified by region-sample-systematic-template. To support
+            functions other than template builder functions, the argument and return
+            types need to be extended.
 
             Args:
-                func (GenericProcessorFunc): the function to register
+                func (UserTemplateFunc): the function to register
             """
             processor_list.append(
                 {
@@ -118,8 +121,11 @@ class Router:
         sample_name: Optional[str] = None,
         systematic_name: Optional[str] = None,
         template: Optional[str] = None,
-    ) -> Callable[[Callable], UserTemplateFunc]:
+    ) -> Callable[[UserTemplateFunc], UserTemplateFunc]:
         """Decorator for registering a template builder function.
+
+        The function is added to the list stored in the ``template_builders`` member
+        variable.
 
         Args:
             region_name (Optional[str], optional): name of the region to apply the
@@ -132,12 +138,12 @@ class Router:
                 function to, defaults to None (apply to all templates)
 
         Returns:
-            Callable[[Callable], UserTemplateFunc]: the generic function to register a
+            Callable[[UserTemplateFunc], UserTemplateFunc]: the function to register a
             processor
         """
         return self._register_processor(
             self.template_builders, region_name, sample_name, systematic_name, template
-        )  # type: ignore
+        )
 
     @staticmethod
     def _find_match(
@@ -146,8 +152,11 @@ class Router:
         sample_name: str,
         systematic_name: str,
         template: str,
-    ) -> Optional[GenericProcessorFunc]:
+    ) -> Optional[UserTemplateFunc]:
         """Returns a function matching the provided specification.
+
+        This is currently only used for template builder functions, but could be used
+        for other types of functions by extending the return type accordingly.
 
         Args:
             processor_list (List[Dict[str, Any]]): list of processors to search in
@@ -157,7 +166,7 @@ class Router:
             template (str): template name
 
         Returns:
-            Optional[GenericProcessorFunc]: processor function matching the description,
+            Optional[UserTemplateFunc]: processor function matching the description,
             or None if no matches are found
         """
         matches = []
@@ -188,7 +197,7 @@ class Router:
     def _find_template_builder_match(
         self, region_name: str, sample_name: str, systematic_name: str, template: str
     ) -> Optional[ProcessorFunc]:
-        """Returns a template builder function matching the provided specification.
+        """Returns wrapped template builder function matching provided specification.
 
         If no matches are found, returns None. Wraps the user-defined function in the
         provided wrapper, if no wrapper is found raises an error.
@@ -217,7 +226,7 @@ class Router:
 
         if match is not None:
             # if user-defined function was found, wrap and return it
-            return self.template_builder_wrapper(match)  # type: ignore
+            return self.template_builder_wrapper(match)
         return None
 
 
