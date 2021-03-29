@@ -487,7 +487,6 @@ def templates(
         ax1.plot(
             line_x,
             line_y,
-            "-",
             color=color,
             linestyle=linestyle,
             label=label,
@@ -521,7 +520,6 @@ def templates(
             ax2.plot(
                 line_x,
                 line_y,
-                "-",
                 color=color,
                 linestyle=linestyle,
             )
