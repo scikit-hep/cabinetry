@@ -155,6 +155,9 @@ class Router:
     ) -> Optional[UserTemplateFunc]:
         """Returns a function matching the provided specification.
 
+        This is currently only used for template builder functions, but could be used
+        for other types of functions by extending the return type accordingly.
+
         Args:
             processor_list (List[Dict[str, Any]]): list of processors to search in
             region_name (str): region name
