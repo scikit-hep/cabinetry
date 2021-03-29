@@ -61,9 +61,12 @@ class Router:
         systematic_name: Optional[str],
         template: Optional[str],
     ) -> Callable[[UserTemplateFunc], UserTemplateFunc]:
-        """Decorator for registering a template builder function.
+        """Decorator for registering a processor function.
 
-        The function is added to the list provided as function argument.
+        The function is added to the list provided as function argument. Currently this
+        function is used only for template builder functions, but could be used for
+        additional types of functions as well. This requires extending the return type
+        accordingly.
 
         Args:
             region_name  (Optional[str]): name of the region to apply the function to,
@@ -91,7 +94,9 @@ class Router:
         def _register(func: UserTemplateFunc) -> UserTemplateFunc:
             """Registers a processor function to be applied when matching a pattern.
 
-            The pattern is specified by region-sample-systematic-template.
+            The pattern is specified by region-sample-systematic-template. To support
+            functions other than template builder functions, the argument and return
+            types need to be extended.
 
             Args:
                 func (UserTemplateFunc): the function to register
