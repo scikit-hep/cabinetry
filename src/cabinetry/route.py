@@ -139,7 +139,7 @@ class Router:
 
         Returns:
             Callable[[UserTemplateFunc], UserTemplateFunc]: the function to register a
-            a processor
+            processor
         """
         return self._register_processor(
             self.template_builders, region_name, sample_name, systematic_name, template
