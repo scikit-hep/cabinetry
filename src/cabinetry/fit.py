@@ -348,6 +348,9 @@ def _goodness_of_fit(
 ) -> float:
     """Calculates goodness-of-fit p-value with a saturated model.
 
+    Returns NaN if the number of degrees of freedom in the chi2 test is zero (nominal
+    fit should already be perfect) or negative (over-parameterized model).
+
     Args:
         model (pyhf.pdf.Model): model used in the fit for which goodness-of-fit should
             be calculated
@@ -382,6 +385,14 @@ def _goodness_of_fit(
         model.config.channel_nbins.values()
     ) - model_utils.unconstrained_parameter_count(model)
     log.debug(f"number of degrees of freedom: {n_dof}")
+
+    if n_dof <= 0:
+        log.warning(
+            f"cannot calculate p-value: {n_dof} degrees of freedom and Delta NLL = "
+            f"{delta_nll:.6f}"
+        )
+        return np.nan
+
     p_val = scipy.stats.chi2.sf(2 * delta_nll, n_dof)
     log.info(f"p-value for goodness-of-fit test: {p_val:.2%}")
     return p_val
