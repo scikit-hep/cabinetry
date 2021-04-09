@@ -240,10 +240,7 @@ def example_spec_no_aux():
         ],
         "measurements": [
             {
-                "config": {
-                    "parameters": [],
-                    "poi": "Signal strength",
-                },
+                "config": {"parameters": [], "poi": "Signal strength"},
                 "name": "no auxdata",
             }
         ],
