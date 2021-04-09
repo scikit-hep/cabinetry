@@ -331,16 +331,31 @@ def test__run_minos(caplog):
 
 
 @mock.patch("cabinetry.model_utils.unconstrained_parameter_count", return_value=1)
-def test__goodness_of_fit(mock_count, example_spec_multibin, caplog):
+def test__goodness_of_fit(
+    mock_count, example_spec_multibin, example_spec_no_aux, caplog
+):
     caplog.set_level(logging.DEBUG)
-    model, data = model_utils.model_and_data(example_spec_multibin)
 
+    model, data = model_utils.model_and_data(example_spec_multibin)
     p_val = fit._goodness_of_fit(model, data, 9.964913)
     assert mock_count.call_count == 1
     assert mock_count.call_args[0][0].spec == model.spec
     assert mock_count.call_args[1] == {}
     assert "Delta NLL = 0.084185" in [rec.message for rec in caplog.records]
     assert np.allclose(p_val, 0.91926079)
+    caplog.clear()
+
+    # no auxdata and zero degrees of freedom in chi2 test
+    model, data = model_utils.model_and_data(example_spec_no_aux)
+    p_val = fit._goodness_of_fit(model, data, 6.01482863)
+    assert mock_count.call_count == 2
+    assert mock_count.call_args[0][0].spec == model.spec
+    assert mock_count.call_args[1] == {}
+    assert (
+        "cannot calculate p-value: 0 degrees of freedom and Delta NLL = 0.000000"
+        in [rec.message for rec in caplog.records]
+    )
+    assert np.isnan(p_val)
     caplog.clear()
 
 

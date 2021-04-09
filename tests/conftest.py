@@ -215,3 +215,36 @@ def example_spec_with_background():
         "version": "1.0.0",
     }
     return spec
+
+
+@pytest.fixture
+def example_spec_no_aux():
+    spec = {
+        "channels": [
+            {
+                "name": "Signal Region",
+                "samples": [
+                    {
+                        "data": [60],
+                        "modifiers": [
+                            {
+                                "data": None,
+                                "name": "Signal strength",
+                                "type": "normfactor",
+                            },
+                        ],
+                        "name": "Signal",
+                    }
+                ],
+            }
+        ],
+        "measurements": [
+            {
+                "config": {"parameters": [], "poi": "Signal strength"},
+                "name": "no auxdata",
+            }
+        ],
+        "observations": [{"data": [65], "name": "Signal Region"}],
+        "version": "1.0.0",
+    }
+    return spec
