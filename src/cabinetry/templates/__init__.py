@@ -47,6 +47,9 @@ def build(
     route.apply_to_all_templates(
         config, template_builder._create_histogram, match_func=match_func
     )
+    # need to write a new function like _create_histogram which instead accumulates all
+    # instructions, and can then hand them off to something like coffea for efficient
+    # parallelization
 
 
 def collect(config: Dict[str, Any], *, method: str = "uproot") -> None:
