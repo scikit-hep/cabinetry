@@ -162,6 +162,10 @@
                 "Data": {
                     "description": "if it is a data sample",
                     "type": "boolean"
+                },
+                "Regions": {
+                    "description": "region(s) that contain the sample, defaults to all regions",
+                    "$ref": "#/definitions/regions_setting"
                 }
             },
             "additionalProperties": false

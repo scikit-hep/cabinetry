@@ -308,6 +308,10 @@ class WorkspaceBuilder:
                     # skip the data sample, it goes into the observations instead
                     continue
 
+                if not configuration.region_contains_sample(region, sample):
+                    # region does not contain this sample
+                    continue
+
                 # yield of the samples
                 histo_yield = self.get_yield_for_sample(region, sample)
                 current_sample = {}
