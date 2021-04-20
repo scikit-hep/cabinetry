@@ -5,6 +5,7 @@ from typing import Any, Dict, Optional
 
 import numpy as np
 
+from . import configuration
 from . import histo
 from . import route
 from . import smooth
@@ -72,16 +73,14 @@ def _get_smoothing_algorithm(
     smoothing_regions = smoothing.get("Regions", False)
     if smoothing_regions:
         # if regions are specified, only smooth those regions
-        if not isinstance(smoothing_regions, list):
-            smoothing_regions = [smoothing_regions]
+        smoothing_regions = configuration._convert_setting_to_list(smoothing_regions)
         if region["Name"] not in smoothing_regions:
             return None
 
     smoothing_samples = smoothing.get("Samples", False)
     if smoothing_samples:
         # if samples are specified, only smooth those samples
-        if not isinstance(smoothing_samples, list):
-            smoothing_samples = [smoothing_samples]
+        smoothing_samples = configuration._convert_setting_to_list(smoothing_samples)
         if sample["Name"] not in smoothing_samples:
             return None
 
