@@ -187,7 +187,7 @@ def histogram_is_needed(
                 if systematic.get(template, {}).get("Symmetrize", False):
                     histo_needed = False
             else:
-                raise NotImplementedError("other systematics not yet implemented")
+                raise ValueError(f"unknown systematics type: {systematic['Type']}")
 
     return histo_needed
 

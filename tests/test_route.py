@@ -201,6 +201,7 @@ def test_Router__find_template_builder_match(processor_examples):
 
 
 def test_apply_to_all_templates():
+    # could mock configuration.histogram_is_needed here
     # define a custom override function that logs its arguments when called
     override_call_args = []
 
