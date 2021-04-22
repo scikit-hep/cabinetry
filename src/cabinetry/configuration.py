@@ -130,7 +130,7 @@ def region_contains_sample(region: Dict[str, Any], sample: Dict[str, Any]) -> bo
     """
     # "Regions" setting of samples is optional, default to empty list
     regions_list_for_sample = _convert_setting_to_list(sample.get("Regions", []))
-    if regions_list_for_sample != [] and region["Name"] not in regions_list_for_sample:
+    if regions_list_for_sample and region["Name"] not in regions_list_for_sample:
         # sample only exists for some regions, and current region not in list
         return False
     return True
