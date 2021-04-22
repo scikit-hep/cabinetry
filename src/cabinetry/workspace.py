@@ -309,7 +309,7 @@ class WorkspaceBuilder:
                     continue
 
                 if not configuration.region_contains_sample(region, sample):
-                    # region does not contain this sample
+                    # current region does not contain this sample, so skip it
                     continue
 
                 # yield of the samples
