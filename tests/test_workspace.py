@@ -276,6 +276,10 @@ def test_WorkspaceBuilder_get_channels(mock_contains, mock_get_yield, mock_get_u
     channels = ws_builder.get_channels()
     expected_channels = [{"name": "region_1", "samples": []}]
     assert channels == expected_channels
+    assert mock_contains.call_args_list[-1] == (
+        (example_config["Regions"][0], example_config["Samples"][0]),
+        {},
+    )
     # no calls to read histogram content
     assert mock_get_yield.call_count == 1
     assert mock_get_unc.call_count == 1
