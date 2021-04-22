@@ -232,7 +232,8 @@ def test_WorkspaceBuilder_get_sys_modifiers():
     "cabinetry.workspace.WorkspaceBuilder.get_yield_for_sample",
     return_value=[1.0, 2.0],
 )
-def test_WorkspaceBuilder_get_channels(mock_get_yield, mock_get_unc):
+@mock.patch("cabinetry.configuration.region_contains_sample", side_effect=[True, False])
+def test_WorkspaceBuilder_get_channels(mock_contains, mock_get_yield, mock_get_unc):
     example_config = {
         "General": {"HistogramFolder": "path"},
         "Regions": [{"Name": "region_1"}],
@@ -261,12 +262,28 @@ def test_WorkspaceBuilder_get_channels(mock_get_yield, mock_get_unc):
         }
     ]
     assert channels == expected_channels
+    assert mock_contains.call_args_list == [
+        ((example_config["Regions"][0], example_config["Samples"][0]), {})
+    ]
     assert mock_get_yield.call_args_list == [
         ((example_config["Regions"][0], example_config["Samples"][0]), {})
     ]
     assert mock_get_unc.call_args_list == [
         ((example_config["Regions"][0], example_config["Samples"][0]), {})
     ]
+
+    # run again, this time region will not contain sample due to side_effect
+    channels = ws_builder.get_channels()
+    expected_channels = [{"name": "region_1", "samples": []}]
+    assert channels == expected_channels
+    assert mock_contains.call_count == 2
+    assert mock_contains.call_args_list[-1] == (
+        (example_config["Regions"][0], example_config["Samples"][0]),
+        {},
+    )
+    # no calls to read histogram content
+    assert mock_get_yield.call_count == 1
+    assert mock_get_unc.call_count == 1
 
 
 def test_WorkspaceBuilder_get_measurement():

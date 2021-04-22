@@ -115,6 +115,27 @@ def sample_affected_by_modifier(
     return affected
 
 
+def region_contains_sample(region: Dict[str, Any], sample: Dict[str, Any]) -> bool:
+    """Checks if a region contains a given sample.
+
+    A sample enters all regions by default, and the "Regions" property of a sample can
+    be used to specify a single region or list of regions that contain the sample.
+
+    Args:
+        region (Dict[str, Any]): containing all region information
+        sample (Dict[str, Any]): containing all sample information
+
+    Returns:
+        bool: True if region contains sample, False otherwise
+    """
+    # "Regions" setting of samples is optional, default to empty list
+    regions_list_for_sample = _convert_setting_to_list(sample.get("Regions", []))
+    if regions_list_for_sample and region["Name"] not in regions_list_for_sample:
+        # sample only exists for some regions, and current region not in list
+        return False
+    return True
+
+
 def histogram_is_needed(
     region: Dict[str, Any],
     sample: Dict[str, Any],
@@ -139,6 +160,10 @@ def histogram_is_needed(
     Returns:
         bool: whether a histogram is needed
     """
+    if not region_contains_sample(region, sample):
+        # region does not contain sample
+        return False
+
     if systematic.get("Name", None) == "Nominal":
         # for nominal, histograms are generally needed
         histo_needed = True
@@ -162,7 +187,7 @@ def histogram_is_needed(
                 if systematic.get(template, {}).get("Symmetrize", False):
                     histo_needed = False
             else:
-                raise NotImplementedError("other systematics not yet implemented")
+                raise ValueError(f"unknown systematics type: {systematic['Type']}")
 
     return histo_needed
 

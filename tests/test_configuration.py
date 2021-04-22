@@ -107,6 +107,18 @@ def test_sample_affected_by_modifier(sample_and_modifier, affected):
 
 
 @pytest.mark.parametrize(
+    "region_and_sample, contained",
+    [
+        (({"Name": "CR"}, {}), True),
+        (({"Name": "SR"}, {"Regions": ["SR", "CR"]}), True),
+        (({"Name": "CR"}, {"Regions": "SR"}), False),
+    ],
+)
+def test_region_contains_sample(region_and_sample, contained):
+    assert configuration.region_contains_sample(*region_and_sample) is contained
+
+
+@pytest.mark.parametrize(
     "reg_sam_sys_tem, is_needed",
     [
         # nominal
@@ -163,18 +175,19 @@ def test_sample_affected_by_modifier(sample_and_modifier, affected):
             ),
             True,
         ),
+        # region does not contain sample
+        (({"Name": "CR"}, {"Name": "Signal", "Regions": "SR"}, {}, "Nominal"), False),
     ],
 )
 def test_histogram_is_needed(reg_sam_sys_tem, is_needed):
+    # could also mock sample_affected_by_modifier and region_contains_sample here
     reg, sam, sys, tem = reg_sam_sys_tem
     assert configuration.histogram_is_needed(*reg_sam_sys_tem) is is_needed
 
 
 def test_histogram_is_needed_unknown():
     # non-supported systematic
-    with pytest.raises(
-        NotImplementedError, match="other systematics not yet implemented"
-    ):
+    with pytest.raises(ValueError, match="unknown systematics type: unknown"):
         configuration.histogram_is_needed({}, {}, {"Type": "unknown"}, "")
 
 
