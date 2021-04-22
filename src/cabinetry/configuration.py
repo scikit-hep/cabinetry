@@ -97,22 +97,28 @@ def _convert_setting_to_list(setting: Union[str, List[str]]) -> List[str]:
     return setting
 
 
-def sample_affected_by_modifier(
-    sample: Dict[str, Any], modifier: Dict[str, Any]
-) -> bool:
-    """Checks if a sample is affected by a given modifier (Systematic, NormFactor).
+def _x_contains_y(x: Dict[str, Any], y: Dict[str, Any], y_key: str) -> bool:
+    """Checks if object ``x`` contains ``y`` using property ``y_key`` of ``y``.
+
+    If ``y_key`` is not specified, ``x`` is assumed to contain ``y`` by default. Used
+    to check if regions contain samples/modifiers and if samples contain modifiers.
+    ``x`` is identified by its ``Name`` property, which must exist.
 
     Args:
-        sample (Dict[str, Any]): containing all sample information
-        modifier (Dict[str, Any]): containing all modifier information (a Systematic or
-            a NormFactor)
+        x (Dict[str, Any]): containing all relevant information: region or sample, must
+            have a ``Name`` property
+        y (Dict[str, Any]): containing all relevant information: sample or modifier
+        y_key (str): property of ``y`` to check
 
     Returns:
-        bool: True if sample is affected, False otherwise
+        bool: True if ``x`` contains ``y``, False otherwise
     """
-    affected_samples = _convert_setting_to_list(modifier["Samples"])
-    affected = sample["Name"] in affected_samples
-    return affected
+    # y_key setting of y is optional, default to empty list
+    matched_x_list = _convert_setting_to_list(y.get(y_key, []))
+    if matched_x_list and x["Name"] not in matched_x_list:
+        # only some x are allowed as specified in list, and current x does not match
+        return False
+    return True
 
 
 def region_contains_sample(region: Dict[str, Any], sample: Dict[str, Any]) -> bool:
@@ -128,12 +134,21 @@ def region_contains_sample(region: Dict[str, Any], sample: Dict[str, Any]) -> bo
     Returns:
         bool: True if region contains sample, False otherwise
     """
-    # "Regions" setting of samples is optional, default to empty list
-    regions_list_for_sample = _convert_setting_to_list(sample.get("Regions", []))
-    if regions_list_for_sample and region["Name"] not in regions_list_for_sample:
-        # sample only exists for some regions, and current region not in list
-        return False
-    return True
+    return _x_contains_y(region, sample, "Regions")
+
+
+def sample_contains_modifier(sample: Dict[str, Any], modifier: Dict[str, Any]) -> bool:
+    """Checks if a sample is affected by a given modifier (Systematic, NormFactor).
+
+    Args:
+        sample (Dict[str, Any]): containing all sample information
+        modifier (Dict[str, Any]): containing all modifier information (a Systematic or
+            a NormFactor)
+
+    Returns:
+        bool: True if sample is affected, False otherwise
+    """
+    return _x_contains_y(sample, modifier, "Samples")
 
 
 def histogram_is_needed(
@@ -180,7 +195,7 @@ def histogram_is_needed(
             elif systematic["Type"] == "NormPlusShape":
                 # for a variation defined via a template, a histogram is needed (if
                 # sample is affected)
-                histo_needed = sample_affected_by_modifier(sample, systematic)
+                histo_needed = sample_contains_modifier(sample, systematic)
                 # if symmetrization is specified for the template under consideration,
                 # a histogram is not needed (since it will later on be obtained via
                 # symmetrization)

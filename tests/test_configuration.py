@@ -102,8 +102,8 @@ def test__convert_setting_to_list(samples, converted):
         (({"Name": "Signal"}, {"Samples": "Background"}), False),
     ],
 )
-def test_sample_affected_by_modifier(sample_and_modifier, affected):
-    assert configuration.sample_affected_by_modifier(*sample_and_modifier) is affected
+def test_sample_contains_modifier(sample_and_modifier, affected):
+    assert configuration.sample_contains_modifier(*sample_and_modifier) is affected
 
 
 @pytest.mark.parametrize(
@@ -180,7 +180,7 @@ def test_region_contains_sample(region_and_sample, contained):
     ],
 )
 def test_histogram_is_needed(reg_sam_sys_tem, is_needed):
-    # could also mock sample_affected_by_modifier and region_contains_sample here
+    # could also mock sample_contains_modifier and region_contains_sample here
     reg, sam, sys, tem = reg_sam_sys_tem
     assert configuration.histogram_is_needed(*reg_sam_sys_tem) is is_needed
 
