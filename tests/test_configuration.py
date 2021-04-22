@@ -96,14 +96,17 @@ def test__convert_setting_to_list(samples, converted):
 
 
 @pytest.mark.parametrize(
-    "sample_and_modifier, affected",
+    "x_y_key, contained",
     [
-        (({"Name": "Signal"}, {"Samples": ["Signal", "Background"]}), True),
-        (({"Name": "Signal"}, {"Samples": "Background"}), False),
+        (({"Name": "abc"}, {}, "key"), True),
+        (({"Name": "abc"}, {"key": ["abc", "def"]}, "key"), True),
+        (({"Name": "abc"}, {"key": ["def"]}, "key"), False),
+        (({"Name": "abc"}, {"key": "abc"}, "key"), True),
+        (({"Name": "abc"}, {"key": "def"}, "key"), False),
     ],
 )
-def test_sample_contains_modifier(sample_and_modifier, affected):
-    assert configuration.sample_contains_modifier(*sample_and_modifier) is affected
+def test__x_contains_y(x_y_key, contained):
+    assert configuration._x_contains_y(*x_y_key) is contained
 
 
 @pytest.mark.parametrize(
@@ -116,6 +119,17 @@ def test_sample_contains_modifier(sample_and_modifier, affected):
 )
 def test_region_contains_sample(region_and_sample, contained):
     assert configuration.region_contains_sample(*region_and_sample) is contained
+
+
+@pytest.mark.parametrize(
+    "sample_and_modifier, contained",
+    [
+        (({"Name": "Signal"}, {"Samples": ["Signal", "Background"]}), True),
+        (({"Name": "Signal"}, {"Samples": "Background"}), False),
+    ],
+)
+def test_sample_contains_modifier(sample_and_modifier, contained):
+    assert configuration.sample_contains_modifier(*sample_and_modifier) is contained
 
 
 @pytest.mark.parametrize(
