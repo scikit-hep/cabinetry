@@ -152,10 +152,7 @@ def test_WorkspaceBuilder_get_NF_modifiers():
     # multiple NFs affect sample
     example_config = {
         "General": {"HistogramFolder": "path"},
-        "NormFactors": [
-            {"Name": "mu", "Samples": ["ABC", "DEF"]},
-            {"Name": "k", "Samples": ["DEF", "GHI"]},
-        ],
+        "NormFactors": [{"Name": "mu"}, {"Name": "k"}],
     }
     sample = {"Name": "DEF"}
     expected_modifier = [
@@ -192,7 +189,6 @@ def test_WorkspaceBuilder_get_sys_modifiers():
             {
                 "Name": "sys",
                 "Type": "Normalization",
-                "Samples": "Signal",
                 "Up": {"Normalization": 0.1},
                 "Down": {"Normalization": -0.05},
             }
@@ -211,9 +207,7 @@ def test_WorkspaceBuilder_get_sys_modifiers():
     # unsupported systematics type
     example_config_unsupported = {
         "General": {"HistogramFolder": "path"},
-        "Systematics": [
-            {"Name": "Normalization", "Type": "unknown", "Samples": "Signal"}
-        ],
+        "Systematics": [{"Name": "Normalization", "Type": "unknown"}],
     }
     ws_builder = workspace.WorkspaceBuilder(example_config_unsupported)
     with pytest.raises(

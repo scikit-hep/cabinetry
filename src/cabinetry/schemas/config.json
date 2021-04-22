@@ -175,14 +175,14 @@
             "$$target": "#/definitions/normfactor",
             "description": "a normalization factor affecting one or more samples",
             "type": "object",
-            "required": ["Name", "Samples"],
+            "required": ["Name"],
             "properties": {
                 "Name": {
                     "description": "name of the normalization factor",
                     "type": "string"
                 },
                 "Samples": {
-                    "description": "affected sample(s)",
+                    "description": "affected sample(s), defaults to all samples",
                     "$ref": "#/definitions/samples_setting"
                 },
                 "Nominal": {
@@ -208,15 +208,11 @@
             "$$target": "#/definitions/systematic",
             "description": "a systematic uncertainty",
             "type": "object",
-            "required": ["Name", "Samples", "Type", "Up", "Down"],
+            "required": ["Name", "Type", "Up", "Down"],
             "properties": {
                 "Name": {
                     "description": "name of the systematic uncertainty",
                     "type": "string"
-                },
-                "Samples": {
-                    "description": "affected sample(s)",
-                    "$ref": "#/definitions/samples_setting"
                 },
                 "Type": {
                     "description": "type of systematic uncertainty",
@@ -230,6 +226,10 @@
                 "Down": {
                     "description": "template for \"down\" variation",
                     "$ref": "#/definitions/template_setting"
+                },
+                "Samples": {
+                    "description": "affected sample(s), defaults to all samples",
+                    "$ref": "#/definitions/samples_setting"
                 },
                 "Smoothing": {
                     "description": "smoothing to apply",
@@ -347,7 +347,7 @@
                     "$ref": "#/definitions/regions_setting"
                 },
                 "Samples": {
-                    "description": "samples to apply smoothing to",
+                    "description": "sample(s) to apply smoothing to, defaults to all samples",
                     "$ref": "#/definitions/samples_setting"
                 }
             },

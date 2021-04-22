@@ -24,7 +24,7 @@ def test_validate():
         },
         "Regions": [{"Name": "", "Filter": "", "Variable": "", "Binning": [0, 1]}],
         "Samples": [{"Name": "", "Tree": "", "Data": True}],
-        "NormFactors": [{"Name": "", "Samples": ""}],
+        "NormFactors": [{"Name": ""}],
     }
     assert configuration.validate(config_valid)
 
@@ -38,7 +38,7 @@ def test_validate():
         },
         "Regions": [{"Name": "", "Filter": "", "Variable": "", "Binning": [0, 1]}],
         "Samples": [{"Name": "", "Tree": ""}],
-        "NormFactors": [{"Name": "", "Samples": ""}],
+        "NormFactors": [{"Name": ""}],
     }
     with pytest.raises(
         NotImplementedError, match="can only handle cases with exactly one data sample"
@@ -168,7 +168,6 @@ def test_sample_contains_modifier(sample_and_modifier, contained):
                 {"Name": "Signal"},
                 {
                     "Type": "NormPlusShape",
-                    "Samples": "Signal",
                     "Up": {"Symmetrize": True},
                 },
                 "Up",

@@ -218,7 +218,7 @@ def test_apply_to_all_templates():
         "Samples": [{"Name": "sample"}],
         "Systematics": [
             {"Name": "norm", "Type": "Normalization"},
-            {"Name": "var", "Type": "NormPlusShape", "Samples": "sample"},
+            {"Name": "var", "Type": "NormPlusShape"},
         ],
     }
 
@@ -235,7 +235,7 @@ def test_apply_to_all_templates():
         (
             {"Name": "test_region"},
             {"Name": "sample"},
-            {"Name": "var", "Type": "NormPlusShape", "Samples": "sample"},
+            {"Name": "var", "Type": "NormPlusShape"},
             "Up",
         ),
         {},
@@ -244,7 +244,7 @@ def test_apply_to_all_templates():
         (
             {"Name": "test_region"},
             {"Name": "sample"},
-            {"Name": "var", "Type": "NormPlusShape", "Samples": "sample"},
+            {"Name": "var", "Type": "NormPlusShape"},
             "Down",
         ),
         {},
@@ -262,12 +262,12 @@ def test_apply_to_all_templates():
     assert override_call_args[1] == (
         {"Name": "test_region"},
         {"Name": "sample"},
-        {"Name": "var", "Type": "NormPlusShape", "Samples": "sample"},
+        {"Name": "var", "Type": "NormPlusShape"},
         "Up",
     )
     assert override_call_args[2] == (
         {"Name": "test_region"},
         {"Name": "sample"},
-        {"Name": "var", "Type": "NormPlusShape", "Samples": "sample"},
+        {"Name": "var", "Type": "NormPlusShape"},
         "Down",
     )
