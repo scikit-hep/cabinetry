@@ -124,6 +124,7 @@ def test_region_contains_sample(region_and_sample, contained):
 @pytest.mark.parametrize(
     "sample_and_modifier, contained",
     [
+        (({"Name": "Signal"}, {}), True),
         (({"Name": "Signal"}, {"Samples": ["Signal", "Background"]}), True),
         (({"Name": "Signal"}, {"Samples": "Background"}), False),
     ],
@@ -141,12 +142,14 @@ def test_sample_contains_modifier(sample_and_modifier, contained):
         (({}, {"Data": True}, {"Name": "var"}, ""), False),
         # overall normalization variation
         (({}, {}, {"Type": "Normalization"}, ""), False),
-        # normalization + shape variation on affected sample
+        # normalization + shape variation
+        (({}, {"Name": "Signal"}, {"Type": "NormPlusShape"}, "Up"), True),
+        # normalization + shape variation on specified and affected sample
         (
             (
                 {},
                 {"Name": "Signal"},
-                {"Type": "NormPlusShape", "Samples": "Signal"},
+                {"Type": "NormPlusShape", "Samples": ["Signal", "Background"]},
                 "Up",
             ),
             True,
@@ -161,7 +164,7 @@ def test_sample_contains_modifier(sample_and_modifier, contained):
             ),
             False,
         ),
-        # non-needed template of systematic due to symmetrization
+        # template not needed due to symmetrization
         (
             (
                 {},
