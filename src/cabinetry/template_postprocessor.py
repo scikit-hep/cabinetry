@@ -70,19 +70,15 @@ def _get_smoothing_algorithm(
     if smoothing is None:
         return None
 
-    smoothing_regions = smoothing.get("Regions", False)
-    if smoothing_regions:
-        # if regions are specified, only smooth those regions
-        smoothing_regions = configuration._convert_setting_to_list(smoothing_regions)
-        if region["Name"] not in smoothing_regions:
-            return None
+    # check for region and sample restrictions specified for smoothing, apply to all
+    # regions and samples by default if no further specification is made
+    if not configuration._x_contains_y(region, smoothing, "Regions"):
+        # regions are specified and current region does not match, do not smooth
+        return None
 
-    smoothing_samples = smoothing.get("Samples", False)
-    if smoothing_samples:
-        # if samples are specified, only smooth those samples
-        smoothing_samples = configuration._convert_setting_to_list(smoothing_samples)
-        if sample["Name"] not in smoothing_samples:
-            return None
+    if not configuration._x_contains_y(sample, smoothing, "Samples"):
+        # samples are specified and current sample does not match, do not smooth
+        return None
 
     # smoothing algorithm needs to be applied
     smoothing_algorithm = smoothing["Algorithm"]

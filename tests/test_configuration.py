@@ -24,7 +24,7 @@ def test_validate():
         },
         "Regions": [{"Name": "", "Filter": "", "Variable": "", "Binning": [0, 1]}],
         "Samples": [{"Name": "", "Tree": "", "Data": True}],
-        "NormFactors": [{"Name": "", "Samples": ""}],
+        "NormFactors": [{"Name": ""}],
     }
     assert configuration.validate(config_valid)
 
@@ -38,7 +38,7 @@ def test_validate():
         },
         "Regions": [{"Name": "", "Filter": "", "Variable": "", "Binning": [0, 1]}],
         "Samples": [{"Name": "", "Tree": ""}],
-        "NormFactors": [{"Name": "", "Samples": ""}],
+        "NormFactors": [{"Name": ""}],
     }
     with pytest.raises(
         NotImplementedError, match="can only handle cases with exactly one data sample"
@@ -96,14 +96,17 @@ def test__convert_setting_to_list(samples, converted):
 
 
 @pytest.mark.parametrize(
-    "sample_and_modifier, affected",
+    "x_y_key, contained",
     [
-        (({"Name": "Signal"}, {"Samples": ["Signal", "Background"]}), True),
-        (({"Name": "Signal"}, {"Samples": "Background"}), False),
+        (({"Name": "abc"}, {}, "key"), True),
+        (({"Name": "abc"}, {"key": ["abc", "def"]}, "key"), True),
+        (({"Name": "abc"}, {"key": ["def"]}, "key"), False),
+        (({"Name": "abc"}, {"key": "abc"}, "key"), True),
+        (({"Name": "abc"}, {"key": "def"}, "key"), False),
     ],
 )
-def test_sample_affected_by_modifier(sample_and_modifier, affected):
-    assert configuration.sample_affected_by_modifier(*sample_and_modifier) is affected
+def test__x_contains_y(x_y_key, contained):
+    assert configuration._x_contains_y(*x_y_key) is contained
 
 
 @pytest.mark.parametrize(
@@ -119,6 +122,18 @@ def test_region_contains_sample(region_and_sample, contained):
 
 
 @pytest.mark.parametrize(
+    "sample_and_modifier, contained",
+    [
+        (({"Name": "Signal"}, {}), True),
+        (({"Name": "Signal"}, {"Samples": ["Signal", "Background"]}), True),
+        (({"Name": "Signal"}, {"Samples": "Background"}), False),
+    ],
+)
+def test_sample_contains_modifier(sample_and_modifier, contained):
+    assert configuration.sample_contains_modifier(*sample_and_modifier) is contained
+
+
+@pytest.mark.parametrize(
     "reg_sam_sys_tem, is_needed",
     [
         # nominal
@@ -127,12 +142,14 @@ def test_region_contains_sample(region_and_sample, contained):
         (({}, {"Data": True}, {"Name": "var"}, ""), False),
         # overall normalization variation
         (({}, {}, {"Type": "Normalization"}, ""), False),
-        # normalization + shape variation on affected sample
+        # normalization + shape variation
+        (({}, {"Name": "Signal"}, {"Type": "NormPlusShape"}, "Up"), True),
+        # normalization + shape variation on specified and affected sample
         (
             (
                 {},
                 {"Name": "Signal"},
-                {"Type": "NormPlusShape", "Samples": "Signal"},
+                {"Type": "NormPlusShape", "Samples": ["Signal", "Background"]},
                 "Up",
             ),
             True,
@@ -147,14 +164,13 @@ def test_region_contains_sample(region_and_sample, contained):
             ),
             False,
         ),
-        # non-needed template of systematic due to symmetrization
+        # template not needed due to symmetrization
         (
             (
                 {},
                 {"Name": "Signal"},
                 {
                     "Type": "NormPlusShape",
-                    "Samples": "Signal",
                     "Up": {"Symmetrize": True},
                 },
                 "Up",
@@ -180,7 +196,7 @@ def test_region_contains_sample(region_and_sample, contained):
     ],
 )
 def test_histogram_is_needed(reg_sam_sys_tem, is_needed):
-    # could also mock sample_affected_by_modifier and region_contains_sample here
+    # could also mock sample_contains_modifier and region_contains_sample here
     reg, sam, sys, tem = reg_sam_sys_tem
     assert configuration.histogram_is_needed(*reg_sam_sys_tem) is is_needed
 

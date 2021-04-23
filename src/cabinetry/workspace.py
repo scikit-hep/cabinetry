@@ -125,7 +125,7 @@ class WorkspaceBuilder:
         """
         modifiers = []
         for NormFactor in self.config["NormFactors"]:
-            if configuration.sample_affected_by_modifier(sample, NormFactor):
+            if configuration.sample_contains_modifier(sample, NormFactor):
                 log.debug(
                     f"adding NormFactor {NormFactor['Name']} to sample {sample['Name']}"
                 )
@@ -268,7 +268,7 @@ class WorkspaceBuilder:
         """
         modifiers = []
         for systematic in self.config.get("Systematics", []):
-            if configuration.sample_affected_by_modifier(sample, systematic):
+            if configuration.sample_contains_modifier(sample, systematic):
                 if systematic["Type"] == "Normalization":
                     # OverallSys (norm uncertainty with Gaussian constraint)
                     log.debug(
