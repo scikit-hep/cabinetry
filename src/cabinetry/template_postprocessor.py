@@ -70,14 +70,14 @@ def _get_smoothing_algorithm(
     if smoothing is None:
         return None
 
-    # check for limited regions and samples for which to apply smoothing, apply to all
+    # check for region and sample restrictions specified for smoothing, apply to all
     # regions and samples by default if no further specification is made
     if not configuration._x_contains_y(region, smoothing, "Regions"):
-        # limited regions are specified and current region does not match, do not smooth
+        # regions are specified and current region does not match, do not smooth
         return None
 
     if not configuration._x_contains_y(sample, smoothing, "Samples"):
-        # limited samples are specified and current sample does not match, do not smooth
+        # samples are specified and current sample does not match, do not smooth
         return None
 
     # smoothing algorithm needs to be applied
