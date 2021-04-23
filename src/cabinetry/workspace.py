@@ -114,8 +114,10 @@ class WorkspaceBuilder:
         histo_stdev = histogram.stdev.tolist()
         return histo_stdev
 
-    def get_NF_modifiers(self, sample: Dict[str, Any]) -> List[Dict[str, Any]]:
-        """Returns the list of NormFactor modifiers acting on a sample.
+    def get_NF_modifiers(
+        self, region: Dict[str, Any], sample: Dict[str, Any]
+    ) -> List[Dict[str, Any]]:
+        """Returns the list of NormFactor modifiers acting on a sample in a region.
 
         Args:
             sample (Dict[str, Any]): specific sample to get NormFactor modifiers for
@@ -124,13 +126,17 @@ class WorkspaceBuilder:
             List[Dict[str, Any]]: NormFactor modifiers for sample
         """
         modifiers = []
-        for NormFactor in self.config["NormFactors"]:
-            if configuration.sample_contains_modifier(sample, NormFactor):
+        for norm_factor in self.config["NormFactors"]:
+            # check that region and sample both do not exclude modifier
+            if configuration.region_contains_modifier(
+                region, norm_factor
+            ) and configuration.sample_contains_modifier(sample, norm_factor):
                 log.debug(
-                    f"adding NormFactor {NormFactor['Name']} to sample {sample['Name']}"
+                    f"adding NormFactor {norm_factor['Name']} to sample "
+                    f"{sample['Name']} in region {region['Name']}"
                 )
                 modifiers.append(
-                    {"data": None, "name": NormFactor["Name"], "type": "normfactor"}
+                    {"data": None, "name": norm_factor["Name"], "type": "normfactor"}
                 )
         return modifiers
 
@@ -254,7 +260,7 @@ class WorkspaceBuilder:
     def get_sys_modifiers(
         self, region: Dict[str, Any], sample: Dict[str, Any]
     ) -> List[Dict[str, Any]]:
-        """Returns the list of all systematic modifiers acting on a sample.
+        """Returns the list of all systematic modifiers acting on a sample in a region.
 
         Args:
             region (Dict[str, Any]): region considered
@@ -268,12 +274,15 @@ class WorkspaceBuilder:
         """
         modifiers = []
         for systematic in self.config.get("Systematics", []):
-            if configuration.sample_contains_modifier(sample, systematic):
+            # check that region and sample both do not exclude modifier
+            if configuration.region_contains_modifier(
+                region, systematic
+            ) and configuration.sample_contains_modifier(sample, systematic):
                 if systematic["Type"] == "Normalization":
                     # OverallSys (norm uncertainty with Gaussian constraint)
                     log.debug(
                         f"adding OverallSys {systematic['Name']} to sample"
-                        f" {sample['Name']}",
+                        f" {sample['Name']} in region {region['Name']}",
                     )
                     modifiers.append(self.get_Normalization_modifier(systematic))
                 elif systematic["Type"] == "NormPlusShape":
@@ -281,7 +290,7 @@ class WorkspaceBuilder:
                     # and a HistoSys for the shape variation
                     log.debug(
                         f"adding OverallSys and HistoSys {systematic['Name']} to sample"
-                        f" {sample['Name']}",
+                        f" {sample['Name']} in region {region['Name']}",
                     )
                     modifiers += self.get_NormPlusShape_modifiers(
                         region, sample, systematic
@@ -329,11 +338,12 @@ class WorkspaceBuilder:
                 gammas.update({"data": stat_unc})
                 modifiers.append(gammas)
 
-                # check if normfactor affect the sample and add modifiers as needed
-                nf_modifier_list = self.get_NF_modifiers(sample)
+                # modifiers can have region and sample dependence, which is checked
+                # check if normfactors affect sample in region, add modifiers as needed
+                nf_modifier_list = self.get_NF_modifiers(region, sample)
                 modifiers += nf_modifier_list
 
-                # check if systematic uncertainties affect the samples, add modifiers
+                # check if systematics affect sample in region, add modifiers as needed
                 sys_modifier_list = self.get_sys_modifiers(region, sample)
                 modifiers += sys_modifier_list
 
