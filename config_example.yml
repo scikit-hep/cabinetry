@@ -32,7 +32,6 @@ Systematics:
       Normalization: 0.05
     Down:
       Normalization: -0.05
-    Samples: ["Signal", "Background"]
     Type: "Normalization"
 
   - Name: "Modeling"
