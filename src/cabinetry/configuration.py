@@ -124,8 +124,8 @@ def _x_contains_y(x: Dict[str, Any], y: Dict[str, Any], y_key: str) -> bool:
 def region_contains_sample(region: Dict[str, Any], sample: Dict[str, Any]) -> bool:
     """Checks if a region contains a given sample.
 
-    A sample enters all regions by default, and the "Regions" property of a sample can
-    be used to specify a single region or list of regions that contain the sample.
+    A sample enters all regions by default, and its ``Regions`` property can be used to
+    specify a single region or list of regions that contain the sample.
 
     Args:
         region (Dict[str, Any]): containing all region information
@@ -139,6 +139,9 @@ def region_contains_sample(region: Dict[str, Any], sample: Dict[str, Any]) -> bo
 
 def sample_contains_modifier(sample: Dict[str, Any], modifier: Dict[str, Any]) -> bool:
     """Checks if a sample is affected by a given modifier (Systematic, NormFactor).
+
+    A modifier affects all samples by default, and its ``Samples`` property can be used
+    to specify a single sample or list of samples on which the modifier acts.
 
     Args:
         sample (Dict[str, Any]): containing all sample information
