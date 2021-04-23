@@ -102,11 +102,11 @@ def _x_contains_y(x: Dict[str, Any], y: Dict[str, Any], y_key: str) -> bool:
 
     If ``y_key`` is not specified, ``x`` is assumed to contain ``y`` by default. Used
     to check if regions contain samples/modifiers and if samples contain modifiers.
-    ``x`` is identified by its ``Name`` property, which must exist.
+    ``x`` is identified by its "Name" property, which must exist.
 
     Args:
         x (Dict[str, Any]): containing all relevant information: region or sample, must
-            have a ``Name`` property
+            have a "Name" property
         y (Dict[str, Any]): containing all relevant information: sample or modifier
         y_key (str): property of ``y`` to check
 
@@ -124,7 +124,7 @@ def _x_contains_y(x: Dict[str, Any], y: Dict[str, Any], y_key: str) -> bool:
 def region_contains_sample(region: Dict[str, Any], sample: Dict[str, Any]) -> bool:
     """Checks if a region contains a given sample.
 
-    A sample enters all regions by default, and its ``Regions`` property can be used to
+    A sample enters all regions by default, and its "Regions" property can be used to
     specify a single region or list of regions that contain the sample.
 
     Args:
@@ -140,8 +140,8 @@ def region_contains_sample(region: Dict[str, Any], sample: Dict[str, Any]) -> bo
 def sample_contains_modifier(sample: Dict[str, Any], modifier: Dict[str, Any]) -> bool:
     """Checks if a sample is affected by a given modifier (Systematic, NormFactor).
 
-    A modifier affects all samples by default, and its ``Samples`` property can be used
-    to specify a single sample or list of samples on which the modifier acts.
+    A modifier affects all samples by default, and its "Samples" property can be used to
+    specify a single sample or list of samples on which the modifier acts.
 
     Args:
         sample (Dict[str, Any]): containing all sample information
