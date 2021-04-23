@@ -215,8 +215,9 @@ def histogram_is_needed(
                 histo_needed = False
             elif systematic["Type"] == "NormPlusShape":
                 # for a variation defined via a template, a histogram is needed (if
-                # sample is affected)
-                histo_needed = sample_contains_modifier(sample, systematic)
+                # sample is affected in region)
+                histo_needed = region_contains_modifier(region, systematic)
+                histo_needed &= sample_contains_modifier(sample, systematic)
                 # if symmetrization is specified for the template under consideration,
                 # a histogram is not needed (since it will later on be obtained via
                 # symmetrization)

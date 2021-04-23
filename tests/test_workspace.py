@@ -135,19 +135,21 @@ def test_WorkspaceBuilder_get_unc_for_sample(mock_histogram):
 
 
 def test_WorkspaceBuilder_get_NF_modifiers():
+    # could mock region_contains_modifier / sample_contains_modifier
     # one NF affects sample
     example_config = {
         "General": {"HistogramFolder": "path"},
         "NormFactors": [{"Name": "mu", "Samples": ["ABC", "DEF"]}],
     }
+    region = {"Name": "SR"}
     sample = {"Name": "DEF"}
     expected_modifier = [{"data": None, "name": "mu", "type": "normfactor"}]
     ws_builder = workspace.WorkspaceBuilder(example_config)
-    assert ws_builder.get_NF_modifiers(sample) == expected_modifier
+    assert ws_builder.get_NF_modifiers(region, sample) == expected_modifier
 
     # no NF affects sample
     sample = {"Name": "GHI"}
-    assert ws_builder.get_NF_modifiers(sample) == []
+    assert ws_builder.get_NF_modifiers(region, sample) == []
 
     # multiple NFs affect sample
     example_config = {
@@ -160,7 +162,7 @@ def test_WorkspaceBuilder_get_NF_modifiers():
         {"data": None, "name": "k", "type": "normfactor"},
     ]
     ws_builder = workspace.WorkspaceBuilder(example_config)
-    assert ws_builder.get_NF_modifiers(sample) == expected_modifier
+    assert ws_builder.get_NF_modifiers(region, sample) == expected_modifier
 
 
 def test_WorkspaceBuilder_get_Normalization_modifier():
@@ -183,6 +185,7 @@ def test_WorkspaceBuilder_get_NormPlusShape_modifiers():
 
 
 def test_WorkspaceBuilder_get_sys_modifiers():
+    # could mock region_contains_modifier / sample_contains_modifier
     example_config = {
         "General": {"HistogramFolder": "path"},
         "Systematics": [
@@ -194,8 +197,8 @@ def test_WorkspaceBuilder_get_sys_modifiers():
             }
         ],
     }
+    region = {"Name": "SR"}
     sample = {"Name": "Signal"}
-    region = {}
     # needs to be expanded to include histogram loading
     ws_builder = workspace.WorkspaceBuilder(example_config)
     modifiers = ws_builder.get_sys_modifiers(region, sample)
