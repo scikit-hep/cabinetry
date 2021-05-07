@@ -120,6 +120,7 @@ class WorkspaceBuilder:
         """Returns the list of NormFactor modifiers acting on a sample in a region.
 
         Args:
+            region (Dict[str, Any]): specific region to get NormFactor modifiers for
             sample (Dict[str, Any]): specific sample to get NormFactor modifiers for
 
         Returns:
