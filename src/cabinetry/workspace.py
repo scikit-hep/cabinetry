@@ -128,7 +128,7 @@ class WorkspaceBuilder:
         """
         modifiers = []
         for norm_factor in self.config["NormFactors"]:
-            # check that region and sample both do not exclude modifier
+            # check that region and sample are both not excluded by modifier
             if configuration.region_contains_modifier(
                 region, norm_factor
             ) and configuration.sample_contains_modifier(sample, norm_factor):
