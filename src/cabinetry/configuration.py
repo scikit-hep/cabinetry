@@ -137,6 +137,24 @@ def region_contains_sample(region: Dict[str, Any], sample: Dict[str, Any]) -> bo
     return _x_contains_y(region, sample, "Regions")
 
 
+def region_contains_modifier(region: Dict[str, Any], modifier: Dict[str, Any]) -> bool:
+    """Checks if a region contains a given modifier (Systematic, NormFactor).
+
+    A modifier affects all regions by default, and its "Regions" property can be used to
+    specify a single region or list of regions that contain the modifier. This does not
+    check whether the modifier only acts on samples which the region does not contain.
+
+    Args:
+        region (Dict[str, Any]): containing all region information
+        modifier (Dict[str, Any]): containing all modifier information (a Systematic or
+            a NormFactor)
+
+    Returns:
+        bool: True if region contains modifier, False otherwise
+    """
+    return _x_contains_y(region, modifier, "Regions")
+
+
 def sample_contains_modifier(sample: Dict[str, Any], modifier: Dict[str, Any]) -> bool:
     """Checks if a sample is affected by a given modifier (Systematic, NormFactor).
 
@@ -197,8 +215,9 @@ def histogram_is_needed(
                 histo_needed = False
             elif systematic["Type"] == "NormPlusShape":
                 # for a variation defined via a template, a histogram is needed (if
-                # sample is affected)
-                histo_needed = sample_contains_modifier(sample, systematic)
+                # sample is affected in region)
+                histo_needed = region_contains_modifier(region, systematic)
+                histo_needed &= sample_contains_modifier(sample, systematic)
                 # if symmetrization is specified for the template under consideration,
                 # a histogram is not needed (since it will later on be obtained via
                 # symmetrization)

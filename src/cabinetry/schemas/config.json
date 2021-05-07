@@ -181,6 +181,10 @@
                     "description": "name of the normalization factor",
                     "type": "string"
                 },
+                "Regions": {
+                    "description": "region(s) that contain the normfactor, defaults to all regions",
+                    "$ref": "#/definitions/regions_setting"
+                },
                 "Samples": {
                     "description": "affected sample(s), defaults to all samples",
                     "$ref": "#/definitions/samples_setting"
@@ -226,6 +230,10 @@
                 "Down": {
                     "description": "template for \"down\" variation",
                     "$ref": "#/definitions/template_setting"
+                },
+                "Regions": {
+                    "description": "region(s) that contain the systematic, defaults to all regions",
+                    "$ref": "#/definitions/regions_setting"
                 },
                 "Samples": {
                     "description": "affected sample(s), defaults to all samples",

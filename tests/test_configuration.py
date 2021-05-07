@@ -122,6 +122,18 @@ def test_region_contains_sample(region_and_sample, contained):
 
 
 @pytest.mark.parametrize(
+    "region_and_modifier, contained",
+    [
+        (({"Name": "CR"}, {}), True),
+        (({"Name": "SR"}, {"Regions": ["SR", "CR"]}), True),
+        (({"Name": "CR"}, {"Regions": "SR"}), False),
+    ],
+)
+def test_region_contains_modifier(region_and_modifier, contained):
+    assert configuration.region_contains_modifier(*region_and_modifier) is contained
+
+
+@pytest.mark.parametrize(
     "sample_and_modifier, contained",
     [
         (({"Name": "Signal"}, {}), True),
@@ -192,11 +204,50 @@ def test_sample_contains_modifier(sample_and_modifier, contained):
             True,
         ),
         # region does not contain sample
-        (({"Name": "CR"}, {"Name": "Signal", "Regions": "SR"}, {}, "Nominal"), False),
+        (
+            (
+                {"Name": "CR"},
+                {"Name": "Signal", "Regions": "SR"},
+                {"Type": "NormPlusShape"},
+                "Nominal",
+            ),
+            False,
+        ),
+        # region does contain sample
+        (
+            (
+                {"Name": "CR"},
+                {"Name": "Signal", "Regions": "CR"},
+                {"Type": "NormPlusShape"},
+                "Nominal",
+            ),
+            True,
+        ),
+        # region does not contain modifier
+        (
+            (
+                {"Name": "CR"},
+                {"Name": "Signal"},
+                {"Type": "NormPlusShape", "Regions": "SR"},
+                "Up",
+            ),
+            False,
+        ),
+        # region does contain modifier
+        (
+            (
+                {"Name": "CR"},
+                {"Name": "Signal"},
+                {"Type": "NormPlusShape", "Regions": "CR"},
+                "Up",
+            ),
+            True,
+        ),
     ],
 )
 def test_histogram_is_needed(reg_sam_sys_tem, is_needed):
-    # could also mock sample_contains_modifier and region_contains_sample here
+    # could also mock region_contains_sample, region_contains_modifier, and
+    # sample_contains_modifier
     reg, sam, sys, tem = reg_sam_sys_tem
     assert configuration.histogram_is_needed(*reg_sam_sys_tem) is is_needed
 
