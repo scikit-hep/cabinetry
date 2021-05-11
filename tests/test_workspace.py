@@ -293,7 +293,7 @@ def test_WorkspaceBuilder_get_sys_modifiers(mock_norm, mock_norm_shape):
         [(region, sample, example_config["Systematics"][1]), {}]
     ]
 
-    # # one systematic not present in region
+    # one systematic not present in region
     example_config_region_mismatch = copy.deepcopy(example_config)
     example_config_region_mismatch["Systematics"][0].update({"Regions": "CR"})
     ws_builder = workspace.WorkspaceBuilder(example_config_region_mismatch)
