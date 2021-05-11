@@ -208,11 +208,14 @@ def test_Histogram_validate(caplog, example_histograms):
 
 
 def test_Histogram_normalize_to_yield(example_histograms):
+    # requires boost_histogram >= 1.0.2 for correct stdev scaling, but this feature is
+    # not currently needed in cabinetry
     hist = histo.Histogram.from_arrays(*example_histograms.empty_bin())
     var_hist = histo.Histogram.from_arrays(*example_histograms.normal())
     factor = var_hist.normalize_to_yield(hist)
     assert factor == 3.0
     np.testing.assert_equal(var_hist.yields, np.asarray([1 / 3, 2 / 3]))
+    assert np.allclose(var_hist.stdev, np.asarray([0.1 / 3, 0.2 / 3]))
 
 
 def test_build_name():
