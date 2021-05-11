@@ -193,8 +193,50 @@ def test_WorkspaceBuilder_get_Normalization_modifier():
     assert ws_builder.get_Normalization_modifier(systematic) == expected_modifier
 
 
-def test_WorkspaceBuilder_get_NormPlusShape_modifiers():
-    ...
+@mock.patch(
+    "cabinetry.workspace.histo.Histogram.from_config",
+    side_effect=[
+        # without symmetrization: up, nominal, down
+        histo.Histogram.from_arrays([0, 1, 2], [26.0, 24.0], [0.1, 0.1]),
+        histo.Histogram.from_arrays([0, 1, 2], [20.0, 20.0], [0.1, 0.1]),
+        histo.Histogram.from_arrays([0, 1, 2], [8.0, 12.0], [0.1, 0.1]),
+        # for test of symmetrization: up and nominal
+        histo.Histogram.from_arrays([0, 1, 2], [26.0, 24.0], [0.1, 0.1]),
+        histo.Histogram.from_arrays([0, 1, 2], [20.0, 20.0], [0.1, 0.1]),
+    ],
+)
+def test_WorkspaceBuilder_get_NormPlusShape_modifiers(mock_histogram):
+    # could mock Histogram.normalize_to_yield
+    # up: 26, 24 (1.25*nom)
+    # nominal: 20, 20
+    # down: 8, 12 (0.5*nom)
+    example_config = {"General": {"HistogramFolder": "path"}}
+    ws_builder = workspace.WorkspaceBuilder(example_config)
+    region = {"Name": "SR"}
+    sample = {"Name": "Signal"}
+    systematic = {"Name": "sys", "Up": {}, "Down": {}}
+    # no symmetrization
+    modifiers = ws_builder.get_NormPlusShape_modifiers(region, sample, systematic)
+    assert modifiers == [
+        {"name": "sys", "type": "normsys", "data": {"hi": 1.25, "lo": 0.5}},
+        {
+            "name": "sys",
+            "type": "histosys",
+            "data": {"hi_data": [20.8, 19.2], "lo_data": [16.0, 24.0]},
+        },
+    ]
+
+    # down template via symmetrized up template
+    systematic = {"Name": "sys", "Up": {}, "Down": {"Symmetrize": True}}
+    modifiers = ws_builder.get_NormPlusShape_modifiers(region, sample, systematic)
+    assert modifiers == [
+        {"name": "sys", "type": "normsys", "data": {"hi": 1.25, "lo": 0.75}},
+        {
+            "name": "sys",
+            "type": "histosys",
+            "data": {"hi_data": [20.8, 19.2], "lo_data": [19.2, 20.8]},
+        },
+    ]
 
 
 @mock.patch(
