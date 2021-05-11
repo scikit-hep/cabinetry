@@ -1,3 +1,4 @@
+import copy
 import pathlib
 from unittest import mock
 
@@ -192,45 +193,120 @@ def test_WorkspaceBuilder_get_Normalization_modifier():
     assert ws_builder.get_Normalization_modifier(systematic) == expected_modifier
 
 
-def test_WorkspaceBuilder_get_NormPlusShape_modifiers():
-    ...
+@mock.patch(
+    "cabinetry.workspace.histo.Histogram.from_config",
+    side_effect=[
+        # without symmetrization: up, nominal, down
+        histo.Histogram.from_arrays([0, 1, 2], [26.0, 24.0], [0.1, 0.1]),
+        histo.Histogram.from_arrays([0, 1, 2], [20.0, 20.0], [0.1, 0.1]),
+        histo.Histogram.from_arrays([0, 1, 2], [8.0, 12.0], [0.1, 0.1]),
+        # for test of symmetrization: up and nominal
+        histo.Histogram.from_arrays([0, 1, 2], [26.0, 24.0], [0.1, 0.1]),
+        histo.Histogram.from_arrays([0, 1, 2], [20.0, 20.0], [0.1, 0.1]),
+    ],
+)
+def test_WorkspaceBuilder_get_NormPlusShape_modifiers(mock_histogram):
+    # could mock Histogram.normalize_to_yield
+    # up: 26, 24 (1.25*nom)
+    # nominal: 20, 20
+    # down: 8, 12 (0.5*nom)
+    example_config = {"General": {"HistogramFolder": "path"}}
+    ws_builder = workspace.WorkspaceBuilder(example_config)
+    region = {"Name": "SR"}
+    sample = {"Name": "Signal"}
+    systematic = {"Name": "sys", "Up": {}, "Down": {}}
+    # no symmetrization
+    modifiers = ws_builder.get_NormPlusShape_modifiers(region, sample, systematic)
+    assert modifiers == [
+        {"name": "sys", "type": "normsys", "data": {"hi": 1.25, "lo": 0.5}},
+        {
+            "name": "sys",
+            "type": "histosys",
+            "data": {"hi_data": [20.8, 19.2], "lo_data": [16.0, 24.0]},
+        },
+    ]
+    assert mock_histogram.call_args_list == [
+        (
+            (pathlib.Path("path"), region, sample, systematic),
+            {"modified": True, "template": "Up"},
+        ),
+        (
+            (pathlib.Path("path"), region, sample, {"Name": "Nominal"}),
+            {"modified": True},
+        ),
+        (
+            (pathlib.Path("path"), region, sample, systematic),
+            {"modified": True, "template": "Down"},
+        ),
+    ]
+
+    # down template via symmetrized up template
+    systematic = {"Name": "sys", "Up": {}, "Down": {"Symmetrize": True}}
+    modifiers = ws_builder.get_NormPlusShape_modifiers(region, sample, systematic)
+    assert modifiers == [
+        {"name": "sys", "type": "normsys", "data": {"hi": 1.25, "lo": 0.75}},
+        {
+            "name": "sys",
+            "type": "histosys",
+            "data": {"hi_data": [20.8, 19.2], "lo_data": [19.2, 20.8]},
+        },
+    ]
+    assert mock_histogram.call_args_list[3:] == [
+        (
+            (pathlib.Path("path"), region, sample, systematic),
+            {"modified": True, "template": "Up"},
+        ),
+        (
+            (pathlib.Path("path"), region, sample, {"Name": "Nominal"}),
+            {"modified": True},
+        ),
+    ]
 
 
-def test_WorkspaceBuilder_get_sys_modifiers():
-    # should mock get_Normalization_modifier and especially get_NormPlusShape_modifiers
+@mock.patch(
+    "cabinetry.workspace.WorkspaceBuilder.get_NormPlusShape_modifiers",
+    return_value=[{"mock": "norm"}, {"mock": "shape"}],
+)
+@mock.patch(
+    "cabinetry.workspace.WorkspaceBuilder.get_Normalization_modifier",
+    return_value={"mock": "normsys"},
+)
+def test_WorkspaceBuilder_get_sys_modifiers(mock_norm, mock_norm_shape):
     # could mock region_contains_modifier / sample_contains_modifier
     example_config = {
         "General": {"HistogramFolder": "path"},
         "Systematics": [
-            {
-                "Name": "sys",
-                "Type": "Normalization",
-                "Up": {"Normalization": 0.1},
-                "Down": {"Normalization": -0.05},
-            }
+            {"Name": "norm", "Type": "Normalization"},
+            {"Name": "norm_shape", "Type": "NormPlusShape"},
         ],
     }
     region = {"Name": "SR"}
     sample = {"Name": "Signal"}
-    # needs to be expanded to include histogram loading
     ws_builder = workspace.WorkspaceBuilder(example_config)
-    modifiers = ws_builder.get_sys_modifiers(region, sample)
-    expected_modifiers = [
-        {"name": "sys", "type": "normsys", "data": {"hi": 1.1, "lo": 0.95}}
+    assert ws_builder.get_sys_modifiers(region, sample) == [
+        {"mock": "normsys"},
+        {"mock": "norm"},
+        {"mock": "shape"},
     ]
-    assert modifiers == expected_modifiers
+    assert mock_norm.call_args_list == [[(example_config["Systematics"][0],), {}]]
+    assert mock_norm_shape.call_args_list == [
+        [(region, sample, example_config["Systematics"][1]), {}]
+    ]
 
-    # systematic not present in region
-    example_config_region_mismatch = example_config.copy()
+    # one systematic not present in region
+    example_config_region_mismatch = copy.deepcopy(example_config)
     example_config_region_mismatch["Systematics"][0].update({"Regions": "CR"})
     ws_builder = workspace.WorkspaceBuilder(example_config_region_mismatch)
-    assert ws_builder.get_sys_modifiers(region, sample) == []
+    assert ws_builder.get_sys_modifiers(region, sample) == [
+        {"mock": "norm"},
+        {"mock": "shape"},
+    ]
 
-    # systematic not present in sample
-    example_config_sample_mismatch = example_config.copy()
-    example_config_sample_mismatch["Systematics"][0].update({"Samples": "Background"})
+    # one systematic not present in sample
+    example_config_sample_mismatch = copy.deepcopy(example_config)
+    example_config_sample_mismatch["Systematics"][1].update({"Samples": "Background"})
     ws_builder = workspace.WorkspaceBuilder(example_config_sample_mismatch)
-    assert ws_builder.get_sys_modifiers(region, sample) == []
+    assert ws_builder.get_sys_modifiers(region, sample) == [{"mock": "normsys"}]
 
     # unsupported systematics type
     example_config_unsupported = {
@@ -243,9 +319,6 @@ def test_WorkspaceBuilder_get_sys_modifiers():
     ):
         ws_builder.get_sys_modifiers(region, sample)
 
-    # need an extra test for NormPlusShape
-    ...
-
 
 @mock.patch(
     "cabinetry.workspace.WorkspaceBuilder.get_unc_for_sample", return_value=[0.1, 0.1]
@@ -256,6 +329,7 @@ def test_WorkspaceBuilder_get_sys_modifiers():
 )
 @mock.patch("cabinetry.configuration.region_contains_sample", side_effect=[True, False])
 def test_WorkspaceBuilder_get_channels(mock_contains, mock_get_yield, mock_get_unc):
+    # should mock get_NF_modifiers / get_sys_modifiers
     example_config = {
         "General": {"HistogramFolder": "path"},
         "Regions": [{"Name": "region_1"}],
@@ -406,6 +480,7 @@ def test_WorkspaceBuilder_get_measurement():
     side_effect=[[1.0, 2.0], [5.0], [3.0]],
 )
 def test_WorkspaceBuilder_get_observations(mock_get_yield):
+    # could mock _get_data_sample
     # create observations list from config
     example_config = {
         "General": {"HistogramFolder": "path"},
