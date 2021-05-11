@@ -225,6 +225,20 @@ def test_WorkspaceBuilder_get_NormPlusShape_modifiers(mock_histogram):
             "data": {"hi_data": [20.8, 19.2], "lo_data": [16.0, 24.0]},
         },
     ]
+    assert mock_histogram.call_args_list == [
+        (
+            (pathlib.Path("path"), region, sample, systematic),
+            {"modified": True, "template": "Up"},
+        ),
+        (
+            (pathlib.Path("path"), region, sample, {"Name": "Nominal"}),
+            {"modified": True},
+        ),
+        (
+            (pathlib.Path("path"), region, sample, systematic),
+            {"modified": True, "template": "Down"},
+        ),
+    ]
 
     # down template via symmetrized up template
     systematic = {"Name": "sys", "Up": {}, "Down": {"Symmetrize": True}}
@@ -236,6 +250,16 @@ def test_WorkspaceBuilder_get_NormPlusShape_modifiers(mock_histogram):
             "type": "histosys",
             "data": {"hi_data": [20.8, 19.2], "lo_data": [19.2, 20.8]},
         },
+    ]
+    assert mock_histogram.call_args_list[3:] == [
+        (
+            (pathlib.Path("path"), region, sample, systematic),
+            {"modified": True, "template": "Up"},
+        ),
+        (
+            (pathlib.Path("path"), region, sample, {"Name": "Nominal"}),
+            {"modified": True},
+        ),
     ]
 
 
