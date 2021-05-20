@@ -230,8 +230,8 @@ class Histogram(bh.Histogram, family=cabinetry):
         target_integrated_yield = sum(reference_histogram.yields)
         current_integrated_yield = sum(self.yields)
         normalization_ratio = current_integrated_yield / target_integrated_yield
-        # update integrated yield to match target
-        self.view().value /= normalization_ratio  # type: ignore
+        # scale integrated yield to match target (also scale stdev accordingly)
+        self /= normalization_ratio
         return normalization_ratio
 
 
