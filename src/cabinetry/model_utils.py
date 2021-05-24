@@ -75,9 +75,9 @@ def build_Asimov_data(model: pyhf.Model, with_aux: bool = True) -> List[float]:
     Returns:
         List[float]: the Asimov dataset
     """
-    asimov_data = model.expected_data(
-        get_asimov_parameters(model), include_auxdata=with_aux
-    ).tolist()
+    asimov_data = pyhf.tensorlib.tolist(
+        model.expected_data(get_asimov_parameters(model), include_auxdata=with_aux)
+    )
     return asimov_data
 
 
@@ -220,14 +220,18 @@ def calculate_stdev(
         down_pars[i_par] -= uncertainty[i_par]
 
         # total model distribution with this parameter varied up
-        up_combined = model.expected_data(up_pars, include_auxdata=False)
+        up_combined = pyhf.tensorlib.to_numpy(
+            model.expected_data(up_pars, include_auxdata=False)
+        )
         up_yields = np.split(up_combined, region_split_indices)
         # append list of yields summed per channel
         up_yields += [np.asarray([sum(chan_yields)]) for chan_yields in up_yields]
         up_variations.append(up_yields)
 
         # total model distribution with this parameter varied down
-        down_combined = model.expected_data(down_pars, include_auxdata=False)
+        down_combined = pyhf.tensorlib.to_numpy(
+            model.expected_data(down_pars, include_auxdata=False)
+        )
         down_yields = np.split(down_combined, region_split_indices)
         # append list of yields summed per channel
         down_yields += [np.asarray([sum(chan_yields)]) for chan_yields in down_yields]

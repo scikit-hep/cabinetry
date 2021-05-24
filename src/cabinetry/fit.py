@@ -154,7 +154,7 @@ def _fit_model_pyhf(
     Returns:
         FitResults: object storing relevant fit results
     """
-    pyhf.set_backend("numpy", pyhf.optimize.minuit_optimizer(verbose=1))
+    pyhf.set_backend(pyhf.tensorlib, pyhf.optimize.minuit_optimizer(verbose=1))
 
     result, result_obj = pyhf.infer.mle.fit(
         data,
@@ -166,8 +166,8 @@ def _fit_model_pyhf(
     )
     log.info(f"MINUIT status:\n{result_obj.minuit.fmin}")
 
-    bestfit = result[:, 0]
-    uncertainty = result[:, 1]
+    bestfit = pyhf.tensorlib.to_numpy(result[:, 0])
+    uncertainty = pyhf.tensorlib.to_numpy(result[:, 1])
     labels = model_utils.get_parameter_names(model)
     corr_mat = result_obj.hess_inv.correlation()
     best_twice_nll = float(result_obj.fun)  # convert 0-dim np.ndarray to float
@@ -215,7 +215,7 @@ def _fit_model_custom(
     Returns:
         FitResults: object storing relevant fit results
     """
-    pyhf.set_backend("numpy", pyhf.optimize.minuit_optimizer(verbose=1))
+    pyhf.set_backend(pyhf.tensorlib, pyhf.optimize.minuit_optimizer(verbose=1))
 
     # use init_pars provided in function argument if they exist, else use default
     init_pars = init_pars or model.config.suggested_init()
@@ -364,15 +364,19 @@ def _goodness_of_fit(
     if model.config.nauxdata > 0:
         main_data, aux_data = model.fullpdf_tv.split(pyhf.tensorlib.astensor(data))
         # constraint term: log Gaussian(aux_data|parameters) etc.
-        constraint_ll = model.constraint_logpdf(
-            aux_data, pyhf.tensorlib.astensor(model.config.suggested_init())
+        constraint_ll = pyhf.tensorlib.to_numpy(
+            model.constraint_logpdf(
+                aux_data, pyhf.tensorlib.astensor(model.config.suggested_init())
+            )
         )
     else:
         # no auxiliary data, so no constraint terms present
         main_data = pyhf.tensorlib.astensor(data)
         constraint_ll = 0.0
     # Poisson term: log Poisson(data|lambda=data), sum is over log likelihood of bins
-    poisson_ll = sum(pyhf.tensorlib.poisson_dist(main_data).log_prob(main_data))
+    poisson_ll = pyhf.tensorlib.to_numpy(
+        sum(pyhf.tensorlib.poisson_dist(main_data).log_prob(main_data))
+    )
     saturated_nll = -(poisson_ll + constraint_ll)  # saturated likelihood
 
     log.info("calculating goodness-of-fit")
@@ -648,7 +652,7 @@ def limit(
     Returns:
         LimitResults: observed and expected limits, CLs values, and scanned points
     """
-    pyhf.set_backend("numpy", pyhf.optimize.minuit_optimizer(verbose=1))
+    pyhf.set_backend(pyhf.tensorlib, pyhf.optimize.minuit_optimizer(verbose=1))
 
     log.info(f"calculating upper limit for {model.config.poi_name}")
 
@@ -826,7 +830,7 @@ def significance(model: pyhf.pdf.Model, data: List[float]) -> SignificanceResult
         model (pyhf.pdf.Model): model to use in fits
         data (List[float]): data (including auxdata) the model is fit to
     """
-    pyhf.set_backend("numpy", pyhf.optimize.minuit_optimizer(verbose=1))
+    pyhf.set_backend(pyhf.tensorlib, pyhf.optimize.minuit_optimizer(verbose=1))
 
     log.info("calculating discovery significance")
     obs_p_val, exp_p_val = pyhf.infer.hypotest(
