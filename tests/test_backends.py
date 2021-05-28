@@ -36,8 +36,8 @@ def test_backend_integration(backend, reset_backend):
         model, data, minos="mu", goodness_of_fit=True, custom_fit=True
     )
     assert np.allclose(fit_results_1.bestfit, fit_results_2.bestfit)
-    assert np.allclose(fit_results_1.uncertainty, fit_results_2.uncertainty, rtol=0.001)
-    assert np.allclose(fit_results_1.corr_mat, fit_results_2.corr_mat, rtol=0.001)
+    assert np.allclose(fit_results_1.uncertainty, fit_results_2.uncertainty, rtol=0.005)
+    assert np.allclose(fit_results_1.corr_mat, fit_results_2.corr_mat, rtol=0.005)
     assert np.allclose(fit_results_1.best_twice_nll, fit_results_2.best_twice_nll)
     assert np.allclose(fit_results_1.goodness_of_fit, fit_results_2.goodness_of_fit)
 
