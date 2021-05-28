@@ -1,5 +1,5 @@
 import logging
-from typing import Dict, List, NamedTuple, Optional, Tuple, Union
+from typing import Any, Dict, List, NamedTuple, Optional, Tuple, Union
 
 import iminuit
 import numpy as np
@@ -229,7 +229,18 @@ def _fit_model_custom(
     # this will cause the associated parameter uncertainties to be 0 post-fit
     step_size = [0.1 if not fix_pars[i_par] else 0.0 for i_par in range(len(init_pars))]
 
-    def twice_nll_func(pars: np.ndarray) -> float:
+    def twice_nll_func(pars: np.ndarray) -> Any:
+        """The objective for minimization: twice the negative log-likelihood.
+
+        The return value is float-like, but not always a float. The actual type depends
+        on the active ``pyhf`` backend.
+
+        Args:
+            pars (np.ndarray): parameter values at which the NLL is evaluated
+
+        Returns:
+            Any: twice the negative log-likelihood
+        """
         twice_nll = -2 * model.logpdf(pars, data)
         return twice_nll[0]
 

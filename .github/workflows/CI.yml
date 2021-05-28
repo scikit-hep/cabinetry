@@ -56,7 +56,7 @@ jobs:
       if: matrix.python-version != 3.7
       run: |
         sudo apt-get install ghostscript  # for pdf comparison
-        pytest
+        pytest --runslow
     - name: Upload coverage to codecov
       if: matrix.python-version == 3.7
       uses: codecov/codecov-action@v1
