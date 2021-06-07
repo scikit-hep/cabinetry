@@ -34,3 +34,7 @@ docs/_build
 
 # reference for tests
 !tests/contrib/reference/*pdf
+
+# virtualenv
+venv/
+.env/
