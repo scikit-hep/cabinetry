@@ -38,3 +38,6 @@ docs/_build
 # virtualenv
 venv/
 .env/
+
+# jupyter
+.ipynb_checkpoints
