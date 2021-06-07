@@ -57,6 +57,7 @@ jobs:
       if: matrix.python-version != 3.7
       run: |
         sudo apt-get install ghostscript  # for pdf comparison
+        python -m pip install .[test]  # should downgrade numpy again for tensorflow compatibility
         pytest --runslow
     - name: Upload coverage to codecov
       if: matrix.python-version == 3.7
