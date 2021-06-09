@@ -49,12 +49,18 @@ jobs:
       run: |
         python util/create_ntuples.py
         python example.py
+    - name: Test with pytest and without typeguard
+      if: matrix.python-version == 3.7
+      run: |
+        sudo apt-get install ghostscript  # for pdf comparison
+        pytest --typeguard-packages=""  # typeguard issue with typing.NamedTuple in Python 3.7
     - name: Test with pytest and generate coverage report
+      if: matrix.python-version != 3.7
       run: |
         sudo apt-get install ghostscript  # for pdf comparison
         pytest --cov-report=xml
     - name: Upload coverage to codecov
-      if: matrix.python-version == 3.7
+      if: matrix.python-version == 3.8
       uses: codecov/codecov-action@v1
       with:
         token: ${{ secrets.CODECOV_TOKEN }}

@@ -16,7 +16,7 @@ extras_require["test"] = sorted(
             "mypy",
             "types-tabulate",
             "types-PyYAML",
-            "typeguard!=2.11.*,!=2.12.*",  # NamedTuple incompatibility in Python 3.7
+            "typeguard>=2.12.1",  # click 8.0 compatibility
             "black",
         ]
     )
