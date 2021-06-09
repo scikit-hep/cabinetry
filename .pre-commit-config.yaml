@@ -8,7 +8,8 @@ repos:
     hooks:
     -   id: mypy
         files: src/cabinetry
-        additional_dependencies: ["numpy>=1.20", "boost-histogram>=1.0.1"]
+        additional_dependencies: ["numpy>=1.20", "boost-histogram>=1.0.1", "click>=8", "types-tabulate", "types-PyYAML"]
+        args: []
 -   repo: https://gitlab.com/pycqa/flake8
     rev: 3.9.2
     hooks:
