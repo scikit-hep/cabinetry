@@ -2,7 +2,7 @@ import io
 import json
 import logging
 import pathlib
-from typing import Any, KeysView, Optional, Tuple
+from typing import Any, List, Optional, Tuple
 
 import click
 import yaml
@@ -19,8 +19,8 @@ from .. import workspace as cabinetry_workspace
 class OrderedGroup(click.Group):
     """A group that shows commands in the order they were added."""
 
-    def list_commands(self, _: Any) -> KeysView[str]:
-        return self.commands.keys()
+    def list_commands(self, _: Any) -> List[str]:
+        return list(self.commands.keys())
 
 
 def _set_logging() -> None:
