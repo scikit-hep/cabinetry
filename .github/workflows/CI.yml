@@ -37,11 +37,11 @@ jobs:
     - name: Static code analysis with flake8 and mypy
       run: |
         # stop the build if there are Python syntax errors or undefined names
-        python -m flake8 src/cabinetry --select=E9,F63,F7,F82 --show-source
+        flake8 src/cabinetry --select=E9,F63,F7,F82 --show-source
         # check for additional issues flagged by flake8
-        python -m flake8
+        flake8
         # run mypy for type checking
-        # python -m mypy  # currently runs via pre-commit instead
+        # mypy  # currently runs via pre-commit instead
     - name: Format with Black
       run: |
         black --check --diff --verbose .
@@ -49,18 +49,18 @@ jobs:
       run: |
         python util/create_ntuples.py
         python example.py
-    - name: Test with pytest and without typeguard
+    - name: Test with pytest, without typeguard, generate coverage report
       if: matrix.python-version == 3.7
       run: |
         sudo apt-get install ghostscript  # for pdf comparison
-        pytest --typeguard-packages=""  # typeguard issue with typing.NamedTuple in Python 3.7
-    - name: Test with pytest and generate coverage report
+        pytest --cov-report=xml --typeguard-packages=""  # typeguard issue with typing.NamedTuple in Python 3.7
+    - name: Test with pytest and typeguard
       if: matrix.python-version != 3.7
       run: |
         sudo apt-get install ghostscript  # for pdf comparison
-        pytest --cov-report=xml
+        pytest
     - name: Upload coverage to codecov
-      if: matrix.python-version == 3.8
+      if: matrix.python-version == 3.7
       uses: codecov/codecov-action@v1
       with:
         token: ${{ secrets.CODECOV_TOKEN }}
