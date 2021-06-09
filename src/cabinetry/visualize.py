@@ -493,7 +493,7 @@ def templates(
                 # only keep up/down variations, and sort alphabetically
                 # (sorting to have consistent order, and simplified debugging)
                 variation_paths = sorted(
-                    [v for v in variation_paths if ("Up" in v.name or "Down" in v.name)]
+                    v for v in variation_paths if ("Up" in v.name or "Down" in v.name)
                 )
 
                 if len(variation_paths) == 0:

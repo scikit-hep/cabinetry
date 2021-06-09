@@ -118,7 +118,7 @@ def print_results(
     Args:
         fit_results (FitResults): results of fit to be printed
     """
-    max_label_length = max([len(label) for label in fit_results.labels])
+    max_label_length = max(len(label) for label in fit_results.labels)
     log.info("fit results (with symmetric uncertainties):")
     for i, label in enumerate(fit_results.labels):
         log.info(
@@ -332,7 +332,7 @@ def _run_minos(
         minuit_obj.minos(par_name)
 
     log.info("MINOS results:")
-    max_label_length = max([len(label) for label in labels])
+    max_label_length = max(len(label) for label in labels)
     minos_unc = [minuit_obj.params[i].merror for i in range(minuit_obj.npar)]
     for i_par, unc in zip(range(len(labels)), minos_unc):
         # if MINOS has not been run, entries are None

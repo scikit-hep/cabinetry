@@ -546,7 +546,7 @@ def templates(
 
     ax1.legend(frameon=False, fontsize="large", ncol=2)
 
-    max_yield = max([max(template["yields"]) for template in all_templates if template])
+    max_yield = max(max(template["yields"]) for template in all_templates if template)
 
     ax1.set_xlim([bin_edges[0], bin_edges[-1]])
     ax1.set_ylim([0, max_yield * 1.5])
