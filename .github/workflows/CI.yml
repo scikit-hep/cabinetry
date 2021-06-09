@@ -35,7 +35,7 @@ jobs:
         # check for additional issues flagged by flake8
         flake8
         # run mypy for type checking
-        mypy
+        mypy --install-types
     - name: Format with Black
       run: |
         black --check --diff --verbose .
