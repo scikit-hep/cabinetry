@@ -31,11 +31,11 @@ jobs:
     - name: Static code analysis with flake8 and mypy
       run: |
         # stop the build if there are Python syntax errors or undefined names
-        flake8 src/cabinetry --select=E9,F63,F7,F82 --show-source
+        python -m flake8 src/cabinetry --select=E9,F63,F7,F82 --show-source
         # check for additional issues flagged by flake8
-        flake8
+        python -m flake8
         # run mypy for type checking
-        mypy --install-types
+        python -m mypy --install-types
     - name: Format with Black
       run: |
         black --check --diff --verbose .
