@@ -54,7 +54,7 @@ def validate(config: Dict[str, Any]) -> bool:
     jsonschema.validate(instance=config, schema=config_schema)
 
     # check that there is exactly one data sample
-    if sum([sample.get("Data", False) for sample in config["Samples"]]) != 1:
+    if sum(sample.get("Data", False) for sample in config["Samples"]) != 1:
         raise NotImplementedError("can only handle cases with exactly one data sample")
 
     # should also check here for conflicting settings
