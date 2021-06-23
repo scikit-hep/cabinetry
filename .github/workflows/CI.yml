@@ -56,7 +56,6 @@ jobs:
       if: matrix.python-version != 3.7
       run: |
         sudo apt-get install ghostscript  # for pdf comparison
-        python -m pip install pyhf[tensorflow]  # workaround to get tensorflow
         pytest --runslow
     - name: Upload coverage to codecov
       if: matrix.python-version == 3.7

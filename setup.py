@@ -18,7 +18,7 @@ extras_require["test"] = sorted(
             "types-PyYAML",
             "typeguard>=2.12.1",  # click 8.0 compatibility
             "black",
-            "pyhf[jax, torch]",
+            "pyhf[backends]",
         ]
     )
 )
