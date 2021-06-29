@@ -375,8 +375,10 @@ def _goodness_of_fit(
     if model.config.nauxdata > 0:
         main_data, aux_data = model.fullpdf_tv.split(pyhf.tensorlib.astensor(data))
         # constraint term: log Gaussian(aux_data|parameters) etc.
-        constraint_ll = model.constraint_logpdf(
-            aux_data, pyhf.tensorlib.astensor(model.config.suggested_init())
+        constraint_ll = pyhf.tensorlib.to_numpy(
+            model.constraint_logpdf(
+                aux_data, pyhf.tensorlib.astensor(model.config.suggested_init())
+            )
         )
     else:
         # no auxiliary data, so no constraint terms present
