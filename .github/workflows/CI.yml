@@ -47,9 +47,6 @@ jobs:
       run: |
         python util/create_ntuples.py
         python example.py
-    - name: Run mypy
-      run: |
-        mypy
     - name: Test with pytest, without typeguard, generate coverage report
       if: matrix.python-version == 3.7
       run: |
