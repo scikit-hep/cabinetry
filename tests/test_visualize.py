@@ -178,7 +178,7 @@ def test_data_MC(
     # yield table per bin
     assert mock_table_bin.call_count == 1
     assert mock_table_bin.call_args_list[0][0][0] == model
-    assert mock_table_bin.call_args_list[0][0][1] == [[[51.839756]]]
+    assert mock_table_bin.call_args_list[0][0][1] == [[[51.8]]]
     assert mock_table_bin.call_args_list[0][0][2] == [[0.3]]
     assert mock_table_bin.call_args_list[0][0][3] == [[data[0]]]
     assert mock_table_bin.call_args_list[0][1] == {}
@@ -186,7 +186,7 @@ def test_data_MC(
     # yield table per channel
     assert mock_table_channel.call_count == 1
     assert mock_table_channel.call_args_list[0][0][0] == model
-    assert mock_table_channel.call_args_list[0][0][1] == [[51.839756]]
+    assert mock_table_channel.call_args_list[0][0][1] == [[51.8]]
     assert mock_table_channel.call_args_list[0][0][2] == [0.3]
     assert mock_table_channel.call_args_list[0][0][3] == [data[0]]
     assert mock_table_channel.call_args_list[0][1] == {}
@@ -198,7 +198,7 @@ def test_data_MC(
         {
             "label": "Signal",
             "isData": False,
-            "yields": np.asarray([51.839756]),
+            "yields": np.asarray([51.8]),
             "variable": "x",
         },
         {
@@ -248,7 +248,7 @@ def test_data_MC(
 
     assert mock_draw.call_count == 2
     # yield at best-fit point is different from pre-fit
-    assert np.allclose(mock_draw.call_args_list[1][0][0][0]["yields"], 57.59396892)
+    assert np.allclose(mock_draw.call_args_list[1][0][0][0]["yields"], 57.54980000)
     assert np.allclose(mock_draw.call_args_list[1][0][1], np.asarray([0.3]))
     np.testing.assert_equal(mock_draw.call_args_list[1][0][2], np.asarray([1, 2]))
     assert mock_draw.call_args_list[1][0][3] == pathlib.Path(

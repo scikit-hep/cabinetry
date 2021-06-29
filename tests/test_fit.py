@@ -112,10 +112,10 @@ def test_print_results(caplog):
 def test__fit_model_pyhf(mock_minos, example_spec, example_spec_multibin):
     model, data = model_utils.model_and_data(example_spec)
     fit_results = fit._fit_model_pyhf(model, data)
-    assert np.allclose(fit_results.bestfit, [1.1, 8.32984849])
-    assert np.allclose(fit_results.uncertainty, [0.0, 0.38153046])
+    assert np.allclose(fit_results.bestfit, [1.1, 8.33624084])
+    assert np.allclose(fit_results.uncertainty, [0.0, 0.38182003])
     assert fit_results.labels == ["staterror_Signal-Region", "Signal strength"]
-    assert np.allclose(fit_results.best_twice_nll, 7.90080379)
+    assert np.allclose(fit_results.best_twice_nll, 7.82495235)
     assert np.allclose(fit_results.corr_mat, [[0.0, 0.0], [0.0, 1.0]])
 
     # Asimov fit, with fixed gamma (fixed not to Asimov MLE)
@@ -124,9 +124,9 @@ def test__fit_model_pyhf(mock_minos, example_spec, example_spec_multibin):
     # the gamma factor is multiplicative and fixed to 1.1, so the
     # signal strength needs to be 1/1.1 to compensate
     assert np.allclose(fit_results.bestfit, [1.1, 0.90917877])
-    assert np.allclose(fit_results.uncertainty, [0.0, 0.12623183])
+    assert np.allclose(fit_results.uncertainty, [0.0, 0.12628017])
     assert fit_results.labels == ["staterror_Signal-Region", "Signal strength"]
-    assert np.allclose(fit_results.best_twice_nll, 5.68851093)
+    assert np.allclose(fit_results.best_twice_nll, 5.61189476)
     assert np.allclose(fit_results.corr_mat, [[0.0, 0.0], [0.0, 1.0]])
 
     # parameters held constant via keyword argument
@@ -159,10 +159,10 @@ def test__fit_model_pyhf(mock_minos, example_spec, example_spec_multibin):
 def test__fit_model_custom(mock_minos, example_spec, example_spec_multibin):
     model, data = model_utils.model_and_data(example_spec)
     fit_results = fit._fit_model_custom(model, data)
-    assert np.allclose(fit_results.bestfit, [1.1, 8.32985794])
-    assert np.allclose(fit_results.uncertainty, [0.0, 0.38153392])
+    assert np.allclose(fit_results.bestfit, [1.1, 8.33625071])
+    assert np.allclose(fit_results.uncertainty, [0.0, 0.38182151])
     assert fit_results.labels == ["staterror_Signal-Region", "Signal strength"]
-    assert np.allclose(fit_results.best_twice_nll, 7.90080378)
+    assert np.allclose(fit_results.best_twice_nll, 7.82495235)
     assert np.allclose(fit_results.corr_mat, [[0.0, 0.0], [0.0, 1.0]])
 
     # Asimov fit, with fixed gamma (fixed not to Asimov MLE)
@@ -171,9 +171,9 @@ def test__fit_model_custom(mock_minos, example_spec, example_spec_multibin):
     # the gamma factor is multiplicative and fixed to 1.1, so the
     # signal strength needs to be 1/1.1 to compensate
     assert np.allclose(fit_results.bestfit, [1.1, 0.90917877])
-    assert np.allclose(fit_results.uncertainty, [0.0, 0.12623172])
+    assert np.allclose(fit_results.uncertainty, [0.0, 0.12628023])
     assert fit_results.labels == ["staterror_Signal-Region", "Signal strength"]
-    assert np.allclose(fit_results.best_twice_nll, 5.68851093)
+    assert np.allclose(fit_results.best_twice_nll, 5.61189476)
     assert np.allclose(fit_results.corr_mat, [[0.0, 0.0], [0.0, 1.0]])
 
     # parameters held constant via keyword argument
@@ -454,7 +454,7 @@ def test_ranking(mock_fit, example_spec):
 
     # correct call to fit
     expected_fix = [True, False]
-    expected_inits = [[0.94956657, 1.0], [0.85043343, 1.0], [0.92, 1.0], [0.88, 1.0]]
+    expected_inits = [[0.95019305, 1.0], [0.84980695, 1.0], [0.92, 1.0], [0.88, 1.0]]
     assert mock_fit.call_count == 4
     for i in range(4):
         assert mock_fit.call_args_list[i][0] == (model, data)

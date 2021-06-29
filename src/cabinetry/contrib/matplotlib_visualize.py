@@ -148,9 +148,9 @@ def data_MC(
     )
 
     # get the highest single bin yield, from the sum of MC or data
-    y_max = max(np.max(total_yield), np.max(data_histogram_yields))
+    y_max = max(np.amax(total_yield), np.amax(data_histogram_yields))
     # lowest MC yield in single bin (not considering empty bins)
-    y_min = np.min(total_yield[np.nonzero(total_yield)])
+    y_min = np.amin(total_yield[np.nonzero(total_yield)])
 
     # use log scale if it is requested, otherwise determine scale setting:
     # if yields vary over more than 2 orders of magnitude, set y-axis to log scale
@@ -364,7 +364,7 @@ def ranking(
     ax_pulls.set_ylim([-1, num_pars])
 
     # impact axis limits: need largest pre-fit impact
-    impact_max = np.max(np.abs(impact_prefit_up, impact_prefit_down))
+    impact_max = np.amax(np.abs(impact_prefit_up, impact_prefit_down))
     ax_impact.set_xlim([-impact_max * 1.1, impact_max * 1.1])
 
     # minor ticks

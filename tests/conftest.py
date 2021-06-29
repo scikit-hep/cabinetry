@@ -23,10 +23,10 @@ def example_spec():
                 "name": "Signal Region",
                 "samples": [
                     {
-                        "data": [51.839756],
+                        "data": [51.8],
                         "modifiers": [
                             {
-                                "data": [2.5695188],
+                                "data": [2.6],
                                 "name": "staterror_Signal-Region",
                                 "type": "staterror",
                             },
