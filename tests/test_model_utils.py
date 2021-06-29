@@ -18,7 +18,7 @@ def test_model_and_data(example_spec):
 
     # requesting Asimov dataset
     model, data = model_utils.model_and_data(example_spec, asimov=True)
-    assert data == [51.839756, 1.0]
+    assert data == [51.8, 1.0]
 
     # without auxdata
     model, data = model_utils.model_and_data(example_spec, with_aux=False)
@@ -34,10 +34,10 @@ def test_get_parameter_names(example_spec):
 def test_build_Asimov_data(example_spec):
     ws = pyhf.Workspace(example_spec)
     model = ws.model()
-    assert model_utils.build_Asimov_data(model) == [51.839756, 1]
+    assert model_utils.build_Asimov_data(model) == [51.8, 1]
 
     # without auxdata
-    assert model_utils.build_Asimov_data(model, with_aux=False) == [51.839756]
+    assert model_utils.build_Asimov_data(model, with_aux=False) == [51.8]
 
     # respect nominal settings for normfactors
     example_spec["measurements"][0]["config"]["parameters"].append(
@@ -45,7 +45,7 @@ def test_build_Asimov_data(example_spec):
     )
     ws = pyhf.Workspace(example_spec)
     model = ws.model()
-    assert model_utils.build_Asimov_data(model, with_aux=False) == [103.679512]
+    assert model_utils.build_Asimov_data(model, with_aux=False) == [103.6]
 
 
 def test_get_asimov_parameters(example_spec, example_spec_shapefactor):
@@ -112,8 +112,8 @@ def test_calculate_stdev(example_spec, example_spec_multibin):
     total_stdev_bin, total_stdev_chan = model_utils.calculate_stdev(
         model, parameters, uncertainty, corr_mat
     )
-    assert np.allclose(total_stdev_bin, [[8.03767016]])
-    assert np.allclose(total_stdev_chan, [8.03767016])
+    assert np.allclose(total_stdev_bin, [[8.03150606]])
+    assert np.allclose(total_stdev_chan, [8.03150606])
 
     # pre-fit
     parameters = np.asarray([1.0, 1.0])
@@ -122,8 +122,8 @@ def test_calculate_stdev(example_spec, example_spec_multibin):
     total_stdev_bin, total_stdev_chan = model_utils.calculate_stdev(
         model, parameters, uncertainty, diag_corr_mat
     )
-    assert np.allclose(total_stdev_bin, [[2.56951880]])  # the staterror
-    assert np.allclose(total_stdev_chan, [2.56951880])
+    assert np.allclose(total_stdev_bin, [[2.56754823]])  # the staterror
+    assert np.allclose(total_stdev_chan, [2.56754823])
 
     # multiple channels, bins, staterrors
     model = pyhf.Workspace(example_spec_multibin).model()
