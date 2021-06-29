@@ -181,8 +181,8 @@ def data_MC(
         corr_mat = np.zeros(shape=(len(param_values), len(param_values)))
         np.fill_diagonal(corr_mat, 1.0)
 
-    yields_combined = model.main_model.expected_data(
-        param_values, return_by_sample=True
+    yields_combined = pyhf.tensorlib.to_numpy(
+        model.main_model.expected_data(param_values, return_by_sample=True)
     )  # all channels concatenated
 
     # slice the yields into list of lists (of lists) where first index is channel,
