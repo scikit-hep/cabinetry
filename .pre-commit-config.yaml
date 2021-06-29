@@ -9,12 +9,12 @@ repos:
     -   id: mypy
         name: mypy with Python 3.7
         files: src/cabinetry
-        additional_dependencies: ["numpy>=1.21", "boost-histogram>=1.0.1", "click>=8", "types-tabulate", "types-PyYAML"]
+        additional_dependencies: ["numpy>=1.20", "boost-histogram>=1.0.1", "click>=8", "types-tabulate", "types-PyYAML"]
         args: ["--python-version=3.7"]
     -   id: mypy
         name: mypy with Python 3.8
         files: src/cabinetry
-        additional_dependencies: ["numpy>=1.21", "boost-histogram>=1.0.1", "click>=8", "types-tabulate", "types-PyYAML"]
+        additional_dependencies: ["numpy>=1.20", "boost-histogram>=1.0.1", "click>=8", "types-tabulate", "types-PyYAML"]
         args: ["--python-version=3.8"]
 -   repo: https://gitlab.com/pycqa/flake8
     rev: 3.9.2
