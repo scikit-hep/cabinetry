@@ -23,8 +23,8 @@ def test_backend_integration(backend, reset_backend):
     """
     pyhf.set_backend(backend)
     # construct a simple workspace
-    model = pyhf.simplemodels.hepdata_like(
-        signal_data=[24.0, 22.0], bkg_data=[50.0, 52.0], bkg_uncerts=[3.0, 7.0]
+    model = pyhf.simplemodels.uncorrelated_background(
+        signal=[24.0, 22.0], bkg=[50.0, 52.0], bkg_uncertainty=[3.0, 7.0]
     )
     ws = pyhf.Workspace.build(model, [74, 74])
 
