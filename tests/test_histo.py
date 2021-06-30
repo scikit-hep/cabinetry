@@ -112,6 +112,7 @@ def test_Histogram_from_arrays(example_histograms):
 
 
 def test_Histogram_from_path(tmp_path, caplog, example_histograms, histogram_helpers):
+    caplog.set_level(logging.INFO)
     h_ref = histo.Histogram.from_arrays(*example_histograms.normal())
     h_ref.save(tmp_path)
 

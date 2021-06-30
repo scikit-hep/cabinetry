@@ -259,6 +259,8 @@ def test_histogram_is_needed_unknown():
 
 
 def test_get_region_dict(caplog):
+    caplog.set_level(logging.WARNING)
+
     config = {"Regions": [{"Name": "reg_a"}, {"Name": "reg_b"}]}
     assert configuration.get_region_dict(config, "reg_a") == {"Name": "reg_a"}
 
