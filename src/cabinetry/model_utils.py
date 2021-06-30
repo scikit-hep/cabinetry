@@ -94,35 +94,20 @@ def get_asimov_parameters(model: pyhf.pdf.Model) -> np.ndarray:
         np.ndarray: the Asimov parameters, in the same order as
         ``model.config.suggested_init()``
     """
-    # create a list of parameter names, one entry per single parameter
-    # (vectors like staterror expanded)
-    auxdata_pars_all = []
-    for parameter in model.config.auxdata_order:
-        auxdata_pars_all += [parameter] * model.config.param_set(parameter).n_parameters
-
-    # create a list of Asimov parameters (constrained parameters at the
-    # best-fit value from the aux measurement, unconstrained parameters at
-    # the init specified in the workspace)
+    # create a list of Asimov parameters (constrained parameters at best-fit value from
+    # the aux measurement, unconstrained parameters at init specified in the workspace)
     asimov_parameters = []
     for parameter in model.config.par_order:
         if not model.config.param_set(parameter).constrained:
             # unconstrained parameter: use suggested inits (for normfactor/shapefactor)
             inits = model.config.param_set(parameter).suggested_init
-        elif model.config.param_set(parameter).pdf_type == "poisson":
-            # Poisson constraint: nominal parameter value is 0 (shapesys)
-            inits = [1] * model.config.param_set(parameter).n_parameters
+        elif dict(model.config.modifiers)[parameter] in ["histosys", "normsys", "lumi"]:
+            # histosys/normsys/lumi: Gaussian constraint, nominal value 0
+            inits = [0] * model.config.param_set(parameter).n_parameters
         else:
-            # Gaussian constraint (histosys/normsys/lumi, currently also staterror):
-            # nominal value is 0 for histosys/normsys/lumi and 1 for staterror
-
-            # indices in auxdata list that match the current parameter
-            aux_indices = [
-                i for i, par in enumerate(auxdata_pars_all) if par == parameter
-            ]
-            # pick up best-fit value from auxdata
-            inits = [
-                aux for i, aux in enumerate(model.config.auxdata) if i in aux_indices
-            ]
+            # remaining modifiers are staterror/shapesys, with Gaussian/Poisson
+            # constraint and nominal value of 1
+            inits = [1] * model.config.param_set(parameter).n_parameters
 
         asimov_parameters += inits
 
