@@ -1,17 +1,12 @@
-import logging
 import os
 
 import cabinetry
 
 
-# set up log formatting and suppress verbose output from matplotlib
-logging.basicConfig(
-    level=logging.DEBUG, format="%(levelname)s - %(name)s - %(message)s"
-)
-logging.getLogger("matplotlib").setLevel(logging.WARNING)
-
-
 if __name__ == "__main__":
+    # set up customized log formatting
+    cabinetry.set_logging()
+
     # check whether input data exists
     if not os.path.exists("ntuples/"):
         print("run util/create_ntuples.py to create input data")
