@@ -84,8 +84,8 @@ def build_Asimov_data(model: pyhf.Model, with_aux: bool = True) -> List[float]:
 def get_asimov_parameters(model: pyhf.pdf.Model) -> np.ndarray:
     """Returns a list of Asimov parameter values for a model.
 
-    For normalization factors, initial parameter settings (specified in the workspace)
-    are treated as nominal settings.
+    For normfactors and shapefactors, initial parameter settings (specified in the
+    workspace) are treated as nominal settings.
 
     Args:
         model (pyhf.pdf.Model): model for which to extract the parameters
@@ -94,27 +94,21 @@ def get_asimov_parameters(model: pyhf.pdf.Model) -> np.ndarray:
         np.ndarray: the Asimov parameters, in the same order as
         ``model.config.suggested_init()``
     """
-    # create a list of parameter names, one entry per single parameter
-    # (vectors like staterror expanded)
-    auxdata_pars_all = []
-    for parameter in model.config.auxdata_order:
-        auxdata_pars_all += [parameter] * model.config.param_set(parameter).n_parameters
-
-    # create a list of Asimov parameters (constrained parameters at the
-    # best-fit value from the aux measurement, unconstrained parameters at
-    # the init specified in the workspace)
+    # create a list of Asimov parameters (constrained parameters at best-fit value from
+    # the aux measurement, unconstrained parameters at init specified in the workspace)
     asimov_parameters = []
     for parameter in model.config.par_order:
-        # indices in auxdata list that match the current parameter
-        aux_indices = [i for i, par in enumerate(auxdata_pars_all) if par == parameter]
-        if aux_indices:
-            # pick up best-fit value from auxdata
-            inits = [
-                aux for i, aux in enumerate(model.config.auxdata) if i in aux_indices
-            ]
-        else:
-            # pick up suggested inits (for normfactors)
+        if not model.config.param_set(parameter).constrained:
+            # unconstrained parameter: use suggested inits (for normfactor/shapefactor)
             inits = model.config.param_set(parameter).suggested_init
+        elif dict(model.config.modifiers)[parameter] in ["histosys", "normsys", "lumi"]:
+            # histosys/normsys/lumi: Gaussian constraint, nominal value 0
+            inits = [0.0] * model.config.param_set(parameter).n_parameters
+        else:
+            # remaining modifiers are staterror/shapesys, with Gaussian/Poisson
+            # constraint and nominal value of 1
+            inits = [1.0] * model.config.param_set(parameter).n_parameters
+
         asimov_parameters += inits
 
     return np.asarray(asimov_parameters)
@@ -214,9 +208,9 @@ def calculate_stdev(
     # within the respective uncertainties
     for i_par in range(model.config.npars):
         # central parameter values, but one parameter varied within uncertainties
-        up_pars = parameters.copy()
+        up_pars = parameters.copy().astype(float)  # ensure float for correct addition
         up_pars[i_par] += uncertainty[i_par]
-        down_pars = parameters.copy()
+        down_pars = parameters.copy().astype(float)
         down_pars[i_par] -= uncertainty[i_par]
 
         # total model distribution with this parameter varied up

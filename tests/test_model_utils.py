@@ -53,17 +53,46 @@ def test_get_asimov_parameters(example_spec, example_spec_shapefactor):
     pars = model_utils.get_asimov_parameters(model)
     assert np.allclose(pars, [1.0, 1.0])
 
+    # respect shapefactor initial values
+    example_spec_shapefactor["measurements"][0]["config"]["parameters"].append(
+        {"name": "shape factor", "inits": [1.2, 1.1]}
+    )
     model = pyhf.Workspace(example_spec_shapefactor).model()
     pars = model_utils.get_asimov_parameters(model)
-    assert np.allclose(pars, [1.0, 1.0, 1.0])
+    assert np.allclose(pars, [1.2, 1.1, 1.0])
 
-    # respect nominal settings for normfactors
-    example_spec["measurements"][0]["config"]["parameters"].append(
+    # respect normfactor initial values
+    normfactor_spec = copy.deepcopy(example_spec)
+    normfactor_spec["measurements"][0]["config"]["parameters"].append(
         {"name": "Signal strength", "inits": [2.0]}
     )
-    model = pyhf.Workspace(example_spec).model()
+    model = pyhf.Workspace(normfactor_spec).model()
     pars = model_utils.get_asimov_parameters(model)
     assert np.allclose(pars, [1.0, 2.0])
+
+    # modifier with nominal value 0 and different initial value (which is ignored)
+    normsys_spec = copy.deepcopy(example_spec)
+    normsys_spec["channels"][0]["samples"][0]["modifiers"].append(
+        {"data": {"hi": 1.2, "lo": 0.8}, "name": "normsys_example", "type": "normsys"}
+    )
+    normsys_spec["measurements"][0]["config"]["parameters"].append(
+        {"name": "normsys_example", "inits": [0.5]}
+    )
+    model = pyhf.Workspace(normsys_spec).model()
+    pars = model_utils.get_asimov_parameters(model)
+    assert np.allclose(pars, [1.0, 1.0, 0.0])
+
+    # shapesys modifier with nominal value 1 and different initial value (ignored)
+    shapesys_spec = copy.deepcopy(example_spec)
+    shapesys_spec["channels"][0]["samples"][0]["modifiers"].append(
+        {"data": [5.0], "name": "shapesys_example", "type": "shapesys"}
+    )
+    shapesys_spec["measurements"][0]["config"]["parameters"].append(
+        {"name": "shapesys_example", "inits": [1.5]}
+    )
+    model = pyhf.Workspace(shapesys_spec).model()
+    pars = model_utils.get_asimov_parameters(model)
+    assert np.allclose(pars, [1.0, 1.0, 1.0])
 
 
 def test_get_prefit_uncertainties(
