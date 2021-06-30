@@ -103,11 +103,11 @@ def get_asimov_parameters(model: pyhf.pdf.Model) -> np.ndarray:
             inits = model.config.param_set(parameter).suggested_init
         elif dict(model.config.modifiers)[parameter] in ["histosys", "normsys", "lumi"]:
             # histosys/normsys/lumi: Gaussian constraint, nominal value 0
-            inits = [0] * model.config.param_set(parameter).n_parameters
+            inits = [0.0] * model.config.param_set(parameter).n_parameters
         else:
             # remaining modifiers are staterror/shapesys, with Gaussian/Poisson
             # constraint and nominal value of 1
-            inits = [1] * model.config.param_set(parameter).n_parameters
+            inits = [1.0] * model.config.param_set(parameter).n_parameters
 
         asimov_parameters += inits
 
