@@ -208,9 +208,9 @@ def calculate_stdev(
     # within the respective uncertainties
     for i_par in range(model.config.npars):
         # central parameter values, but one parameter varied within uncertainties
-        up_pars = parameters.copy()
+        up_pars = parameters.copy().astype(float)  # ensure float for correct addition
         up_pars[i_par] += uncertainty[i_par]
-        down_pars = parameters.copy()
+        down_pars = parameters.copy().astype(float)
         down_pars[i_par] -= uncertainty[i_par]
 
         # total model distribution with this parameter varied up
