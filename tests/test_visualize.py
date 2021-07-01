@@ -560,6 +560,7 @@ def test_templates(mock_draw, mock_histo_config, mock_histo_path, tmp_path):
     up_path.unlink()
     down_path.unlink()
 
+    assert mock_draw.call_count == 2  # two calls so far
     visualize.templates(config, figure_folder=folder_path)
     assert mock_draw.call_count == 2  # no new call, since no variations found
 
