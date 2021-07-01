@@ -202,7 +202,7 @@ def data_MC(
     figure_path.parent.mkdir(parents=True, exist_ok=True)
     log.debug(f"saving figure as {figure_path}")
     fig.savefig(figure_path)
-    if close_figure:  # pragma: no cover
+    if close_figure:
         plt.close(fig)
 
 
@@ -210,7 +210,7 @@ def correlation_matrix(
     corr_mat: np.ndarray,
     labels: Union[List[str], np.ndarray],
     figure_path: pathlib.Path,
-    close_figure: bool = True,
+    close_figure: bool = False,
 ) -> None:
     """Draws a correlation matrix.
 
@@ -251,7 +251,7 @@ def correlation_matrix(
     figure_path.parent.mkdir(parents=True, exist_ok=True)
     log.debug(f"saving figure as {figure_path}")
     fig.savefig(figure_path)
-    if close_figure:  # pragma: no cover
+    if close_figure:
         plt.close(fig)
 
 
@@ -260,7 +260,7 @@ def pulls(
     uncertainty: np.ndarray,
     labels: Union[List[str], np.ndarray],
     figure_path: pathlib.Path,
-    close_figure: bool = True,
+    close_figure: bool = False,
 ) -> None:
     """Draws a pull plot.
 
@@ -295,7 +295,7 @@ def pulls(
     figure_path.parent.mkdir(parents=True, exist_ok=True)
     log.debug(f"saving figure as {figure_path}")
     fig.savefig(figure_path)
-    if close_figure:  # pragma: no cover
+    if close_figure:
         plt.close(fig)
 
 
@@ -308,7 +308,7 @@ def ranking(
     impact_postfit_up: np.ndarray,
     impact_postfit_down: np.ndarray,
     figure_path: pathlib.Path,
-    close_figure: bool = True,
+    close_figure: bool = False,
 ) -> None:
     """Draws a ranking plot.
 
@@ -416,7 +416,7 @@ def ranking(
     figure_path.parent.mkdir(parents=True, exist_ok=True)
     log.debug(f"saving figure as {figure_path}")
     fig.savefig(figure_path)
-    if close_figure:  # pragma: no cover
+    if close_figure:
         plt.close(fig)
 
 
@@ -429,7 +429,7 @@ def templates(
     bin_edges: np.ndarray,
     variable: str,
     figure_path: pathlib.Path,
-    close_figure: bool = True,
+    close_figure: bool = False,
 ) -> None:
     """Draws a nominal template and the associated up/down variations.
 
@@ -593,7 +593,7 @@ def templates(
     figure_path.parent.mkdir(parents=True, exist_ok=True)
     log.debug(f"saving figure as {figure_path}")
     fig.savefig(figure_path)
-    if close_figure:  # pragma: no cover
+    if close_figure:
         plt.close(fig)
 
 
@@ -604,7 +604,7 @@ def scan(
     par_vals: np.ndarray,
     par_nlls: np.ndarray,
     figure_path: pathlib.Path,
-    close_figure: bool = True,
+    close_figure: bool = False,
 ) -> None:
     """Draws a figure showing the results of a likelihood scan.
 
@@ -683,7 +683,7 @@ def scan(
     figure_path.parent.mkdir(parents=True, exist_ok=True)
     log.debug(f"saving figure as {figure_path}")
     fig.savefig(figure_path)
-    if close_figure:  # pragma: no cover
+    if close_figure:
         plt.close(fig)
 
 
@@ -692,7 +692,7 @@ def limit(
     expected_CLs: np.ndarray,
     poi_values: np.ndarray,
     figure_path: pathlib.Path,
-    close_figure: bool = True,
+    close_figure: bool = False,
 ) -> None:
     """Draws observed and expected CLs values as function of the parameter of interest.
 
@@ -772,5 +772,5 @@ def limit(
     figure_path.parent.mkdir(parents=True, exist_ok=True)
     log.debug(f"saving figure as {figure_path}")
     fig.savefig(figure_path)
-    if close_figure:  # pragma: no cover
+    if close_figure:
         plt.close(fig)

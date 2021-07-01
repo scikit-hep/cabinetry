@@ -1,5 +1,6 @@
 import copy
 
+import matplotlib.pyplot as plt
 from matplotlib.testing.compare import compare_images
 import numpy as np
 
@@ -58,6 +59,9 @@ def test_data_MC(tmp_path):
     assert compare_images("tests/contrib/reference/data_MC.pdf", str(fname), 0) is None
     fname.unlink()
 
+    # three open figures, does not change when calling with close_figure
+    assert len(plt.get_fignums()) == 3
+
     # log scale forced
     matplotlib_visualize.data_MC(
         histo_dict_list_log,
@@ -66,12 +70,15 @@ def test_data_MC(tmp_path):
         fname,
         log_scale=True,
         log_scale_x=True,
+        close_figure=True,
     )
     assert (
         compare_images("tests/contrib/reference/data_MC_log.pdf", str(fname_log), 0)
         is None
     )
     fname_log.unlink()
+    assert len(plt.get_fignums()) == 3
+    plt.close("all")
 
 
 def test_correlation_matrix(tmp_path):
@@ -85,6 +92,12 @@ def test_correlation_matrix(tmp_path):
         is None
     )
 
+    # single open figure, does not change when calling with close_figure
+    assert len(plt.get_fignums()) == 1
+    matplotlib_visualize.correlation_matrix(corr_mat, labels, fname, close_figure=True)
+    assert len(plt.get_fignums()) == 1
+    plt.close("all")
+
 
 def test_pulls(tmp_path):
     fname = tmp_path / "fig.pdf"
@@ -93,6 +106,12 @@ def test_pulls(tmp_path):
     labels = np.asarray(["a", "b", "c"])
     matplotlib_visualize.pulls(bestfit, uncertainty, labels, fname)
     assert compare_images("tests/contrib/reference/pulls.pdf", str(fname), 0) is None
+
+    # single open figure, does not change when calling with close_figure
+    assert len(plt.get_fignums()) == 1
+    matplotlib_visualize.pulls(bestfit, uncertainty, labels, fname, close_figure=True)
+    assert len(plt.get_fignums()) == 1
+    plt.close("all")
 
 
 def test_ranking(tmp_path):
@@ -116,6 +135,22 @@ def test_ranking(tmp_path):
         fname,
     )
     assert compare_images("tests/contrib/reference/ranking.pdf", str(fname), 0) is None
+
+    # single open figure, does not change when calling with close_figure
+    assert len(plt.get_fignums()) == 1
+    matplotlib_visualize.ranking(
+        bestfit,
+        uncertainty,
+        labels,
+        impact_prefit_up,
+        impact_prefit_down,
+        impact_postfit_up,
+        impact_postfit_down,
+        fname,
+        close_figure=True,
+    )
+    assert len(plt.get_fignums()) == 1
+    plt.close("all")
 
 
 def test_templates(tmp_path):
@@ -157,6 +192,9 @@ def test_templates(tmp_path):
         compare_images("tests/contrib/reference/templates.pdf", str(fname), 0) is None
     )
 
+    # single open figure, does not change when calling with close_figure
+    assert len(plt.get_fignums()) == 1
+
     # only single variation specified
     matplotlib_visualize.templates(
         nominal_histo,
@@ -167,7 +205,10 @@ def test_templates(tmp_path):
         bin_edges,
         variable,
         fname,
+        close_figure=True,
     )
+    assert len(plt.get_fignums()) == 1
+    plt.close("all")
 
 
 def test_scan(tmp_path):
@@ -181,9 +222,16 @@ def test_scan(tmp_path):
     matplotlib_visualize.scan(par_name, par_mle, par_unc, par_vals, par_nlls, fname)
     assert compare_images("tests/contrib/reference/scan.pdf", str(fname), 0) is None
 
+    # single open figure, does not change when calling with close_figure
+    assert len(plt.get_fignums()) == 1
+
     # no 68% CL / 95% CL text
     par_nlls = np.asarray([0.1, 0.04, 0.0, 0.04, 0.1])
-    matplotlib_visualize.scan(par_name, par_mle, par_unc, par_vals, par_nlls, fname)
+    matplotlib_visualize.scan(
+        par_name, par_mle, par_unc, par_vals, par_nlls, fname, close_figure=True
+    )
+    assert len(plt.get_fignums()) == 1
+    plt.close("all")
 
 
 def test_limit(tmp_path):
@@ -201,3 +249,11 @@ def test_limit(tmp_path):
 
     matplotlib_visualize.limit(observed_CLs, expected_CLs, poi_values, fname)
     assert compare_images("tests/contrib/reference/limit.pdf", str(fname), 0) is None
+
+    # single open figure, does not change when calling with close_figure
+    assert len(plt.get_fignums()) == 1
+    matplotlib_visualize.limit(
+        observed_CLs, expected_CLs, poi_values, fname, close_figure=True
+    )
+    assert len(plt.get_fignums()) == 1
+    plt.close("all")
