@@ -10,6 +10,24 @@ import numpy as np
 log = logging.getLogger(__name__)
 
 
+def _save_figure(
+    fig: mpl.figure.Figure, path: pathlib.Path, close_figure: bool = False
+) -> None:
+    """Saves a figure at a given location and optionally close it.
+
+    Args:
+        fig (matplotlib.figure.Figure): figure to save
+        figure_path (pathlib.Path): path where figure should be saved
+        close_figure (bool, optional): whether to close figure after saving, defaults to
+            False
+    """
+    path.parent.mkdir(parents=True, exist_ok=True)
+    log.debug(f"saving figure as {path}")
+    fig.savefig(path)
+    if close_figure:
+        plt.close(fig)
+
+
 def data_MC(
     histogram_dict_list: List[Dict[str, Any]],
     total_model_unc: np.ndarray,
@@ -199,11 +217,7 @@ def data_MC(
 
     fig.tight_layout()
 
-    figure_path.parent.mkdir(parents=True, exist_ok=True)
-    log.debug(f"saving figure as {figure_path}")
-    fig.savefig(figure_path)
-    if close_figure:
-        plt.close(fig)
+    _save_figure(fig, figure_path, close_figure)
 
 
 def correlation_matrix(
@@ -248,11 +262,7 @@ def correlation_matrix(
         if abs(corr) > 0.005:
             ax.text(i, j, f"{corr:.2f}", ha="center", va="center", color=text_color)
 
-    figure_path.parent.mkdir(parents=True, exist_ok=True)
-    log.debug(f"saving figure as {figure_path}")
-    fig.savefig(figure_path)
-    if close_figure:
-        plt.close(fig)
+    _save_figure(fig, figure_path, close_figure)
 
 
 def pulls(
@@ -292,11 +302,7 @@ def pulls(
     ax.tick_params(direction="in", top=True, right=True, which="both")
     fig.tight_layout()
 
-    figure_path.parent.mkdir(parents=True, exist_ok=True)
-    log.debug(f"saving figure as {figure_path}")
-    fig.savefig(figure_path)
-    if close_figure:
-        plt.close(fig)
+    _save_figure(fig, figure_path, close_figure)
 
 
 def ranking(
@@ -413,11 +419,7 @@ def ranking(
     leg_space = 1.0 / (num_pars + 3) + 0.03
     fig.tight_layout(rect=[0, 0, 1.0, 1 - leg_space])  # make space for legend on top
 
-    figure_path.parent.mkdir(parents=True, exist_ok=True)
-    log.debug(f"saving figure as {figure_path}")
-    fig.savefig(figure_path)
-    if close_figure:
-        plt.close(fig)
+    _save_figure(fig, figure_path, close_figure)
 
 
 def templates(
@@ -590,11 +592,7 @@ def templates(
 
     fig.tight_layout()
 
-    figure_path.parent.mkdir(parents=True, exist_ok=True)
-    log.debug(f"saving figure as {figure_path}")
-    fig.savefig(figure_path)
-    if close_figure:
-        plt.close(fig)
+    _save_figure(fig, figure_path, close_figure)
 
 
 def scan(
@@ -680,11 +678,7 @@ def scan(
 
     fig.tight_layout()
 
-    figure_path.parent.mkdir(parents=True, exist_ok=True)
-    log.debug(f"saving figure as {figure_path}")
-    fig.savefig(figure_path)
-    if close_figure:
-        plt.close(fig)
+    _save_figure(fig, figure_path, close_figure)
 
 
 def limit(
@@ -769,8 +763,4 @@ def limit(
 
     fig.tight_layout()
 
-    figure_path.parent.mkdir(parents=True, exist_ok=True)
-    log.debug(f"saving figure as {figure_path}")
-    fig.savefig(figure_path)
-    if close_figure:
-        plt.close(fig)
+    _save_figure(fig, figure_path, close_figure)

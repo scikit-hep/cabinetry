@@ -13,6 +13,18 @@ def test_no_open_figure():
     assert len(plt.get_fignums()) == 0
 
 
+def test__save_figure(tmp_path):
+    fig = plt.figure()
+    fname = tmp_path / "fig.pdf"
+    matplotlib_visualize._save_figure(fig, fname)
+    assert len(plt.get_fignums()) == 1
+
+    fig = plt.figure()  # new figure to test closing
+    matplotlib_visualize._save_figure(fig, fname, close_figure=True)
+    assert len(plt.get_fignums()) == 1  # previous figure still open
+    plt.close("all")
+
+
 def test_data_MC(tmp_path):
     fname = tmp_path / "fig.pdf"
     histo_dict_list = [
@@ -39,7 +51,6 @@ def test_data_MC(tmp_path):
     bin_edges = np.asarray([1, 2, 3])
     matplotlib_visualize.data_MC(histo_dict_list, total_model_unc, bin_edges, fname)
     assert compare_images("tests/contrib/reference/data_MC.pdf", str(fname), 0) is None
-    fname.unlink()  # delete figure
 
     histo_dict_list_log = copy.deepcopy(histo_dict_list)
     histo_dict_list_log[0]["yields"] = np.asarray([2000, 14])
@@ -56,14 +67,12 @@ def test_data_MC(tmp_path):
         compare_images("tests/contrib/reference/data_MC_log.pdf", str(fname_log), 0)
         is None
     )
-    fname_log.unlink()
 
     # linear scale forced
     matplotlib_visualize.data_MC(
         histo_dict_list, total_model_unc, bin_edges, fname, log_scale=False
     )
     assert compare_images("tests/contrib/reference/data_MC.pdf", str(fname), 0) is None
-    fname.unlink()
 
     # three open figures, does not change when calling with close_figure
     assert len(plt.get_fignums()) == 3
@@ -82,7 +91,6 @@ def test_data_MC(tmp_path):
         compare_images("tests/contrib/reference/data_MC_log.pdf", str(fname_log), 0)
         is None
     )
-    fname_log.unlink()
     assert len(plt.get_fignums()) == 3
     plt.close("all")
 
