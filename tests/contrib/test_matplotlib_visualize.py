@@ -7,6 +7,12 @@ import numpy as np
 from cabinetry.contrib import matplotlib_visualize
 
 
+def test_no_open_figure():
+    # ensure there are no open figures at the start, if this fails then some other part
+    # of the test suite opened a figure without closing it
+    assert len(plt.get_fignums()) == 0
+
+
 def test_data_MC(tmp_path):
     fname = tmp_path / "fig.pdf"
     histo_dict_list = [
