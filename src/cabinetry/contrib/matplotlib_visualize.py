@@ -10,6 +10,24 @@ import numpy as np
 log = logging.getLogger(__name__)
 
 
+def _save_figure(
+    fig: mpl.figure.Figure, path: pathlib.Path, close_figure: bool = False
+) -> None:
+    """Saves a figure at a given location and optionally closes it.
+
+    Args:
+        fig (matplotlib.figure.Figure): figure to save
+        figure_path (pathlib.Path): path where figure should be saved
+        close_figure (bool, optional): whether to close figure after saving, defaults to
+            False
+    """
+    path.parent.mkdir(parents=True, exist_ok=True)
+    log.debug(f"saving figure as {path}")
+    fig.savefig(path)
+    if close_figure:
+        plt.close(fig)
+
+
 def data_MC(
     histogram_dict_list: List[Dict[str, Any]],
     total_model_unc: np.ndarray,
@@ -17,6 +35,7 @@ def data_MC(
     figure_path: pathlib.Path,
     log_scale: Optional[bool] = None,
     log_scale_x: bool = False,
+    close_figure: bool = False,
 ) -> None:
     """Draws a data/MC histogram with uncertainty bands and ratio panel.
 
@@ -32,6 +51,9 @@ def data_MC(
             scale)
         log_scale_x (bool, optional): whether to use logarithmic horizontal axis,
             defaults to False
+        close_figure (bool, optional): whether to close each figure immediately after
+            saving it, defaults to False (enable when producing many figures to avoid
+            memory issues, prevents rendering in notebooks)
     """
     mc_histograms_yields = []
     mc_labels = []
@@ -195,16 +217,14 @@ def data_MC(
 
     fig.tight_layout()
 
-    figure_path.parent.mkdir(parents=True, exist_ok=True)
-    log.debug(f"saving figure as {figure_path}")
-    fig.savefig(figure_path)
-    plt.close(fig)
+    _save_figure(fig, figure_path, close_figure)
 
 
 def correlation_matrix(
     corr_mat: np.ndarray,
     labels: Union[List[str], np.ndarray],
     figure_path: pathlib.Path,
+    close_figure: bool = False,
 ) -> None:
     """Draws a correlation matrix.
 
@@ -213,6 +233,9 @@ def correlation_matrix(
         labels (Union[List[str], np.ndarray]): names of parameters in the correlation
             matrix
         figure_path (pathlib.Path): path where figure should be saved
+        close_figure (bool, optional): whether to close each figure immediately after
+            saving it, defaults to False (enable when producing many figures to avoid
+            memory issues, prevents rendering in notebooks)
     """
     # rounding for test in CI to match reference
     fig, ax = plt.subplots(
@@ -239,10 +262,7 @@ def correlation_matrix(
         if abs(corr) > 0.005:
             ax.text(i, j, f"{corr:.2f}", ha="center", va="center", color=text_color)
 
-    figure_path.parent.mkdir(parents=True, exist_ok=True)
-    log.debug(f"saving figure as {figure_path}")
-    fig.savefig(figure_path)
-    plt.close(fig)
+    _save_figure(fig, figure_path, close_figure)
 
 
 def pulls(
@@ -250,6 +270,7 @@ def pulls(
     uncertainty: np.ndarray,
     labels: Union[List[str], np.ndarray],
     figure_path: pathlib.Path,
+    close_figure: bool = False,
 ) -> None:
     """Draws a pull plot.
 
@@ -258,6 +279,9 @@ def pulls(
         uncertainty (np.ndarray): parameter uncertainties
         labels (Union[List[str], np.ndarray]): parameter names
         figure_path (pathlib.Path): path where figure should be saved
+        close_figure (bool, optional): whether to close each figure immediately after
+            saving it, defaults to False (enable when producing many figures to avoid
+            memory issues, prevents rendering in notebooks)
     """
     num_pars = len(bestfit)
     y_positions = np.arange(num_pars)[::-1]
@@ -278,10 +302,7 @@ def pulls(
     ax.tick_params(direction="in", top=True, right=True, which="both")
     fig.tight_layout()
 
-    figure_path.parent.mkdir(parents=True, exist_ok=True)
-    log.debug(f"saving figure as {figure_path}")
-    fig.savefig(figure_path)
-    plt.close(fig)
+    _save_figure(fig, figure_path, close_figure)
 
 
 def ranking(
@@ -293,6 +314,7 @@ def ranking(
     impact_postfit_up: np.ndarray,
     impact_postfit_down: np.ndarray,
     figure_path: pathlib.Path,
+    close_figure: bool = False,
 ) -> None:
     """Draws a ranking plot.
 
@@ -307,6 +329,9 @@ def ranking(
         impact_postfit_down (np.ndarray): post-fit impact in "down" direction per
             parameter
         figure_path (pathlib.Path): path where figure should be saved
+        close_figure (bool, optional): whether to close each figure immediately after
+            saving it, defaults to False (enable when producing many figures to avoid
+            memory issues, prevents rendering in notebooks)
     """
     num_pars = len(bestfit)
 
@@ -394,10 +419,7 @@ def ranking(
     leg_space = 1.0 / (num_pars + 3) + 0.03
     fig.tight_layout(rect=[0, 0, 1.0, 1 - leg_space])  # make space for legend on top
 
-    figure_path.parent.mkdir(parents=True, exist_ok=True)
-    log.debug(f"saving figure as {figure_path}")
-    fig.savefig(figure_path)
-    plt.close(fig)
+    _save_figure(fig, figure_path, close_figure)
 
 
 def templates(
@@ -409,6 +431,7 @@ def templates(
     bin_edges: np.ndarray,
     variable: str,
     figure_path: pathlib.Path,
+    close_figure: bool = False,
 ) -> None:
     """Draws a nominal template and the associated up/down variations.
 
@@ -423,6 +446,9 @@ def templates(
         bin_edges (np.ndarray): bin edges of histogram
         variable (str): variable name for the horizontal axis
         figure_path (pathlib.Path): path where figure should be saved
+        close_figure (bool, optional): whether to close each figure immediately after
+            saving it, defaults to False (enable when producing many figures to avoid
+            memory issues, prevents rendering in notebooks)
     """
     bin_width = bin_edges[1:] - bin_edges[:-1]
     bin_centers = 0.5 * (bin_edges[:-1] + bin_edges[1:])
@@ -566,10 +592,7 @@ def templates(
 
     fig.tight_layout()
 
-    figure_path.parent.mkdir(parents=True, exist_ok=True)
-    log.debug(f"saving figure as {figure_path}")
-    fig.savefig(figure_path)
-    plt.close(fig)
+    _save_figure(fig, figure_path, close_figure)
 
 
 def scan(
@@ -579,6 +602,7 @@ def scan(
     par_vals: np.ndarray,
     par_nlls: np.ndarray,
     figure_path: pathlib.Path,
+    close_figure: bool = False,
 ) -> None:
     """Draws a figure showing the results of a likelihood scan.
 
@@ -589,6 +613,9 @@ def scan(
         par_vals (np.ndarray): values used in scan over parameter
         par_nlls (np.ndarray): -2 log(L) offset at each scan point
         figure_path (pathlib.Path): path where figure should be saved
+        close_figure (bool, optional): whether to close each figure immediately after
+            saving it, defaults to False (enable when producing many figures to avoid
+            memory issues, prevents rendering in notebooks)
     """
     mpl.style.use("seaborn-colorblind")
     fig, ax = plt.subplots()
@@ -651,10 +678,7 @@ def scan(
 
     fig.tight_layout()
 
-    figure_path.parent.mkdir(parents=True, exist_ok=True)
-    log.debug(f"saving figure as {figure_path}")
-    fig.savefig(figure_path)
-    plt.close(fig)
+    _save_figure(fig, figure_path, close_figure)
 
 
 def limit(
@@ -662,6 +686,7 @@ def limit(
     expected_CLs: np.ndarray,
     poi_values: np.ndarray,
     figure_path: pathlib.Path,
+    close_figure: bool = False,
 ) -> None:
     """Draws observed and expected CLs values as function of the parameter of interest.
 
@@ -670,6 +695,9 @@ def limit(
         expected_CLs (np.ndarray): expected CLs values, including 1 and 2 sigma bands
         poi_values (np.ndarray): parameter of interest values used in scan
         figure_path (pathlib.Path): path where figure should be saved
+        close_figure (bool, optional): whether to close each figure immediately after
+            saving it, defaults to False (enable when producing many figures to avoid
+            memory issues, prevents rendering in notebooks)
     """
     fig, ax = plt.subplots()
 
@@ -735,7 +763,4 @@ def limit(
 
     fig.tight_layout()
 
-    figure_path.parent.mkdir(parents=True, exist_ok=True)
-    log.debug(f"saving figure as {figure_path}")
-    fig.savefig(figure_path)
-    plt.close(fig)
+    _save_figure(fig, figure_path, close_figure)

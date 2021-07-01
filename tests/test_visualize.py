@@ -103,19 +103,24 @@ def test_data_MC_from_histograms(mock_load, mock_draw, mock_stdev):
                 [0.0, 1.0],
                 figure_folder / "reg_1_prefit.pdf",
             ),
-            {"log_scale": None, "log_scale_x": False},
+            {"log_scale": None, "log_scale_x": False, "close_figure": False},
         )
     ]
 
-    # custom log scale settings
+    # custom log scale settings, close figure
     visualize.data_MC_from_histograms(
         config,
         figure_folder=figure_folder,
         method="matplotlib",
         log_scale=True,
         log_scale_x=True,
+        close_figure=True,
     )
-    assert mock_draw.call_args[1] == {"log_scale": True, "log_scale_x": True}
+    assert mock_draw.call_args[1] == {
+        "log_scale": True,
+        "log_scale_x": True,
+        "close_figure": True,
+    }
 
     # other plotting method
     with pytest.raises(NotImplementedError, match="unknown backend: unknown"):
@@ -215,9 +220,13 @@ def test_data_MC(
     assert mock_draw.call_args_list[0][0][3] == pathlib.Path(
         "tmp/Signal-Region_prefit.pdf"
     )
-    assert mock_draw.call_args_list[0][1] == {"log_scale": None, "log_scale_x": False}
+    assert mock_draw.call_args_list[0][1] == {
+        "log_scale": None,
+        "log_scale_x": False,
+        "close_figure": False,
+    }
 
-    # post-fit plot and custom scale
+    # post-fit plot, custom scale, close figure
     fit_results = fit.FitResults(
         np.asarray([1.01, 1.1]),
         np.asarray([0.03, 0.1]),
@@ -232,6 +241,7 @@ def test_data_MC(
         figure_folder=figure_folder,
         fit_results=fit_results,
         log_scale=False,
+        close_figure=True,
     )
 
     assert mock_asimov.call_count == 1  # no new call
@@ -254,7 +264,11 @@ def test_data_MC(
     assert mock_draw.call_args_list[1][0][3] == pathlib.Path(
         "tmp/Signal-Region_postfit.pdf"
     )
-    assert mock_draw.call_args_list[1][1] == {"log_scale": False, "log_scale_x": False}
+    assert mock_draw.call_args_list[1][1] == {
+        "log_scale": False,
+        "log_scale_x": False,
+        "close_figure": True,
+    }
 
     # no yield table
     visualize.data_MC(model, data, config=config, include_table=False)
@@ -296,14 +310,17 @@ def test_correlation_matrix(mock_draw):
         [mock_draw.call_args[0][1][i] == labels[i] for i in range(len(labels_pruned))]
     )
     assert mock_draw.call_args[0][2] == figure_path
-    assert mock_draw.call_args[1] == {}
+    assert mock_draw.call_args[1] == {"close_figure": False}
 
-    # pruning of fixed parameter (all zeros in correlation matrix row/column)
+    # pruning of fixed parameter (all zeros in correlation matrix row/column), close
+    # figure
     corr_mat_fixed = np.asarray([[1.0, 0.2, 0.0], [0.2, 1.0, 0.0], [0.0, 0.0, 0.0]])
     fit_results_fixed = fit.FitResults(
         np.empty(0), np.empty(0), labels, corr_mat_fixed, 1.0
     )
-    visualize.correlation_matrix(fit_results_fixed, figure_folder=folder_path)
+    visualize.correlation_matrix(
+        fit_results_fixed, figure_folder=folder_path, close_figure=True
+    )
     assert np.allclose(mock_draw.call_args_list[1][0][0], corr_mat_pruned)
     assert np.any(
         [
@@ -311,6 +328,7 @@ def test_correlation_matrix(mock_draw):
             for i in range(len(labels_pruned))
         ]
     )
+    assert mock_draw.call_args[1] == {"close_figure": True}
 
     # unknown plotting method
     with pytest.raises(NotImplementedError, match="unknown backend: unknown"):
@@ -351,7 +369,7 @@ def test_pulls(mock_draw):
         ]
     )
     assert mock_draw.call_args[0][3] == figure_path
-    assert mock_draw.call_args[1] == {}
+    assert mock_draw.call_args[1] == {"close_figure": False}
 
     # filtering single parameter instead of list
     visualize.pulls(
@@ -369,14 +387,16 @@ def test_pulls(mock_draw):
         ]
     )
 
-    # without filtering via list, but with staterror removal
-    # and fixed parameter removal
+    # without filtering via list, but with staterror removal, fixed parameter removal
+    # and closing figure
     fit_results.uncertainty[0] = 0.0
 
     bestfit_expected = np.asarray([1.0, 1.1])
     uncertainty_expected = np.asarray([1.0, 0.7])
     labels_expected = ["b", "c"]
-    visualize.pulls(fit_results, figure_folder=folder_path, method="matplotlib")
+    visualize.pulls(
+        fit_results, figure_folder=folder_path, method="matplotlib", close_figure=True
+    )
 
     assert np.allclose(mock_draw.call_args[0][0], bestfit_expected)
     assert np.allclose(mock_draw.call_args[0][1], uncertainty_expected)
@@ -387,7 +407,7 @@ def test_pulls(mock_draw):
         ]
     )
     assert mock_draw.call_args[0][3] == figure_path
-    assert mock_draw.call_args[1] == {}
+    assert mock_draw.call_args[1] == {"close_figure": True}
 
     # unknown plotting method
     with pytest.raises(NotImplementedError, match="unknown backend: unknown"):
@@ -435,10 +455,12 @@ def test_ranking(mock_draw):
     assert np.allclose(mock_draw.call_args[0][5], impact_postfit_up[::-1])
     assert np.allclose(mock_draw.call_args[0][6], impact_postfit_down[::-1])
     assert mock_draw.call_args[0][7] == figure_path
-    assert mock_draw.call_args[1] == {}
+    assert mock_draw.call_args[1] == {"close_figure": False}
 
-    # maximum parameter amount specified
-    visualize.ranking(ranking_results, figure_folder=folder_path, max_pars=1)
+    # maximum parameter amount specified, close figure
+    visualize.ranking(
+        ranking_results, figure_folder=folder_path, max_pars=1, close_figure=True
+    )
     assert mock_draw.call_count == 2
     assert np.allclose(mock_draw.call_args[0][0], bestfit_expected[0])
     assert np.allclose(mock_draw.call_args[0][1], uncertainty_expected[0])
@@ -448,7 +470,7 @@ def test_ranking(mock_draw):
     assert np.allclose(mock_draw.call_args[0][5], impact_postfit_up[1])
     assert np.allclose(mock_draw.call_args[0][6], impact_postfit_down[1])
     assert mock_draw.call_args[0][7] == figure_path
-    assert mock_draw.call_args[1] == {}
+    assert mock_draw.call_args[1] == {"close_figure": True}
 
     # unknown plotting method
     with pytest.raises(NotImplementedError, match="unknown backend: unknown"):
@@ -517,7 +539,17 @@ def test_templates(mock_draw, mock_histo_config, mock_histo_path, tmp_path):
     down_mod = {"yields": [3.0], "stdev": [0.3]}
     bins = [0.0, 1.0]
     assert mock_draw.call_args_list == [
-        [(nominal, up_orig, up_mod, down_orig, down_mod, bins, "x", figure_path), {}]
+        [
+            (nominal, up_orig, up_mod, down_orig, down_mod, bins, "x", figure_path),
+            {"close_figure": False},
+        ]
+    ]
+
+    # close figure
+    visualize.templates(config, figure_folder=folder_path, close_figure=True)
+    assert mock_draw.call_args == [
+        (nominal, up_orig, up_mod, down_orig, down_mod, bins, "x", figure_path),
+        {"close_figure": True},
     ]
 
     # unknown plotting method
@@ -528,8 +560,9 @@ def test_templates(mock_draw, mock_histo_config, mock_histo_path, tmp_path):
     up_path.unlink()
     down_path.unlink()
 
+    assert mock_draw.call_count == 2  # two calls so far
     visualize.templates(config, figure_folder=folder_path)
-    assert mock_draw.call_count == 1  # no new call, since no variations found
+    assert mock_draw.call_count == 2  # no new call, since no variations found
 
 
 @mock.patch("cabinetry.contrib.matplotlib_visualize.scan")
@@ -553,7 +586,11 @@ def test_scan(mock_draw):
     assert np.allclose(mock_draw.call_args[0][3], par_vals)
     assert np.allclose(mock_draw.call_args[0][4], par_nlls)
     assert mock_draw.call_args[0][5] == figure_path
-    assert mock_draw.call_args[1] == {}
+    assert mock_draw.call_args[1] == {"close_figure": False}
+
+    # close figure
+    visualize.scan(scan_results, figure_folder=folder_path, close_figure=True)
+    assert mock_draw.call_args[1] == {"close_figure": True}
 
     # unknown plotting method
     with pytest.raises(NotImplementedError, match="unknown backend: unknown"):
@@ -579,7 +616,11 @@ def test_limit(mock_draw):
     assert np.allclose(mock_draw.call_args[0][1], limit_results.expected_CLs)
     assert np.allclose(mock_draw.call_args[0][2], limit_results.poi_values)
     assert mock_draw.call_args[0][3] == figure_path
-    assert mock_draw.call_args[1] == {}
+    assert mock_draw.call_args[1] == {"close_figure": False}
+
+    # close figure
+    visualize.limit(limit_results, figure_folder=folder_path, close_figure=True)
+    assert mock_draw.call_args[1] == {"close_figure": True}
 
     # unknown plotting method
     with pytest.raises(NotImplementedError, match="unknown backend: unknown"):

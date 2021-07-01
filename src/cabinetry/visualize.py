@@ -56,6 +56,7 @@ def data_MC_from_histograms(
     log_scale: Optional[bool] = None,
     log_scale_x: bool = False,
     method: str = "matplotlib",
+    close_figure: bool = False,
 ) -> None:
     """Draws pre-fit data/MC histograms, using histograms created by cabinetry.
 
@@ -70,6 +71,9 @@ def data_MC_from_histograms(
         log_scale_x (bool, optional): whether to use logarithmic horizontal axis,
             defaults to False
         method (str, optional): backend to use for plotting, defaults to "matplotlib"
+        close_figure (bool, optional): whether to close each figure immediately after
+            saving it, defaults to False (enable when producing many figures to avoid
+            memory issues, prevents rendering in notebooks)
 
     Raises:
         NotImplementedError: when trying to plot with a method that is not supported
@@ -112,6 +116,7 @@ def data_MC_from_histograms(
                 figure_path,
                 log_scale=log_scale,
                 log_scale_x=log_scale_x,
+                close_figure=close_figure,
             )
         else:
             raise NotImplementedError(f"unknown backend: {method}")
@@ -127,6 +132,7 @@ def data_MC(
     log_scale_x: bool = False,
     include_table: bool = True,
     method: str = "matplotlib",
+    close_figure: bool = False,
 ) -> None:
     """Draws pre- and post-fit data/MC histograms for a ``pyhf`` model and data.
 
@@ -154,6 +160,9 @@ def data_MC(
         include_table (bool, optional): whether to also output a yield table, defaults
             to True
         method (str, optional): backend to use for plotting, defaults to "matplotlib"
+        close_figure (bool, optional): whether to close each figure immediately after
+            saving it, defaults to False (enable when producing many figures to avoid
+            memory issues, prevents rendering in notebooks)
 
     Raises:
         NotImplementedError: when trying to plot with a method that is not supported
@@ -272,6 +281,7 @@ def data_MC(
                 figure_path,
                 log_scale=log_scale,
                 log_scale_x=log_scale_x,
+                close_figure=close_figure,
             )
         else:
             raise NotImplementedError(f"unknown backend: {method}")
@@ -282,6 +292,7 @@ def correlation_matrix(
     figure_folder: Union[str, pathlib.Path] = "figures",
     pruning_threshold: float = 0.0,
     method: str = "matplotlib",
+    close_figure: bool = False,
 ) -> None:
     """Draws a correlation matrix.
 
@@ -293,6 +304,9 @@ def correlation_matrix(
         pruning_threshold (float, optional): minimum correlation for a parameter to
             have with any other parameters to not get pruned, defaults to 0.0
         method (str, optional): backend to use for plotting, defaults to "matplotlib"
+        close_figure (bool, optional): whether to close each figure immediately after
+            saving it, defaults to False (enable when producing many figures to avoid
+            memory issues, prevents rendering in notebooks)
 
     Raises:
         NotImplementedError: when trying to plot with a method that is not supported
@@ -322,7 +336,9 @@ def correlation_matrix(
     if method == "matplotlib":
         from .contrib import matplotlib_visualize
 
-        matplotlib_visualize.correlation_matrix(corr_mat, labels, figure_path)
+        matplotlib_visualize.correlation_matrix(
+            corr_mat, labels, figure_path, close_figure=close_figure
+        )
     else:
         raise NotImplementedError(f"unknown backend: {method}")
 
@@ -332,6 +348,7 @@ def pulls(
     figure_folder: Union[str, pathlib.Path] = "figures",
     exclude: Optional[Union[str, List[str], Tuple[str, ...]]] = None,
     method: str = "matplotlib",
+    close_figure: bool = False,
 ) -> None:
     """Draws a pull plot of parameter results and uncertainties.
 
@@ -343,6 +360,9 @@ def pulls(
         exclude (Optional[Union[str, List[str], Tuple[str, ...]]], optional): parameter
             or parameters to exclude from plot, defaults to None (nothing excluded)
         method (str, optional): backend to use for plotting, defaults to "matplotlib"
+        close_figure (bool, optional): whether to close each figure immediately after
+            saving it, defaults to False (enable when producing many figures to avoid
+            memory issues, prevents rendering in notebooks)
 
     Raises:
         NotImplementedError: when trying to plot with a method that is not supported
@@ -378,7 +398,13 @@ def pulls(
     if method == "matplotlib":
         from .contrib import matplotlib_visualize
 
-        matplotlib_visualize.pulls(bestfit, uncertainty, labels_np, figure_path)
+        matplotlib_visualize.pulls(
+            bestfit,
+            uncertainty,
+            labels_np,
+            figure_path,
+            close_figure=close_figure,
+        )
     else:
         raise NotImplementedError(f"unknown backend: {method}")
 
@@ -388,6 +414,7 @@ def ranking(
     figure_folder: Union[str, pathlib.Path] = "figures",
     max_pars: Optional[int] = None,
     method: str = "matplotlib",
+    close_figure: bool = False,
 ) -> None:
     """Produces a ranking plot showing the impact of parameters on the POI.
 
@@ -398,6 +425,9 @@ def ranking(
         max_pars (Optional[int], optional): number of parameters to include, defaults to
             None (which means all parameters are included)
         method (str, optional): backend to use for plotting, defaults to "matplotlib"
+        close_figure (bool, optional): whether to close each figure immediately after
+            saving it, defaults to False (enable when producing many figures to avoid
+            memory issues, prevents rendering in notebooks)
 
     Raises:
         NotImplementedError: when trying to plot with a method that is not supported
@@ -441,6 +471,7 @@ def ranking(
             postfit_up,
             postfit_down,
             figure_path,
+            close_figure=close_figure,
         )
     else:
         raise NotImplementedError(f"unknown backend: {method}")
@@ -450,6 +481,7 @@ def templates(
     config: Dict[str, Any],
     figure_folder: Union[str, pathlib.Path] = "figures",
     method: str = "matplotlib",
+    close_figure: bool = False,
 ) -> None:
     """Visualizes template histograms (after post-processing) for systematic variations.
 
@@ -461,6 +493,9 @@ def templates(
         figure_folder (Union[str, pathlib.Path], optional): path to the folder to save
             figures in, defaults to "figures"
         method (str, optional): backend to use for plotting, defaults to "matplotlib"
+        close_figure (bool, optional): whether to close each figure immediately after
+            saving it, defaults to False (enable when producing many figures to avoid
+            memory issues, prevents rendering in notebooks)
 
     Raises:
         NotImplementedError: when trying to plot with a method that is not supported
@@ -563,6 +598,7 @@ def templates(
                         bins,
                         variable,
                         figure_path,
+                        close_figure=close_figure,
                     )
 
                 else:
@@ -573,6 +609,7 @@ def scan(
     scan_results: fit.ScanResults,
     figure_folder: Union[str, pathlib.Path] = "figures",
     method: str = "matplotlib",
+    close_figure: bool = False,
 ) -> None:
     """Visualizes the results of a likelihood scan.
 
@@ -581,6 +618,9 @@ def scan(
         figure_folder (Union[str, pathlib.Path], optional): path to the folder to save
             figures in, defaults to "figures"
         method (str, optional): backend to use for plotting, defaults to "matplotlib"
+        close_figure (bool, optional): whether to close each figure immediately after
+            saving it, defaults to False (enable when producing many figures to avoid
+            memory issues, prevents rendering in notebooks)
 
     Raises:
         NotImplementedError: when trying to plot with a method that is not supported
@@ -601,6 +641,7 @@ def scan(
             scan_results.parameter_values,
             scan_results.delta_nlls,
             figure_path,
+            close_figure=close_figure,
         )
     else:
         raise NotImplementedError(f"unknown backend: {method}")
@@ -610,6 +651,7 @@ def limit(
     limit_results: fit.LimitResults,
     figure_folder: Union[str, pathlib.Path] = "figures",
     method: str = "matplotlib",
+    close_figure: bool = False,
 ) -> None:
     """Visualizes observed and expected CLs values as a function of the POI.
 
@@ -618,6 +660,9 @@ def limit(
         figure_folder (Union[str, pathlib.Path], optional): path to the folder to save
             figures in, defaults to "figures"
         method (str, optional): backend to use for plotting, defaults to "matplotlib"
+        close_figure (bool, optional): whether to close each figure immediately after
+            saving it, defaults to False (enable when producing many figures to avoid
+            memory issues, prevents rendering in notebooks)
 
     Raises:
         NotImplementedError: when trying to plot with a method that is not supported
@@ -632,6 +677,7 @@ def limit(
             limit_results.expected_CLs,
             limit_results.poi_values,
             figure_path,
+            close_figure=close_figure,
         )
     else:
         raise NotImplementedError(f"unknown backend: {method}")
