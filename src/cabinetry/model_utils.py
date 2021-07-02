@@ -85,7 +85,8 @@ def get_asimov_parameters(model: pyhf.pdf.Model) -> np.ndarray:
     """Returns a list of Asimov parameter values for a model.
 
     For normfactors and shapefactors, initial parameter settings (specified in the
-    workspace) are treated as nominal settings.
+    workspace) are treated as nominal settings. This ignores custom auxiliary data set
+    in the measurement configuration in the workspace.
 
     Args:
         model (pyhf.pdf.Model): model for which to extract the parameters
@@ -101,12 +102,12 @@ def get_asimov_parameters(model: pyhf.pdf.Model) -> np.ndarray:
         if not model.config.param_set(parameter).constrained:
             # unconstrained parameter: use suggested inits (for normfactor/shapefactor)
             inits = model.config.param_set(parameter).suggested_init
-        elif dict(model.config.modifiers)[parameter] in ["histosys", "normsys", "lumi"]:
-            # histosys/normsys/lumi: Gaussian constraint, nominal value 0
+        elif dict(model.config.modifiers)[parameter] in ["histosys", "normsys"]:
+            # histosys/normsys: Gaussian constraint, nominal value 0
             inits = [0.0] * model.config.param_set(parameter).n_parameters
         else:
-            # remaining modifiers are staterror/shapesys, with Gaussian/Poisson
-            # constraint and nominal value of 1
+            # remaining modifiers are staterror/lumi with Gaussian constraint, and
+            # shapesys with Poisson constraint, all have nominal value of 1
             inits = [1.0] * model.config.param_set(parameter).n_parameters
 
         asimov_parameters += inits
