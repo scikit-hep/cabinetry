@@ -285,7 +285,7 @@ def example_spec_lumi():
                     ],
                     "poi": "Signal strength",
                 },
-                "name": "no auxdata",
+                "name": "lumi modifier",
             }
         ],
         "observations": [{"data": [35], "name": "Signal Region"}],
