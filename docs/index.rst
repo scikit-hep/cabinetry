@@ -17,8 +17,8 @@ cabinetry
     api
     license
 
-``cabinetry`` is a tool to build and steer (profile likelihood) template fits with applications in high energy physics in mind.
-It acts as an interface to many powerful tools to make it easier for an analyzer to run their statistical inference pipeline.
+``cabinetry`` is a Python library for building and steering binned template fits.
+It interfaces many other libraries to make it easy for an analyzer to run their statistical inference pipeline.
 
 This documentation can be viewed `on Read the Docs <https://cabinetry.readthedocs.io/>`_ or locally via
 
@@ -27,9 +27,19 @@ This documentation can be viewed `on Read the Docs <https://cabinetry.readthedoc
     sphinx-build docs docs/_build
     open docs/_build/index.html
 
-It contains a description of the ``cabinetry`` configuration file schema, as well as the public facing API.
+See the `README on github <https://github.com/alexander-held/cabinetry/blob/master/README.md>`_ for a simple example of using ``cabinetry``, and the [cabinetry-tutorials](https://github.com/cabinetry/cabinetry-tutorials) repository repository for a more in-depth version.
 
-See the `README on github <https://github.com/alexander-held/cabinetry/blob/master/README.md>`_ for an example of using ``cabinetry``.
+Presentations of `cabinetry`
+----------------------------
+
+- `vCHEP 2021 <https://indico.cern.ch/event/948465/>`_
+
+  - short talk: https://indico.cern.ch/event/948465/contributions/4324154/
+  - associated paper: `10.5281/zenodo.4627037 <https://doi.org/10.5281/zenodo.4627037>`_
+
+- `PyHEP 2021 <https://indico.cern.ch/event/1019958/>`_
+
+  - notebook talk: https://indico.cern.ch/event/1019958/contributions/4421868/
 
 Acknowledgements
 ----------------
