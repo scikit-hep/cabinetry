@@ -48,7 +48,9 @@ def test_build_Asimov_data(example_spec):
     assert model_utils.build_Asimov_data(model, with_aux=False) == [103.6]
 
 
-def test_get_asimov_parameters(example_spec, example_spec_shapefactor):
+def test_get_asimov_parameters(
+    example_spec, example_spec_shapefactor, example_spec_lumi
+):
     model = pyhf.Workspace(example_spec).model()
     pars = model_utils.get_asimov_parameters(model)
     assert np.allclose(pars, [1.0, 1.0])
@@ -93,6 +95,11 @@ def test_get_asimov_parameters(example_spec, example_spec_shapefactor):
     model = pyhf.Workspace(shapesys_spec).model()
     pars = model_utils.get_asimov_parameters(model)
     assert np.allclose(pars, [1.0, 1.0, 1.0])
+
+    # lumi modifier with nominal value 1 and different initial value (ignored)
+    model = pyhf.Workspace(example_spec_lumi).model()
+    pars = model_utils.get_asimov_parameters(model)
+    assert np.allclose(pars, [1.0, 1.0])
 
 
 def test_get_prefit_uncertainties(

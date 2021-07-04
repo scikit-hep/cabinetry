@@ -250,6 +250,50 @@ def example_spec_no_aux():
     return spec
 
 
+@pytest.fixture
+def example_spec_lumi():
+    spec = {
+        "channels": [
+            {
+                "name": "Signal Region",
+                "samples": [
+                    {
+                        "data": [35],
+                        "modifiers": [
+                            {
+                                "data": None,
+                                "name": "Signal strength",
+                                "type": "normfactor",
+                            },
+                            {"data": None, "name": "lumi", "type": "lumi"},
+                        ],
+                        "name": "Signal",
+                    }
+                ],
+            }
+        ],
+        "measurements": [
+            {
+                "config": {
+                    "parameters": [
+                        {
+                            "auxdata": [1.0],
+                            "inits": [1.05],
+                            "name": "lumi",
+                            "sigmas": [0.02],
+                        },
+                    ],
+                    "poi": "Signal strength",
+                },
+                "name": "lumi modifier",
+            }
+        ],
+        "observations": [{"data": [35], "name": "Signal Region"}],
+        "version": "1.0.0",
+    }
+    return spec
+
+
 # code below allows marking tests as slow and adds --runslow to run them
 # implemented following https://docs.pytest.org/en/6.2.x/example/simple.html
 def pytest_addoption(parser):
