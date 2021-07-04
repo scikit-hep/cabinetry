@@ -14,7 +14,7 @@ It is written with applications in High Energy Physics in mind.
 `cabinetry` interfaces many other powerful libraries to make it easy for an analyzer to run their statistical inference pipeline.
 
 Statistical models in [HistFactory](https://cds.cern.ch/record/1456844) format can be built by `cabinetry` from instructions in a declarative configuration.
-`cabinetry` makes heavy use of [`pyhf`](pyhf.readthedocs.io/) for statistical inference, and provides additional utilities to help study and disseminate fit results.
+`cabinetry` makes heavy use of [`pyhf`](https://pyhf.readthedocs.io/) for statistical inference, and provides additional utilities to help study and disseminate fit results.
 This includes commonly used visualizations.
 Due to its modular approach, analyzers are free to use all of `cabinetry`'s functionality or only some pieces.
 `cabinetry` can be used for inference and visualization with any `pyhf`-compatible model, whether it was built with `cabinetry` or not.
