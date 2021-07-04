@@ -65,6 +65,7 @@ cabinetry.visualize.data_MC(model, data, config=config, fit_results=fit_results)
 The above is an abbreviated version of an example included in `example.py`, which shows how to use `cabinetry`.
 It requires additional dependencies obtained with `pip install cabinetry[contrib]`.
 
+
 ## Documentation
 
 Find more information in the [documentation](https://cabinetry.readthedocs.io/) and tutorial material in the [cabinetry-tutorials](https://github.com/cabinetry/cabinetry-tutorials) repository.
