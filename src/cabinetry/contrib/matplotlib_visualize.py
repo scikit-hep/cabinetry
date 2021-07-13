@@ -32,6 +32,7 @@ def data_MC(
     histogram_dict_list: List[Dict[str, Any]],
     total_model_unc: np.ndarray,
     bin_edges: np.ndarray,
+    label: str,
     figure_path: pathlib.Path,
     log_scale: Optional[bool] = None,
     log_scale_x: bool = False,
@@ -45,6 +46,7 @@ def data_MC(
         total_model_unc (np.ndarray): total model uncertainty, if specified this is used
             instead of calculating it via sum in quadrature, defaults to None
         bin_edges (np.ndarray): bin edges of histogram
+        label (str): string to be written on the figure, for example name of region
         figure_path (pathlib.Path): path where figure should be saved
         log_scale (Optional[bool], optional): whether to use a logarithmic vertical
             axis, defaults to None (automatically determine whether to use linear or log
@@ -193,20 +195,34 @@ def data_MC(
         ax1.set_xscale("log")
         ax2.set_xscale("log")
 
+    # figure label (region name)
+    ax1.text(
+        0.05,
+        0.95,
+        label,
+        ha="left",
+        va="top",
+        transform=ax1.transAxes,
+        fontsize="large",
+        linespacing=1.5,
+    )
+
     # MC contributions in inverse order, such that first legend entry corresponds to
     # the last (highest) contribution to the stack
     all_containers = mc_containers[::-1] + [mc_unc_container, data_container]
     all_labels = mc_labels[::-1] + ["Uncertainty", data_label]
-    ax1.legend(all_containers, all_labels, frameon=False, fontsize="large")
+    ax1.legend(
+        all_containers, all_labels, frameon=False, fontsize="large", loc="upper right"
+    )
 
-    ax1.set_xlim(bin_left_edges[0], bin_right_edges[-1])
+    ax1.set_xlim(bin_edges[0], bin_edges[-1])
     ax1.set_ylabel("events")
     ax1.set_xticklabels([])
     ax1.set_xticklabels([], minor=True)
     ax1.tick_params(axis="both", which="major", pad=8)  # tick label - axis padding
     ax1.tick_params(direction="in", top=True, right=True, which="both")
 
-    ax2.set_xlim(bin_left_edges[0], bin_right_edges[-1])
+    ax2.set_xlim(bin_edges[0], bin_edges[-1])
     ax2.set_ylim([0.5, 1.5])
     ax2.set_xlabel(histogram_dict_list[0]["variable"])
     ax2.set_ylabel("data / model")
@@ -633,23 +649,9 @@ def scan(
     text_x_pos = par_vals[-1] - 0.01 * (par_vals[-1] - par_vals[0])
     # only draw text if it fits in the figure
     if y_lim >= 1:
-        ax.text(
-            text_x_pos,
-            1.0,
-            "68% CL",
-            horizontalalignment="right",
-            verticalalignment="bottom",
-            color="gray",
-        )
+        ax.text(text_x_pos, 1.0, "68% CL", ha="right", va="bottom", color="gray")
     if y_lim >= 4:
-        ax.text(
-            text_x_pos,
-            4.0,
-            "95% CL",
-            horizontalalignment="right",
-            verticalalignment="bottom",
-            color="gray",
-        )
+        ax.text(text_x_pos, 4.0, "95% CL", ha="right", va="bottom", color="gray")
 
     # Gaussian at best-fit parameter value for reference
     val_grid = np.linspace(par_vals[0], par_vals[-1], 100)

@@ -104,6 +104,7 @@ def data_MC_from_histograms(
         figure_name = _build_figure_name(region["Name"], True)
         total_model_unc = _total_yield_uncertainty(model_stdevs)
         bin_edges = histogram.bins
+        label = f"{region['Name']}\npre-fit"
 
         if method == "matplotlib":
             from .contrib import matplotlib_visualize
@@ -113,6 +114,7 @@ def data_MC_from_histograms(
                 histogram_dict_list,
                 total_model_unc,
                 bin_edges,
+                label,
                 figure_path,
                 log_scale=log_scale,
                 log_scale_x=log_scale_x,
@@ -263,21 +265,25 @@ def data_MC(
             }
         )
 
+        if prefit:
+            figure_path = pathlib.Path(figure_folder) / _build_figure_name(
+                channel_name, True
+            )
+            label = f"{channel_name}\npre-fit"
+        else:
+            figure_path = pathlib.Path(figure_folder) / _build_figure_name(
+                channel_name, False
+            )
+            label = f"{channel_name}\npost-fit"
+
         if method == "matplotlib":
             from .contrib import matplotlib_visualize
 
-            if prefit:
-                figure_path = pathlib.Path(figure_folder) / _build_figure_name(
-                    channel_name, True
-                )
-            else:
-                figure_path = pathlib.Path(figure_folder) / _build_figure_name(
-                    channel_name, False
-                )
             matplotlib_visualize.data_MC(
                 histogram_dict_list,
                 np.asarray(total_stdev_model_bins[i_chan]),
                 bin_edges,
+                label,
                 figure_path,
                 log_scale=log_scale,
                 log_scale_x=log_scale_x,
