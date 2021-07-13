@@ -430,6 +430,7 @@ def templates(
     down_histo_mod: Dict[str, np.ndarray],
     bin_edges: np.ndarray,
     variable: str,
+    title: str,
     figure_path: pathlib.Path,
     close_figure: bool = False,
 ) -> None:
@@ -445,6 +446,7 @@ def templates(
         down_histo_mod (Dict[str, np.ndarray]): "down" variation after post-processing
         bin_edges (np.ndarray): bin edges of histogram
         variable (str): variable name for the horizontal axis
+        title (str): figure title
         figure_path (pathlib.Path): path where figure should be saved
         close_figure (bool, optional): whether to close each figure immediately after
             saving it, defaults to False (enable when producing many figures to avoid
@@ -580,6 +582,7 @@ def templates(
     ax1.set_xticklabels([])
     ax1.tick_params(axis="both", which="major", pad=8)  # tick label - axis padding
     ax1.tick_params(direction="in", top=True, right=True, which="both")
+    ax1.set_title(title)
 
     ax2.set_xlim([bin_edges[0], bin_edges[-1]])
     ax2.set_ylim([0.5, 1.5])

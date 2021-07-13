@@ -576,13 +576,12 @@ def templates(
                         down_orig.update(var_orig)
                         down_mod.update(var_mod)
 
+                figure_title = (
+                    f"region: {region['Name']}\nsample: {sample['Name']}"
+                    f"\nsystematic: {systematic['Name']}"
+                )
                 figure_name = (
-                    region["Name"]
-                    + "_"
-                    + sample["Name"]
-                    + "_"
-                    + systematic["Name"]
-                    + ".pdf"
+                    f"{region['Name']}_{sample['Name']}_{systematic['Name']}.pdf"
                 )
                 figure_path = figure_folder / figure_name
 
@@ -597,6 +596,7 @@ def templates(
                         down_mod,
                         bins,
                         variable,
+                        figure_title,
                         figure_path,
                         close_figure=close_figure,
                     )
