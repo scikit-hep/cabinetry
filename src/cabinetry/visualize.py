@@ -114,10 +114,10 @@ def data_MC_from_histograms(
                 histogram_dict_list,
                 total_model_unc,
                 bin_edges,
-                label,
                 figure_path,
                 log_scale=log_scale,
                 log_scale_x=log_scale_x,
+                label=label,
                 close_figure=close_figure,
             )
         else:
@@ -283,10 +283,10 @@ def data_MC(
                 histogram_dict_list,
                 np.asarray(total_stdev_model_bins[i_chan]),
                 bin_edges,
-                label,
                 figure_path,
                 log_scale=log_scale,
                 log_scale_x=log_scale_x,
+                label=label,
                 close_figure=close_figure,
             )
         else:
@@ -602,8 +602,8 @@ def templates(
                         down_mod,
                         bins,
                         variable,
-                        figure_title,
                         figure_path,
+                        title=figure_title,
                         close_figure=close_figure,
                     )
 

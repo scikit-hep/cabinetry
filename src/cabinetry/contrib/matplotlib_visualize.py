@@ -32,10 +32,10 @@ def data_MC(
     histogram_dict_list: List[Dict[str, Any]],
     total_model_unc: np.ndarray,
     bin_edges: np.ndarray,
-    label: str,
     figure_path: pathlib.Path,
     log_scale: Optional[bool] = None,
     log_scale_x: bool = False,
+    label: str = "",
     close_figure: bool = False,
 ) -> None:
     """Draws a data/MC histogram with uncertainty bands and ratio panel.
@@ -46,13 +46,13 @@ def data_MC(
         total_model_unc (np.ndarray): total model uncertainty, if specified this is used
             instead of calculating it via sum in quadrature, defaults to None
         bin_edges (np.ndarray): bin edges of histogram
-        label (str): string to be written on the figure, for example name of region
         figure_path (pathlib.Path): path where figure should be saved
         log_scale (Optional[bool], optional): whether to use a logarithmic vertical
             axis, defaults to None (automatically determine whether to use linear or log
             scale)
         log_scale_x (bool, optional): whether to use logarithmic horizontal axis,
             defaults to False
+        label (str, optional): label written on the figure, defaults to ""
         close_figure (bool, optional): whether to close each figure immediately after
             saving it, defaults to False (enable when producing many figures to avoid
             memory issues, prevents rendering in notebooks)
@@ -446,8 +446,8 @@ def templates(
     down_histo_mod: Dict[str, np.ndarray],
     bin_edges: np.ndarray,
     variable: str,
-    title: str,
     figure_path: pathlib.Path,
+    title: str = "",
     close_figure: bool = False,
 ) -> None:
     """Draws a nominal template and the associated up/down variations.
@@ -462,8 +462,8 @@ def templates(
         down_histo_mod (Dict[str, np.ndarray]): "down" variation after post-processing
         bin_edges (np.ndarray): bin edges of histogram
         variable (str): variable name for the horizontal axis
-        title (str): figure title
         figure_path (pathlib.Path): path where figure should be saved
+        title (str, optional): figure title, defaults to ""
         close_figure (bool, optional): whether to close each figure immediately after
             saving it, defaults to False (enable when producing many figures to avoid
             memory issues, prevents rendering in notebooks)
