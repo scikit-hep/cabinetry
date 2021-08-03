@@ -142,7 +142,7 @@ def test_integration(tmp_path, ntuple_creator, caplog):
         ],
     ]
     assert np.allclose(fit_results.bestfit, bestfit_expected)
-    assert np.allclose(fit_results.uncertainty, uncertainty_expected, atol=2e-5)
+    assert np.allclose(fit_results.uncertainty, uncertainty_expected, atol=5e-5)
     assert np.allclose(fit_results.best_twice_nll, best_twice_nll_expected)
     assert np.allclose(fit_results.corr_mat, corr_mat_expected, rtol=1e-4, atol=5e-5)
     assert np.allclose(fit_results.goodness_of_fit, 0.24679341)
@@ -209,7 +209,7 @@ def test_integration(tmp_path, ntuple_creator, caplog):
             -1.10138138,
             -0.89692663,
         ],
-        atol=2e-5,
+        atol=5e-5,
     )
     assert np.allclose(
         ranking_results.postfit_down,
@@ -222,7 +222,7 @@ def test_integration(tmp_path, ntuple_creator, caplog):
             0.84367903,
             0.76574073,
         ],
-        atol=2e-5,
+        atol=5e-5,
     )
 
     # parameter scan
