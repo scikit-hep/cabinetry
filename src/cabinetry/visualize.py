@@ -555,8 +555,8 @@ def templates(
                 # extract original and modified (after post-processing) variation
                 # histograms, if they exist
                 up_orig = {}
-                up_mod = {}
                 down_orig = {}
+                up_mod = {}
                 down_mod = {}
                 for variation_path in variation_paths:
                     # original variation, before post-processing
@@ -597,8 +597,8 @@ def templates(
                     matplotlib_visualize.templates(
                         nominal,
                         up_orig,
-                        up_mod,
                         down_orig,
+                        up_mod,
                         down_mod,
                         bins,
                         variable,

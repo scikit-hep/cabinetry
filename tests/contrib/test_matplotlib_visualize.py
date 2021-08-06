@@ -50,7 +50,9 @@ def test_data_MC(tmp_path):
     ]
     total_model_unc = np.sqrt([0.17, 0.29])
     bin_edges = np.asarray([1, 2, 3])
-    matplotlib_visualize.data_MC(histo_dict_list, total_model_unc, bin_edges, fname)
+    matplotlib_visualize.data_MC(
+        histo_dict_list, total_model_unc, bin_edges, fname, label="Signal region"
+    )
     assert compare_images("tests/contrib/reference/data_MC.pdf", str(fname), 0) is None
 
     histo_dict_list_log = copy.deepcopy(histo_dict_list)
@@ -62,7 +64,12 @@ def test_data_MC(tmp_path):
 
     # automatic log scale
     matplotlib_visualize.data_MC(
-        histo_dict_list_log, total_model_unc_log, bin_edges_log, fname, log_scale_x=True
+        histo_dict_list_log,
+        total_model_unc_log,
+        bin_edges_log,
+        fname,
+        log_scale_x=True,
+        label="Signal region",
     )
     assert (
         compare_images("tests/contrib/reference/data_MC_log.pdf", str(fname_log), 0)
@@ -71,7 +78,12 @@ def test_data_MC(tmp_path):
 
     # linear scale forced
     matplotlib_visualize.data_MC(
-        histo_dict_list, total_model_unc, bin_edges, fname, log_scale=False
+        histo_dict_list,
+        total_model_unc,
+        bin_edges,
+        fname,
+        log_scale=False,
+        label="Signal region",
     )
     assert compare_images("tests/contrib/reference/data_MC.pdf", str(fname), 0) is None
 
@@ -86,6 +98,7 @@ def test_data_MC(tmp_path):
         fname,
         log_scale=True,
         log_scale_x=True,
+        label="Signal region",
         close_figure=True,
     )
     assert (
@@ -178,13 +191,13 @@ def test_templates(tmp_path):
         "yields": np.asarray([1.2, 1.7]),
         "stdev": np.asarray([0.05, 0.07]),
     }
-    up_histo_mod = {
-        "yields": np.asarray([1.3, 1.6]),
-        "stdev": np.asarray([0.05, 0.07]),
-    }
     down_histo_orig = {
         "yields": np.asarray([0.9, 0.9]),
         "stdev": np.asarray([0.06, 0.07]),
+    }
+    up_histo_mod = {
+        "yields": np.asarray([1.3, 1.6]),
+        "stdev": np.asarray([0.05, 0.07]),
     }
     down_histo_mod = {
         "yields": np.asarray([0.85, 0.95]),
@@ -192,16 +205,18 @@ def test_templates(tmp_path):
     }
     bin_edges = np.asarray([0.0, 1.0, 2.0])
     variable = "x"
+    label = "region: Signal region\nsample: Signal\nsystematic: Modeling"
 
     matplotlib_visualize.templates(
         nominal_histo,
         up_histo_orig,
-        up_histo_mod,
         down_histo_orig,
+        up_histo_mod,
         down_histo_mod,
         bin_edges,
         variable,
         fname,
+        label=label,
     )
     assert (
         compare_images("tests/contrib/reference/templates.pdf", str(fname), 0) is None
@@ -214,12 +229,13 @@ def test_templates(tmp_path):
     matplotlib_visualize.templates(
         nominal_histo,
         up_histo_orig,
-        up_histo_mod,
         {},
+        up_histo_mod,
         {},
         bin_edges,
         variable,
         fname,
+        label=label,
         close_figure=True,
     )
     assert len(plt.get_fignums()) == 1

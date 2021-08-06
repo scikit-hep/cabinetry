@@ -441,8 +441,8 @@ def ranking(
 def templates(
     nominal_histo: Dict[str, np.ndarray],
     up_histo_orig: Dict[str, np.ndarray],
-    up_histo_mod: Dict[str, np.ndarray],
     down_histo_orig: Dict[str, np.ndarray],
+    up_histo_mod: Dict[str, np.ndarray],
     down_histo_mod: Dict[str, np.ndarray],
     bin_edges: np.ndarray,
     variable: str,
@@ -457,8 +457,8 @@ def templates(
     Args:
         nominal_histo (Dict[str, np.ndarray]): the nominal template
         up_histo_orig (Dict[str, np.ndarray]): original "up" variation
-        up_histo_mod (Dict[str, np.ndarray]): "up" variation after post-processing
         down_histo_orig (Dict[str, np.ndarray]): original "down" variation
+        up_histo_mod (Dict[str, np.ndarray]): "up" variation after post-processing
         down_histo_mod (Dict[str, np.ndarray]): "down" variation after post-processing
         bin_edges (np.ndarray): bin edges of histogram
         variable (str): variable name for the horizontal axis
@@ -497,20 +497,20 @@ def templates(
         hatch=3 * "/",
     )
 
-    colors = ["black", "C0", "C0", "C1", "C1"]
-    linestyles = ["-", ":", "--", ":", "--"]
+    colors = ["black", "C0", "C1", "C0", "C1"]
+    linestyles = ["-", ":", ":", "--", "--"]
     all_templates = [
         nominal_histo,
         up_histo_orig,
-        up_histo_mod,
         down_histo_orig,
+        up_histo_mod,
         down_histo_mod,
     ]
     template_labels = [
         "nominal",
         "up (original)",
-        "up (modified)",
         "down (original)",
+        "up (modified)",
         "down (modified)",
     ]
 
