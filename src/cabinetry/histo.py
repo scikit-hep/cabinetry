@@ -253,7 +253,7 @@ def build_name(
     Returns:
         str: unique name for the histogram
     """
-    name = region["Name"] + "_" + sample["Name"] + "_" + systematic["Name"]
+    name = f"{region['Name']}_{sample['Name']}_{systematic['Name']}"
     if template != "Nominal":
         name += "_" + template
     name = name.replace(" ", "-")
