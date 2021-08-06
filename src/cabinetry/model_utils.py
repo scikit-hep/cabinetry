@@ -76,15 +76,7 @@ def parameter_names(model: pyhf.pdf.Model) -> List[str]:
     Returns:
         List[str]: names of fit parameters
     """
-    labels = []
-    for parname in model.config.par_order:
-        for i_par in range(model.config.param_set(parname).n_parameters):
-            labels.append(
-                f"{parname}[bin_{i_par}]"
-                if model.config.param_set(parname).n_parameters > 1
-                else parname
-            )
-    return labels
+    return model.config.par_names()
 
 
 def asimov_data(model: pyhf.Model, with_aux: bool = True) -> List[float]:

@@ -85,15 +85,7 @@ def _fit_model_pyhf(
     fit_results = FitResults(bestfit, uncertainty, labels, corr_mat, best_twice_nll)
 
     if minos is not None:
-        parameters_translated = []
-        for minos_par in minos:
-            par_index = model_utils._parameter_index(minos_par, labels)
-            if par_index != -1:
-                # pyhf does not hand over parameter names, all parameters are known as
-                # x0, x1, etc.
-                parameters_translated.append(f"x{par_index}")
-
-        _run_minos(result_obj.minuit, parameters_translated, labels)
+        _run_minos(result_obj.minuit, minos, labels)
 
     return fit_results
 
@@ -239,13 +231,11 @@ def _run_minos(
             knows parameters)
     """
     for par_name in minos:
-        # get index of current parameter in labels (to translate its name if iminuit
-        # did not receive the parameter labels)
-        par_index = model_utils._parameter_index(par_name, minuit_obj.parameters)
-        if par_index == -1:
-            # parameter not found, skip calculation (can only happen with custom fit)
+        if par_name not in minuit_obj.parameters:
+            # parameter not found, skip calculation
+            log.warning(f"parameter {par_name} not found in model")
             continue
-        log.info(f"running MINOS for {labels[par_index]}")
+        log.info(f"running MINOS for {par_name}")
         minuit_obj.minos(par_name)
 
     log.info("MINOS results:")
@@ -499,7 +489,7 @@ def scan(
     # get index of parameter with name par_name
     par_index = model_utils._parameter_index(par_name, labels)
     if par_index == -1:
-        raise ValueError(f"could not find parameter {par_name} in model")
+        raise ValueError(f"parameter {par_name} not found in model")
 
     # run a fit with the parameter not held constant, to find the best-fit point
     fit_results = _fit_model(model, data, custom_fit=custom_fit)

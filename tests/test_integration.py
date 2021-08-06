@@ -148,7 +148,7 @@ def test_integration(tmp_path, ntuple_creator, caplog):
     assert np.allclose(fit_results.goodness_of_fit, 0.24679341)
 
     # minos result
-    assert "Signal_norm                    =  1.6895 -0.9580 +0.9052" in [
+    assert "Signal_norm                =  1.6895 -0.9580 +0.9052" in [
         rec.message for rec in caplog.records
     ]
     caplog.clear()

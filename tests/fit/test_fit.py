@@ -68,7 +68,7 @@ def test__fit_model_pyhf(mock_minos, example_spec, example_spec_multibin):
     fit_results = fit._fit_model_pyhf(model, data, minos=["Signal strength", "abc"])
     assert mock_minos.call_count == 1
     # first argument to minos call is the Minuit instance
-    assert mock_minos.call_args[0][1] == ["x1"]
+    assert mock_minos.call_args[0][1] == ["Signal strength", "abc"]
     assert mock_minos.call_args[0][2] == ["staterror_Signal-Region", "Signal strength"]
     assert mock_minos.call_args[1] == {}
 
@@ -216,15 +216,6 @@ def test__run_minos(caplog):
     fit._run_minos(m, ["b"], ["a", "b"])
     assert "running MINOS for b" in [rec.message for rec in caplog.records]
     assert "b =  1.5909 -0.7262 +0.4738" in [rec.message for rec in caplog.records]
-    caplog.clear()
-
-    # proper labels not known to iminuit
-    m = iminuit.Minuit(func_to_minimize, [1.0, 1.0])
-    m.errordef = 1
-    m.migrad()
-    fit._run_minos(m, ["x0"], ["a", "b"])
-    assert "running MINOS for a" in [rec.message for rec in caplog.records]
-    assert "a =  1.3827 -0.8713 +0.5715" in [rec.message for rec in caplog.records]
     caplog.clear()
 
     # unknown parameter, MINOS does not run
@@ -467,7 +458,7 @@ def test_scan(mock_fit, example_spec):
     assert mock_fit.call_args[1]["custom_fit"] is True
 
     # unknown parameter
-    with pytest.raises(ValueError, match="could not find parameter abc in model"):
+    with pytest.raises(ValueError, match="parameter abc not found in model"):
         fit.scan(model, data, "abc")
 
 
