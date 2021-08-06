@@ -104,6 +104,7 @@ def data_MC_from_histograms(
         figure_name = _build_figure_name(region["Name"], True)
         total_model_unc = _total_yield_uncertainty(model_stdevs)
         bin_edges = histogram.bins
+        label = f"{region['Name']}\npre-fit"
 
         if method == "matplotlib":
             from .contrib import matplotlib_visualize
@@ -116,6 +117,7 @@ def data_MC_from_histograms(
                 figure_path,
                 log_scale=log_scale,
                 log_scale_x=log_scale_x,
+                label=label,
                 close_figure=close_figure,
             )
         else:
@@ -263,17 +265,20 @@ def data_MC(
             }
         )
 
+        if prefit:
+            figure_path = pathlib.Path(figure_folder) / _build_figure_name(
+                channel_name, True
+            )
+            label = f"{channel_name}\npre-fit"
+        else:
+            figure_path = pathlib.Path(figure_folder) / _build_figure_name(
+                channel_name, False
+            )
+            label = f"{channel_name}\npost-fit"
+
         if method == "matplotlib":
             from .contrib import matplotlib_visualize
 
-            if prefit:
-                figure_path = pathlib.Path(figure_folder) / _build_figure_name(
-                    channel_name, True
-                )
-            else:
-                figure_path = pathlib.Path(figure_folder) / _build_figure_name(
-                    channel_name, False
-                )
             matplotlib_visualize.data_MC(
                 histogram_dict_list,
                 np.asarray(total_stdev_model_bins[i_chan]),
@@ -281,6 +286,7 @@ def data_MC(
                 figure_path,
                 log_scale=log_scale,
                 log_scale_x=log_scale_x,
+                label=label,
                 close_figure=close_figure,
             )
         else:
@@ -549,8 +555,8 @@ def templates(
                 # extract original and modified (after post-processing) variation
                 # histograms, if they exist
                 up_orig = {}
-                up_mod = {}
                 down_orig = {}
+                up_mod = {}
                 down_mod = {}
                 for variation_path in variation_paths:
                     # original variation, before post-processing
@@ -576,13 +582,12 @@ def templates(
                         down_orig.update(var_orig)
                         down_mod.update(var_mod)
 
+                figure_label = (
+                    f"region: {region['Name']}\nsample: {sample['Name']}"
+                    f"\nsystematic: {systematic['Name']}"
+                )
                 figure_name = (
-                    region["Name"]
-                    + "_"
-                    + sample["Name"]
-                    + "_"
-                    + systematic["Name"]
-                    + ".pdf"
+                    f"{region['Name']}_{sample['Name']}_{systematic['Name']}.pdf"
                 )
                 figure_path = figure_folder / figure_name
 
@@ -592,12 +597,13 @@ def templates(
                     matplotlib_visualize.templates(
                         nominal,
                         up_orig,
-                        up_mod,
                         down_orig,
+                        up_mod,
                         down_mod,
                         bins,
                         variable,
                         figure_path,
+                        label=figure_label,
                         close_figure=close_figure,
                     )
 

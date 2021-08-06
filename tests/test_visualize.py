@@ -103,7 +103,12 @@ def test_data_MC_from_histograms(mock_load, mock_draw, mock_stdev):
                 [0.0, 1.0],
                 figure_folder / "reg_1_prefit.pdf",
             ),
-            {"log_scale": None, "log_scale_x": False, "close_figure": False},
+            {
+                "log_scale": None,
+                "log_scale_x": False,
+                "label": "reg_1\npre-fit",
+                "close_figure": False,
+            },
         )
     ]
 
@@ -119,6 +124,7 @@ def test_data_MC_from_histograms(mock_load, mock_draw, mock_stdev):
     assert mock_draw.call_args[1] == {
         "log_scale": True,
         "log_scale_x": True,
+        "label": "reg_1\npre-fit",
         "close_figure": True,
     }
 
@@ -223,6 +229,7 @@ def test_data_MC(
     assert mock_draw.call_args_list[0][1] == {
         "log_scale": None,
         "log_scale_x": False,
+        "label": "Signal Region\npre-fit",
         "close_figure": False,
     }
 
@@ -267,6 +274,7 @@ def test_data_MC(
     assert mock_draw.call_args_list[1][1] == {
         "log_scale": False,
         "log_scale_x": False,
+        "label": "Signal Region\npost-fit",
         "close_figure": True,
     }
 
@@ -534,22 +542,28 @@ def test_templates(mock_draw, mock_histo_config, mock_histo_path, tmp_path):
 
     nominal = {"yields": [1.0], "stdev": [0.1]}
     up_orig = {"yields": [4.0], "stdev": [0.4]}
-    up_mod = {"yields": [5.0], "stdev": [0.5]}
     down_orig = {"yields": [2.0], "stdev": [0.2]}
+    up_mod = {"yields": [5.0], "stdev": [0.5]}
     down_mod = {"yields": [3.0], "stdev": [0.3]}
     bins = [0.0, 1.0]
     assert mock_draw.call_args_list == [
         [
-            (nominal, up_orig, up_mod, down_orig, down_mod, bins, "x", figure_path),
-            {"close_figure": False},
+            (nominal, up_orig, down_orig, up_mod, down_mod, bins, "x", figure_path),
+            {
+                "label": "region: region\nsample: sample\nsystematic: sys",
+                "close_figure": False,
+            },
         ]
     ]
 
     # close figure
     visualize.templates(config, figure_folder=folder_path, close_figure=True)
     assert mock_draw.call_args == [
-        (nominal, up_orig, up_mod, down_orig, down_mod, bins, "x", figure_path),
-        {"close_figure": True},
+        (nominal, up_orig, down_orig, up_mod, down_mod, bins, "x", figure_path),
+        {
+            "label": "region: region\nsample: sample\nsystematic: sys",
+            "close_figure": True,
+        },
     ]
 
     # unknown plotting method

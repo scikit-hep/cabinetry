@@ -35,6 +35,7 @@ def data_MC(
     figure_path: pathlib.Path,
     log_scale: Optional[bool] = None,
     log_scale_x: bool = False,
+    label: str = "",
     close_figure: bool = False,
 ) -> None:
     """Draws a data/MC histogram with uncertainty bands and ratio panel.
@@ -51,6 +52,7 @@ def data_MC(
             scale)
         log_scale_x (bool, optional): whether to use logarithmic horizontal axis,
             defaults to False
+        label (str, optional): label written on the figure, defaults to ""
         close_figure (bool, optional): whether to close each figure immediately after
             saving it, defaults to False (enable when producing many figures to avoid
             memory issues, prevents rendering in notebooks)
@@ -193,20 +195,31 @@ def data_MC(
         ax1.set_xscale("log")
         ax2.set_xscale("log")
 
+    # figure label (region name)
+    at = mpl.offsetbox.AnchoredText(
+        label,
+        loc="upper left",
+        frameon=False,
+        prop={"fontsize": "large", "linespacing": 1.5},
+    )
+    ax1.add_artist(at)
+
     # MC contributions in inverse order, such that first legend entry corresponds to
     # the last (highest) contribution to the stack
     all_containers = mc_containers[::-1] + [mc_unc_container, data_container]
     all_labels = mc_labels[::-1] + ["Uncertainty", data_label]
-    ax1.legend(all_containers, all_labels, frameon=False, fontsize="large")
+    ax1.legend(
+        all_containers, all_labels, frameon=False, fontsize="large", loc="upper right"
+    )
 
-    ax1.set_xlim(bin_left_edges[0], bin_right_edges[-1])
+    ax1.set_xlim(bin_edges[0], bin_edges[-1])
     ax1.set_ylabel("events")
     ax1.set_xticklabels([])
     ax1.set_xticklabels([], minor=True)
     ax1.tick_params(axis="both", which="major", pad=8)  # tick label - axis padding
     ax1.tick_params(direction="in", top=True, right=True, which="both")
 
-    ax2.set_xlim(bin_left_edges[0], bin_right_edges[-1])
+    ax2.set_xlim(bin_edges[0], bin_edges[-1])
     ax2.set_ylim([0.5, 1.5])
     ax2.set_xlabel(histogram_dict_list[0]["variable"])
     ax2.set_ylabel("data / model")
@@ -425,12 +438,13 @@ def ranking(
 def templates(
     nominal_histo: Dict[str, np.ndarray],
     up_histo_orig: Dict[str, np.ndarray],
-    up_histo_mod: Dict[str, np.ndarray],
     down_histo_orig: Dict[str, np.ndarray],
+    up_histo_mod: Dict[str, np.ndarray],
     down_histo_mod: Dict[str, np.ndarray],
     bin_edges: np.ndarray,
     variable: str,
     figure_path: pathlib.Path,
+    label: str = "",
     close_figure: bool = False,
 ) -> None:
     """Draws a nominal template and the associated up/down variations.
@@ -440,12 +454,13 @@ def templates(
     Args:
         nominal_histo (Dict[str, np.ndarray]): the nominal template
         up_histo_orig (Dict[str, np.ndarray]): original "up" variation
-        up_histo_mod (Dict[str, np.ndarray]): "up" variation after post-processing
         down_histo_orig (Dict[str, np.ndarray]): original "down" variation
+        up_histo_mod (Dict[str, np.ndarray]): "up" variation after post-processing
         down_histo_mod (Dict[str, np.ndarray]): "down" variation after post-processing
         bin_edges (np.ndarray): bin edges of histogram
         variable (str): variable name for the horizontal axis
         figure_path (pathlib.Path): path where figure should be saved
+        label (str, optional): label written on the figure, defaults to ""
         close_figure (bool, optional): whether to close each figure immediately after
             saving it, defaults to False (enable when producing many figures to avoid
             memory issues, prevents rendering in notebooks)
@@ -454,7 +469,7 @@ def templates(
     bin_centers = 0.5 * (bin_edges[:-1] + bin_edges[1:])
 
     mpl.style.use("seaborn-colorblind")
-    fig = plt.figure()
+    fig = plt.figure(figsize=(8, 6))
     gs = fig.add_gridspec(nrows=2, ncols=1, hspace=0, height_ratios=[3, 1])
     ax1 = fig.add_subplot(gs[0])
     ax2 = fig.add_subplot(gs[1])
@@ -479,20 +494,20 @@ def templates(
         hatch=3 * "/",
     )
 
-    colors = ["black", "C0", "C0", "C1", "C1"]
-    linestyles = ["-", ":", "--", ":", "--"]
+    colors = ["black", "C0", "C1", "C0", "C1"]
+    linestyles = ["-", ":", ":", "--", "--"]
     all_templates = [
         nominal_histo,
         up_histo_orig,
-        up_histo_mod,
         down_histo_orig,
+        up_histo_mod,
         down_histo_mod,
     ]
-    labels = [
+    template_labels = [
         "nominal",
         "up (original)",
-        "up (modified)",
         "down (original)",
+        "up (modified)",
         "down (modified)",
     ]
 
@@ -500,8 +515,8 @@ def templates(
     line_x = [y for y in bin_edges for _ in range(2)][1:-1]
 
     # draw templates
-    for template, color, linestyle, label in zip(
-        all_templates, colors, linestyles, labels
+    for template, color, linestyle, template_label in zip(
+        all_templates, colors, linestyles, template_labels
     ):
         if not template:
             # variation not defined
@@ -515,9 +530,9 @@ def templates(
             line_y,
             color=color,
             linestyle=linestyle,
-            label=label,
+            label=template_label,
         )
-        if label == "nominal":
+        if template_label == "nominal":
             # band for stat. uncertainty of nominal prediction
             ax1.bar(
                 bin_centers,
@@ -570,12 +585,21 @@ def templates(
     for axis in [ax1.xaxis, ax1.yaxis, ax2.xaxis, ax2.yaxis]:
         axis.set_minor_locator(mpl.ticker.AutoMinorLocator())
 
-    ax1.legend(frameon=False, fontsize="large", ncol=2)
+    # figure label (region, sample, systematic name)
+    at = mpl.offsetbox.AnchoredText(
+        label,
+        loc="upper left",
+        frameon=False,
+        prop={"fontsize": "large", "linespacing": 1.5},
+    )
+    ax1.add_artist(at)
+
+    ax1.legend(frameon=False, fontsize="large", loc="upper right")
 
     max_yield = max(max(template["yields"]) for template in all_templates if template)
 
     ax1.set_xlim([bin_edges[0], bin_edges[-1]])
-    ax1.set_ylim([0, max_yield * 1.5])
+    ax1.set_ylim([0, max_yield * 1.75])
     ax1.set_ylabel("events")
     ax1.set_xticklabels([])
     ax1.tick_params(axis="both", which="major", pad=8)  # tick label - axis padding
@@ -630,23 +654,9 @@ def scan(
     text_x_pos = par_vals[-1] - 0.01 * (par_vals[-1] - par_vals[0])
     # only draw text if it fits in the figure
     if y_lim >= 1:
-        ax.text(
-            text_x_pos,
-            1.0,
-            "68% CL",
-            horizontalalignment="right",
-            verticalalignment="bottom",
-            color="gray",
-        )
+        ax.text(text_x_pos, 1.0, "68% CL", ha="right", va="bottom", color="gray")
     if y_lim >= 4:
-        ax.text(
-            text_x_pos,
-            4.0,
-            "95% CL",
-            horizontalalignment="right",
-            verticalalignment="bottom",
-            color="gray",
-        )
+        ax.text(text_x_pos, 4.0, "95% CL", ha="right", va="bottom", color="gray")
 
     # Gaussian at best-fit parameter value for reference
     val_grid = np.linspace(par_vals[0], par_vals[-1], 100)
