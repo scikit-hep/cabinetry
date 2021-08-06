@@ -550,7 +550,7 @@ def test_templates(mock_draw, mock_histo_config, mock_histo_path, tmp_path):
         [
             (nominal, up_orig, up_mod, down_orig, down_mod, bins, "x", figure_path),
             {
-                "title": "region: region\nsample: sample\nsystematic: sys",
+                "label": "region: region\nsample: sample\nsystematic: sys",
                 "close_figure": False,
             },
         ]
@@ -561,7 +561,7 @@ def test_templates(mock_draw, mock_histo_config, mock_histo_path, tmp_path):
     assert mock_draw.call_args == [
         (nominal, up_orig, up_mod, down_orig, down_mod, bins, "x", figure_path),
         {
-            "title": "region: region\nsample: sample\nsystematic: sys",
+            "label": "region: region\nsample: sample\nsystematic: sys",
             "close_figure": True,
         },
     ]
