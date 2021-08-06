@@ -51,7 +51,11 @@ def test_data_MC(tmp_path):
     total_model_unc = np.sqrt([0.17, 0.29])
     bin_edges = np.asarray([1, 2, 3])
     matplotlib_visualize.data_MC(
-        histo_dict_list, total_model_unc, bin_edges, fname, label="Signal region"
+        histo_dict_list,
+        total_model_unc,
+        bin_edges,
+        fname,
+        label="Signal region\npre-fit",
     )
     assert compare_images("tests/contrib/reference/data_MC.pdf", str(fname), 0) is None
 
@@ -69,7 +73,7 @@ def test_data_MC(tmp_path):
         bin_edges_log,
         fname,
         log_scale_x=True,
-        label="Signal region",
+        label="Signal region\npre-fit",
     )
     assert (
         compare_images("tests/contrib/reference/data_MC_log.pdf", str(fname_log), 0)
@@ -83,7 +87,7 @@ def test_data_MC(tmp_path):
         bin_edges,
         fname,
         log_scale=False,
-        label="Signal region",
+        label="Signal region\npre-fit",
     )
     assert compare_images("tests/contrib/reference/data_MC.pdf", str(fname), 0) is None
 
@@ -98,7 +102,7 @@ def test_data_MC(tmp_path):
         fname,
         log_scale=True,
         log_scale_x=True,
-        label="Signal region",
+        label="Signal region\npre-fit",
         close_figure=True,
     )
     assert (
