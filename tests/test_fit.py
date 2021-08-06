@@ -639,17 +639,23 @@ def test_limit(example_spec_with_background, caplog):
 
 
 def test_significance(example_spec_with_background):
+    # increase observed data for smaller observed p-value
+    example_spec_with_background["observations"][0]["data"] = [196]
+
     model, data = model_utils.model_and_data(example_spec_with_background)
     significance_results = fit.significance(model, data)
-    assert np.allclose(significance_results.observed_p_value, 0.23773068)
-    assert np.allclose(significance_results.observed_significance, 0.71362132)
-    assert np.allclose(significance_results.expected_p_value, 0.00049159)
-    assert np.allclose(significance_results.expected_significance, 3.29529432)
+    assert np.allclose(significance_results.observed_p_value, 0.00080517)
+    assert np.allclose(significance_results.observed_significance, 3.15402672)
+    assert np.allclose(significance_results.expected_p_value, 0.00033333)
+    assert np.allclose(significance_results.expected_significance, 3.40293444)
+
+    # reduce signal for larger expected p-value
+    example_spec_with_background["channels"][0]["samples"][0]["data"] = [30]
 
     # Asimov dataset, observed = expected
     model, data = model_utils.model_and_data(example_spec_with_background, asimov=True)
     significance_results = fit.significance(model, data)
-    assert np.allclose(significance_results.observed_p_value, 0.00031984)
-    assert np.allclose(significance_results.observed_significance, 3.41421033)
-    assert np.allclose(significance_results.expected_p_value, 0.00031984)
-    assert np.allclose(significance_results.expected_significance, 3.41421033)
+    assert np.allclose(significance_results.observed_p_value, 0.02062714)
+    assert np.allclose(significance_results.observed_significance, 2.04096523)
+    assert np.allclose(significance_results.expected_p_value, 0.02062714)
+    assert np.allclose(significance_results.expected_significance, 2.04096523)
