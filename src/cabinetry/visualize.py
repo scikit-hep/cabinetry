@@ -582,7 +582,7 @@ def templates(
                         down_orig.update(var_orig)
                         down_mod.update(var_mod)
 
-                figure_title = (
+                figure_label = (
                     f"region: {region['Name']}\nsample: {sample['Name']}"
                     f"\nsystematic: {systematic['Name']}"
                 )
@@ -603,7 +603,7 @@ def templates(
                         bins,
                         variable,
                         figure_path,
-                        title=figure_title,
+                        label=figure_label,
                         close_figure=close_figure,
                     )
 

@@ -447,7 +447,7 @@ def templates(
     bin_edges: np.ndarray,
     variable: str,
     figure_path: pathlib.Path,
-    title: str = "",
+    label: str = "",
     close_figure: bool = False,
 ) -> None:
     """Draws a nominal template and the associated up/down variations.
@@ -463,7 +463,7 @@ def templates(
         bin_edges (np.ndarray): bin edges of histogram
         variable (str): variable name for the horizontal axis
         figure_path (pathlib.Path): path where figure should be saved
-        title (str, optional): figure title, defaults to ""
+        label (str, optional): label written on the figure, defaults to ""
         close_figure (bool, optional): whether to close each figure immediately after
             saving it, defaults to False (enable when producing many figures to avoid
             memory issues, prevents rendering in notebooks)
@@ -472,7 +472,7 @@ def templates(
     bin_centers = 0.5 * (bin_edges[:-1] + bin_edges[1:])
 
     mpl.style.use("seaborn-colorblind")
-    fig = plt.figure()
+    fig = plt.figure(figsize=(8, 6))
     gs = fig.add_gridspec(nrows=2, ncols=1, hspace=0, height_ratios=[3, 1])
     ax1 = fig.add_subplot(gs[0])
     ax2 = fig.add_subplot(gs[1])
@@ -506,7 +506,7 @@ def templates(
         down_histo_orig,
         down_histo_mod,
     ]
-    labels = [
+    template_labels = [
         "nominal",
         "up (original)",
         "up (modified)",
@@ -518,8 +518,8 @@ def templates(
     line_x = [y for y in bin_edges for _ in range(2)][1:-1]
 
     # draw templates
-    for template, color, linestyle, label in zip(
-        all_templates, colors, linestyles, labels
+    for template, color, linestyle, template_label in zip(
+        all_templates, colors, linestyles, template_labels
     ):
         if not template:
             # variation not defined
@@ -533,9 +533,9 @@ def templates(
             line_y,
             color=color,
             linestyle=linestyle,
-            label=label,
+            label=template_label,
         )
-        if label == "nominal":
+        if template_label == "nominal":
             # band for stat. uncertainty of nominal prediction
             ax1.bar(
                 bin_centers,
@@ -588,17 +588,28 @@ def templates(
     for axis in [ax1.xaxis, ax1.yaxis, ax2.xaxis, ax2.yaxis]:
         axis.set_minor_locator(mpl.ticker.AutoMinorLocator())
 
-    ax1.legend(frameon=False, fontsize="large", ncol=2)
+    # figure label (region, sample, systematic name)
+    ax1.text(
+        0.03,
+        0.95,
+        label,
+        ha="left",
+        va="top",
+        transform=ax1.transAxes,
+        fontsize="large",
+        linespacing=1.5,
+    )
+
+    ax1.legend(frameon=False, fontsize="large", ncol=1)
 
     max_yield = max(max(template["yields"]) for template in all_templates if template)
 
     ax1.set_xlim([bin_edges[0], bin_edges[-1]])
-    ax1.set_ylim([0, max_yield * 1.5])
+    ax1.set_ylim([0, max_yield * 1.75])
     ax1.set_ylabel("events")
     ax1.set_xticklabels([])
     ax1.tick_params(axis="both", which="major", pad=8)  # tick label - axis padding
     ax1.tick_params(direction="in", top=True, right=True, which="both")
-    ax1.set_title(title)
 
     ax2.set_xlim([bin_edges[0], bin_edges[-1]])
     ax2.set_ylim([0.5, 1.5])
