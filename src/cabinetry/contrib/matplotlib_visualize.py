@@ -196,16 +196,13 @@ def data_MC(
         ax2.set_xscale("log")
 
     # figure label (region name)
-    ax1.text(
-        0.05,
-        0.95,
+    at = mpl.offsetbox.AnchoredText(
         label,
-        ha="left",
-        va="top",
-        transform=ax1.transAxes,
-        fontsize="large",
-        linespacing=1.5,
+        loc="upper left",
+        frameon=False,
+        prop={"fontsize": "large", "linespacing": 1.5},
     )
+    ax1.add_artist(at)
 
     # MC contributions in inverse order, such that first legend entry corresponds to
     # the last (highest) contribution to the stack
@@ -589,18 +586,15 @@ def templates(
         axis.set_minor_locator(mpl.ticker.AutoMinorLocator())
 
     # figure label (region, sample, systematic name)
-    ax1.text(
-        0.03,
-        0.95,
+    at = mpl.offsetbox.AnchoredText(
         label,
-        ha="left",
-        va="top",
-        transform=ax1.transAxes,
-        fontsize="large",
-        linespacing=1.5,
+        loc="upper left",
+        frameon=False,
+        prop={"fontsize": "large", "linespacing": 1.5},
     )
+    ax1.add_artist(at)
 
-    ax1.legend(frameon=False, fontsize="large", ncol=1)
+    ax1.legend(frameon=False, fontsize="large", loc="upper right")
 
     max_yield = max(max(template["yields"]) for template in all_templates if template)
 
