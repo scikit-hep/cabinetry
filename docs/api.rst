@@ -61,6 +61,31 @@ cabinetry.visualize
 .. automodule:: cabinetry.visualize
     :members:
 
+cabinetry.visualize.plot_model
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. automodule:: cabinetry.visualize.plot_model
+    :members:
+
+cabinetry.visualize.plot_results
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. automodule:: cabinetry.visualize.plot_results
+    :members:
+
+cabinetry.visualize.utils
+~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. automodule:: cabinetry.visualize.utils
+    :members:
+
+
+cabinetry.tabulate
+---------------------
+
+.. automodule:: cabinetry.tabulate
+    :members:
+
 
 cabinetry.model_utils
 ---------------------
@@ -69,13 +94,20 @@ cabinetry.model_utils
     :members:
 
 
+cabinetry.smooth
+---------------------
+
+.. automodule:: cabinetry.smooth
+    :members:
+
+
 cabinetry.contrib
 -----------------
 
 .. automodule:: cabinetry.contrib
 
-.. automodule:: cabinetry.contrib.histogram_creation
-    :members:
+cabinetry.contrib.histogram_creation
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-.. automodule:: cabinetry.contrib.matplotlib_visualize
+.. automodule:: cabinetry.contrib.histogram_creation
     :members:

@@ -29,7 +29,7 @@ python -m pip install cabinetry
 ```
 
 This will only install the minimum requirements for the core part of `cabinetry`.
-The following will install additional optional dependencies needed for [`ROOT`](https://root.cern/) file reading and visualization:
+The following will install additional optional dependencies needed for [`ROOT`](https://root.cern/) file reading:
 
 ```bash
 python -m pip install cabinetry[contrib]
