@@ -1,4 +1,4 @@
-"""High-level entry point for visualizing fit model and inference results."""
+"""High-level entry point for visualizing fit models and inference results."""
 
 import glob
 import logging
