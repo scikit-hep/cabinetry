@@ -30,9 +30,9 @@ def _build_figure_name(region_name: str, is_prefit: bool) -> str:
     """
     figure_name = region_name.replace(" ", "-")
     if is_prefit:
-        figure_name += "_" + "prefit"
+        figure_name += "_prefit"
     else:
-        figure_name += "_" + "postfit"
+        figure_name += "_postfit"
     figure_name += ".pdf"
     return figure_name
 

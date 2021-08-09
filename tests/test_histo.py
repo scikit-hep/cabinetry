@@ -123,7 +123,7 @@ def test_Histogram_from_path(tmp_path, caplog, example_histograms, histogram_hel
     # try loading a modified one, without success since it does not exist
     h_from_path_modified = histo.Histogram.from_path(tmp_path, modified=True)
     expected_warning = (
-        "the modified histogram " + str(tmp_path) + "_modified.npz " + "does not exist"
+        f"the modified histogram {str(tmp_path)}_modified.npz does not exist"
     )
     assert expected_warning in [rec.message for rec in caplog.records]
     assert "loading the un-modified histogram instead!" in [
