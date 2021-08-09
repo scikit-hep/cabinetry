@@ -67,10 +67,10 @@ cabinetry.visualize.plot_model
 .. automodule:: cabinetry.visualize.plot_model
     :members:
 
-cabinetry.visualize.plot_results
+cabinetry.visualize.plot_result
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-.. automodule:: cabinetry.visualize.plot_results
+.. automodule:: cabinetry.visualize.plot_result
     :members:
 
 cabinetry.visualize.utils

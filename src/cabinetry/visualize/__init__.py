@@ -10,7 +10,7 @@ import numpy as np
 import pyhf
 
 from . import plot_model
-from . import plot_results
+from . import plot_result
 from .. import configuration
 from .. import fit
 from .. import histo
@@ -318,7 +318,7 @@ def correlation_matrix(
     labels = np.delete(fit_results.labels, delete_indices)
     figure_path = pathlib.Path(figure_folder) / "correlation_matrix.pdf"
 
-    plot_results.correlation_matrix(
+    plot_result.correlation_matrix(
         corr_mat, labels, figure_path, close_figure=close_figure
     )
 
@@ -370,7 +370,7 @@ def pulls(
     uncertainty = fit_results.uncertainty[mask]
     labels_np = labels_np[mask]
 
-    plot_results.pulls(
+    plot_result.pulls(
         bestfit,
         uncertainty,
         labels_np,
@@ -424,7 +424,7 @@ def ranking(
         postfit_up = postfit_up[:max_pars]
         postfit_down = postfit_down[:max_pars]
 
-    plot_results.ranking(
+    plot_result.ranking(
         bestfit,
         uncertainty,
         labels,
@@ -575,7 +575,7 @@ def scan(
     )
     figure_path = pathlib.Path(figure_folder) / figure_name
 
-    plot_results.scan(
+    plot_result.scan(
         scan_results.name,
         scan_results.bestfit,
         scan_results.uncertainty,
@@ -603,7 +603,7 @@ def limit(
     """
     figure_path = pathlib.Path(figure_folder) / "limit.pdf"
 
-    plot_results.limit(
+    plot_result.limit(
         limit_results.observed_CLs,
         limit_results.expected_CLs,
         limit_results.poi_values,

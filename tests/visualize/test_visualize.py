@@ -276,7 +276,7 @@ def test_data_MC(
     np.testing.assert_equal(mock_draw.call_args[0][2], np.asarray([0, 1]))
 
 
-@mock.patch("cabinetry.visualize.plot_results.correlation_matrix")
+@mock.patch("cabinetry.visualize.plot_result.correlation_matrix")
 def test_correlation_matrix(mock_draw):
     corr_mat = np.asarray([[1.0, 0.2, 0.1], [0.2, 1.0, 0.1], [0.1, 0.1, 1.0]])
     corr_mat_pruned = np.asarray([[1.0, 0.2], [0.2, 1.0]])
@@ -318,7 +318,7 @@ def test_correlation_matrix(mock_draw):
     assert mock_draw.call_args[1] == {"close_figure": True}
 
 
-@mock.patch("cabinetry.visualize.plot_results.pulls")
+@mock.patch("cabinetry.visualize.plot_result.pulls")
 def test_pulls(mock_draw):
     bestfit = np.asarray([0.8, 1.0, 1.05, 1.1])
     uncertainty = np.asarray([0.9, 1.0, 0.03, 0.7])
@@ -380,7 +380,7 @@ def test_pulls(mock_draw):
     assert mock_draw.call_args[1] == {"close_figure": True}
 
 
-@mock.patch("cabinetry.visualize.plot_results.ranking")
+@mock.patch("cabinetry.visualize.plot_result.ranking")
 def test_ranking(mock_draw):
     bestfit = np.asarray([1.2, 0.1])
     uncertainty = np.asarray([0.2, 0.8])
@@ -524,7 +524,7 @@ def test_templates(mock_draw, mock_histo_config, mock_histo_path, tmp_path):
     assert mock_draw.call_count == 2  # no new call, since no variations found
 
 
-@mock.patch("cabinetry.visualize.plot_results.scan")
+@mock.patch("cabinetry.visualize.plot_result.scan")
 def test_scan(mock_draw):
     folder_path = "tmp"
     figure_path = pathlib.Path(folder_path) / "scan_a_0.pdf"
@@ -552,7 +552,7 @@ def test_scan(mock_draw):
     assert mock_draw.call_args[1] == {"close_figure": True}
 
 
-@mock.patch("cabinetry.visualize.plot_results.limit")
+@mock.patch("cabinetry.visualize.plot_result.limit")
 def test_limit(mock_draw):
     folder_path = "tmp"
     figure_path = pathlib.Path(folder_path) / "limit.pdf"
