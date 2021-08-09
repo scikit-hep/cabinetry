@@ -454,9 +454,6 @@ def templates(
         close_figure (bool, optional): whether to close each figure immediately after
             saving it, defaults to False (enable when producing many figures to avoid
             memory issues, prevents rendering in notebooks)
-
-    Raises:
-        NotImplementedError: when trying to plot with a method that is not supported
     """
     log.info("visualizing systematics templates")
     histogram_folder = pathlib.Path(config["General"]["HistogramFolder"])
@@ -571,9 +568,6 @@ def scan(
         close_figure (bool, optional): whether to close each figure immediately after
             saving it, defaults to False (enable when producing many figures to avoid
             memory issues, prevents rendering in notebooks)
-
-    Raises:
-        NotImplementedError: when trying to plot with a method that is not supported
     """
     # replace [], needed for staterrors
     figure_name = (
@@ -606,9 +600,6 @@ def limit(
         close_figure (bool, optional): whether to close each figure immediately after
             saving it, defaults to False (enable when producing many figures to avoid
             memory issues, prevents rendering in notebooks)
-
-    Raises:
-        NotImplementedError: when trying to plot with a method that is not supported
     """
     figure_path = pathlib.Path(figure_folder) / "limit.pdf"
 
