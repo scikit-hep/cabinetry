@@ -1,4 +1,4 @@
-"""Visualizes the fit model with matplotlib."""
+"""Visualizes fit models with matplotlib."""
 
 import logging
 import pathlib
