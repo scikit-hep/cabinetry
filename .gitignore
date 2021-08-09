@@ -33,7 +33,7 @@ docs/_build
 !src/cabinetry/schemas/*json
 
 # reference for tests
-!tests/contrib/reference/*pdf
+!tests/visualize/reference/*pdf
 
 # virtualenv
 venv/
