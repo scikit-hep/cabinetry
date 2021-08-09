@@ -35,18 +35,12 @@ def test__total_yield_uncertainty():
 
 
 @mock.patch("cabinetry.visualize._total_yield_uncertainty", return_value=[0.2])
-@mock.patch("cabinetry.contrib.matplotlib_visualize.data_MC")
+@mock.patch("cabinetry.visualize.plot_model.data_MC")
 @mock.patch(
     "cabinetry.histo.Histogram.from_config",
     return_value=MockHistogram([0.0, 1.0], [1.0], [0.1]),
 )
 def test_data_MC_from_histograms(mock_load, mock_draw, mock_stdev):
-    """contrib.matplotlib_visualize is only imported depending on the keyword argument,
-    so cannot patch via cabinetry.visualize.matplotlib_visualize
-    Generally it seems like following the path to the module is preferred, but that
-    does not work for the ``data_MC`` case. For some information see also
-    https://docs.python.org/3/library/unittest.mock.html#where-to-patch
-    """
     config = {
         "General": {"HistogramFolder": "tmp_hist"},
         "Regions": [{"Name": "reg_1", "Variable": "x"}],
@@ -55,9 +49,7 @@ def test_data_MC_from_histograms(mock_load, mock_draw, mock_stdev):
     figure_folder = pathlib.Path("tmp")
     histogram_folder = pathlib.Path("tmp_hist")
 
-    visualize.data_MC_from_histograms(
-        config, figure_folder=figure_folder, method="matplotlib"
-    )
+    visualize.data_MC_from_histograms(config, figure_folder=figure_folder)
 
     # the call_args_list contains calls (outer round brackets), first filled with
     # arguments (inner round brackets) and then keyword arguments
@@ -116,7 +108,6 @@ def test_data_MC_from_histograms(mock_load, mock_draw, mock_stdev):
     visualize.data_MC_from_histograms(
         config,
         figure_folder=figure_folder,
-        method="matplotlib",
         log_scale=True,
         log_scale_x=True,
         close_figure=True,
@@ -128,14 +119,8 @@ def test_data_MC_from_histograms(mock_load, mock_draw, mock_stdev):
         "close_figure": True,
     }
 
-    # other plotting method
-    with pytest.raises(NotImplementedError, match="unknown backend: unknown"):
-        visualize.data_MC_from_histograms(
-            config, figure_folder=figure_folder, method="unknown"
-        )
 
-
-@mock.patch("cabinetry.contrib.matplotlib_visualize.data_MC")
+@mock.patch("cabinetry.visualize.plot_model.data_MC")
 @mock.patch("cabinetry.template_builder._get_binning", return_value=np.asarray([1, 2]))
 @mock.patch(
     "cabinetry.configuration.get_region_dict",
@@ -290,14 +275,8 @@ def test_data_MC(
     assert mock_draw.call_args[0][0][1]["yields"] == np.asarray(data[:1])
     np.testing.assert_equal(mock_draw.call_args[0][2], np.asarray([0, 1]))
 
-    # unknown plotting method
-    with pytest.raises(NotImplementedError, match="unknown backend: unknown"):
-        visualize.data_MC(
-            model, data, config=config, figure_folder=figure_folder, method="unknown"
-        )
 
-
-@mock.patch("cabinetry.contrib.matplotlib_visualize.correlation_matrix")
+@mock.patch("cabinetry.visualize.plot_results.correlation_matrix")
 def test_correlation_matrix(mock_draw):
     corr_mat = np.asarray([[1.0, 0.2, 0.1], [0.2, 1.0, 0.1], [0.1, 0.1, 1.0]])
     corr_mat_pruned = np.asarray([[1.0, 0.2], [0.2, 1.0]])
@@ -338,14 +317,8 @@ def test_correlation_matrix(mock_draw):
     )
     assert mock_draw.call_args[1] == {"close_figure": True}
 
-    # unknown plotting method
-    with pytest.raises(NotImplementedError, match="unknown backend: unknown"):
-        visualize.correlation_matrix(
-            fit_results, figure_folder=folder_path, method="unknown"
-        )
 
-
-@mock.patch("cabinetry.contrib.matplotlib_visualize.pulls")
+@mock.patch("cabinetry.visualize.plot_results.pulls")
 def test_pulls(mock_draw):
     bestfit = np.asarray([0.8, 1.0, 1.05, 1.1])
     uncertainty = np.asarray([0.9, 1.0, 0.03, 0.7])
@@ -360,12 +333,7 @@ def test_pulls(mock_draw):
     figure_path = pathlib.Path(folder_path) / "pulls.pdf"
 
     # with filtering
-    visualize.pulls(
-        fit_results,
-        figure_folder=folder_path,
-        exclude=exclude,
-        method="matplotlib",
-    )
+    visualize.pulls(fit_results, figure_folder=folder_path, exclude=exclude)
 
     mock_draw.assert_called_once()
     assert np.allclose(mock_draw.call_args[0][0], filtered_bestfit)
@@ -380,12 +348,8 @@ def test_pulls(mock_draw):
     assert mock_draw.call_args[1] == {"close_figure": False}
 
     # filtering single parameter instead of list
-    visualize.pulls(
-        fit_results,
-        figure_folder=folder_path,
-        exclude=exclude[0],
-        method="matplotlib",
-    )
+    visualize.pulls(fit_results, figure_folder=folder_path, exclude=exclude[0])
+
     assert np.allclose(mock_draw.call_args[0][0], filtered_bestfit)
     assert np.allclose(mock_draw.call_args[0][1], filtered_uncertainty)
     assert np.any(
@@ -402,9 +366,7 @@ def test_pulls(mock_draw):
     bestfit_expected = np.asarray([1.0, 1.1])
     uncertainty_expected = np.asarray([1.0, 0.7])
     labels_expected = ["b", "c"]
-    visualize.pulls(
-        fit_results, figure_folder=folder_path, method="matplotlib", close_figure=True
-    )
+    visualize.pulls(fit_results, figure_folder=folder_path, close_figure=True)
 
     assert np.allclose(mock_draw.call_args[0][0], bestfit_expected)
     assert np.allclose(mock_draw.call_args[0][1], uncertainty_expected)
@@ -417,17 +379,8 @@ def test_pulls(mock_draw):
     assert mock_draw.call_args[0][3] == figure_path
     assert mock_draw.call_args[1] == {"close_figure": True}
 
-    # unknown plotting method
-    with pytest.raises(NotImplementedError, match="unknown backend: unknown"):
-        visualize.pulls(
-            fit_results,
-            figure_folder=folder_path,
-            exclude=exclude,
-            method="unknown",
-        )
 
-
-@mock.patch("cabinetry.contrib.matplotlib_visualize.ranking")
+@mock.patch("cabinetry.visualize.plot_results.ranking")
 def test_ranking(mock_draw):
     bestfit = np.asarray([1.2, 0.1])
     uncertainty = np.asarray([0.2, 0.8])
@@ -480,10 +433,6 @@ def test_ranking(mock_draw):
     assert mock_draw.call_args[0][7] == figure_path
     assert mock_draw.call_args[1] == {"close_figure": True}
 
-    # unknown plotting method
-    with pytest.raises(NotImplementedError, match="unknown backend: unknown"):
-        visualize.ranking(ranking_results, figure_folder=folder_path, method="unknown")
-
 
 @mock.patch(
     "cabinetry.histo.Histogram.from_path",
@@ -499,7 +448,7 @@ def test_ranking(mock_draw):
     "cabinetry.histo.Histogram.from_config",
     return_value=MockHistogram([0.0, 1.0], [1.0], [0.1]),
 )
-@mock.patch("cabinetry.contrib.matplotlib_visualize.templates")
+@mock.patch("cabinetry.visualize.plot_model.templates")
 def test_templates(mock_draw, mock_histo_config, mock_histo_path, tmp_path):
     # the side effects are repeated for the patched Histogram.from_path
     # to check all relevant behavior (including the unknown backend check)
@@ -566,10 +515,6 @@ def test_templates(mock_draw, mock_histo_config, mock_histo_path, tmp_path):
         },
     ]
 
-    # unknown plotting method
-    with pytest.raises(NotImplementedError, match="unknown backend: unknown"):
-        visualize.templates(config, figure_folder=folder_path, method="unknown")
-
     # remove files for variation histograms
     up_path.unlink()
     down_path.unlink()
@@ -579,7 +524,7 @@ def test_templates(mock_draw, mock_histo_config, mock_histo_path, tmp_path):
     assert mock_draw.call_count == 2  # no new call, since no variations found
 
 
-@mock.patch("cabinetry.contrib.matplotlib_visualize.scan")
+@mock.patch("cabinetry.visualize.plot_results.scan")
 def test_scan(mock_draw):
     folder_path = "tmp"
     figure_path = pathlib.Path(folder_path) / "scan_a_0.pdf"
@@ -606,12 +551,8 @@ def test_scan(mock_draw):
     visualize.scan(scan_results, figure_folder=folder_path, close_figure=True)
     assert mock_draw.call_args[1] == {"close_figure": True}
 
-    # unknown plotting method
-    with pytest.raises(NotImplementedError, match="unknown backend: unknown"):
-        visualize.scan(scan_results, figure_folder=folder_path, method="unknown")
 
-
-@mock.patch("cabinetry.contrib.matplotlib_visualize.limit")
+@mock.patch("cabinetry.visualize.plot_results.limit")
 def test_limit(mock_draw):
     folder_path = "tmp"
     figure_path = pathlib.Path(folder_path) / "limit.pdf"
@@ -635,7 +576,3 @@ def test_limit(mock_draw):
     # close figure
     visualize.limit(limit_results, figure_folder=folder_path, close_figure=True)
     assert mock_draw.call_args[1] == {"close_figure": True}
-
-    # unknown plotting method
-    with pytest.raises(NotImplementedError, match="unknown backend: unknown"):
-        visualize.limit(limit_results, figure_folder=folder_path, method="unknown")
