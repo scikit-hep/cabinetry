@@ -135,7 +135,8 @@ def fit(
         cabinetry_visualize.pulls(fit_results, figure_folder=figfolder)
     if corrmat:
         cabinetry_visualize.correlation_matrix(fit_results, figure_folder=figfolder)
-    pass  # fixes coverage, see https://github.com/nedbat/coveragepy/issues/198
+    # pass fixes coverage, see https://github.com/nedbat/coveragepy/issues/198
+    pass  # noqa
 
 
 @click.command()
