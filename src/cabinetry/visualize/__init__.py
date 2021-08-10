@@ -9,14 +9,14 @@ import awkward as ak
 import numpy as np
 import pyhf
 
-from . import plot_model
-from . import plot_result
-from .. import configuration
-from .. import fit
-from .. import histo
-from .. import model_utils
-from .. import tabulate
-from .. import template_builder
+from cabinetry import configuration
+from cabinetry import fit
+from cabinetry import histo
+from cabinetry import model_utils
+from cabinetry import tabulate
+from cabinetry import template_builder
+from cabinetry.visualize import plot_model
+from cabinetry.visualize import plot_result
 
 
 log = logging.getLogger(__name__)

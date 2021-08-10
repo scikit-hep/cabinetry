@@ -8,7 +8,7 @@ import matplotlib as mpl
 import matplotlib.pyplot as plt
 import numpy as np
 
-from . import utils
+from cabinetry.visualize import utils
 
 
 log = logging.getLogger(__name__)

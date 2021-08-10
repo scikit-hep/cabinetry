@@ -5,8 +5,8 @@ from typing import Any, Dict, List, Optional, Union
 
 import pyhf
 
-from . import configuration
-from . import histo
+from cabinetry import configuration
+from cabinetry import histo
 
 
 log = logging.getLogger(__name__)

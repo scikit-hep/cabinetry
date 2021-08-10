@@ -5,10 +5,10 @@ from typing import Any, Dict, Optional
 
 import numpy as np
 
-from . import configuration
-from . import histo
-from . import route
-from . import smooth
+from cabinetry import configuration
+from cabinetry import histo
+from cabinetry import route
+from cabinetry import smooth
 
 
 log = logging.getLogger(__name__)
