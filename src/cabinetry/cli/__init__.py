@@ -7,13 +7,13 @@ from typing import Any, List, Optional, Tuple
 import click
 import yaml
 
-from .. import configuration as cabinetry_configuration
-from .. import fit as cabinetry_fit
-from .. import model_utils as cabinetry_model_utils
-from .. import template_builder as cabinetry_template_builder
-from .. import template_postprocessor as cabinetry_template_postprocessor
-from .. import visualize as cabinetry_visualize
-from .. import workspace as cabinetry_workspace
+from cabinetry import configuration as cabinetry_configuration
+from cabinetry import fit as cabinetry_fit
+from cabinetry import model_utils as cabinetry_model_utils
+from cabinetry import template_builder as cabinetry_template_builder
+from cabinetry import template_postprocessor as cabinetry_template_postprocessor
+from cabinetry import visualize as cabinetry_visualize
+from cabinetry import workspace as cabinetry_workspace
 
 
 class OrderedGroup(click.Group):

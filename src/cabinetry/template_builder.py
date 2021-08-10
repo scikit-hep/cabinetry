@@ -6,9 +6,9 @@ from typing import Any, Dict, List, Optional, Union
 import boost_histogram as bh
 import numpy as np
 
-from . import configuration
-from . import histo
-from . import route
+from cabinetry import configuration
+from cabinetry import histo
+from cabinetry import route
 
 
 log = logging.getLogger(__name__)
@@ -281,7 +281,7 @@ class _Builder:
 
         # obtain the histogram
         if self.method == "uproot":
-            from .contrib import histogram_creation
+            from cabinetry.contrib import histogram_creation
 
             yields, stdev = histogram_creation.from_uproot(
                 ntuple_paths,

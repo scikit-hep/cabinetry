@@ -7,7 +7,7 @@ import pyhf
 import scipy.optimize
 import scipy.stats
 
-from . import model_utils
+from cabinetry import model_utils
 
 
 log = logging.getLogger(__name__)

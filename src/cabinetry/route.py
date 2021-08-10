@@ -4,7 +4,7 @@ from typing import Any, Callable, Dict, List, Optional
 
 import boost_histogram as bh
 
-from . import configuration
+from cabinetry import configuration
 
 
 log = logging.getLogger(__name__)

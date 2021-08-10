@@ -1,15 +1,15 @@
 import logging
 
-from . import configuration  # NOQA
-from . import fit  # NOQA
-from . import route  # NOQA
-from . import smooth  # NOQA
-from . import tabulate  # NOQA
-from . import template_builder  # NOQA
-from . import template_postprocessor  # NOQA
-from . import model_utils  # NOQA
-from . import visualize  # NOQA
-from . import workspace  # NOQA
+import cabinetry.configuration  # noqa: F401
+import cabinetry.fit  # noqa: F401
+import cabinetry.model_utils  # noqa: F401
+import cabinetry.route  # noqa: F401
+import cabinetry.smooth  # noqa: F401
+import cabinetry.tabulate  # noqa: F401
+import cabinetry.template_builder  # noqa: F401
+import cabinetry.template_postprocessor  # noqa: F401
+import cabinetry.visualize  # noqa: F401
+import cabinetry.workspace  # noqa: F401
 
 
 __version__ = "0.2.3"
