@@ -28,6 +28,7 @@ jobs:
         python -m pip uninstall --yes pyhf
         python -m pip install --upgrade --no-cache-dir git+git://github.com/scikit-hep/pyhf.git
         python -m pip list
+        sudo apt-get install ghostscript  # for pdf comparison
     - name: Test with pytest
       run: |
         python -m pytest -r sx
@@ -53,6 +54,7 @@ jobs:
         python -m pip uninstall --yes awkward
         python -m pip install --upgrade --no-cache-dir git+git://github.com/scikit-hep/awkward-1.0.git
         python -m pip list
+        sudo apt-get install ghostscript  # for pdf comparison
     - name: Test with pytest
       run: |
         python -m pytest -r sx
@@ -78,6 +80,7 @@ jobs:
         python -m pip uninstall --yes uproot
         python -m pip install --upgrade --no-cache-dir git+git://github.com/scikit-hep/uproot4.git
         python -m pip list
+        sudo apt-get install ghostscript  # for pdf comparison
     - name: Test with pytest
       run: |
         python -m pytest -r sx
@@ -104,6 +107,7 @@ jobs:
         python -m pip install --upgrade --no-cache-dir cython
         python -m pip install --upgrade --no-cache-dir git+git://github.com/scikit-hep/iminuit.git
         python -m pip list
+        sudo apt-get install ghostscript  # for pdf comparison
     - name: Test with pytest
       run: |
         python -m pytest -r sx
@@ -129,6 +133,7 @@ jobs:
         python -m pip uninstall --yes boost-histogram
         python -m pip install --upgrade --no-cache-dir git+git://github.com/scikit-hep/boost-histogram.git
         python -m pip list
+        sudo apt-get install ghostscript  # for pdf comparison
     - name: Test with pytest
       run: |
         python -m pytest -r sx
