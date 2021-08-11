@@ -253,21 +253,29 @@
             "description": "a systematics template (up/down)",
             "type": "object",
             "properties": {
-                "SamplePaths": {
-                    "description": "override for nominal setting",
-                    "$ref": "#/definitions/samplepaths_setting"
-                },
                 "Tree": {
-                    "description": "name of tree",
+                    "description": "name of tree (override for nominal setting)",
                     "type": "string"
                 },
                 "Weight": {
-                    "description": "weight to apply",
+                    "description": "weight to apply (override for nominal setting)",
+                    "type": "string"
+                },
+                "Filter": {
+                    "description": "selection criteria to apply (override for nominal setting)",
                     "type": "string"
                 },
                 "Variable": {
                     "description": "variable to bin in (override for nominal setting)",
                     "type": "string"
+                },
+                "RegionPath": {
+                    "description": "(part of) path to file containing region (override for nominal setting)",
+                    "type": "string"
+                },
+                "SamplePaths": {
+                    "description": "(part of) path(s) to input file(s) (override for nominal setting)",
+                    "$ref": "#/definitions/samplepaths_setting"
                 },
                 "Normalization": {
                     "description": "normalization uncertainty to apply",
