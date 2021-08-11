@@ -216,7 +216,8 @@
             "properties": {
                 "Name": {
                     "description": "name of the systematic uncertainty",
-                    "type": "string"
+                    "type": "string",
+                    "not": {"const": "Nominal", "$comment": "systematics may not be called \"Nominal\""}
                 },
                 "Type": {
                     "description": "type of systematic uncertainty",
