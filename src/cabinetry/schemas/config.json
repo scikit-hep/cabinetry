@@ -264,6 +264,10 @@
                     "description": "weight to apply",
                     "type": "string"
                 },
+                "Variable": {
+                    "description": "variable to bin in (override for nominal setting)",
+                    "type": "string"
+                },
                 "Normalization": {
                     "description": "normalization uncertainty to apply",
                     "type": "number"
