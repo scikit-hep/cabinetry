@@ -111,16 +111,33 @@ def _get_ntuple_paths(
     return paths
 
 
-def _get_variable(region: Dict[str, Any]) -> str:
+def _get_variable(
+    region: Dict[str, Any],
+    sample: Dict[str, Any],
+    systematic: Dict[str, Any],
+    template: str,
+) -> str:
     """Returns the variable the histogram will be binned in.
+
+    For non-nominal templates, overrides the nominal variable if an alternative is
+    specified for the template.
 
     Args:
         region (Dict[str, Any]): containing all region information
+        sample (Dict[str, Any]): containing all sample information
+        systematic (Dict[str, Any]): containing all systematic information
+        template (str): which template is considered: "Nominal", "Up", "Down"
 
     Returns:
         str: name of variable to bin histogram in
     """
     axis_variable = region["Variable"]
+    # check whether a systematic is being processed
+    if systematic.get("Name", "Nominal") != "Nominal":
+        # determine whether the template has an override specified
+        axis_variable_override = _check_for_override(systematic, template, "Variable")
+        if axis_variable_override is not None:
+            axis_variable = axis_variable_override
     return axis_variable
 
 
@@ -274,7 +291,7 @@ class _Builder:
             self.general_path, region, sample, systematic, template
         )
         pos_in_file = _get_position_in_file(sample, systematic, template)
-        variable = _get_variable(region)
+        variable = _get_variable(region, sample, systematic, template)
         bins = _get_binning(region)
         weight = _get_weight(region, sample, systematic, template)
         selection_filter = _get_filter(region, sample, systematic, template)

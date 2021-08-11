@@ -127,7 +127,29 @@ def test__get_ntuple_paths(caplog):
 
 
 def test__get_variable():
-    assert template_builder._get_variable({"Variable": "jet_pt"}) == "jet_pt"
+    # no override
+    assert (
+        template_builder._get_variable({"Variable": "jet_pt"}, {}, {}, "") == "jet_pt"
+    )
+
+    # systematic with override
+    assert (
+        template_builder._get_variable(
+            {"Variable": "jet_pt"},
+            {},
+            {"Name": "variation", "Up": {"Variable": "jet_pt_up"}},
+            "Up",
+        )
+        == "jet_pt_up"
+    )
+
+    # systematic without override
+    assert (
+        template_builder._get_variable(
+            {"Variable": "jet_pt"}, {}, {"Name": "variation"}, "Up"
+        )
+        == "jet_pt"
+    )
 
 
 def test__get_filter():
