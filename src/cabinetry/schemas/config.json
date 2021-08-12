@@ -243,6 +243,10 @@
                 "Smoothing": {
                     "description": "smoothing to apply",
                     "$ref": "#/definitions/smoothing_setting"
+                },
+                "ModifierName": {
+                    "description": "name of modifier in workspace, modifiers with same name are correlated",
+                    "type": "string"
                 }
             },
             "additionalProperties": false
