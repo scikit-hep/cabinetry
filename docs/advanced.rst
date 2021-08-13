@@ -140,3 +140,83 @@ Fixed parameters are not allowed to vary in fits.
 Both their pre-fit and post-fit uncertainty are set to zero.
 This means that the associated nuisance parameters do not contribute to uncertainty bands in data/MC visualizations either.
 The impact of such parameters on the parameter of interest (for nuisance parameter ranking) is also zero.
+
+
+Manually correlating systematics
+--------------------------------
+
+Systematic uncertainties are correlated if the modifiers defining them in the ``pyhf`` workspace have the same names.
+The example below shows a modifier called `correlated_modifier`, correlated between two samples in a workspace.
+
+.. code-block:: json
+
+    [
+      {
+        "data": [25.0],
+        "modifiers": [
+          {
+            "data": {"hi": 1.05, "lo": 0.95},
+            "name": "correlated_modifier",
+            "type": "normsys"
+          }
+        ],
+        "name": "Signal"
+      },
+      {
+        "data": [55.0],
+        "modifiers": [
+          {
+            "data": {"hi": 1.05, "lo": 0.95},
+            "name": "correlated_modifier",
+            "type": "normsys"
+          }
+        ],
+        "name": "Background"
+      }
+    ]
+
+The names of modifiers written to the workspace are by default picked up from the name of the associated systematic in the ``cabinetry`` configuration.
+Names of systematics in the configuration need to be unique, so it is not possible to define multiple systematics with the same name.
+Instead, the option ``ModifierName`` can be used to specify the name of the associated modifier(s) used in the workspace:
+
+.. code-block:: yaml
+
+    Systematics:
+      - Name: "first_systematic"
+        Up:
+          Normalization: 0.05
+        Down:
+          Normalization: -0.05
+        Type: "Normalization"
+        Samples: "Signal"
+        ModifierName: "correlated_modifier"
+
+      - Name: "second_systematic"
+        Up:
+          Normalization: 0.05
+        Down:
+          Normalization: -0.05
+        Type: "Normalization"
+        Samples: "Background"
+        ModifierName: "correlated_modifier"
+
+This results in a workspace like the example shown above.
+Without ``ModifierName``, the two modifiers would be uncorrelated and called `first_systematic` and `second_systematic`.
+
+In this simple example, the following settings result in the same workspace:
+
+.. code-block:: yaml
+
+    Systematics:
+      - Name: "correlated_modifier"
+        Up:
+          Normalization: 0.05
+        Down:
+          Normalization: -0.05
+        Type: "Normalization"
+        Samples: ["Signal", "Background"]
+
+The approach of manually correlating different systematics however allows to define systematics in different ways (e.g. different normalization effect per sample), while still keeping them correlated.
+
+Internally, ``cabinetry`` refers to systematics by their unique name up until the workspace building stage.
+For statistical inference, information contained in the workspace is used and thus the original systematics names are replaced by the values set in ``ModifierName`` (if that option is used).
