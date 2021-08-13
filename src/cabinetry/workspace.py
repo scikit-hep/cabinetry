@@ -243,7 +243,7 @@ class WorkspaceBuilder:
             histo_yield_up = list(histogram_up.yields / norm_effect_up)
             histo_yield_down = list(histogram_down.yields / norm_effect_down)
 
-        # take name of modifier from ModifierName if set, defaults to systematics name
+        # take name of modifier from ModifierName if set, default to systematics name
         modifier_name = systematic.get("ModifierName", systematic["Name"])
 
         # add the normsys
