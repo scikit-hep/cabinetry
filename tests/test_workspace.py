@@ -192,6 +192,15 @@ def test_WorkspaceBuilder_get_Normalization_modifier():
     ws_builder = workspace.WorkspaceBuilder({"General": {"HistogramFolder": "path"}})
     assert ws_builder.get_Normalization_modifier(systematic) == expected_modifier
 
+    # ModifierName set
+    systematic = {
+        "Name": "sys",
+        "Up": {"Normalization": 0.1},
+        "Down": {"Normalization": -0.05},
+        "ModifierName": "mod_name",
+    }
+    assert ws_builder.get_Normalization_modifier(systematic)["name"] == "mod_name"
+
 
 @mock.patch(
     "cabinetry.workspace.histo.Histogram.from_config",
@@ -240,13 +249,18 @@ def test_WorkspaceBuilder_get_NormPlusShape_modifiers(mock_histogram):
         ),
     ]
 
-    # down template via symmetrized up template
-    systematic = {"Name": "sys", "Up": {}, "Down": {"Symmetrize": True}}
+    # down template via symmetrized up template, ModifierName set
+    systematic = {
+        "Name": "sys",
+        "Up": {},
+        "Down": {"Symmetrize": True},
+        "ModifierName": "mod_name",
+    }
     modifiers = ws_builder.get_NormPlusShape_modifiers(region, sample, systematic)
     assert modifiers == [
-        {"name": "sys", "type": "normsys", "data": {"hi": 1.25, "lo": 0.75}},
+        {"name": "mod_name", "type": "normsys", "data": {"hi": 1.25, "lo": 0.75}},
         {
-            "name": "sys",
+            "name": "mod_name",
             "type": "histosys",
             "data": {"hi_data": [20.8, 19.2], "lo_data": [19.2, 20.8]},
         },
