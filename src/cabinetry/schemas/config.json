@@ -245,7 +245,7 @@
                     "$ref": "#/definitions/smoothing_setting"
                 },
                 "ModifierName": {
-                    "description": "name of modifier in workspace, overrides default set by Name",
+                    "description": "name of modifier in workspace, defaults to value set by Name",
                     "type": "string"
                 }
             },
