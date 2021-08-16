@@ -112,8 +112,8 @@ class Histogram(bh.Histogram, family=cabinetry):
             systematic (Dict[str, Any]): containing all systematic information
             modified (bool, optional): whether to load the modified histogram (after
                 post-processing), defaults to True
-            template (Optional[Literal["Up", "Down"]]): which template ("Up", "Down") to
-                consider, or None in the nominal case, defaults to None
+            template (Optional[Literal["Up", "Down"]], optional): which template to
+            consider: "Up", "Down", None for the nominal case, defaults to None
 
         Returns:
             cabinetry.histo.Histogram: the loaded histogram
@@ -251,8 +251,8 @@ def build_name(
         region (Dict[str, Any]): containing all region information
         sample (Dict[str, Any]): containing all sample information
         systematic (Dict[str, Any]): containing all systematic information
-        template (Optional[Literal["Up", "Down"]]): which template ("Up", "Down") to
-            consider, or None in the nominal case, defaults to None
+        template (Optional[Literal["Up", "Down"]], optional): which template to
+            consider: "Up", "Down", None for the nominal case, defaults to None
 
     Returns:
         str: unique name for the histogram
