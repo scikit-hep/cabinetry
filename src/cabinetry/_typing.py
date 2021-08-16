@@ -3,6 +3,6 @@
 import sys
 
 if sys.version_info < (3, 8):
-    from typing_extensions import Literal  # noqa: F401
+    from typing_extensions import Literal  # noqa: F401, # pragma: no cover
 else:
-    from typing import Literal  # noqa: F401
+    from typing import Literal  # noqa: F401, # pragma: no cover
