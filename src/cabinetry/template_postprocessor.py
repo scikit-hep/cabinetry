@@ -9,6 +9,7 @@ from cabinetry import configuration
 from cabinetry import histo
 from cabinetry import route
 from cabinetry import smooth
+from cabinetry._typing import Literal
 
 
 log = logging.getLogger(__name__)
@@ -59,9 +60,9 @@ def _get_smoothing_algorithm(
     """Returns name of algorithm to use for smoothing, or None otherwise.
 
     Args:
-        region (Dict[str, Any]): specifying region information
-        sample (Dict[str, Any]): specifying sample information
-        systematic (Dict[str, Any]): specifying systematic information
+        region (Dict[str, Any]): containing all region information
+        sample (Dict[str, Any]): containing all sample information
+        systematic (Dict[str, Any]): containing all systematic information
 
     Returns:
         Optional[str]: name of smoothing algorithm or None
@@ -138,15 +139,16 @@ def _get_postprocessor(histogram_folder: pathlib.Path) -> route.ProcessorFunc:
         region: Dict[str, Any],
         sample: Dict[str, Any],
         systematic: Dict[str, Any],
-        template: str,
+        template: Optional[Literal["Up", "Down"]],
     ) -> None:
         """Applies post-processing to a single histogram.
 
         Args:
-            region (Dict[str, Any]): specifying region information
-            sample (Dict[str, Any]): specifying sample information
-            systematic (Dict[str, Any]): specifying systematic information
-            template (str): name of the template: "Nominal", "Up", "Down"
+            region (Dict[str, Any]): containing all region information
+            sample (Dict[str, Any]): containing all sample information
+            systematic (Dict[str, Any]): containing all systematic information
+            template (Optional[Literal["Up", "Down"]]): template considered: "Up",
+                "Down", or None for nominal
         """
         histogram = histo.Histogram.from_config(
             histogram_folder,
@@ -164,7 +166,7 @@ def _get_postprocessor(histogram_folder: pathlib.Path) -> route.ProcessorFunc:
         else:
             # to apply smoothing, the associated nominal histogram is needed
             nominal_histogram = histo.Histogram.from_config(
-                histogram_folder, region, sample, {"Name": "Nominal"}, modified=False
+                histogram_folder, region, sample, {}, modified=False
             )
 
         new_histogram = apply_postprocessing(

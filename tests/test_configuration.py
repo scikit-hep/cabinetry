@@ -184,11 +184,11 @@ def test_sample_contains_modifier(sample_and_modifier, contained):
     "reg_sam_sys_tem, is_needed",
     [
         # nominal
-        (({}, {}, {"Name": "Nominal"}, "Nominal"), True),
+        (({}, {}, {"Name": "abc"}, None), True),
         # non-nominal data
-        (({}, {"Data": True}, {"Name": "var"}, ""), False),
+        (({}, {"Data": True}, {"Name": "var"}, "Up"), False),
         # overall normalization variation
-        (({}, {}, {"Type": "Normalization"}, ""), False),
+        (({}, {}, {"Type": "Normalization"}, "Up"), False),
         # normalization + shape variation
         (({}, {"Name": "Signal"}, {"Type": "NormPlusShape"}, "Up"), True),
         # normalization + shape variation on specified and affected sample
@@ -207,7 +207,7 @@ def test_sample_contains_modifier(sample_and_modifier, contained):
                 {},
                 {"Name": "Background"},
                 {"Type": "NormPlusShape", "Samples": "Signal"},
-                "",
+                "Up",
             ),
             False,
         ),
@@ -244,7 +244,7 @@ def test_sample_contains_modifier(sample_and_modifier, contained):
                 {"Name": "CR"},
                 {"Name": "Signal", "Regions": "SR"},
                 {"Type": "NormPlusShape"},
-                "Nominal",
+                None,
             ),
             False,
         ),
@@ -254,7 +254,7 @@ def test_sample_contains_modifier(sample_and_modifier, contained):
                 {"Name": "CR"},
                 {"Name": "Signal", "Regions": "CR"},
                 {"Type": "NormPlusShape"},
-                "Nominal",
+                None,
             ),
             True,
         ),
@@ -290,7 +290,7 @@ def test_histogram_is_needed(reg_sam_sys_tem, is_needed):
 def test_histogram_is_needed_unknown():
     # non-supported systematic
     with pytest.raises(ValueError, match="unknown systematics type: unknown"):
-        configuration.histogram_is_needed({}, {}, {"Type": "unknown"}, "")
+        configuration.histogram_is_needed({}, {}, {"Type": "unknown"}, "Up")
 
 
 def test_get_region_dict(caplog):
