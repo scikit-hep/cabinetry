@@ -185,8 +185,8 @@ class Router:
             #   - "*": apply to all templates
             #   - another string: do normal matching, can never match nominal then
             if template is None:
-                # nominal template is matched by processors applying nominal templates,
-                # and by processors applying to all templates
+                # nominal template is matched by processors applying to nominal
+                # templates (None), and by processors applying to all templates ("*")
                 template_matches = (processor["template"] is None) or (
                     processor["template"] == "*"
                 )
