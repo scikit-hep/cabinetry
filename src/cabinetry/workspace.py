@@ -151,8 +151,11 @@ class WorkspaceBuilder:
         Returns:
             Dict[str, Any]: single `normsys` modifier for ``pyhf`` workspace
         """
+        # take name of modifier from ModifierName if set, default to systematics name
+        modifier_name = systematic.get("ModifierName", systematic["Name"])
+
         modifier = {}
-        modifier.update({"name": systematic["Name"]})
+        modifier.update({"name": modifier_name})
         modifier.update({"type": "normsys"})
         modifier.update(
             {
@@ -240,17 +243,20 @@ class WorkspaceBuilder:
             histo_yield_up = list(histogram_up.yields / norm_effect_up)
             histo_yield_down = list(histogram_down.yields / norm_effect_down)
 
+        # take name of modifier from ModifierName if set, default to systematics name
+        modifier_name = systematic.get("ModifierName", systematic["Name"])
+
         # add the normsys
         modifiers = []
         norm_modifier = {}
-        norm_modifier.update({"name": systematic["Name"]})
+        norm_modifier.update({"name": modifier_name})
         norm_modifier.update({"type": "normsys"})
         norm_modifier.update({"data": {"hi": norm_effect_up, "lo": norm_effect_down}})
         modifiers.append(norm_modifier)
 
         # add the shape part in a histosys
         shape_modifier = {}
-        shape_modifier.update({"name": systematic["Name"]})
+        shape_modifier.update({"name": modifier_name})
         shape_modifier.update({"type": "histosys"})
         shape_modifier.update(
             {"data": {"hi_data": histo_yield_up, "lo_data": histo_yield_down}}

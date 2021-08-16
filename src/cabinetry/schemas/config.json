@@ -243,6 +243,10 @@
                 "Smoothing": {
                     "description": "smoothing to apply",
                     "$ref": "#/definitions/smoothing_setting"
+                },
+                "ModifierName": {
+                    "description": "name of modifier in workspace, defaults to value set by Name",
+                    "type": "string"
                 }
             },
             "additionalProperties": false
