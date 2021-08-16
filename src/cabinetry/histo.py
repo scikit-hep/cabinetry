@@ -113,7 +113,7 @@ class Histogram(bh.Histogram, family=cabinetry):
             modified (bool, optional): whether to load the modified histogram (after
                 post-processing), defaults to True
             template (Optional[Literal["Up", "Down"]], optional): which template to
-            consider: "Up", "Down", None for the nominal case, defaults to None
+                consider: "Up", "Down", None for the nominal case, defaults to None
 
         Returns:
             cabinetry.histo.Histogram: the loaded histogram
