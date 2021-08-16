@@ -164,7 +164,9 @@ def _get_postprocessor(histogram_folder: pathlib.Path) -> route.ProcessorFunc:
         if smoothing_algorithm is None:
             nominal_histogram = None
         else:
-            # to apply smoothing, the associated nominal histogram is needed
+            # to apply smoothing, the associated nominal histogram is needed (smoothing
+            # can currently not be applied to nominal itself, but for systematics is
+            # applied to the ratio variation / nominal)
             nominal_histogram = histo.Histogram.from_config(
                 histogram_folder, region, sample, {}, modified=False
             )
