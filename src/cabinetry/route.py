@@ -263,7 +263,8 @@ def apply_to_all_templates(
             log.debug(f"    reading sample {sample['Name']}")
             # region dependence of sample is checked below via histogram_is_needed
 
-            for systematic in [{"Name": "Nominal"}] + config["Systematics"]:
+            # loop over nominal templates and all existing systematics
+            for systematic in [{"Name": "Nominal"}] + config.get("Systematics", []):
                 # determine how many templates need to be considered
                 if systematic["Name"] == "Nominal":
                     # only nominal template is needed
@@ -275,6 +276,7 @@ def apply_to_all_templates(
                 for template in templates:
                     # determine whether a histogram is needed for this
                     # specific combination of sample-region-systematic-template
+                    # could consider caching the results of histogram_is_needed
                     histo_needed = configuration.histogram_is_needed(
                         region, sample, systematic, template
                     )

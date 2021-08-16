@@ -523,6 +523,15 @@ def test_templates(mock_draw, mock_histo_config, mock_histo_path, tmp_path):
     visualize.templates(config, figure_folder=folder_path)
     assert mock_draw.call_count == 2  # no new call, since no variations found
 
+    # no systematics in config
+    config = {
+        "General": {"HistogramFolder": tmp_path},
+        "Regions": [region],
+        "Samples": [sample, {"Name": "data", "Data": True}],
+    }
+    visualize.templates(config, figure_folder=folder_path)
+    assert mock_draw.call_count == 2  # no systematics, so no new calls
+
 
 @mock.patch("cabinetry.visualize.plot_result.scan")
 def test_scan(mock_draw):
