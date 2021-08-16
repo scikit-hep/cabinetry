@@ -314,7 +314,7 @@ def apply_to_all_templates(
 
                     log.debug(
                         f"      variation "
-                        f"{systematic['Name'] if systematic != {} else 'Nominal'}"
+                        f"{systematic['Name'] if template is not None else 'Nominal'}"
                         f"{' ' + template if template is not None else ''}"
                     )
 
@@ -322,7 +322,9 @@ def apply_to_all_templates(
                     if match_func is not None:
                         # check whether a user-defined function was registered that
                         # matches this region-sample-systematic-template
-                        systematic_name = systematic["Name"] if systematic != {} else ""
+                        systematic_name = (
+                            systematic["Name"] if template is not None else ""
+                        )
                         func_override = match_func(
                             region["Name"], sample["Name"], systematic_name, template
                         )
