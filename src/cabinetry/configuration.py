@@ -206,7 +206,7 @@ def histogram_is_needed(
         region (Dict[str, Any]): containing all region information
         sample (Dict[str, Any]): containing all sample information
         systematic (Dict[str, Any]): containing all systematic information
-        template (Optional[Literal["Up", "Down"]]): which template is considered: "Up",
+        template (Optional[Literal["Up", "Down"]]): which template to consider: "Up",
             "Down", None for the nominal case
 
     Raises:
