@@ -280,3 +280,4 @@ def test_apply_to_all_templates():
     route.apply_to_all_templates(example_config, default_func)
     # previously 3 calls of default_func, now one more for nominal template
     assert default_func.call_count == 4
+    assert default_func.call_args_list[3][0][3] == "Nominal"
