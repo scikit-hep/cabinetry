@@ -493,10 +493,7 @@ def templates(
 
                 # extract nominal histogram
                 nominal_histo = histo.Histogram.from_config(
-                    histogram_folder,
-                    region,
-                    sample,
-                    {},
+                    histogram_folder, region, sample, {}
                 )
                 bins = nominal_histo.bins
                 variable = region["Variable"]
