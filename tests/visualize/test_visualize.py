@@ -59,7 +59,7 @@ def test_data_MC_from_histograms(mock_load, mock_draw, mock_stdev):
                 histogram_folder,
                 {"Name": "reg_1", "Variable": "x"},
                 {"Name": "data", "Data": True},
-                {"Name": "Nominal"},
+                {},
             ),
             {"modified": True},
         ),
@@ -68,7 +68,7 @@ def test_data_MC_from_histograms(mock_load, mock_draw, mock_stdev):
                 histogram_folder,
                 {"Name": "reg_1", "Variable": "x"},
                 {"Name": "sample_1"},
-                {"Name": "Nominal"},
+                {},
             ),
             {"modified": True},
         ),
@@ -477,9 +477,9 @@ def test_templates(mock_draw, mock_histo_config, mock_histo_path, tmp_path):
 
     visualize.templates(config, figure_folder=folder_path)
 
-    assert mock_histo_config.call_args_list == [
-        [(tmp_path, region, sample, {"Name": "Nominal"}), {}]
-    ]
+    # nominal histogram loading
+    assert mock_histo_config.call_args_list == [[(tmp_path, region, sample, {}), {}]]
+    # variation histograms
     down_path_orig = pathlib.Path(str(down_path).replace("_modified", ""))
     up_path_orig = pathlib.Path(str(up_path).replace("_modified", ""))
     assert mock_histo_path.call_args_list == [
