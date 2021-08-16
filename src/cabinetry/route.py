@@ -195,7 +195,7 @@ class Router:
                 # does not match
                 template_matches = False
             else:
-                # neither template nor processor are none, can do normal matching
+                # neither template nor processor are None, can do normal matching
                 template_matches = fnmatch.fnmatch(template, processor["template"])
             if (
                 region_matches
