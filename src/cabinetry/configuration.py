@@ -64,18 +64,18 @@ def validate(config: Dict[str, Any]) -> bool:
     if len(set(sample_names)) != len(sample_names):
         raise ValueError(f"all sample names must be unique: {sample_names}")
 
-    # check that systematic names are unique
-    # systematics are optional, may be empty
-    systematic_names = [sys["Name"] for sys in config.get("Systematics", [])]
-    if len(set(systematic_names)) != len(systematic_names):
-        raise ValueError(f"all systematic names must be unique: {systematic_names}")
-
     # check that normfactor names are unique
     # may technically not be required, but non-unique names do not seem to offer any
     # obvious advantages, so require uniqueness here for consistency
     normfactor_names = [normfactor["Name"] for normfactor in config["NormFactors"]]
     if len(set(normfactor_names)) != len(normfactor_names):
         raise ValueError(f"all normfactor names must be unique: {normfactor_names}")
+
+    # check that systematic names are unique
+    # systematics are optional, may be empty
+    systematic_names = [sys["Name"] for sys in config.get("Systematics", [])]
+    if len(set(systematic_names)) != len(systematic_names):
+        raise ValueError(f"all systematic names must be unique: {systematic_names}")
 
     # if no issues are found
     return True

@@ -78,6 +78,14 @@ def test_validate():
         with pytest.raises(ValueError, match="all sample names must be unique"):
             configuration.validate(config_sample_names)
 
+        config_normfactor_names = {
+            "Regions": [],
+            "Samples": [{"Name": "", "Tree": "", "Data": True}],
+            "NormFactors": [{"Name": "abc"}, {"Name": "abc"}],
+        }
+        with pytest.raises(ValueError, match="all normfactor names must be unique"):
+            configuration.validate(config_normfactor_names)
+
         config_systematic_names = {
             "Regions": [],
             "Samples": [{"Name": "abc", "Tree": "", "Data": True}],
@@ -86,14 +94,6 @@ def test_validate():
         }
         with pytest.raises(ValueError, match="all systematic names must be unique"):
             configuration.validate(config_systematic_names)
-
-        config_normfactor_names = {
-            "Regions": [],
-            "Samples": [{"Name": "", "Tree": "", "Data": True}],
-            "NormFactors": [{"Name": "abc"}, {"Name": "abc"}],
-        }
-        with pytest.raises(ValueError, match="all normfactor names must be unique"):
-            configuration.validate(config_normfactor_names)
 
 
 def test_print_overview(caplog):
