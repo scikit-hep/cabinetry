@@ -60,6 +60,41 @@ def test_validate():
             configuration.validate({})
         mock_get.assert_called_once()
 
+    # uniqueness of names
+    with mock.patch("jsonschema.validate", return_value=None):
+        config_region_names = {
+            "Regions": [{"Name": "abc"}, {"Name": "abc"}],
+            "Samples": [{"Name": "", "Tree": "", "Data": True}],
+            "NormFactors": [],
+        }
+        with pytest.raises(ValueError, match="all region names must be unique"):
+            configuration.validate(config_region_names)
+
+        config_sample_names = {
+            "Regions": [],
+            "Samples": [{"Name": "abc", "Tree": "", "Data": True}, {"Name": "abc"}],
+            "NormFactors": [],
+        }
+        with pytest.raises(ValueError, match="all sample names must be unique"):
+            configuration.validate(config_sample_names)
+
+        config_systematic_names = {
+            "Regions": [],
+            "Samples": [{"Name": "abc", "Tree": "", "Data": True}],
+            "Systematics": [{"Name": "abc"}, {"Name": "abc"}],
+            "NormFactors": [],
+        }
+        with pytest.raises(ValueError, match="all systematic names must be unique"):
+            configuration.validate(config_systematic_names)
+
+        config_normfactor_names = {
+            "Regions": [],
+            "Samples": [{"Name": "", "Tree": "", "Data": True}],
+            "NormFactors": [{"Name": "abc"}, {"Name": "abc"}],
+        }
+        with pytest.raises(ValueError, match="all normfactor names must be unique"):
+            configuration.validate(config_normfactor_names)
+
 
 def test_print_overview(caplog):
     caplog.set_level(logging.DEBUG)
