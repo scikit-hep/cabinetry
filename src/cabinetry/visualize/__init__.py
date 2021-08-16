@@ -466,7 +466,8 @@ def templates(
                 # skip data
                 continue
 
-            for systematic in config["Systematics"]:
+            # loop over systematics (if they exist)
+            for systematic in config.get("Systematics", []):
                 histo_name = (
                     region["Name"]
                     + "_"

@@ -226,7 +226,7 @@ def test_apply_to_all_templates():
     route.apply_to_all_templates(example_config, default_func, match_func=None)
 
     # check that the default function was called for all templates
-    assert len(default_func.call_args_list) == 3
+    assert default_func.call_count == 3
     assert default_func.call_args_list[0] == (
         ({"Name": "test_region"}, {"Name": "sample"}, {"Name": "Nominal"}, "Nominal"),
         {},
@@ -271,3 +271,13 @@ def test_apply_to_all_templates():
         {"Name": "var", "Type": "NormPlusShape"},
         "Down",
     )
+
+    # no systematics
+    example_config = {
+        "Regions": [{"Name": "test_region"}],
+        "Samples": [{"Name": "sample"}],
+    }
+    route.apply_to_all_templates(example_config, default_func)
+    # previously 3 calls of default_func, now one more for nominal template
+    assert default_func.call_count == 4
+    assert default_func.call_args_list[3][0][3] == "Nominal"
