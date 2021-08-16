@@ -11,6 +11,7 @@ from cabinetry import histo
 from cabinetry import route
 from cabinetry._typing import Literal
 
+
 log = logging.getLogger(__name__)
 
 
