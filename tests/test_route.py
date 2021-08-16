@@ -58,24 +58,6 @@ def test_Router__register_processor(processor_examples):
         }
     ]
 
-    # test registration with no details specified
-    example_router._register_processor(
-        example_router.template_builders,
-        region_name=None,
-        sample_name=None,
-        systematic_name=None,
-        template=None,
-    )(example_template_builder)
-
-    assert example_router.template_builders[-1] == {
-        "region": "*",
-        "sample": "*",
-        "systematic": "*",
-        "template": "*",
-        "name": "example_template_builder",
-        "func": example_template_builder,
-    }
-
 
 def test_Router_register_template_builder(processor_examples):
     example_router = route.Router()
@@ -96,34 +78,53 @@ def test_Router_register_template_builder(processor_examples):
         }
     ]
 
+    # defaults for arguments
+    example_router.register_template_builder()(example_template_builder)
+    assert example_router.template_builders[1] == {
+        "region": "*",
+        "sample": "*",
+        "systematic": "*",
+        "template": "*",
+        "name": "example_template_builder",
+        "func": example_template_builder,
+    }
+
 
 def test_Router__find_match(processor_examples, caplog):
     caplog.set_level(logging.DEBUG)
     example_router = route.Router()
-    example_template_builder = processor_examples.get_example_template_builder()
+    example_template_builder_1 = processor_examples.get_example_template_builder()
+    example_template_builder_2 = processor_examples.get_example_template_builder()
+    example_template_builder_3 = processor_examples.get_example_template_builder()
 
-    def other_processor():
-        pass
-
-    example_processor_specification = {
+    processor_specification_1 = {
         "region": "r?g",
         "sample": "sig*",
         "systematic": "*",
         "template": "Up",
-        "name": "example_template_builder",
-        "func": example_template_builder,
+        "name": "example_template_builder_1",
+        "func": example_template_builder_1,
     }
-    other_processor_specification = {
+    processor_specification_2 = {
         "region": "abc",
         "sample": "*",
         "systematic": "*",
         "template": "*",
-        "name": "other_processor",
-        "func": other_processor,
+        "name": "example_template_builder_2",
+        "func": example_template_builder_2,
+    }
+    processor_specification_3 = {
+        "region": "reg",
+        "sample": "bg",
+        "systematic": "*",
+        "template": None,
+        "name": "example_template_builder_3",
+        "func": example_template_builder_3,
     }
     example_router.template_builders = [
-        other_processor_specification,
-        example_processor_specification,
+        processor_specification_1,
+        processor_specification_2,
+        processor_specification_3,
     ]
 
     # get a single match
@@ -131,10 +132,18 @@ def test_Router__find_match(processor_examples, caplog):
         example_router._find_match(
             example_router.template_builders, "reg", "signal", "sys", "Up"
         )
-        is example_template_builder
+        is example_template_builder_1
     )
 
-    # no matches available
+    # strings match case 3, but template does not (processor only applied to nominal)
+    assert (
+        example_router._find_match(
+            example_router.template_builders, "reg", "bg", "sys", "Up"
+        )
+        is None
+    )
+
+    # no matches available due to string mis-match
     assert (
         example_router._find_match(
             example_router.template_builders, "reg", "background", "sys", "Up"
@@ -142,17 +151,33 @@ def test_Router__find_match(processor_examples, caplog):
         is None
     )
 
+    # match for None (nominal) template with no processor template restrictions ("*")
+    assert (
+        example_router._find_match(
+            example_router.template_builders, "abc", "signal", "sys", None
+        )
+        is example_template_builder_2
+    )
+
+    # match for None (nominal) template with None processor template
+    assert (
+        example_router._find_match(
+            example_router.template_builders, "reg", "bg", "*", None
+        )
+        is example_template_builder_3
+    )
+
     # multiple matches
     caplog.clear()
     example_router.template_builders = [
-        example_processor_specification,
-        example_processor_specification,
+        processor_specification_1,
+        processor_specification_1,
     ]
     assert (
         example_router._find_match(
             example_router.template_builders, "reg", "signal", "sys", "Up"
         )
-        is example_template_builder
+        is example_template_builder_1
     )
 
     assert (
@@ -168,7 +193,7 @@ def test_Router__find_template_builder_match(processor_examples):
 
     # no wrapper defined
     with pytest.raises(ValueError, match="no template builder wrapper defined"):
-        example_router._find_template_builder_match("", "", "", "")
+        example_router._find_template_builder_match("", "", "", None)
 
     def example_wrapper(func):
         @functools.wraps(func)
@@ -180,14 +205,16 @@ def test_Router__find_template_builder_match(processor_examples):
 
     # wrapper defined, but no match available
     example_router.template_builder_wrapper = example_wrapper
-    assert example_router._find_template_builder_match("", "", "", "") is None
+    assert example_router._find_template_builder_match("", "", "", None) is None
 
     # match exists
     with mock.patch(
         "cabinetry.route.Router._find_match", return_value=example_template_builder
     ) as mock_find:
-        wrapped_builder = example_router._find_template_builder_match("reg", "", "", "")
-        assert mock_find.call_args_list == [(([], "reg", "", "", ""), {})]
+        wrapped_builder = example_router._find_template_builder_match(
+            "reg", "", "", None
+        )
+        assert mock_find.call_args_list == [(([], "reg", "", "", None), {})]
 
         # need to verify that wrapped template builder is wrapped with right function
         expected_wrap = example_wrapper(example_template_builder)
@@ -228,7 +255,7 @@ def test_apply_to_all_templates():
     # check that the default function was called for all templates
     assert default_func.call_count == 3
     assert default_func.call_args_list[0] == (
-        ({"Name": "test_region"}, {"Name": "sample"}, {"Name": "Nominal"}, "Nominal"),
+        ({"Name": "test_region"}, {"Name": "sample"}, {}, None),
         {},
     )
     assert default_func.call_args_list[1] == (
@@ -256,8 +283,8 @@ def test_apply_to_all_templates():
     assert override_call_args[0] == (
         {"Name": "test_region"},
         {"Name": "sample"},
-        {"Name": "Nominal"},
-        "Nominal",
+        {},
+        None,
     )
     assert override_call_args[1] == (
         {"Name": "test_region"},
@@ -280,4 +307,4 @@ def test_apply_to_all_templates():
     route.apply_to_all_templates(example_config, default_func)
     # previously 3 calls of default_func, now one more for nominal template
     assert default_func.call_count == 4
-    assert default_func.call_args_list[3][0][3] == "Nominal"
+    assert default_func.call_args_list[3][0][3] is None
