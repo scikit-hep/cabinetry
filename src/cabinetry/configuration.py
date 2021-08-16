@@ -37,11 +37,8 @@ def validate(config: Dict[str, Any]) -> bool:
         config (Dict[str, Any]): cabinetry configuration
 
     Raises:
-        ValueError: when missing required keys
-        ValueError: when unknown keys are found
         NotImplementedError: when more than one data sample is found
-        ValueError: when missing a name for a NormFactor
-        ValueError: when missing a samples for a NormFactor
+        ValueError: when region / sample / normfactor / systematic names are not unique
 
     Returns:
         bool: whether the validation was successful
@@ -57,8 +54,28 @@ def validate(config: Dict[str, Any]) -> bool:
     if sum(sample.get("Data", False) for sample in config["Samples"]) != 1:
         raise NotImplementedError("can only handle cases with exactly one data sample")
 
-    # should also check here for conflicting settings
-    ...
+    # check that region names are unique
+    region_names = [region["Name"] for region in config["Regions"]]
+    if len(set(region_names)) != len(region_names):
+        raise ValueError(f"all region names must be unique: {region_names}")
+
+    # check that sample names are unique
+    sample_names = [sample["Name"] for sample in config["Samples"]]
+    if len(set(sample_names)) != len(sample_names):
+        raise ValueError(f"all sample names must be unique: {sample_names}")
+
+    # check that normfactor names are unique
+    # may technically not be required, but non-unique names do not seem to offer any
+    # obvious advantages, so require uniqueness here for consistency
+    normfactor_names = [normfactor["Name"] for normfactor in config["NormFactors"]]
+    if len(set(normfactor_names)) != len(normfactor_names):
+        raise ValueError(f"all normfactor names must be unique: {normfactor_names}")
+
+    # check that systematic names are unique
+    # systematics are optional, may be empty
+    systematic_names = [sys["Name"] for sys in config.get("Systematics", [])]
+    if len(set(systematic_names)) != len(systematic_names):
+        raise ValueError(f"all systematic names must be unique: {systematic_names}")
 
     # if no issues are found
     return True
