@@ -38,7 +38,7 @@ def validate(config: Dict[str, Any]) -> bool:
 
     Raises:
         NotImplementedError: when more than one data sample is found
-        ValueError: when region / sample / systematic / normfactor names are not unique
+        ValueError: when region / sample / normfactor / systematic names are not unique
 
     Returns:
         bool: whether the validation was successful
