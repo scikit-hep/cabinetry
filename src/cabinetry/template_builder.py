@@ -344,7 +344,7 @@ class _Builder:
                 "Down", or None for nominal
         """
         # generate a name for the histogram
-        histogram_name = histo.build_name(region, sample, systematic, template)
+        histogram_name = histo.name(region, sample, systematic, template)
 
         # check the histogram for common issues
         histogram.validate(histogram_name)

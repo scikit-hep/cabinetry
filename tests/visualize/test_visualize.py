@@ -22,8 +22,8 @@ MockHistogram = namedtuple("MockHistogram", ["bins", "yields", "stdev"])
         (("SR 1", False), "SR-1_postfit.pdf"),
     ],
 )
-def test__build_figure_name(test_input, expected):
-    assert visualize._build_figure_name(*test_input) == expected
+def test__figure_name(test_input, expected):
+    assert visualize._figure_name(*test_input) == expected
 
 
 def test__total_yield_uncertainty():

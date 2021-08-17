@@ -282,7 +282,7 @@ def test__Builder_create_histogram(mock_uproot_builder, mock_histo, mock_save):
         builder_unknown._create_histogram(region, sample, systematic, None)
 
 
-@mock.patch("cabinetry.histo.build_name", return_value="name")
+@mock.patch("cabinetry.histo.name", return_value="name")
 def test__Builder__name_and_save(mock_name):
     region = {"Name": "test_region"}
     sample = {"Name": "sample"}

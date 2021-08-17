@@ -22,7 +22,7 @@ from cabinetry.visualize import plot_result
 log = logging.getLogger(__name__)
 
 
-def _build_figure_name(region_name: str, is_prefit: bool) -> str:
+def _figure_name(region_name: str, is_prefit: bool) -> str:
     """Constructs a file name for a figure.
 
     Args:
@@ -100,7 +100,7 @@ def data_mc_from_histograms(
             if not is_data:
                 model_stdevs.append(histogram.stdev)
 
-        figure_name = _build_figure_name(region["Name"], True)
+        figure_name = _figure_name(region["Name"], True)
         total_model_unc = _total_yield_uncertainty(model_stdevs)
         bin_edges = histogram.bins
         label = f"{region['Name']}\npre-fit"
@@ -255,12 +255,10 @@ def data_mc(
         )
 
         if prefit:
-            figure_path = pathlib.Path(figure_folder) / _build_figure_name(
-                channel_name, True
-            )
+            figure_path = pathlib.Path(figure_folder) / _figure_name(channel_name, True)
             label = f"{channel_name}\npre-fit"
         else:
-            figure_path = pathlib.Path(figure_folder) / _build_figure_name(
+            figure_path = pathlib.Path(figure_folder) / _figure_name(
                 channel_name, False
             )
             label = f"{channel_name}\npost-fit"

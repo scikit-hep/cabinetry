@@ -126,7 +126,7 @@ def test_apply_postprocessing(mock_stat, mock_smooth, caplog):
         )
 
 
-@mock.patch("cabinetry.histo.build_name", return_value="histo_name")
+@mock.patch("cabinetry.histo.name", return_value="histo_name")
 def test__postprocessor(mock_name):
     postprocessor = template_postprocessor._postprocessor(pathlib.Path("path"))
 

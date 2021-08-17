@@ -145,7 +145,7 @@ def test_Histogram_from_path(tmp_path, caplog, example_histograms, histogram_hel
 
 
 def test_Histogram_from_config(tmp_path, example_histograms, histogram_helpers):
-    # could mock build_name here
+    # could mock histo.name here
     h_ref = histo.Histogram.from_arrays(*example_histograms.normal())
     histo_path = tmp_path / "region_sample.npz"
     h_ref.save(histo_path)
@@ -230,13 +230,13 @@ def test_Histogram_normalize_to_yield(example_histograms):
     assert np.allclose(var_hist.stdev, np.asarray([0.1 / 3, 0.2 / 3]))
 
 
-def test_build_name():
+def test_name():
     region = {"Name": "Region"}
     sample = {"Name": "Sample"}
     systematic = {"Name": "Systematic"}
     template = "Up"
     assert (
-        histo.build_name(region, sample, systematic, template=template)
+        histo.name(region, sample, systematic, template=template)
         == "Region_Sample_Systematic_Up"
     )
 
@@ -244,10 +244,7 @@ def test_build_name():
     region = {"Name": "Region 1"}
     sample = {"Name": "Sample 1"}
     systematic = {"Name": "Systematic 1"}
-    assert histo.build_name(region, sample, systematic) == "Region-1_Sample-1"
+    assert histo.name(region, sample, systematic) == "Region-1_Sample-1"
 
     # nominal template requested explicitly
-    assert (
-        histo.build_name(region, sample, systematic, template=None)
-        == "Region-1_Sample-1"
-    )
+    assert histo.name(region, sample, systematic, template=None) == "Region-1_Sample-1"
