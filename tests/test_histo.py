@@ -145,6 +145,7 @@ def test_Histogram_from_path(tmp_path, caplog, example_histograms, histogram_hel
 
 
 def test_Histogram_from_config(tmp_path, example_histograms, histogram_helpers):
+    # could mock build_name here
     h_ref = histo.Histogram.from_arrays(*example_histograms.normal())
     histo_path = tmp_path / "region_sample.npz"
     h_ref.save(histo_path)
@@ -154,6 +155,16 @@ def test_Histogram_from_config(tmp_path, example_histograms, histogram_helpers):
     systematic = {}
     h_from_path = histo.Histogram.from_config(
         tmp_path, region, sample, systematic, modified=False
+    )
+    histogram_helpers.assert_equal(h_ref, h_from_path)
+
+    # non-nominal and modified template
+    histo_path = tmp_path / "region_sample_sys_Up_modified.npz"
+    h_ref.save(histo_path)
+
+    systematic = {"Name": "sys"}
+    h_from_path = histo.Histogram.from_config(
+        tmp_path, region, sample, systematic, template="Up"
     )
     histogram_helpers.assert_equal(h_ref, h_from_path)
 
