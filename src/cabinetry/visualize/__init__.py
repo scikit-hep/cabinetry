@@ -176,8 +176,8 @@ def data_MC(
         # no fit results specified, draw a pre-fit plot
         prefit = True
         # use pre-fit parameter values, uncertainties, and diagonal correlation matrix
-        param_values = model_utils.get_asimov_parameters(model)
-        param_uncertainty = model_utils.get_prefit_uncertainties(model)
+        param_values = model_utils.asimov_parameters(model)
+        param_uncertainty = model_utils.prefit_uncertainties(model)
         corr_mat = np.zeros(shape=(len(param_values), len(param_values)))
         np.fill_diagonal(corr_mat, 1.0)
 
@@ -187,7 +187,7 @@ def data_MC(
 
     # slice the yields into list of lists (of lists) where first index is channel,
     # second index is sample (and third index is bin)
-    region_split_indices = model_utils._get_channel_boundary_indices(model)
+    region_split_indices = model_utils._channel_boundary_indices(model)
     model_yields = [
         m.tolist() for m in np.split(yields_combined, region_split_indices, axis=1)
     ]
@@ -196,7 +196,7 @@ def data_MC(
 
     # calculate the total standard deviation of the model prediction
     # indices: channel (and bin) for per-bin uncertainties, channel for per-channel
-    total_stdev_model_bins, total_stdev_model_channels = model_utils.calculate_stdev(
+    total_stdev_model_bins, total_stdev_model_channels = model_utils.yield_uncertainty(
         model, param_values, param_uncertainty, corr_mat
     )
 
@@ -226,8 +226,8 @@ def data_MC(
 
         if config is not None:
             # get the region dictionary from the config for binning / variable name
-            region_dict = configuration.get_region_dict(config, channel_name)
-            bin_edges = template_builder._get_binning(region_dict)
+            region_dict = configuration.region_dict(config, channel_name)
+            bin_edges = template_builder._binning(region_dict)
             variable = region_dict["Variable"]
         else:
             # fall back to defaults

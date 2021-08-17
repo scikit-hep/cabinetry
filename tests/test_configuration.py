@@ -126,8 +126,8 @@ def test_print_overview(caplog):
 @pytest.mark.parametrize(
     "samples, converted", [("sample", ["sample"]), (["sample"], ["sample"])]
 )
-def test__convert_setting_to_list(samples, converted):
-    assert configuration._convert_setting_to_list(samples) == converted
+def test__setting_to_list(samples, converted):
+    assert configuration._setting_to_list(samples) == converted
 
 
 @pytest.mark.parametrize(
@@ -293,17 +293,17 @@ def test_histogram_is_needed_unknown():
         configuration.histogram_is_needed({}, {}, {"Type": "unknown"}, "Up")
 
 
-def test_get_region_dict(caplog):
+def test_region_dict(caplog):
     caplog.set_level(logging.WARNING)
 
     config = {"Regions": [{"Name": "reg_a"}, {"Name": "reg_b"}]}
-    assert configuration.get_region_dict(config, "reg_a") == {"Name": "reg_a"}
+    assert configuration.region_dict(config, "reg_a") == {"Name": "reg_a"}
 
     config = {"Regions": [{"Name": "reg_a"}, {"Name": "reg_a"}]}
-    assert configuration.get_region_dict(config, "reg_a") == {"Name": "reg_a"}
+    assert configuration.region_dict(config, "reg_a") == {"Name": "reg_a"}
     assert "found more than one region with name reg_a" in [
         rec.message for rec in caplog.records
     ]
 
     with pytest.raises(ValueError, match="region abc not found in config"):
-        configuration.get_region_dict(config, "abc")
+        configuration.region_dict(config, "abc")

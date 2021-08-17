@@ -24,7 +24,7 @@ class WorkspaceBuilder:
         self.config = config
         self.histogram_folder = pathlib.Path(config["General"]["HistogramFolder"])
 
-    def _get_data_sample(self) -> Dict[str, Any]:
+    def _data_sample(self) -> Dict[str, Any]:
         """Returns the data sample dictionary.
 
         Returns:
@@ -37,7 +37,7 @@ class WorkspaceBuilder:
             raise ValueError("did not find exactly one data sample")
         return data_samples[0]
 
-    def _get_constant_parameter_setting(self, par_name: str) -> Optional[float]:
+    def _constant_parameter_setting(self, par_name: str) -> Optional[float]:
         """Determines whether a parameter should be set to constant, and to which value.
 
         For a given parameter, determines if it is supposed to be set to constant. If
@@ -62,7 +62,7 @@ class WorkspaceBuilder:
         )
         return fixed_value
 
-    def get_NF_modifiers(
+    def normfactor_modifiers(
         self, region: Dict[str, Any], sample: Dict[str, Any]
     ) -> List[Dict[str, Any]]:
         """Returns the list of NormFactor modifiers acting on a sample in a region.
@@ -90,7 +90,7 @@ class WorkspaceBuilder:
         return modifiers
 
     @staticmethod
-    def get_Normalization_modifier(systematic: Dict[str, Any]) -> Dict[str, Any]:
+    def normalization_modifier(systematic: Dict[str, Any]) -> Dict[str, Any]:
         """Returns a normalization modifier (OverallSys in `HistFactory`).
 
         Args:
@@ -115,7 +115,7 @@ class WorkspaceBuilder:
         )
         return modifier
 
-    def get_NormPlusShape_modifiers(
+    def normplusshape_modifiers(
         self,
         region: Dict[str, Any],
         sample: Dict[str, Any],
@@ -210,7 +210,7 @@ class WorkspaceBuilder:
         modifiers.append(shape_modifier)
         return modifiers
 
-    def get_sys_modifiers(
+    def sys_modifiers(
         self, region: Dict[str, Any], sample: Dict[str, Any]
     ) -> List[Dict[str, Any]]:
         """Returns the list of all systematic modifiers acting on a sample in a region.
@@ -237,7 +237,7 @@ class WorkspaceBuilder:
                         f"adding OverallSys {systematic['Name']} to sample"
                         f" {sample['Name']} in region {region['Name']}",
                     )
-                    modifiers.append(self.get_Normalization_modifier(systematic))
+                    modifiers.append(self.normalization_modifier(systematic))
                 elif systematic["Type"] == "NormPlusShape":
                     # two modifiers are needed - an OverallSys for the norm effect,
                     # and a HistoSys for the shape variation
@@ -245,7 +245,7 @@ class WorkspaceBuilder:
                         f"adding OverallSys and HistoSys {systematic['Name']} to sample"
                         f" {sample['Name']} in region {region['Name']}",
                     )
-                    modifiers += self.get_NormPlusShape_modifiers(
+                    modifiers += self.normplusshape_modifiers(
                         region, sample, systematic
                     )
                 else:
@@ -254,7 +254,7 @@ class WorkspaceBuilder:
                     )
         return modifiers
 
-    def get_channels(self) -> List[Dict[str, Any]]:
+    def channels(self) -> List[Dict[str, Any]]:
         """Returns the channel information: yields per sample and modifiers.
 
         Returns:
@@ -295,11 +295,11 @@ class WorkspaceBuilder:
 
                 # modifiers can have region and sample dependence, which is checked
                 # check if normfactors affect sample in region, add modifiers as needed
-                nf_modifier_list = self.get_NF_modifiers(region, sample)
+                nf_modifier_list = self.normfactor_modifiers(region, sample)
                 modifiers += nf_modifier_list
 
                 # check if systematics affect sample in region, add modifiers as needed
-                sys_modifier_list = self.get_sys_modifiers(region, sample)
+                sys_modifier_list = self.sys_modifiers(region, sample)
                 modifiers += sys_modifier_list
 
                 current_sample.update({"modifiers": modifiers})
@@ -308,7 +308,7 @@ class WorkspaceBuilder:
             channels.append(channel)
         return channels
 
-    def get_measurements(self) -> List[Dict[str, Any]]:
+    def measurements(self) -> List[Dict[str, Any]]:
         """Returns the measurements object for the workspace.
 
         Constructs the measurements, including POI setting and parameter bounds, initial
@@ -329,7 +329,7 @@ class WorkspaceBuilder:
             nf_name = nf["Name"]  # every NormFactor has a name
             init = nf.get("Nominal", None)
             bounds = nf.get("Bounds", None)
-            fixed = self._get_constant_parameter_setting(nf_name)
+            fixed = self._constant_parameter_setting(nf_name)
             if (init is None) and (fixed is not None):
                 # if no initial value is specified, but a constant setting
                 # is requested, set the initial value to the constant value
@@ -350,7 +350,7 @@ class WorkspaceBuilder:
             # efficient to loop over fixed parameters and exclude all NormFactor related
             # ones to set all the remaining ones to constant (which are systematics)
             sys_name = sys["Name"]  # every systematic has a name
-            fixed = self._get_constant_parameter_setting(sys_name)
+            fixed = self._constant_parameter_setting(sys_name)
             if fixed is not None:
                 parameter = {"name": sys_name}
                 parameter.update({"inits": [fixed]})
@@ -364,13 +364,13 @@ class WorkspaceBuilder:
         measurements.append(measurement)
         return measurements
 
-    def get_observations(self) -> List[Dict[str, Any]]:
+    def observations(self) -> List[Dict[str, Any]]:
         """Returns the observations (data yields) for the workspace.
 
         Returns:
             List[Dict[str, Any]]: observations for ``pyhf`` workspace
         """
-        data_sample = self._get_data_sample()
+        data_sample = self._data_sample()
         observations = []
         for region in self.config["Regions"]:
             observation = {}
@@ -391,15 +391,15 @@ class WorkspaceBuilder:
         ws: Dict[str, Any] = {}  # the workspace
 
         # channels
-        channels = self.get_channels()
+        channels = self.channels()
         ws.update({"channels": channels})
 
         # measurements
-        measurements = self.get_measurements()
+        measurements = self.measurements()
         ws.update({"measurements": measurements})
 
         # build observations
-        observations = self.get_observations()
+        observations = self.observations()
         ws.update({"observations": observations})
 
         # workspace version

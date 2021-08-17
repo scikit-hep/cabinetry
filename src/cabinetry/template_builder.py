@@ -36,7 +36,7 @@ def _check_for_override(
     return systematic.get(template, {}).get(option, None)
 
 
-def _get_ntuple_paths(
+def _ntuple_paths(
     general_path: str,
     region: Dict[str, Any],
     sample: Dict[str, Any],
@@ -97,7 +97,7 @@ def _get_ntuple_paths(
                 "sample override specified, but {SamplePaths} not found in default path"
             )
         # SamplePaths can be a list, so need to construct all possible paths
-        sample_paths = configuration._convert_setting_to_list(sample_paths)
+        sample_paths = configuration._setting_to_list(sample_paths)
         path_list = []
         for sample_path in sample_paths:
             path_list.append(general_path.replace("{SamplePaths}", sample_path))
@@ -113,7 +113,7 @@ def _get_ntuple_paths(
     return paths
 
 
-def _get_variable(
+def _variable(
     region: Dict[str, Any],
     sample: Dict[str, Any],
     systematic: Dict[str, Any],
@@ -144,7 +144,7 @@ def _get_variable(
     return axis_variable
 
 
-def _get_filter(
+def _filter(
     region: Dict[str, Any],
     sample: Dict[str, Any],
     systematic: Dict[str, Any],
@@ -175,7 +175,7 @@ def _get_filter(
     return selection_filter
 
 
-def _get_weight(
+def _weight(
     region: Dict[str, Any],
     sample: Dict[str, Any],
     systematic: Dict[str, Any],
@@ -207,7 +207,7 @@ def _get_weight(
     return weight
 
 
-def _get_position_in_file(
+def _position_in_file(
     sample: Dict[str, Any],
     systematic: Dict[str, Any],
     template: Optional[Literal["Up", "Down"]],
@@ -236,7 +236,7 @@ def _get_position_in_file(
     return position
 
 
-def _get_binning(region: Dict[str, Any]) -> np.ndarray:
+def _binning(region: Dict[str, Any]) -> np.ndarray:
     """Returns the binning to be used in a region.
 
     Should eventually also support other ways of specifying bins, such as the amount of
@@ -296,14 +296,14 @@ class _Builder:
         Raises:
             NotImplementedError: when requesting an unknown backend
         """
-        ntuple_paths = _get_ntuple_paths(
+        ntuple_paths = _ntuple_paths(
             self.general_path, region, sample, systematic, template
         )
-        pos_in_file = _get_position_in_file(sample, systematic, template)
-        variable = _get_variable(region, sample, systematic, template)
-        bins = _get_binning(region)
-        weight = _get_weight(region, sample, systematic, template)
-        selection_filter = _get_filter(region, sample, systematic, template)
+        pos_in_file = _position_in_file(sample, systematic, template)
+        variable = _variable(region, sample, systematic, template)
+        bins = _binning(region)
+        weight = _weight(region, sample, systematic, template)
+        selection_filter = _filter(region, sample, systematic, template)
 
         # obtain the histogram
         if self.method == "uproot":

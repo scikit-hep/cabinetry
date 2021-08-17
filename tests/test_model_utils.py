@@ -25,19 +25,19 @@ def test_model_and_data(example_spec):
     assert data == [475]
 
 
-def test_get_parameter_names(example_spec):
+def test_parameter_names(example_spec):
     model = pyhf.Workspace(example_spec).model()
-    labels = model_utils.get_parameter_names(model)
+    labels = model_utils.parameter_names(model)
     assert labels == ["staterror_Signal-Region", "Signal strength"]
 
 
-def test_build_Asimov_data(example_spec):
+def test_asimov_data(example_spec):
     ws = pyhf.Workspace(example_spec)
     model = ws.model()
-    assert model_utils.build_Asimov_data(model) == [51.8, 1]
+    assert model_utils.asimov_data(model) == [51.8, 1]
 
     # without auxdata
-    assert model_utils.build_Asimov_data(model, with_aux=False) == [51.8]
+    assert model_utils.asimov_data(model, with_aux=False) == [51.8]
 
     # respect nominal settings for normfactors
     example_spec["measurements"][0]["config"]["parameters"].append(
@@ -45,14 +45,12 @@ def test_build_Asimov_data(example_spec):
     )
     ws = pyhf.Workspace(example_spec)
     model = ws.model()
-    assert model_utils.build_Asimov_data(model, with_aux=False) == [103.6]
+    assert model_utils.asimov_data(model, with_aux=False) == [103.6]
 
 
-def test_get_asimov_parameters(
-    example_spec, example_spec_shapefactor, example_spec_lumi
-):
+def test_asimov_parameters(example_spec, example_spec_shapefactor, example_spec_lumi):
     model = pyhf.Workspace(example_spec).model()
-    pars = model_utils.get_asimov_parameters(model)
+    pars = model_utils.asimov_parameters(model)
     assert np.allclose(pars, [1.0, 1.0])
 
     # respect shapefactor initial values
@@ -60,7 +58,7 @@ def test_get_asimov_parameters(
         {"name": "shape factor", "inits": [1.2, 1.1]}
     )
     model = pyhf.Workspace(example_spec_shapefactor).model()
-    pars = model_utils.get_asimov_parameters(model)
+    pars = model_utils.asimov_parameters(model)
     assert np.allclose(pars, [1.2, 1.1, 1.0])
 
     # respect normfactor initial values
@@ -69,7 +67,7 @@ def test_get_asimov_parameters(
         {"name": "Signal strength", "inits": [2.0]}
     )
     model = pyhf.Workspace(normfactor_spec).model()
-    pars = model_utils.get_asimov_parameters(model)
+    pars = model_utils.asimov_parameters(model)
     assert np.allclose(pars, [1.0, 2.0])
 
     # modifier with nominal value 0 and different initial value (which is ignored)
@@ -81,7 +79,7 @@ def test_get_asimov_parameters(
         {"name": "normsys_example", "inits": [0.5]}
     )
     model = pyhf.Workspace(normsys_spec).model()
-    pars = model_utils.get_asimov_parameters(model)
+    pars = model_utils.asimov_parameters(model)
     assert np.allclose(pars, [1.0, 1.0, 0.0])
 
     # shapesys modifier with nominal value 1 and different initial value (ignored)
@@ -93,38 +91,38 @@ def test_get_asimov_parameters(
         {"name": "shapesys_example", "inits": [1.5]}
     )
     model = pyhf.Workspace(shapesys_spec).model()
-    pars = model_utils.get_asimov_parameters(model)
+    pars = model_utils.asimov_parameters(model)
     assert np.allclose(pars, [1.0, 1.0, 1.0])
 
     # lumi modifier with nominal value 1 and different initial value (ignored)
     model = pyhf.Workspace(example_spec_lumi).model()
-    pars = model_utils.get_asimov_parameters(model)
+    pars = model_utils.asimov_parameters(model)
     assert np.allclose(pars, [1.0, 1.0])
 
 
-def test_get_prefit_uncertainties(
+def test_prefit_uncertainties(
     example_spec, example_spec_multibin, example_spec_shapefactor
 ):
     model = pyhf.Workspace(example_spec).model()
-    unc = model_utils.get_prefit_uncertainties(model)
+    unc = model_utils.prefit_uncertainties(model)
     assert np.allclose(unc, [0.0, 0.0])  # fixed parameter and normfactor
 
     model = pyhf.Workspace(example_spec_multibin).model()
-    unc = model_utils.get_prefit_uncertainties(model)
+    unc = model_utils.prefit_uncertainties(model)
     assert np.allclose(unc, [0.2, 0.4, 0.0, 0.125])
 
     model = pyhf.Workspace(example_spec_shapefactor).model()
-    unc = model_utils.get_prefit_uncertainties(model)
+    unc = model_utils.prefit_uncertainties(model)
     assert np.allclose(unc, [0.0, 0.0, 0.0])
 
 
-def test__get_channel_boundary_indices(example_spec, example_spec_multibin):
+def test__channel_boundary_indices(example_spec, example_spec_multibin):
     model = pyhf.Workspace(example_spec).model()
-    indices = model_utils._get_channel_boundary_indices(model)
+    indices = model_utils._channel_boundary_indices(model)
     assert indices == []
 
     model = pyhf.Workspace(example_spec_multibin).model()
-    indices = model_utils._get_channel_boundary_indices(model)
+    indices = model_utils._channel_boundary_indices(model)
     assert indices == [2]
 
     # add extra channel to model to test three channels (two indices needed)
@@ -135,17 +133,17 @@ def test__get_channel_boundary_indices(example_spec, example_spec_multibin):
     three_channel_model["channels"].append(extra_channel)
     three_channel_model["observations"].append({"data": [35, 8], "name": "region_3"})
     model = pyhf.Workspace(three_channel_model).model()
-    indices = model_utils._get_channel_boundary_indices(model)
+    indices = model_utils._channel_boundary_indices(model)
     assert indices == [2, 3]
 
 
-def test_calculate_stdev(example_spec, example_spec_multibin):
+def test_yield_uncertainty(example_spec, example_spec_multibin):
     model = pyhf.Workspace(example_spec).model()
     parameters = np.asarray([1.05, 0.95])
     uncertainty = np.asarray([0.1, 0.1])
     corr_mat = np.asarray([[1.0, 0.2], [0.2, 1.0]])
 
-    total_stdev_bin, total_stdev_chan = model_utils.calculate_stdev(
+    total_stdev_bin, total_stdev_chan = model_utils.yield_uncertainty(
         model, parameters, uncertainty, corr_mat
     )
     assert np.allclose(total_stdev_bin, [[8.03150606]])
@@ -155,7 +153,7 @@ def test_calculate_stdev(example_spec, example_spec_multibin):
     parameters = np.asarray([1.0, 1.0])
     uncertainty = np.asarray([0.0495665682, 0.0])
     diag_corr_mat = np.diag([1.0, 1.0])
-    total_stdev_bin, total_stdev_chan = model_utils.calculate_stdev(
+    total_stdev_bin, total_stdev_chan = model_utils.yield_uncertainty(
         model, parameters, uncertainty, diag_corr_mat
     )
     assert np.allclose(total_stdev_bin, [[2.56754823]])  # the staterror
@@ -173,7 +171,7 @@ def test_calculate_stdev(example_spec, example_spec_multibin):
             [0.1, 0.3, 0.3, 1.0],
         ]
     )
-    total_stdev_bin, total_stdev_chan = model_utils.calculate_stdev(
+    total_stdev_bin, total_stdev_chan = model_utils.yield_uncertainty(
         model, parameters, uncertainty, corr_mat
     )
     expected_stdev_bin = [[8.056054, 1.670629], [2.775377]]
@@ -198,14 +196,14 @@ def test_unconstrained_parameter_count(example_spec, example_spec_shapefactor):
     assert model_utils.unconstrained_parameter_count(model) == 2
 
 
-def test__get_parameter_index(caplog):
+def test__parameter_index(caplog):
     caplog.set_level(logging.DEBUG)
     labels = ["a", "b", "c"]
     par_name = "b"
-    assert model_utils._get_parameter_index(par_name, labels) == 1
-    assert model_utils._get_parameter_index(par_name, tuple(labels)) == 1
+    assert model_utils._parameter_index(par_name, labels) == 1
+    assert model_utils._parameter_index(par_name, tuple(labels)) == 1
     caplog.clear()
 
-    assert model_utils._get_parameter_index("x", labels) == -1
+    assert model_utils._parameter_index("x", labels) == -1
     assert "parameter x not found in model" in [rec.message for rec in caplog.records]
     caplog.clear()

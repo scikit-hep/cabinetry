@@ -168,7 +168,7 @@ def _fit_model_pyhf(
 
     bestfit = pyhf.tensorlib.to_numpy(result[:, 0])
     uncertainty = pyhf.tensorlib.to_numpy(result[:, 1])
-    labels = model_utils.get_parameter_names(model)
+    labels = model_utils.parameter_names(model)
     corr_mat = result_obj.hess_inv.correlation()
     best_twice_nll = float(result_obj.fun)  # convert 0-dim np.ndarray to float
 
@@ -177,7 +177,7 @@ def _fit_model_pyhf(
     if minos is not None:
         parameters_translated = []
         for minos_par in minos:
-            par_index = model_utils._get_parameter_index(minos_par, labels)
+            par_index = model_utils._parameter_index(minos_par, labels)
             if par_index != -1:
                 # pyhf does not hand over parameter names, all parameters are known as
                 # x0, x1, etc.
@@ -223,7 +223,7 @@ def _fit_model_custom(
     # use fix_pars provided in function argument if they exist, else use default
     fix_pars = fix_pars or model.config.suggested_fixed()
 
-    labels = model_utils.get_parameter_names(model)
+    labels = model_utils.parameter_names(model)
 
     # set initial step size to 0 for fixed parameters
     # this will cause the associated parameter uncertainties to be 0 post-fit
@@ -335,7 +335,7 @@ def _run_minos(
     for par_name in minos:
         # get index of current parameter in labels (to translate its name if iminuit
         # did not receive the parameter labels)
-        par_index = model_utils._get_parameter_index(par_name, minuit_obj.parameters)
+        par_index = model_utils._parameter_index(par_name, minuit_obj.parameters)
         if par_index == -1:
             # parameter not found, skip calculation (can only happen with custom fit)
             continue
@@ -485,8 +485,8 @@ def ranking(
     if fit_results is None:
         fit_results = _fit_model(model, data, custom_fit=custom_fit)
 
-    labels = model_utils.get_parameter_names(model)
-    prefit_unc = model_utils.get_prefit_uncertainties(model)
+    labels = model_utils.parameter_names(model)
+    prefit_unc = model_utils.prefit_uncertainties(model)
     nominal_poi = fit_results.bestfit[model.config.poi_index]
 
     # get default initial parameter settings / whether parameters are constant
@@ -586,12 +586,12 @@ def scan(
         ScanResults: includes parameter name, scanned values and 2*log(likelihood)
         offset
     """
-    labels = model_utils.get_parameter_names(model)
+    labels = model_utils.parameter_names(model)
     init_pars = model.config.suggested_init()
     fix_pars = model.config.suggested_fixed()
 
     # get index of parameter with name par_name
-    par_index = model_utils._get_parameter_index(par_name, labels)
+    par_index = model_utils._parameter_index(par_name, labels)
     if par_index == -1:
         raise ValueError(f"could not find parameter {par_name} in model")
 

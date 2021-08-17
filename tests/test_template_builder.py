@@ -33,15 +33,15 @@ def test__check_for_override():
     ) == ["val", "val2"]
 
 
-def test__get_ntuple_paths(caplog):
+def test__ntuple_paths(caplog):
     # only general path, no override
-    assert template_builder._get_ntuple_paths("path.root", {}, {}, {}, None) == [
+    assert template_builder._ntuple_paths("path.root", {}, {}, {}, None) == [
         pathlib.Path("path.root")
     ]
 
     # general path with region and sample templates
     assert (
-        template_builder._get_ntuple_paths(
+        template_builder._ntuple_paths(
             "{RegionPath}/{SamplePaths}",
             {"RegionPath": "region"},
             {"SamplePaths": "sample.root"},
@@ -53,7 +53,7 @@ def test__get_ntuple_paths(caplog):
 
     # two SamplePaths
     assert (
-        template_builder._get_ntuple_paths(
+        template_builder._ntuple_paths(
             "{RegionPath}/{SamplePaths}",
             {"RegionPath": "region"},
             {"SamplePaths": ["sample.root", "new.root"]},
@@ -65,7 +65,7 @@ def test__get_ntuple_paths(caplog):
 
     # systematic with override for RegionPath and SamplePaths
     assert (
-        template_builder._get_ntuple_paths(
+        template_builder._ntuple_paths(
             "{RegionPath}/{SamplePaths}",
             {"RegionPath": "reg_1"},
             {"SamplePaths": "path.root"},
@@ -82,7 +82,7 @@ def test__get_ntuple_paths(caplog):
     )
 
     # systematic without override
-    assert template_builder._get_ntuple_paths(
+    assert template_builder._ntuple_paths(
         "{SamplePaths}", {}, {"SamplePaths": "path.root"}, {"Name": "variation"}, "Up"
     ) == [pathlib.Path("path.root")]
 
@@ -90,7 +90,7 @@ def test__get_ntuple_paths(caplog):
     caplog.clear()
 
     # warning: no region path in template
-    assert template_builder._get_ntuple_paths(
+    assert template_builder._ntuple_paths(
         "path.root", {"RegionPath": "region.root"}, {}, {}, None
     ) == [pathlib.Path("path.root")]
     assert "region override specified, but {RegionPath} not found in default path" in [
@@ -99,7 +99,7 @@ def test__get_ntuple_paths(caplog):
     caplog.clear()
 
     # warning: no region path in template
-    assert template_builder._get_ntuple_paths(
+    assert template_builder._ntuple_paths(
         "path.root", {}, {"SamplePaths": "sample.root"}, {}, None
     ) == [pathlib.Path("path.root")]
     assert "sample override specified, but {SamplePaths} not found in default path" in [
@@ -109,26 +109,22 @@ def test__get_ntuple_paths(caplog):
 
     # error: no override for {RegionPath}
     with pytest.raises(ValueError, match="no path setting found for region region"):
-        template_builder._get_ntuple_paths(
-            "{RegionPath}", {"Name": "region"}, {}, {}, None
-        )
+        template_builder._ntuple_paths("{RegionPath}", {"Name": "region"}, {}, {}, None)
 
     # error: no override for {SamplePaths}
     with pytest.raises(ValueError, match="no path setting found for sample sample"):
-        template_builder._get_ntuple_paths(
+        template_builder._ntuple_paths(
             "{SamplePaths}", {}, {"Name": "sample"}, {}, None
         )
 
 
-def test__get_variable():
+def test__variable():
     # no override
-    assert (
-        template_builder._get_variable({"Variable": "jet_pt"}, {}, {}, None) == "jet_pt"
-    )
+    assert template_builder._variable({"Variable": "jet_pt"}, {}, {}, None) == "jet_pt"
 
     # systematic with override
     assert (
-        template_builder._get_variable(
+        template_builder._variable(
             {"Variable": "jet_pt"},
             {},
             {"Name": "variation", "Up": {"Variable": "jet_pt_up"}},
@@ -139,26 +135,25 @@ def test__get_variable():
 
     # systematic without override
     assert (
-        template_builder._get_variable(
+        template_builder._variable(
             {"Variable": "jet_pt"}, {}, {"Name": "variation"}, "Up"
         )
         == "jet_pt"
     )
 
 
-def test__get_filter():
+def test__filter():
     # no override
     assert (
-        template_builder._get_filter({"Filter": "jet_pt > 0"}, {}, {}, None)
-        == "jet_pt > 0"
+        template_builder._filter({"Filter": "jet_pt > 0"}, {}, {}, None) == "jet_pt > 0"
     )
 
     # no filter
-    assert template_builder._get_filter({}, {}, {}, None) is None
+    assert template_builder._filter({}, {}, {}, None) is None
 
     # systematic with override
     assert (
-        template_builder._get_filter(
+        template_builder._filter(
             {"Filter": "jet_pt > 0"},
             {},
             {"Name": "variation", "Up": {"Filter": "jet_pt > 100"}},
@@ -169,26 +164,25 @@ def test__get_filter():
 
     # systematic without override
     assert (
-        template_builder._get_filter(
+        template_builder._filter(
             {"Filter": "jet_pt > 0"}, {}, {"Name": "variation"}, "Up"
         )
         == "jet_pt > 0"
     )
 
 
-def test__get_weight():
+def test__weight():
     # no override
     assert (
-        template_builder._get_weight({}, {"Weight": "weight_mc"}, {}, None)
-        == "weight_mc"
+        template_builder._weight({}, {"Weight": "weight_mc"}, {}, None) == "weight_mc"
     )
 
     # no weight
-    assert template_builder._get_weight({}, {}, {}, None) is None
+    assert template_builder._weight({}, {}, {}, None) is None
 
     # systematic with override
     assert (
-        template_builder._get_weight(
+        template_builder._weight(
             {},
             {"Weight": "weight_mc"},
             {"Name": "variation", "Up": {"Weight": "weight_modified"}},
@@ -199,23 +193,23 @@ def test__get_weight():
 
     # systematic without override
     assert (
-        template_builder._get_weight(
+        template_builder._weight(
             {}, {"Weight": "weight_mc"}, {"Name": "variation"}, "Up"
         )
         == "weight_mc"
     )
 
 
-def test__get_position_in_file():
+def test__position_in_file():
     # no override
     assert (
-        template_builder._get_position_in_file({"Tree": "tree_name"}, {}, None)
+        template_builder._position_in_file({"Tree": "tree_name"}, {}, None)
         == "tree_name"
     )
 
     # systematic with override
     assert (
-        template_builder._get_position_in_file(
+        template_builder._position_in_file(
             {"Tree": "nominal"}, {"Name": "variation", "Up": {"Tree": "up_tree"}}, "Up"
         )
         == "up_tree"
@@ -223,19 +217,19 @@ def test__get_position_in_file():
 
     # systematic without override
     assert (
-        template_builder._get_position_in_file(
+        template_builder._position_in_file(
             {"Tree": "nominal"}, {"Name": "variation"}, "Up"
         )
         == "nominal"
     )
 
 
-def test__get_binning():
+def test__binning():
     np.testing.assert_equal(
-        template_builder._get_binning({"Binning": [1, 2, 3]}), [1, 2, 3]
+        template_builder._binning({"Binning": [1, 2, 3]}), [1, 2, 3]
     )
     with pytest.raises(NotImplementedError, match="cannot determine binning"):
-        template_builder._get_binning({})
+        template_builder._binning({})
 
 
 def test__Builder():

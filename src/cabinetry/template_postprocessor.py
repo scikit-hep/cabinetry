@@ -54,7 +54,7 @@ def _apply_353QH_twice(
     variation.yields = smooth_var * sum(variation.yields) / sum(smooth_var)
 
 
-def _get_smoothing_algorithm(
+def _smoothing_algorithm(
     region: Dict[str, Any], sample: Dict[str, Any], systematic: Dict[str, Any]
 ) -> Optional[str]:
     """Returns name of algorithm to use for smoothing, or None otherwise.
@@ -122,7 +122,7 @@ def apply_postprocessing(
     return modified_histogram
 
 
-def _get_postprocessor(histogram_folder: pathlib.Path) -> route.ProcessorFunc:
+def _postprocessor(histogram_folder: pathlib.Path) -> route.ProcessorFunc:
     """Returns the post-processing function to be applied to template histograms.
 
     Needed by ``cabinetry.route.apply_to_all_templates``. Could alternatively create a
@@ -160,7 +160,7 @@ def _get_postprocessor(histogram_folder: pathlib.Path) -> route.ProcessorFunc:
         )
         histogram_name = histo.build_name(region, sample, systematic, template)
 
-        smoothing_algorithm = _get_smoothing_algorithm(region, sample, systematic)
+        smoothing_algorithm = _smoothing_algorithm(region, sample, systematic)
         if smoothing_algorithm is None:
             nominal_histogram = None
         else:
@@ -191,5 +191,5 @@ def run(config: Dict[str, Any]) -> None:
         config (Dict[str, Any]): cabinetry configuration
     """
     histogram_folder = pathlib.Path(config["General"]["HistogramFolder"])
-    postprocessor = _get_postprocessor(histogram_folder)
+    postprocessor = _postprocessor(histogram_folder)
     route.apply_to_all_templates(config, postprocessor)

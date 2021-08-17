@@ -38,31 +38,31 @@ def test__apply_353QH_twice(mock_smooth):
     assert np.allclose(var.yields, [0.9765625, 1.5234375])
 
 
-def test__get_smoothing_algorithm():
+def test__smoothing_algorithm():
     reg = {"Name": "reg"}
     sam = {"Name": "sam"}
     sys = {"Name": "sys"}
 
-    assert template_postprocessor._get_smoothing_algorithm(reg, sam, sys) is None
+    assert template_postprocessor._smoothing_algorithm(reg, sam, sys) is None
 
     sys = {"Name": "sys", "Smoothing": {"Algorithm": "abc"}}
-    assert template_postprocessor._get_smoothing_algorithm(reg, sam, sys) == "abc"
+    assert template_postprocessor._smoothing_algorithm(reg, sam, sys) == "abc"
 
     # region is missing in setting
     sys = {"Name": "sys", "Smoothing": {"Algorithm": "abc", "Regions": "r"}}
-    assert template_postprocessor._get_smoothing_algorithm(reg, sam, sys) is None
+    assert template_postprocessor._smoothing_algorithm(reg, sam, sys) is None
 
     # region is included in setting
     sys = {"Name": "sys", "Smoothing": {"Algorithm": "abc", "Regions": ["r", "reg"]}}
-    assert template_postprocessor._get_smoothing_algorithm(reg, sam, sys) == "abc"
+    assert template_postprocessor._smoothing_algorithm(reg, sam, sys) == "abc"
 
     # sample is missing in setting
     sys = {"Name": "sys", "Smoothing": {"Algorithm": "abc", "Samples": "s"}}
-    assert template_postprocessor._get_smoothing_algorithm(reg, sam, sys) is None
+    assert template_postprocessor._smoothing_algorithm(reg, sam, sys) is None
 
     # sample is included in setting
     sys = {"Name": "sys", "Smoothing": {"Algorithm": "abc", "Samples": ["s", "sam"]}}
-    assert template_postprocessor._get_smoothing_algorithm(reg, sam, sys) == "abc"
+    assert template_postprocessor._smoothing_algorithm(reg, sam, sys) == "abc"
 
 
 @mock.patch("cabinetry.template_postprocessor._apply_353QH_twice")
@@ -127,8 +127,8 @@ def test_apply_postprocessing(mock_stat, mock_smooth, caplog):
 
 
 @mock.patch("cabinetry.histo.build_name", return_value="histo_name")
-def test__get_postprocessor(mock_name):
-    postprocessor = template_postprocessor._get_postprocessor(pathlib.Path("path"))
+def test__postprocessor(mock_name):
+    postprocessor = template_postprocessor._postprocessor(pathlib.Path("path"))
 
     region = {"Name": "region"}
     sample = {"Name": "sample"}
@@ -146,7 +146,7 @@ def test__get_postprocessor(mock_name):
         ) as mock_postprocessing:
             # execute the provided function
             with mock.patch(
-                "cabinetry.template_postprocessor._get_smoothing_algorithm",
+                "cabinetry.template_postprocessor._smoothing_algorithm",
                 return_value=None,
             ) as mock_smooth:
                 postprocessor(region, sample, systematic, template)
@@ -179,7 +179,7 @@ def test__get_postprocessor(mock_name):
                 "Smoothing": {"Algorithm": "353QH, twice"},
             }
             with mock.patch(
-                "cabinetry.template_postprocessor._get_smoothing_algorithm",
+                "cabinetry.template_postprocessor._smoothing_algorithm",
                 return_value="353QH, twice",
             ) as mock_smooth:
                 postprocessor(region, sample, systematic, template)
@@ -201,7 +201,7 @@ def test__get_postprocessor(mock_name):
 
 
 @mock.patch("cabinetry.route.apply_to_all_templates")
-@mock.patch("cabinetry.template_postprocessor._get_postprocessor", return_value="func")
+@mock.patch("cabinetry.template_postprocessor._postprocessor", return_value="func")
 def test_run(mock_postprocessor, mock_apply):
     config = {"General": {"HistogramFolder": "path/"}}
     template_postprocessor.run(config)

@@ -34,11 +34,11 @@ def model_and_data(
     if not asimov:
         data = workspace.data(model, with_aux=with_aux)
     else:
-        data = build_Asimov_data(model, with_aux=with_aux)
+        data = asimov_data(model, with_aux=with_aux)
     return model, data
 
 
-def get_parameter_names(model: pyhf.pdf.Model) -> List[str]:
+def parameter_names(model: pyhf.pdf.Model) -> List[str]:
     """Returns the labels of all fit parameters.
 
     Vectors that act on one bin per vector entry (gammas) are expanded.
@@ -60,7 +60,7 @@ def get_parameter_names(model: pyhf.pdf.Model) -> List[str]:
     return labels
 
 
-def build_Asimov_data(model: pyhf.Model, with_aux: bool = True) -> List[float]:
+def asimov_data(model: pyhf.Model, with_aux: bool = True) -> List[float]:
     """Returns the Asimov dataset (optionally with auxdata) for a model.
 
     Initial parameter settings for normalization factors in the workspace are treated as
@@ -76,12 +76,12 @@ def build_Asimov_data(model: pyhf.Model, with_aux: bool = True) -> List[float]:
         List[float]: the Asimov dataset
     """
     asimov_data = pyhf.tensorlib.tolist(
-        model.expected_data(get_asimov_parameters(model), include_auxdata=with_aux)
+        model.expected_data(asimov_parameters(model), include_auxdata=with_aux)
     )
     return asimov_data
 
 
-def get_asimov_parameters(model: pyhf.pdf.Model) -> np.ndarray:
+def asimov_parameters(model: pyhf.pdf.Model) -> np.ndarray:
     """Returns a list of Asimov parameter values for a model.
 
     For normfactors and shapefactors, initial parameter settings (specified in the
@@ -115,7 +115,7 @@ def get_asimov_parameters(model: pyhf.pdf.Model) -> np.ndarray:
     return np.asarray(asimov_parameters)
 
 
-def get_prefit_uncertainties(model: pyhf.pdf.Model) -> np.ndarray:
+def prefit_uncertainties(model: pyhf.pdf.Model) -> np.ndarray:
     """Returns a list of pre-fit parameter uncertainties for a model.
 
     For unconstrained parameters the uncertainty is set to 0. It is also set to 0 for
@@ -146,7 +146,7 @@ def get_prefit_uncertainties(model: pyhf.pdf.Model) -> np.ndarray:
     return np.asarray(pre_fit_unc)
 
 
-def _get_channel_boundary_indices(model: pyhf.pdf.Model) -> List[int]:
+def _channel_boundary_indices(model: pyhf.pdf.Model) -> List[int]:
     """Returns indices for splitting a concatenated list of observations into channels.
 
     This is useful in combination with ``pyhf.pdf.Model.expected_data``, which returns
@@ -168,7 +168,7 @@ def _get_channel_boundary_indices(model: pyhf.pdf.Model) -> List[int]:
     return channel_start
 
 
-def calculate_stdev(
+def yield_uncertainty(
     model: pyhf.pdf.Model,
     parameters: np.ndarray,
     uncertainty: np.ndarray,
@@ -194,7 +194,7 @@ def calculate_stdev(
             - list of standard deviations per channel
     """
     # indices where to split to separate all bins into regions
-    region_split_indices = _get_channel_boundary_indices(model)
+    region_split_indices = _channel_boundary_indices(model)
 
     # the lists up_variations and down_variations will contain the model distributions
     # with all parameters varied individually within uncertainties
@@ -251,7 +251,7 @@ def calculate_stdev(
         symmetric_uncertainty = (up_variations[i_par] - down_variations[i_par]) / 2
         total_variance = total_variance + symmetric_uncertainty ** 2
 
-    labels = get_parameter_names(model)
+    labels = parameter_names(model)
     # continue with off-diagonal contributions if there are any
     if np.count_nonzero(corr_mat - np.diag(np.ones_like(parameters))) > 0:
         # loop over pairs of parameters
@@ -303,12 +303,10 @@ def unconstrained_parameter_count(model: pyhf.pdf.Model) -> int:
     return n_pars
 
 
-def _get_parameter_index(
-    par_name: str, labels: Union[List[str], Tuple[str, ...]]
-) -> int:
+def _parameter_index(par_name: str, labels: Union[List[str], Tuple[str, ...]]) -> int:
     """Returns the position of a parameter with a given name in the list of parameters.
 
-    Useful together with ``get_parameter_names`` to find the position of a parameter
+    Useful together with ``parameter_names`` to find the position of a parameter
     when the name is known. If the parameter is not found, logs an error and returns a
     default value of -1.
 

@@ -121,20 +121,20 @@ def test_data_MC_from_histograms(mock_load, mock_draw, mock_stdev):
 
 
 @mock.patch("cabinetry.visualize.plot_model.data_MC")
-@mock.patch("cabinetry.template_builder._get_binning", return_value=np.asarray([1, 2]))
+@mock.patch("cabinetry.template_builder._binning", return_value=np.asarray([1, 2]))
 @mock.patch(
-    "cabinetry.configuration.get_region_dict",
+    "cabinetry.configuration.region_dict",
     return_value={"Name": "region", "Variable": "x"},
 )
 @mock.patch("cabinetry.tabulate._yields_per_channel")
 @mock.patch("cabinetry.tabulate._yields_per_bin")
-@mock.patch("cabinetry.model_utils.calculate_stdev", return_value=([[0.3]], [0.3]))
+@mock.patch("cabinetry.model_utils.yield_uncertainty", return_value=([[0.3]], [0.3]))
 @mock.patch(
-    "cabinetry.model_utils.get_prefit_uncertainties",
+    "cabinetry.model_utils.prefit_uncertainties",
     return_value=([0.04956657, 0.0]),
 )
 @mock.patch(
-    "cabinetry.model_utils.get_asimov_parameters",
+    "cabinetry.model_utils.asimov_parameters",
     return_value=([1.0, 1.0]),
 )
 def test_data_MC(

@@ -97,7 +97,7 @@ def print_overview(config: Dict[str, Any]) -> None:
         log.info(f"  {len(config['Systematics'])} Systematic(s)")
 
 
-def _convert_setting_to_list(setting: Union[str, List[str]]) -> List[str]:
+def _setting_to_list(setting: Union[str, List[str]]) -> List[str]:
     """Converts a configuration setting to a list.
 
     The config allows for two ways of specifying some settings, for example samples. A
@@ -133,7 +133,7 @@ def _x_contains_y(x: Dict[str, Any], y: Dict[str, Any], y_key: str) -> bool:
         bool: True if ``x`` contains ``y``, False otherwise
     """
     # y_key setting of y is optional, default to empty list
-    matched_x_list = _convert_setting_to_list(y.get(y_key, []))
+    matched_x_list = _setting_to_list(y.get(y_key, []))
     if matched_x_list and x["Name"] not in matched_x_list:
         # only some x are allowed as specified in list, and current x does not match
         return False
@@ -250,7 +250,7 @@ def histogram_is_needed(
     return histo_needed
 
 
-def get_region_dict(config: Dict[str, Any], region_name: str) -> Dict[str, Any]:
+def region_dict(config: Dict[str, Any], region_name: str) -> Dict[str, Any]:
     """Returns the dictionary for a region with the given name.
 
     Args:
