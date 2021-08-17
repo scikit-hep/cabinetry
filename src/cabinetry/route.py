@@ -84,8 +84,8 @@ class Router:
                 apply to all samples
             systematic_name (str): name of the systematic to apply the function to, or
                "*" to apply to all systematics
-            template (str): name of the template to apply the function to, "*" to
-                apply to all templates, or None to apply to nominal only
+            template (Optional[str]): name of the template to apply the function to, "*"
+                to apply to all templates, or None to apply to nominal only
 
         Returns:
             Callable[[UserTemplateFunc], UserTemplateFunc]: the function to
