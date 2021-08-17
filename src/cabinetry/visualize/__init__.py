@@ -196,7 +196,7 @@ def data_mc(
 
     # calculate the total standard deviation of the model prediction
     # indices: channel (and bin) for per-bin uncertainties, channel for per-channel
-    total_stdev_model_bins, total_stdev_model_channels = model_utils.yield_uncertainty(
+    total_stdev_model_bins, total_stdev_model_channels = model_utils.yield_stdev(
         model, param_values, param_uncertainty, corr_mat
     )
 

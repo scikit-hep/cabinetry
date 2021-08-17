@@ -137,13 +137,13 @@ def test__channel_boundary_indices(example_spec, example_spec_multibin):
     assert indices == [2, 3]
 
 
-def test_yield_uncertainty(example_spec, example_spec_multibin):
+def test_yield_stdev(example_spec, example_spec_multibin):
     model = pyhf.Workspace(example_spec).model()
     parameters = np.asarray([1.05, 0.95])
     uncertainty = np.asarray([0.1, 0.1])
     corr_mat = np.asarray([[1.0, 0.2], [0.2, 1.0]])
 
-    total_stdev_bin, total_stdev_chan = model_utils.yield_uncertainty(
+    total_stdev_bin, total_stdev_chan = model_utils.yield_stdev(
         model, parameters, uncertainty, corr_mat
     )
     assert np.allclose(total_stdev_bin, [[8.03150606]])
@@ -153,7 +153,7 @@ def test_yield_uncertainty(example_spec, example_spec_multibin):
     parameters = np.asarray([1.0, 1.0])
     uncertainty = np.asarray([0.0495665682, 0.0])
     diag_corr_mat = np.diag([1.0, 1.0])
-    total_stdev_bin, total_stdev_chan = model_utils.yield_uncertainty(
+    total_stdev_bin, total_stdev_chan = model_utils.yield_stdev(
         model, parameters, uncertainty, diag_corr_mat
     )
     assert np.allclose(total_stdev_bin, [[2.56754823]])  # the staterror
@@ -171,7 +171,7 @@ def test_yield_uncertainty(example_spec, example_spec_multibin):
             [0.1, 0.3, 0.3, 1.0],
         ]
     )
-    total_stdev_bin, total_stdev_chan = model_utils.yield_uncertainty(
+    total_stdev_bin, total_stdev_chan = model_utils.yield_stdev(
         model, parameters, uncertainty, corr_mat
     )
     expected_stdev_bin = [[8.056054, 1.670629], [2.775377]]

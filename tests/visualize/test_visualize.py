@@ -128,7 +128,7 @@ def test_data_mc_from_histograms(mock_load, mock_draw, mock_stdev):
 )
 @mock.patch("cabinetry.tabulate._yields_per_channel")
 @mock.patch("cabinetry.tabulate._yields_per_bin")
-@mock.patch("cabinetry.model_utils.yield_uncertainty", return_value=([[0.3]], [0.3]))
+@mock.patch("cabinetry.model_utils.yield_stdev", return_value=([[0.3]], [0.3]))
 @mock.patch(
     "cabinetry.model_utils.prefit_uncertainties",
     return_value=([0.04956657, 0.0]),

@@ -168,7 +168,7 @@ def _channel_boundary_indices(model: pyhf.pdf.Model) -> List[int]:
     return channel_start
 
 
-def yield_uncertainty(
+def yield_stdev(
     model: pyhf.pdf.Model,
     parameters: np.ndarray,
     uncertainty: np.ndarray,
