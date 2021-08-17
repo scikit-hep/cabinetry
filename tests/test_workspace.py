@@ -59,72 +59,6 @@ def test_WorkspaceBuilder__get_constant_parameter_setting():
     assert ws_builder._get_constant_parameter_setting("par_a") == 1.2
 
 
-@mock.patch(
-    "cabinetry.workspace.histo.Histogram.from_config",
-    return_value=histo.Histogram.from_arrays([0, 1, 2], [1.0, 2.0], [0.1, 0.1]),
-)
-def test_WorkspaceBuilder_get_yield_for_sample(mock_histogram):
-    expected_yields = [1.0, 2.0]
-    ws_builder = workspace.WorkspaceBuilder({"General": {"HistogramFolder": "path"}})
-    yields = ws_builder.get_yield_for_sample({"Name": "region"}, {"Name": "signal"})
-    assert yields == expected_yields
-
-    # non-nominal
-    yields_non_nominal = ws_builder.get_yield_for_sample(
-        {"Name": "region"}, {"Name": "signal"}, systematic={"Name": "variation"}
-    )
-    assert yields_non_nominal == expected_yields
-
-    assert mock_histogram.call_args_list == [
-        (
-            (pathlib.Path("path"), {"Name": "region"}, {"Name": "signal"}, {}),
-            {"modified": True},
-        ),
-        (
-            (
-                pathlib.Path("path"),
-                {"Name": "region"},
-                {"Name": "signal"},
-                {"Name": "variation"},
-            ),
-            {"modified": True},
-        ),
-    ]
-
-
-@mock.patch(
-    "cabinetry.workspace.histo.Histogram.from_config",
-    return_value=histo.Histogram.from_arrays([0, 1, 2], [1.0, 2.0], [0.1, 0.1]),
-)
-def test_WorkspaceBuilder_get_unc_for_sample(mock_histogram):
-    expected_unc = [0.1, 0.1]
-    ws_builder = workspace.WorkspaceBuilder({"General": {"HistogramFolder": "path"}})
-    unc = ws_builder.get_unc_for_sample({"Name": "region"}, {"Name": "signal"})
-    assert unc == expected_unc
-
-    # non-nominal
-    unc_non_nominal = ws_builder.get_unc_for_sample(
-        {"Name": "region"}, {"Name": "signal"}, systematic={"Name": "variation"}
-    )
-    assert unc_non_nominal == expected_unc
-
-    assert mock_histogram.call_args_list == [
-        (
-            (pathlib.Path("path"), {"Name": "region"}, {"Name": "signal"}, {}),
-            {"modified": True},
-        ),
-        (
-            (
-                pathlib.Path("path"),
-                {"Name": "region"},
-                {"Name": "signal"},
-                {"Name": "variation"},
-            ),
-            {"modified": True},
-        ),
-    ]
-
-
 def test_WorkspaceBuilder_get_NF_modifiers():
     # could mock region_contains_modifier / sample_contains_modifier
     # one NF affects sample
@@ -227,12 +161,12 @@ def test_WorkspaceBuilder_get_NormPlusShape_modifiers(mock_histogram):
     assert mock_histogram.call_args_list == [
         (
             (pathlib.Path("path"), region, sample, systematic),
-            {"modified": True, "template": "Up"},
+            {"template": "Up", "modified": True},
         ),
         ((pathlib.Path("path"), region, sample, {}), {"modified": True}),
         (
             (pathlib.Path("path"), region, sample, systematic),
-            {"modified": True, "template": "Down"},
+            {"template": "Down", "modified": True},
         ),
     ]
 
@@ -255,7 +189,7 @@ def test_WorkspaceBuilder_get_NormPlusShape_modifiers(mock_histogram):
     assert mock_histogram.call_args_list[3:] == [
         (
             (pathlib.Path("path"), region, sample, systematic),
-            {"modified": True, "template": "Up"},
+            {"template": "Up", "modified": True},
         ),
         ((pathlib.Path("path"), region, sample, {}), {"modified": True}),
     ]
@@ -319,14 +253,11 @@ def test_WorkspaceBuilder_get_sys_modifiers(mock_norm, mock_norm_shape):
 
 
 @mock.patch(
-    "cabinetry.workspace.WorkspaceBuilder.get_unc_for_sample", return_value=[0.1, 0.1]
-)
-@mock.patch(
-    "cabinetry.workspace.WorkspaceBuilder.get_yield_for_sample",
-    return_value=[1.0, 2.0],
+    "cabinetry.workspace.histo.Histogram.from_config",
+    return_value=histo.Histogram.from_arrays([0, 1, 2], [1.0, 2.0], [0.1, 0.1]),
 )
 @mock.patch("cabinetry.configuration.region_contains_sample", side_effect=[True, False])
-def test_WorkspaceBuilder_get_channels(mock_contains, mock_get_yield, mock_get_unc):
+def test_WorkspaceBuilder_get_channels(mock_contains, mock_histogram):
     # should mock get_NF_modifiers / get_sys_modifiers
     example_config = {
         "General": {"HistogramFolder": "path"},
@@ -359,11 +290,16 @@ def test_WorkspaceBuilder_get_channels(mock_contains, mock_get_yield, mock_get_u
     assert mock_contains.call_args_list == [
         ((example_config["Regions"][0], example_config["Samples"][0]), {})
     ]
-    assert mock_get_yield.call_args_list == [
-        ((example_config["Regions"][0], example_config["Samples"][0]), {})
-    ]
-    assert mock_get_unc.call_args_list == [
-        ((example_config["Regions"][0], example_config["Samples"][0]), {})
+    assert mock_histogram.call_args_list == [
+        (
+            (
+                pathlib.Path("path"),
+                example_config["Regions"][0],
+                example_config["Samples"][0],
+                {},
+            ),
+            {"modified": True},
+        )
     ]
 
     # run again, this time region will not contain sample due to side_effect
@@ -376,8 +312,7 @@ def test_WorkspaceBuilder_get_channels(mock_contains, mock_get_yield, mock_get_u
         {},
     )
     # no calls to read histogram content
-    assert mock_get_yield.call_count == 1
-    assert mock_get_unc.call_count == 1
+    assert mock_histogram.call_count == 1
 
 
 def test_WorkspaceBuilder_get_measurement():
@@ -474,10 +409,14 @@ def test_WorkspaceBuilder_get_measurement():
 
 
 @mock.patch(
-    "cabinetry.workspace.WorkspaceBuilder.get_yield_for_sample",
-    side_effect=[[1.0, 2.0], [5.0], [3.0]],
+    "cabinetry.workspace.histo.Histogram.from_config",
+    side_effect=[
+        histo.Histogram.from_arrays([0, 1, 2], [1.0, 2.0], [0.1, 0.1]),
+        histo.Histogram.from_arrays([0, 1], [5.0], [0.1]),
+        histo.Histogram.from_arrays([0, 1], [3.0], [0.1]),
+    ],
 )
-def test_WorkspaceBuilder_get_observations(mock_get_yield):
+def test_WorkspaceBuilder_get_observations(mock_histogram):
     # could mock _get_data_sample
     # create observations list from config
     example_config = {
@@ -489,11 +428,17 @@ def test_WorkspaceBuilder_get_observations(mock_get_yield):
     obs = ws_builder.get_observations()
     expected_obs = [{"name": "test_region", "data": [1.0, 2.0]}]
     assert obs == expected_obs
-    assert mock_get_yield.call_args_list == [
-        ((example_config["Regions"][0], example_config["Samples"][0]), {})
+    assert mock_histogram.call_args_list == [
+        (
+            (
+                pathlib.Path("path"),
+                example_config["Regions"][0],
+                example_config["Samples"][0],
+                {},
+            ),
+            {"modified": True},
+        )
     ]
-
-    mock_get_yield.call_args_list = []  # rest call arguments list
 
     # multiple channels
     multi_channel_config = {
@@ -508,9 +453,25 @@ def test_WorkspaceBuilder_get_observations(mock_get_yield):
         {"name": "other_region", "data": [3.0]},
     ]
     assert obs == expected_obs
-    assert mock_get_yield.call_args_list == [
-        ((multi_channel_config["Regions"][0], multi_channel_config["Samples"][0]), {}),
-        ((multi_channel_config["Regions"][1], multi_channel_config["Samples"][0]), {}),
+    assert mock_histogram.call_args_list[1:] == [
+        (
+            (
+                pathlib.Path("path"),
+                multi_channel_config["Regions"][0],
+                multi_channel_config["Samples"][0],
+                {},
+            ),
+            {"modified": True},
+        ),
+        (
+            (
+                pathlib.Path("path"),
+                multi_channel_config["Regions"][1],
+                multi_channel_config["Samples"][0],
+                {},
+            ),
+            {"modified": True},
+        ),
     ]
 
 
