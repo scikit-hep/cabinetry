@@ -27,12 +27,6 @@ def test__check_for_override():
         is None
     )
 
-    # no template requested
-    assert (
-        template_builder._check_for_override({"Up": {"setting": "val"}}, "", "setting")
-        is None
-    )
-
     # override is a list
     assert template_builder._check_for_override(
         {"Up": {"setting": ["val", "val2"]}}, "Up", "setting"
@@ -41,7 +35,7 @@ def test__check_for_override():
 
 def test__get_ntuple_paths(caplog):
     # only general path, no override
-    assert template_builder._get_ntuple_paths("path.root", {}, {}, {}, "") == [
+    assert template_builder._get_ntuple_paths("path.root", {}, {}, {}, None) == [
         pathlib.Path("path.root")
     ]
 
@@ -52,7 +46,7 @@ def test__get_ntuple_paths(caplog):
             {"RegionPath": "region"},
             {"SamplePaths": "sample.root"},
             {},
-            "",
+            None,
         )
         == [pathlib.Path("region/sample.root")]
     )
@@ -64,7 +58,7 @@ def test__get_ntuple_paths(caplog):
             {"RegionPath": "region"},
             {"SamplePaths": ["sample.root", "new.root"]},
             {},
-            "",
+            None,
         )
         == [pathlib.Path("region/sample.root"), pathlib.Path("region/new.root")]
     )
@@ -97,7 +91,7 @@ def test__get_ntuple_paths(caplog):
 
     # warning: no region path in template
     assert template_builder._get_ntuple_paths(
-        "path.root", {"RegionPath": "region.root"}, {}, {}, ""
+        "path.root", {"RegionPath": "region.root"}, {}, {}, None
     ) == [pathlib.Path("path.root")]
     assert "region override specified, but {RegionPath} not found in default path" in [
         rec.message for rec in caplog.records
@@ -106,7 +100,7 @@ def test__get_ntuple_paths(caplog):
 
     # warning: no region path in template
     assert template_builder._get_ntuple_paths(
-        "path.root", {}, {"SamplePaths": "sample.root"}, {}, ""
+        "path.root", {}, {"SamplePaths": "sample.root"}, {}, None
     ) == [pathlib.Path("path.root")]
     assert "sample override specified, but {SamplePaths} not found in default path" in [
         rec.message for rec in caplog.records
@@ -116,20 +110,20 @@ def test__get_ntuple_paths(caplog):
     # error: no override for {RegionPath}
     with pytest.raises(ValueError, match="no path setting found for region region"):
         template_builder._get_ntuple_paths(
-            "{RegionPath}", {"Name": "region"}, {}, {}, ""
+            "{RegionPath}", {"Name": "region"}, {}, {}, None
         )
 
     # error: no override for {SamplePaths}
     with pytest.raises(ValueError, match="no path setting found for sample sample"):
         template_builder._get_ntuple_paths(
-            "{SamplePaths}", {}, {"Name": "sample"}, {}, ""
+            "{SamplePaths}", {}, {"Name": "sample"}, {}, None
         )
 
 
 def test__get_variable():
     # no override
     assert (
-        template_builder._get_variable({"Variable": "jet_pt"}, {}, {}, "") == "jet_pt"
+        template_builder._get_variable({"Variable": "jet_pt"}, {}, {}, None) == "jet_pt"
     )
 
     # systematic with override
@@ -155,12 +149,12 @@ def test__get_variable():
 def test__get_filter():
     # no override
     assert (
-        template_builder._get_filter({"Filter": "jet_pt > 0"}, {}, {}, "")
+        template_builder._get_filter({"Filter": "jet_pt > 0"}, {}, {}, None)
         == "jet_pt > 0"
     )
 
     # no filter
-    assert template_builder._get_filter({}, {}, {}, "") is None
+    assert template_builder._get_filter({}, {}, {}, None) is None
 
     # systematic with override
     assert (
@@ -185,11 +179,12 @@ def test__get_filter():
 def test__get_weight():
     # no override
     assert (
-        template_builder._get_weight({}, {"Weight": "weight_mc"}, {}, "") == "weight_mc"
+        template_builder._get_weight({}, {"Weight": "weight_mc"}, {}, None)
+        == "weight_mc"
     )
 
     # no weight
-    assert template_builder._get_weight({}, {}, {}, "") is None
+    assert template_builder._get_weight({}, {}, {}, None) is None
 
     # systematic with override
     assert (
@@ -214,9 +209,7 @@ def test__get_weight():
 def test__get_position_in_file():
     # no override
     assert (
-        template_builder._get_position_in_file(
-            {"Tree": "tree_name"}, {"Name": "Nominal"}, ""
-        )
+        template_builder._get_position_in_file({"Tree": "tree_name"}, {}, None)
         == "tree_name"
     )
 
@@ -266,10 +259,10 @@ def test__Builder_create_histogram(mock_uproot_builder, mock_histo, mock_save):
         "SamplePaths": "path_to_sample",
         "Weight": "weight_mc",
     }
-    systematic = {"Name": "Nominal"}
+    systematic = {}
 
     builder = template_builder._Builder(pathlib.Path("path"), "{SamplePaths}", "uproot")
-    builder._create_histogram(region, sample, systematic, "Nominal")
+    builder._create_histogram(region, sample, systematic, None)
 
     # verify the backend call happened properly
     assert mock_uproot_builder.call_args_list == [
@@ -284,7 +277,7 @@ def test__Builder_create_histogram(mock_uproot_builder, mock_histo, mock_save):
 
     # verify the call for saving
     assert mock_save.call_args_list == [
-        (("histogram", region, sample, systematic, "Nominal"), {})
+        (("histogram", region, sample, systematic, None), {})
     ]
 
     # other backends
@@ -292,14 +285,14 @@ def test__Builder_create_histogram(mock_uproot_builder, mock_histo, mock_save):
         pathlib.Path("path"), "{SamplePaths}", "unknown"
     )
     with pytest.raises(NotImplementedError, match="unknown backend unknown"):
-        builder_unknown._create_histogram(region, sample, systematic, "Nominal")
+        builder_unknown._create_histogram(region, sample, systematic, None)
 
 
 @mock.patch("cabinetry.histo.build_name", return_value="name")
 def test__Builder__name_and_save(mock_name):
     region = {"Name": "test_region"}
     sample = {"Name": "sample"}
-    systematic = {"Name": "Nominal"}
+    systematic = {}
 
     histogram = mock.MagicMock()
 
@@ -317,7 +310,7 @@ def test__Builder__wrap_custom_template_builder(mock_save):
     histogram = bh.Histogram(bh.axis.Variable([0, 1]))
     region = {"Name": "test_region"}
     sample = {"Name": "sample"}
-    systematic = {"Name": "Nominal"}
+    systematic = {}
 
     def test_func(reg, sam, sys, tem):
         return histogram
