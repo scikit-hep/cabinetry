@@ -158,7 +158,7 @@ def test__get_postprocessor(mock_name):
             assert mock_from_config.call_args_list == [
                 (
                     (pathlib.Path("path"), region, sample, systematic),
-                    {"modified": False, "template": template},
+                    {"template": template, "modified": False},
                 )
             ]  # histogram was created
 

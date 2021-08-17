@@ -62,58 +62,6 @@ class WorkspaceBuilder:
         )
         return fixed_value
 
-    def get_yield_for_sample(
-        self,
-        region: Dict[str, Any],
-        sample: Dict[str, Any],
-        systematic: Optional[Dict[str, Any]] = None,
-    ) -> List[float]:
-        """Returns the yield for a specific sample.
-
-        Args:
-            region (Dict[str, Any]): specific region to use
-            sample (Dict[str, Any]): specific sample to use
-            systematic (Optional[Dict[str, Any]], optional): specific systematic
-                variation to use, defaults to None (nominal)
-
-        Returns:
-            List[float]: yields per bin for the sample
-        """
-        if systematic is None:
-            systematic = {}
-
-        histogram = histo.Histogram.from_config(
-            self.histogram_folder, region, sample, systematic, modified=True
-        )
-        histo_yield = histogram.yields.tolist()
-        return histo_yield
-
-    def get_unc_for_sample(
-        self,
-        region: Dict[str, Any],
-        sample: Dict[str, Any],
-        systematic: Optional[Dict[str, Any]] = None,
-    ) -> List[float]:
-        """Returns the MC stat. uncertainty for a specific sample.
-
-        Args:
-            region (Dict[str, Any]): specific region to use
-            sample (Dict[str, Any]): specific sample to use
-            systematic (Optional[Dict[str, Any]], optional): specific systematic
-                variation to use, defaults to None (nominal)
-
-        Returns:
-            List[float]: statistical uncertainty of yield per bin for the sample
-        """
-        if systematic is None:
-            systematic = {}
-
-        histogram = histo.Histogram.from_config(
-            self.histogram_folder, region, sample, systematic, modified=True
-        )
-        histo_stdev = histogram.stdev.tolist()
-        return histo_stdev
-
     def get_NF_modifiers(
         self, region: Dict[str, Any], sample: Dict[str, Any]
     ) -> List[Dict[str, Any]]:
@@ -196,8 +144,8 @@ class WorkspaceBuilder:
             region,
             sample,
             systematic,
-            modified=True,
             template="Up",
+            modified=True,
         )
 
         # also need the nominal histogram
@@ -206,9 +154,7 @@ class WorkspaceBuilder:
         )
 
         if systematic.get("Down", {}).get("Symmetrize", False):
-            # add support for two-sided variations that do not require symmetrization
             # if symmetrization is desired, should support different implementations
-
             # symmetrization according to "method 1" from issue #26:
             # first normalization, then symmetrization
 
@@ -232,8 +178,8 @@ class WorkspaceBuilder:
                 region,
                 sample,
                 systematic,
-                modified=True,
                 template="Down",
+                modified=True,
             )
             norm_effect_up = sum(histogram_up.yields) / sum(histogram_nominal.yields)
             norm_effect_down = sum(histogram_down.yields) / sum(
@@ -328,21 +274,23 @@ class WorkspaceBuilder:
                     # current region does not contain this sample, so skip it
                     continue
 
-                # yield of the samples
-                histo_yield = self.get_yield_for_sample(region, sample)
+                sample_hist = histo.Histogram.from_config(
+                    self.histogram_folder, region, sample, {}, modified=True
+                )
+
+                # yield of the sample
                 current_sample = {}
                 current_sample.update({"name": sample["Name"]})
-                current_sample.update({"data": histo_yield})
+                current_sample.update({"data": sample_hist.yields.tolist()})
 
                 # collect all modifiers for the sample
                 modifiers = []
 
                 # gammas
-                stat_unc = self.get_unc_for_sample(region, sample)
                 gammas = {}
                 gammas.update({"name": "staterror_" + region["Name"].replace(" ", "-")})
                 gammas.update({"type": "staterror"})
-                gammas.update({"data": stat_unc})
+                gammas.update({"data": sample_hist.stdev.tolist()})
                 modifiers.append(gammas)
 
                 # modifiers can have region and sample dependence, which is checked
@@ -426,7 +374,9 @@ class WorkspaceBuilder:
         observations = []
         for region in self.config["Regions"]:
             observation = {}
-            histo_yield = self.get_yield_for_sample(region, data_sample)
+            histo_yield = histo.Histogram.from_config(
+                self.histogram_folder, region, data_sample, {}, modified=True
+            ).yields.tolist()
             observation.update({"name": region["Name"]})
             observation.update({"data": histo_yield})
             observations.append(observation)

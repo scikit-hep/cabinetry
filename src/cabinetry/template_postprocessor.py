@@ -155,8 +155,8 @@ def _get_postprocessor(histogram_folder: pathlib.Path) -> route.ProcessorFunc:
             region,
             sample,
             systematic,
-            modified=False,
             template=template,
+            modified=False,
         )
         histogram_name = histo.build_name(region, sample, systematic, template)
 
