@@ -96,8 +96,8 @@ class Histogram(bh.Histogram, family=cabinetry):
         region: Dict[str, Any],
         sample: Dict[str, Any],
         systematic: Dict[str, Any],
-        modified: bool = True,
         template: Optional[Literal["Up", "Down"]] = None,
+        modified: bool = True,
     ) -> H:
         """Loads a histogram, using information specified in the configuration file.
 
@@ -110,10 +110,10 @@ class Histogram(bh.Histogram, family=cabinetry):
             region (Dict[str, Any]): containing all region information
             sample (Dict[str, Any]): containing all sample information
             systematic (Dict[str, Any]): containing all systematic information
-            modified (bool, optional): whether to load the modified histogram (after
-                post-processing), defaults to True
             template (Optional[Literal["Up", "Down"]], optional): which template to
                 consider: "Up", "Down", None for the nominal case, defaults to None
+            modified (bool, optional): whether to load the modified histogram (after
+                post-processing), defaults to True
 
         Returns:
             cabinetry.histo.Histogram: the loaded histogram

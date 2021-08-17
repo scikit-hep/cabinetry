@@ -196,8 +196,8 @@ class WorkspaceBuilder:
             region,
             sample,
             systematic,
-            modified=True,
             template="Up",
+            modified=True,
         )
 
         # also need the nominal histogram
@@ -232,8 +232,8 @@ class WorkspaceBuilder:
                 region,
                 sample,
                 systematic,
-                modified=True,
                 template="Down",
+                modified=True,
             )
             norm_effect_up = sum(histogram_up.yields) / sum(histogram_nominal.yields)
             norm_effect_down = sum(histogram_down.yields) / sum(
