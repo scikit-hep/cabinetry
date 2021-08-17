@@ -30,7 +30,7 @@ def _fix_stat_unc(histogram: histo.Histogram, name: str) -> None:
         histogram.stdev = np.nan_to_num(histogram.stdev, nan=0.0)
 
 
-def _apply_353QH_twice(
+def _apply_353qh_twice(
     variation: histo.Histogram, nominal: histo.Histogram, name: str
 ) -> None:
     """Smooths systematic template histogram with the "353QH, twice" algorithm.
@@ -48,7 +48,7 @@ def _apply_353QH_twice(
     log.debug(f"applying smoothing to {name}")
     # smooth relative effect of systematic (systematic/nominal)
     smooth_var = (
-        smooth.smooth_353QH_twice(variation.yields / nominal.yields) * nominal.yields
+        smooth.smooth_353qh_twice(variation.yields / nominal.yields) * nominal.yields
     )
     # scale to match original sum of yields of variation
     variation.yields = smooth_var * sum(variation.yields) / sum(smooth_var)
@@ -116,7 +116,7 @@ def apply_postprocessing(
         if smoothing_algorithm == "353QH, twice":
             if nominal_histogram is None:
                 raise ValueError("cannot apply smoothing, nominal histogram missing")
-            _apply_353QH_twice(modified_histogram, nominal_histogram, name)
+            _apply_353qh_twice(modified_histogram, nominal_histogram, name)
         else:
             log.warning(f"unknown smoothing algorithm {smoothing_algorithm}")
     return modified_histogram

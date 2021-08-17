@@ -682,7 +682,7 @@ def limit(
 
     cache_CLs: Dict[float, tuple] = {}  # cache storing all relevant results
 
-    def _CLs_minus_threshold(
+    def _cls_minus_threshold(
         poi: float,
         model: pyhf.pdf.Model,
         data: List[float],
@@ -754,7 +754,7 @@ def limit(
         try:
             # find the 95% CL upper limit
             res = scipy.optimize.root_scalar(
-                _CLs_minus_threshold,
+                _cls_minus_threshold,
                 bracket=bracket,
                 args=(model, data, i_limit, limit_label),
                 method="brentq",

@@ -14,7 +14,7 @@ from cabinetry.visualize import utils
 log = logging.getLogger(__name__)
 
 
-def data_MC(
+def data_mc(
     histogram_dict_list: List[Dict[str, Any]],
     total_model_unc: np.ndarray,
     bin_edges: np.ndarray,

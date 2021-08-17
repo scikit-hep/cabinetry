@@ -453,7 +453,7 @@ def test_significance(mock_util, mock_sig, tmp_path):
     assert mock_sig.call_args_list[-1] == (("model", "data"), {})
 
 
-@mock.patch("cabinetry.visualize.data_MC", autospec=True)
+@mock.patch("cabinetry.visualize.data_mc", autospec=True)
 @mock.patch(
     "cabinetry.fit.fit",
     return_value=fit.FitResults(

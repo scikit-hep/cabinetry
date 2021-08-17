@@ -54,7 +54,7 @@ def _total_yield_uncertainty(stdev_list: List[np.ndarray]) -> np.ndarray:
     return tot_unc
 
 
-def data_MC_from_histograms(
+def data_mc_from_histograms(
     config: Dict[str, Any],
     figure_folder: Union[str, pathlib.Path] = "figures",
     log_scale: Optional[bool] = None,
@@ -106,7 +106,7 @@ def data_MC_from_histograms(
         label = f"{region['Name']}\npre-fit"
         figure_path = pathlib.Path(figure_folder) / figure_name
 
-        plot_model.data_MC(
+        plot_model.data_mc(
             histogram_dict_list,
             total_model_unc,
             bin_edges,
@@ -118,7 +118,7 @@ def data_MC_from_histograms(
         )
 
 
-def data_MC(
+def data_mc(
     model: pyhf.pdf.Model,
     data: List[float],
     config: Optional[Dict[str, Any]] = None,
@@ -265,7 +265,7 @@ def data_MC(
             )
             label = f"{channel_name}\npost-fit"
 
-        plot_model.data_MC(
+        plot_model.data_mc(
             histogram_dict_list,
             np.asarray(total_stdev_model_bins[i_chan]),
             bin_edges,

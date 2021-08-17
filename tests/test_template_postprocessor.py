@@ -25,12 +25,12 @@ def test__fix_stat_unc(test_histo, fixed_stdev):
     assert np.allclose(test_histo.stdev, fixed_stdev)
 
 
-@mock.patch("cabinetry.smooth.smooth_353QH_twice", return_value=np.asarray([1, 1.3]))
-def test__apply_353QH_twice(mock_smooth):
+@mock.patch("cabinetry.smooth.smooth_353qh_twice", return_value=np.asarray([1, 1.3]))
+def test__apply_353qh_twice(mock_smooth):
     var = histo.Histogram.from_arrays([1, 2, 3], [1, 1.5], [0.1, 0.1])
     nom = histo.Histogram.from_arrays([1, 2, 3], [1, 1.2], [0.1, 0.1])
 
-    template_postprocessor._apply_353QH_twice(var, nom, "abc")
+    template_postprocessor._apply_353qh_twice(var, nom, "abc")
 
     assert np.allclose(nom.yields, [1, 1.2])  # nominal unchanged
     # result of smoothing is [1, 1.3], multiplied by [1, 1.2] -> [1, 1.56]
@@ -65,7 +65,7 @@ def test__smoothing_algorithm():
     assert template_postprocessor._smoothing_algorithm(reg, sam, sys) == "abc"
 
 
-@mock.patch("cabinetry.template_postprocessor._apply_353QH_twice")
+@mock.patch("cabinetry.template_postprocessor._apply_353qh_twice")
 @mock.patch("cabinetry.template_postprocessor._fix_stat_unc")
 def test_apply_postprocessing(mock_stat, mock_smooth, caplog):
     caplog.set_level(logging.DEBUG)

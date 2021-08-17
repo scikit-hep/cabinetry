@@ -13,7 +13,7 @@ def test_no_open_figure():
     assert len(plt.get_fignums()) == 0
 
 
-def test_data_MC(tmp_path):
+def test_data_mc(tmp_path):
     fname = tmp_path / "fig.pdf"
     histo_dict_list = [
         {
@@ -37,7 +37,7 @@ def test_data_MC(tmp_path):
     ]
     total_model_unc = np.sqrt([0.17, 0.29])
     bin_edges = np.asarray([1, 2, 3])
-    plot_model.data_MC(
+    plot_model.data_mc(
         histo_dict_list,
         total_model_unc,
         bin_edges,
@@ -45,7 +45,7 @@ def test_data_MC(tmp_path):
         label="Signal region\npre-fit",
     )
     assert (
-        compare_images("tests/visualize/reference/data_MC.pdf", str(fname), 0) is None
+        compare_images("tests/visualize/reference/data_mc.pdf", str(fname), 0) is None
     )
 
     histo_dict_list_log = copy.deepcopy(histo_dict_list)
@@ -56,7 +56,7 @@ def test_data_MC(tmp_path):
     fname_log = fname.with_name(fname.stem + "_log" + fname.suffix)
 
     # automatic log scale
-    plot_model.data_MC(
+    plot_model.data_mc(
         histo_dict_list_log,
         total_model_unc_log,
         bin_edges_log,
@@ -65,12 +65,12 @@ def test_data_MC(tmp_path):
         label="Signal region\npre-fit",
     )
     assert (
-        compare_images("tests/visualize/reference/data_MC_log.pdf", str(fname_log), 0)
+        compare_images("tests/visualize/reference/data_mc_log.pdf", str(fname_log), 0)
         is None
     )
 
     # linear scale forced
-    plot_model.data_MC(
+    plot_model.data_mc(
         histo_dict_list,
         total_model_unc,
         bin_edges,
@@ -79,14 +79,14 @@ def test_data_MC(tmp_path):
         label="Signal region\npre-fit",
     )
     assert (
-        compare_images("tests/visualize/reference/data_MC.pdf", str(fname), 0) is None
+        compare_images("tests/visualize/reference/data_mc.pdf", str(fname), 0) is None
     )
 
     # three open figures, does not change when calling with close_figure
     assert len(plt.get_fignums()) == 3
 
     # log scale forced
-    plot_model.data_MC(
+    plot_model.data_mc(
         histo_dict_list_log,
         total_model_unc_log,
         bin_edges_log,
@@ -97,7 +97,7 @@ def test_data_MC(tmp_path):
         close_figure=True,
     )
     assert (
-        compare_images("tests/visualize/reference/data_MC_log.pdf", str(fname_log), 0)
+        compare_images("tests/visualize/reference/data_mc_log.pdf", str(fname_log), 0)
         is None
     )
     assert len(plt.get_fignums()) == 3
