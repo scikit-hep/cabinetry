@@ -154,14 +154,14 @@ def test_integration(tmp_path, ntuple_creator, caplog):
     caplog.clear()
 
     # pre- and post-fit yield uncertainties
-    cabinetry.visualize.data_MC(model, data, close_figure=True)
+    cabinetry.visualize.data_mc(model, data, close_figure=True)
     assert "total stdev is [[69, 58.3, 38.2, 45.3]]" in [
         rec.message for rec in caplog.records
     ]
     assert "total stdev per channel is [137]" in [rec.message for rec in caplog.records]
     caplog.clear()
 
-    cabinetry.visualize.data_MC(model, data, fit_results=fit_results, close_figure=True)
+    cabinetry.visualize.data_mc(model, data, fit_results=fit_results, close_figure=True)
     assert "total stdev is [[11.9, 7.28, 7.41, 7.69]]" in [
         rec.message for rec in caplog.records
     ]

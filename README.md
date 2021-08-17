@@ -59,7 +59,7 @@ model, data = cabinetry.model_utils.model_and_data(ws)
 fit_results = cabinetry.fit.fit(model, data)
 
 # visualize the post-fit model prediction and data
-cabinetry.visualize.data_MC(model, data, config=config, fit_results=fit_results)
+cabinetry.visualize.data_mc(model, data, config=config, fit_results=fit_results)
 ```
 
 The above is an abbreviated version of an example included in `example.py`, which shows how to use `cabinetry`.

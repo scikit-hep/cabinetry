@@ -22,7 +22,7 @@ from cabinetry.visualize import plot_result
 log = logging.getLogger(__name__)
 
 
-def _build_figure_name(region_name: str, is_prefit: bool) -> str:
+def _figure_name(region_name: str, is_prefit: bool) -> str:
     """Constructs a file name for a figure.
 
     Args:
@@ -54,7 +54,7 @@ def _total_yield_uncertainty(stdev_list: List[np.ndarray]) -> np.ndarray:
     return tot_unc
 
 
-def data_MC_from_histograms(
+def data_mc_from_histograms(
     config: Dict[str, Any],
     figure_folder: Union[str, pathlib.Path] = "figures",
     log_scale: Optional[bool] = None,
@@ -100,13 +100,13 @@ def data_MC_from_histograms(
             if not is_data:
                 model_stdevs.append(histogram.stdev)
 
-        figure_name = _build_figure_name(region["Name"], True)
+        figure_name = _figure_name(region["Name"], True)
         total_model_unc = _total_yield_uncertainty(model_stdevs)
         bin_edges = histogram.bins
         label = f"{region['Name']}\npre-fit"
         figure_path = pathlib.Path(figure_folder) / figure_name
 
-        plot_model.data_MC(
+        plot_model.data_mc(
             histogram_dict_list,
             total_model_unc,
             bin_edges,
@@ -118,7 +118,7 @@ def data_MC_from_histograms(
         )
 
 
-def data_MC(
+def data_mc(
     model: pyhf.pdf.Model,
     data: List[float],
     config: Optional[Dict[str, Any]] = None,
@@ -176,8 +176,8 @@ def data_MC(
         # no fit results specified, draw a pre-fit plot
         prefit = True
         # use pre-fit parameter values, uncertainties, and diagonal correlation matrix
-        param_values = model_utils.get_asimov_parameters(model)
-        param_uncertainty = model_utils.get_prefit_uncertainties(model)
+        param_values = model_utils.asimov_parameters(model)
+        param_uncertainty = model_utils.prefit_uncertainties(model)
         corr_mat = np.zeros(shape=(len(param_values), len(param_values)))
         np.fill_diagonal(corr_mat, 1.0)
 
@@ -187,7 +187,7 @@ def data_MC(
 
     # slice the yields into list of lists (of lists) where first index is channel,
     # second index is sample (and third index is bin)
-    region_split_indices = model_utils._get_channel_boundary_indices(model)
+    region_split_indices = model_utils._channel_boundary_indices(model)
     model_yields = [
         m.tolist() for m in np.split(yields_combined, region_split_indices, axis=1)
     ]
@@ -196,7 +196,7 @@ def data_MC(
 
     # calculate the total standard deviation of the model prediction
     # indices: channel (and bin) for per-bin uncertainties, channel for per-channel
-    total_stdev_model_bins, total_stdev_model_channels = model_utils.calculate_stdev(
+    total_stdev_model_bins, total_stdev_model_channels = model_utils.yield_stdev(
         model, param_values, param_uncertainty, corr_mat
     )
 
@@ -226,8 +226,8 @@ def data_MC(
 
         if config is not None:
             # get the region dictionary from the config for binning / variable name
-            region_dict = configuration.get_region_dict(config, channel_name)
-            bin_edges = template_builder._get_binning(region_dict)
+            region_dict = configuration.region_dict(config, channel_name)
+            bin_edges = template_builder._binning(region_dict)
             variable = region_dict["Variable"]
         else:
             # fall back to defaults
@@ -255,17 +255,15 @@ def data_MC(
         )
 
         if prefit:
-            figure_path = pathlib.Path(figure_folder) / _build_figure_name(
-                channel_name, True
-            )
+            figure_path = pathlib.Path(figure_folder) / _figure_name(channel_name, True)
             label = f"{channel_name}\npre-fit"
         else:
-            figure_path = pathlib.Path(figure_folder) / _build_figure_name(
+            figure_path = pathlib.Path(figure_folder) / _figure_name(
                 channel_name, False
             )
             label = f"{channel_name}\npost-fit"
 
-        plot_model.data_MC(
+        plot_model.data_mc(
             histogram_dict_list,
             np.asarray(total_stdev_model_bins[i_chan]),
             bin_edges,

@@ -48,15 +48,13 @@ def test_backend_integration(backend, reset_backend):
     cabinetry.fit.significance(model, data)
 
     # model_utils functions that deal with expected_data
-    cabinetry.model_utils.build_Asimov_data(model)
+    cabinetry.model_utils.asimov_data(model)
     # parameters, uncertainty, correlation for stdev
-    param_values = cabinetry.model_utils.get_asimov_parameters(model)
-    param_uncertainty = cabinetry.model_utils.get_prefit_uncertainties(model)
+    param_values = cabinetry.model_utils.asimov_parameters(model)
+    param_uncertainty = cabinetry.model_utils.prefit_uncertainties(model)
     corr_mat = np.zeros(shape=(len(param_values), len(param_values)))
     np.fill_diagonal(corr_mat, 1.0)
-    cabinetry.model_utils.calculate_stdev(
-        model, param_values, param_uncertainty, corr_mat
-    )
+    cabinetry.model_utils.yield_stdev(model, param_values, param_uncertainty, corr_mat)
 
 
 def test_backend_reset():

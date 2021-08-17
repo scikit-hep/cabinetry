@@ -40,5 +40,5 @@ if __name__ == "__main__":
     cabinetry.visualize.correlation_matrix(fit_results)
 
     # visualize pre- and post-fit distributions
-    cabinetry.visualize.data_MC(model, data, config=config)
-    cabinetry.visualize.data_MC(model, data, config=config, fit_results=fit_results)
+    cabinetry.visualize.data_mc(model, data, config=config)
+    cabinetry.visualize.data_mc(model, data, config=config, fit_results=fit_results)

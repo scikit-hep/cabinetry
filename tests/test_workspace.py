@@ -15,7 +15,7 @@ def test_WorkspaceBuilder():
     assert ws_builder.histogram_folder == pathlib.Path("path/")
 
 
-def test_WorkspaceBuilder__get_data_sample():
+def test_WorkspaceBuilder__data_sample():
     mc_sample = {"Name": "MC"}
     data_sample = {"Name": "Data", "Data": True}
 
@@ -24,7 +24,7 @@ def test_WorkspaceBuilder__get_data_sample():
         "Samples": [mc_sample, data_sample],
     }
     ws_builder = workspace.WorkspaceBuilder(example_config)
-    assert ws_builder._get_data_sample() == data_sample
+    assert ws_builder._data_sample() == data_sample
 
     config_two_data_samples = {
         "General": {"HistogramFolder": "path"},
@@ -32,13 +32,13 @@ def test_WorkspaceBuilder__get_data_sample():
     }
     ws_builder = workspace.WorkspaceBuilder(config_two_data_samples)
     with pytest.raises(ValueError, match="did not find exactly one data sample"):
-        ws_builder._get_data_sample()
+        ws_builder._data_sample()
 
 
-def test_WorkspaceBuilder__get_constant_parameter_setting():
+def test_WorkspaceBuilder__constant_parameter_setting():
     config_no_fixed = {"General": {"HistogramFolder": "path"}}
     ws_builder = workspace.WorkspaceBuilder(config_no_fixed)
-    assert ws_builder._get_constant_parameter_setting("par") is None
+    assert ws_builder._constant_parameter_setting("par") is None
 
     config_others_fixed = {
         "General": {
@@ -47,7 +47,7 @@ def test_WorkspaceBuilder__get_constant_parameter_setting():
         }
     }
     ws_builder = workspace.WorkspaceBuilder(config_others_fixed)
-    assert ws_builder._get_constant_parameter_setting("par_b") is None
+    assert ws_builder._constant_parameter_setting("par_b") is None
 
     config_par_fixed = {
         "General": {
@@ -56,10 +56,10 @@ def test_WorkspaceBuilder__get_constant_parameter_setting():
         }
     }
     ws_builder = workspace.WorkspaceBuilder(config_par_fixed)
-    assert ws_builder._get_constant_parameter_setting("par_a") == 1.2
+    assert ws_builder._constant_parameter_setting("par_a") == 1.2
 
 
-def test_WorkspaceBuilder_get_NF_modifiers():
+def test_WorkspaceBuilder_normfactor_modifiers():
     # could mock region_contains_modifier / sample_contains_modifier
     # one NF affects sample
     example_config = {
@@ -70,11 +70,11 @@ def test_WorkspaceBuilder_get_NF_modifiers():
     sample = {"Name": "DEF"}
     expected_modifier = [{"data": None, "name": "mu", "type": "normfactor"}]
     ws_builder = workspace.WorkspaceBuilder(example_config)
-    assert ws_builder.get_NF_modifiers(region, sample) == expected_modifier
+    assert ws_builder.normfactor_modifiers(region, sample) == expected_modifier
 
     # no NF affects sample
     sample = {"Name": "GHI"}
-    assert ws_builder.get_NF_modifiers(region, sample) == []
+    assert ws_builder.normfactor_modifiers(region, sample) == []
 
     # NF enters in region
     example_config = {
@@ -82,11 +82,11 @@ def test_WorkspaceBuilder_get_NF_modifiers():
         "NormFactors": [{"Name": "mu", "Regions": "SR"}],
     }
     ws_builder = workspace.WorkspaceBuilder(example_config)
-    assert ws_builder.get_NF_modifiers(region, sample) == expected_modifier
+    assert ws_builder.normfactor_modifiers(region, sample) == expected_modifier
 
     # no NF due to region
     region = {"Name": "CR"}
-    assert ws_builder.get_NF_modifiers(region, sample) == []
+    assert ws_builder.normfactor_modifiers(region, sample) == []
 
     # multiple NFs affect sample
     example_config = {
@@ -99,10 +99,10 @@ def test_WorkspaceBuilder_get_NF_modifiers():
         {"data": None, "name": "k", "type": "normfactor"},
     ]
     ws_builder = workspace.WorkspaceBuilder(example_config)
-    assert ws_builder.get_NF_modifiers(region, sample) == expected_modifier
+    assert ws_builder.normfactor_modifiers(region, sample) == expected_modifier
 
 
-def test_WorkspaceBuilder_get_Normalization_modifier():
+def test_WorkspaceBuilder_normalization_modifier():
     systematic = {
         "Name": "sys",
         "Up": {"Normalization": 0.1},
@@ -114,7 +114,7 @@ def test_WorkspaceBuilder_get_Normalization_modifier():
         "data": {"hi": 1.1, "lo": 0.95},
     }
     ws_builder = workspace.WorkspaceBuilder({"General": {"HistogramFolder": "path"}})
-    assert ws_builder.get_Normalization_modifier(systematic) == expected_modifier
+    assert ws_builder.normalization_modifier(systematic) == expected_modifier
 
     # ModifierName set
     systematic = {
@@ -123,7 +123,7 @@ def test_WorkspaceBuilder_get_Normalization_modifier():
         "Down": {"Normalization": -0.05},
         "ModifierName": "mod_name",
     }
-    assert ws_builder.get_Normalization_modifier(systematic)["name"] == "mod_name"
+    assert ws_builder.normalization_modifier(systematic)["name"] == "mod_name"
 
 
 @mock.patch(
@@ -138,7 +138,7 @@ def test_WorkspaceBuilder_get_Normalization_modifier():
         histo.Histogram.from_arrays([0, 1, 2], [20.0, 20.0], [0.1, 0.1]),
     ],
 )
-def test_WorkspaceBuilder_get_NormPlusShape_modifiers(mock_histogram):
+def test_WorkspaceBuilder_normplusshape_modifiers(mock_histogram):
     # could mock Histogram.normalize_to_yield
     # up: 26, 24 (1.25*nom)
     # nominal: 20, 20
@@ -149,7 +149,7 @@ def test_WorkspaceBuilder_get_NormPlusShape_modifiers(mock_histogram):
     sample = {"Name": "Signal"}
     systematic = {"Name": "sys", "Up": {}, "Down": {}}
     # no symmetrization
-    modifiers = ws_builder.get_NormPlusShape_modifiers(region, sample, systematic)
+    modifiers = ws_builder.normplusshape_modifiers(region, sample, systematic)
     assert modifiers == [
         {"name": "sys", "type": "normsys", "data": {"hi": 1.25, "lo": 0.5}},
         {
@@ -177,7 +177,7 @@ def test_WorkspaceBuilder_get_NormPlusShape_modifiers(mock_histogram):
         "Down": {"Symmetrize": True},
         "ModifierName": "mod_name",
     }
-    modifiers = ws_builder.get_NormPlusShape_modifiers(region, sample, systematic)
+    modifiers = ws_builder.normplusshape_modifiers(region, sample, systematic)
     assert modifiers == [
         {"name": "mod_name", "type": "normsys", "data": {"hi": 1.25, "lo": 0.75}},
         {
@@ -196,14 +196,14 @@ def test_WorkspaceBuilder_get_NormPlusShape_modifiers(mock_histogram):
 
 
 @mock.patch(
-    "cabinetry.workspace.WorkspaceBuilder.get_NormPlusShape_modifiers",
+    "cabinetry.workspace.WorkspaceBuilder.normplusshape_modifiers",
     return_value=[{"mock": "norm"}, {"mock": "shape"}],
 )
 @mock.patch(
-    "cabinetry.workspace.WorkspaceBuilder.get_Normalization_modifier",
+    "cabinetry.workspace.WorkspaceBuilder.normalization_modifier",
     return_value={"mock": "normsys"},
 )
-def test_WorkspaceBuilder_get_sys_modifiers(mock_norm, mock_norm_shape):
+def test_WorkspaceBuilder_sys_modifiers(mock_norm, mock_norm_shape):
     # could mock region_contains_modifier / sample_contains_modifier
     example_config = {
         "General": {"HistogramFolder": "path"},
@@ -215,7 +215,7 @@ def test_WorkspaceBuilder_get_sys_modifiers(mock_norm, mock_norm_shape):
     region = {"Name": "SR"}
     sample = {"Name": "Signal"}
     ws_builder = workspace.WorkspaceBuilder(example_config)
-    assert ws_builder.get_sys_modifiers(region, sample) == [
+    assert ws_builder.sys_modifiers(region, sample) == [
         {"mock": "normsys"},
         {"mock": "norm"},
         {"mock": "shape"},
@@ -229,7 +229,7 @@ def test_WorkspaceBuilder_get_sys_modifiers(mock_norm, mock_norm_shape):
     example_config_region_mismatch = copy.deepcopy(example_config)
     example_config_region_mismatch["Systematics"][0].update({"Regions": "CR"})
     ws_builder = workspace.WorkspaceBuilder(example_config_region_mismatch)
-    assert ws_builder.get_sys_modifiers(region, sample) == [
+    assert ws_builder.sys_modifiers(region, sample) == [
         {"mock": "norm"},
         {"mock": "shape"},
     ]
@@ -238,7 +238,7 @@ def test_WorkspaceBuilder_get_sys_modifiers(mock_norm, mock_norm_shape):
     example_config_sample_mismatch = copy.deepcopy(example_config)
     example_config_sample_mismatch["Systematics"][1].update({"Samples": "Background"})
     ws_builder = workspace.WorkspaceBuilder(example_config_sample_mismatch)
-    assert ws_builder.get_sys_modifiers(region, sample) == [{"mock": "normsys"}]
+    assert ws_builder.sys_modifiers(region, sample) == [{"mock": "normsys"}]
 
     # unsupported systematics type
     example_config_unsupported = {
@@ -249,7 +249,7 @@ def test_WorkspaceBuilder_get_sys_modifiers(mock_norm, mock_norm_shape):
     with pytest.raises(
         NotImplementedError, match="not supporting other systematic types yet"
     ):
-        ws_builder.get_sys_modifiers(region, sample)
+        ws_builder.sys_modifiers(region, sample)
 
 
 @mock.patch(
@@ -257,8 +257,8 @@ def test_WorkspaceBuilder_get_sys_modifiers(mock_norm, mock_norm_shape):
     return_value=histo.Histogram.from_arrays([0, 1, 2], [1.0, 2.0], [0.1, 0.1]),
 )
 @mock.patch("cabinetry.configuration.region_contains_sample", side_effect=[True, False])
-def test_WorkspaceBuilder_get_channels(mock_contains, mock_histogram):
-    # should mock get_NF_modifiers / get_sys_modifiers
+def test_WorkspaceBuilder_channels(mock_contains, mock_histogram):
+    # should mock normfactor_modifiers / sys_modifiers
     example_config = {
         "General": {"HistogramFolder": "path"},
         "Regions": [{"Name": "region_1"}],
@@ -267,7 +267,7 @@ def test_WorkspaceBuilder_get_channels(mock_contains, mock_histogram):
     }
 
     ws_builder = workspace.WorkspaceBuilder(example_config)
-    channels = ws_builder.get_channels()
+    channels = ws_builder.channels()
     expected_channels = [
         {
             "name": "region_1",
@@ -303,7 +303,7 @@ def test_WorkspaceBuilder_get_channels(mock_contains, mock_histogram):
     ]
 
     # run again, this time region will not contain sample due to side_effect
-    channels = ws_builder.get_channels()
+    channels = ws_builder.channels()
     expected_channels = [{"name": "region_1", "samples": []}]
     assert channels == expected_channels
     assert mock_contains.call_count == 2
@@ -332,7 +332,7 @@ def test_WorkspaceBuilder_get_measurement():
         }
     ]
     ws_builder = workspace.WorkspaceBuilder(example_config)
-    assert ws_builder.get_measurements() == expected_measurement
+    assert ws_builder.measurements() == expected_measurement
 
     # no norm factor settings
     example_config_no_NF_settings = {
@@ -343,11 +343,11 @@ def test_WorkspaceBuilder_get_measurement():
         {"name": "fit", "config": {"poi": "mu", "parameters": [{"name": "NF"}]}}
     ]
     ws_builder = workspace.WorkspaceBuilder(example_config_no_NF_settings)
-    assert ws_builder.get_measurements() == expected_measurement_no_NF_settings
+    assert ws_builder.measurements() == expected_measurement_no_NF_settings
 
     # constant normfactor
     with mock.patch(
-        "cabinetry.workspace.WorkspaceBuilder._get_constant_parameter_setting",
+        "cabinetry.workspace.WorkspaceBuilder._constant_parameter_setting",
         return_value=1.2,
     ) as mock_find_const:
         expected_measurement_const_NF = [
@@ -361,12 +361,12 @@ def test_WorkspaceBuilder_get_measurement():
         ]
         # same config, but patched function to treat NF as fixed
         ws_builder = workspace.WorkspaceBuilder(example_config_no_NF_settings)
-        assert ws_builder.get_measurements() == expected_measurement_const_NF
+        assert ws_builder.measurements() == expected_measurement_const_NF
         assert mock_find_const.call_args_list == [(("NF",), {})]
 
     # constant systematic
     with mock.patch(
-        "cabinetry.workspace.WorkspaceBuilder._get_constant_parameter_setting",
+        "cabinetry.workspace.WorkspaceBuilder._constant_parameter_setting",
         return_value=1.2,
     ) as mock_find_const:
         example_config_const_sys = {
@@ -388,12 +388,12 @@ def test_WorkspaceBuilder_get_measurement():
             }
         ]
         ws_builder = workspace.WorkspaceBuilder(example_config_const_sys)
-        assert ws_builder.get_measurements() == expected_measurement_const_sys
+        assert ws_builder.measurements() == expected_measurement_const_sys
         assert mock_find_const.call_args_list == [(("par_A",), {})]
 
     # no constant systematic
     with mock.patch(
-        "cabinetry.workspace.WorkspaceBuilder._get_constant_parameter_setting",
+        "cabinetry.workspace.WorkspaceBuilder._constant_parameter_setting",
         return_value=None,
     ) as mock_find_const:
         example_config_sys = {
@@ -404,7 +404,7 @@ def test_WorkspaceBuilder_get_measurement():
             {"name": "fit", "config": {"poi": "mu", "parameters": []}}
         ]
         ws_builder = workspace.WorkspaceBuilder(example_config_sys)
-        assert ws_builder.get_measurements() == expected_measurement_sys
+        assert ws_builder.measurements() == expected_measurement_sys
         assert mock_find_const.call_args_list == [(("par_A",), {})]
 
 
@@ -416,8 +416,8 @@ def test_WorkspaceBuilder_get_measurement():
         histo.Histogram.from_arrays([0, 1], [3.0], [0.1]),
     ],
 )
-def test_WorkspaceBuilder_get_observations(mock_histogram):
-    # could mock _get_data_sample
+def test_WorkspaceBuilder_observations(mock_histogram):
+    # could mock _data_sample
     # create observations list from config
     example_config = {
         "General": {"HistogramFolder": "path"},
@@ -425,7 +425,7 @@ def test_WorkspaceBuilder_get_observations(mock_histogram):
         "Regions": [{"Name": "test_region"}],
     }
     ws_builder = workspace.WorkspaceBuilder(example_config)
-    obs = ws_builder.get_observations()
+    obs = ws_builder.observations()
     expected_obs = [{"name": "test_region", "data": [1.0, 2.0]}]
     assert obs == expected_obs
     assert mock_histogram.call_args_list == [
@@ -447,7 +447,7 @@ def test_WorkspaceBuilder_get_observations(mock_histogram):
         "Regions": [{"Name": "test_region"}, {"Name": "other_region"}],
     }
     ws_builder = workspace.WorkspaceBuilder(multi_channel_config)
-    obs = ws_builder.get_observations()
+    obs = ws_builder.observations()
     expected_obs = [
         {"name": "test_region", "data": [5.0]},
         {"name": "other_region", "data": [3.0]},
@@ -476,15 +476,15 @@ def test_WorkspaceBuilder_get_observations(mock_histogram):
 
 
 @mock.patch(
-    "cabinetry.workspace.WorkspaceBuilder.get_observations",
+    "cabinetry.workspace.WorkspaceBuilder.observations",
     return_value=[{"name: observations"}],
 )
 @mock.patch(
-    "cabinetry.workspace.WorkspaceBuilder.get_measurements",
+    "cabinetry.workspace.WorkspaceBuilder.measurements",
     return_value=[{"name: measurement"}],
 )
 @mock.patch(
-    "cabinetry.workspace.WorkspaceBuilder.get_channels",
+    "cabinetry.workspace.WorkspaceBuilder.channels",
     return_value=[{"name: channel"}],
 )
 def test_WorkspaceBuilder_build(mock_channels, mock_measuremets, mock_observations):

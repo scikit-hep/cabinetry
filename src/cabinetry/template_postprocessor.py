@@ -30,7 +30,7 @@ def _fix_stat_unc(histogram: histo.Histogram, name: str) -> None:
         histogram.stdev = np.nan_to_num(histogram.stdev, nan=0.0)
 
 
-def _apply_353QH_twice(
+def _apply_353qh_twice(
     variation: histo.Histogram, nominal: histo.Histogram, name: str
 ) -> None:
     """Smooths systematic template histogram with the "353QH, twice" algorithm.
@@ -48,13 +48,13 @@ def _apply_353QH_twice(
     log.debug(f"applying smoothing to {name}")
     # smooth relative effect of systematic (systematic/nominal)
     smooth_var = (
-        smooth.smooth_353QH_twice(variation.yields / nominal.yields) * nominal.yields
+        smooth.smooth_353qh_twice(variation.yields / nominal.yields) * nominal.yields
     )
     # scale to match original sum of yields of variation
     variation.yields = smooth_var * sum(variation.yields) / sum(smooth_var)
 
 
-def _get_smoothing_algorithm(
+def _smoothing_algorithm(
     region: Dict[str, Any], sample: Dict[str, Any], systematic: Dict[str, Any]
 ) -> Optional[str]:
     """Returns name of algorithm to use for smoothing, or None otherwise.
@@ -116,13 +116,13 @@ def apply_postprocessing(
         if smoothing_algorithm == "353QH, twice":
             if nominal_histogram is None:
                 raise ValueError("cannot apply smoothing, nominal histogram missing")
-            _apply_353QH_twice(modified_histogram, nominal_histogram, name)
+            _apply_353qh_twice(modified_histogram, nominal_histogram, name)
         else:
             log.warning(f"unknown smoothing algorithm {smoothing_algorithm}")
     return modified_histogram
 
 
-def _get_postprocessor(histogram_folder: pathlib.Path) -> route.ProcessorFunc:
+def _postprocessor(histogram_folder: pathlib.Path) -> route.ProcessorFunc:
     """Returns the post-processing function to be applied to template histograms.
 
     Needed by ``cabinetry.route.apply_to_all_templates``. Could alternatively create a
@@ -158,9 +158,9 @@ def _get_postprocessor(histogram_folder: pathlib.Path) -> route.ProcessorFunc:
             template=template,
             modified=False,
         )
-        histogram_name = histo.build_name(region, sample, systematic, template)
+        histogram_name = histo.name(region, sample, systematic, template)
 
-        smoothing_algorithm = _get_smoothing_algorithm(region, sample, systematic)
+        smoothing_algorithm = _smoothing_algorithm(region, sample, systematic)
         if smoothing_algorithm is None:
             nominal_histogram = None
         else:
@@ -191,5 +191,5 @@ def run(config: Dict[str, Any]) -> None:
         config (Dict[str, Any]): cabinetry configuration
     """
     histogram_folder = pathlib.Path(config["General"]["HistogramFolder"])
-    postprocessor = _get_postprocessor(histogram_folder)
+    postprocessor = _postprocessor(histogram_folder)
     route.apply_to_all_templates(config, postprocessor)

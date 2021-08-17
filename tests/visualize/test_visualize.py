@@ -22,8 +22,8 @@ MockHistogram = namedtuple("MockHistogram", ["bins", "yields", "stdev"])
         (("SR 1", False), "SR-1_postfit.pdf"),
     ],
 )
-def test__build_figure_name(test_input, expected):
-    assert visualize._build_figure_name(*test_input) == expected
+def test__figure_name(test_input, expected):
+    assert visualize._figure_name(*test_input) == expected
 
 
 def test__total_yield_uncertainty():
@@ -35,12 +35,12 @@ def test__total_yield_uncertainty():
 
 
 @mock.patch("cabinetry.visualize._total_yield_uncertainty", return_value=[0.2])
-@mock.patch("cabinetry.visualize.plot_model.data_MC")
+@mock.patch("cabinetry.visualize.plot_model.data_mc")
 @mock.patch(
     "cabinetry.histo.Histogram.from_config",
     return_value=MockHistogram([0.0, 1.0], [1.0], [0.1]),
 )
-def test_data_MC_from_histograms(mock_load, mock_draw, mock_stdev):
+def test_data_mc_from_histograms(mock_load, mock_draw, mock_stdev):
     config = {
         "General": {"HistogramFolder": "tmp_hist"},
         "Regions": [{"Name": "reg_1", "Variable": "x"}],
@@ -49,7 +49,7 @@ def test_data_MC_from_histograms(mock_load, mock_draw, mock_stdev):
     figure_folder = pathlib.Path("tmp")
     histogram_folder = pathlib.Path("tmp_hist")
 
-    visualize.data_MC_from_histograms(config, figure_folder=figure_folder)
+    visualize.data_mc_from_histograms(config, figure_folder=figure_folder)
 
     # the call_args_list contains calls (outer round brackets), first filled with
     # arguments (inner round brackets) and then keyword arguments
@@ -105,7 +105,7 @@ def test_data_MC_from_histograms(mock_load, mock_draw, mock_stdev):
     ]
 
     # custom log scale settings, close figure
-    visualize.data_MC_from_histograms(
+    visualize.data_mc_from_histograms(
         config,
         figure_folder=figure_folder,
         log_scale=True,
@@ -120,24 +120,24 @@ def test_data_MC_from_histograms(mock_load, mock_draw, mock_stdev):
     }
 
 
-@mock.patch("cabinetry.visualize.plot_model.data_MC")
-@mock.patch("cabinetry.template_builder._get_binning", return_value=np.asarray([1, 2]))
+@mock.patch("cabinetry.visualize.plot_model.data_mc")
+@mock.patch("cabinetry.template_builder._binning", return_value=np.asarray([1, 2]))
 @mock.patch(
-    "cabinetry.configuration.get_region_dict",
+    "cabinetry.configuration.region_dict",
     return_value={"Name": "region", "Variable": "x"},
 )
 @mock.patch("cabinetry.tabulate._yields_per_channel")
 @mock.patch("cabinetry.tabulate._yields_per_bin")
-@mock.patch("cabinetry.model_utils.calculate_stdev", return_value=([[0.3]], [0.3]))
+@mock.patch("cabinetry.model_utils.yield_stdev", return_value=([[0.3]], [0.3]))
 @mock.patch(
-    "cabinetry.model_utils.get_prefit_uncertainties",
+    "cabinetry.model_utils.prefit_uncertainties",
     return_value=([0.04956657, 0.0]),
 )
 @mock.patch(
-    "cabinetry.model_utils.get_asimov_parameters",
+    "cabinetry.model_utils.asimov_parameters",
     return_value=([1.0, 1.0]),
 )
-def test_data_MC(
+def test_data_mc(
     mock_asimov,
     mock_unc,
     mock_stdev,
@@ -153,7 +153,7 @@ def test_data_MC(
     model, data = model_utils.model_and_data(example_spec)
 
     # pre-fit plot
-    visualize.data_MC(model, data, config=config, figure_folder=figure_folder)
+    visualize.data_mc(model, data, config=config, figure_folder=figure_folder)
 
     # Asimov parameter calculation and pre-fit uncertainties
     assert mock_stdev.call_count == 1
@@ -226,7 +226,7 @@ def test_data_MC(
         np.asarray([[1.0, 0.2], [0.2, 1.0]]),
         0.0,
     )
-    visualize.data_MC(
+    visualize.data_mc(
         model,
         data,
         config=config,
@@ -264,12 +264,12 @@ def test_data_MC(
     }
 
     # no yield table
-    visualize.data_MC(model, data, config=config, include_table=False)
+    visualize.data_mc(model, data, config=config, include_table=False)
     assert mock_table_bin.call_count == 2  # 2 calls from before
     assert mock_table_channel.call_count == 2
 
     # no config specified, default variable name and bin edges, data without auxdata
-    visualize.data_MC(model, data[:1])
+    visualize.data_mc(model, data[:1])
     assert mock_draw.call_args[0][0][0]["variable"] == "bin"
     assert mock_draw.call_args[0][0][1]["variable"] == "bin"
     assert mock_draw.call_args[0][0][1]["yields"] == np.asarray(data[:1])

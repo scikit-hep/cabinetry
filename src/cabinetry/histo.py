@@ -119,7 +119,7 @@ class Histogram(bh.Histogram, family=cabinetry):
             cabinetry.histo.Histogram: the loaded histogram
         """
         # find the histogram name given config information, and then load the histogram
-        histo_name = build_name(region, sample, systematic, template)
+        histo_name = name(region, sample, systematic, template)
         histo_path = pathlib.Path(histo_folder) / histo_name
         return cls.from_path(histo_path, modified)
 
@@ -236,7 +236,7 @@ class Histogram(bh.Histogram, family=cabinetry):
         return normalization_ratio
 
 
-def build_name(
+def name(
     region: Dict[str, Any],
     sample: Dict[str, Any],
     systematic: Dict[str, Any],

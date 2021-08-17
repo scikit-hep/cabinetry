@@ -40,7 +40,7 @@ def _medians_353(zz: Union[List[float], np.ndarray], nbins: int) -> None:
             zz[-2] = statistics.median(yy[-3:])
 
 
-def smooth_353QH_twice(hist: T) -> T:
+def smooth_353qh_twice(hist: T) -> T:
     """Runs the 353QH algorithm twice and returns smooth version of the input.
 
     For documentation see these proceedings https://cds.cern.ch/record/186223/ on page
