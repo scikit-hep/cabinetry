@@ -26,7 +26,7 @@ def _check_for_override(
 
     Args:
         systematic (Dict[str, Any]): containing all systematic information
-        template (Literal["Up", "Down"]): template to consider: "Up" or "Down"
+        template (Literal["Up", "Down"]): template considered: "Up" or "Down"
         option (str): the option for which the presence of an override is checked
 
     Returns:
