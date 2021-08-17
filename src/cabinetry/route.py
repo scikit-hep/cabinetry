@@ -5,6 +5,7 @@ from typing import Any, Callable, Dict, List, Optional
 import boost_histogram as bh
 
 from cabinetry import configuration
+from cabinetry._typing import Literal
 
 
 log = logging.getLogger(__name__)
@@ -12,17 +13,25 @@ log = logging.getLogger(__name__)
 
 # type of a function processing templates, takes sample-region-systematic-template,
 # returns None
-ProcessorFunc = Callable[[Dict[str, Any], Dict[str, Any], Dict[str, Any], str], None]
+# template can be "Up" / "Down" for variations, or None for nominal
+ProcessorFunc = Callable[
+    [Dict[str, Any], Dict[str, Any], Dict[str, Any], Optional[Literal["Up", "Down"]]],
+    None,
+]
 
 # type of a user-defined function for template processing, takes sample-region-
 # systematic-template, returns a boost_histogram.Histogram
+# template can be any string (to match "Up" / "Down"), or None / "*" to match nominal
 UserTemplateFunc = Callable[
-    [Dict[str, Any], Dict[str, Any], Dict[str, Any], str], bh.Histogram
+    [Dict[str, Any], Dict[str, Any], Dict[str, Any], Optional[str]], bh.Histogram
 ]
 
 # type of a function called with names of region-sample-systematic-template,
-# which returns either a ProcessorFunc or None
-MatchFunc = Callable[[str, str, str, str], Optional[ProcessorFunc]]
+# which returns either a ProcessorFunc or None (in case of no match)
+# the template argument is None for the nominal case, and "Up" / "Down" otherwise
+MatchFunc = Callable[
+    [str, str, str, Optional[Literal["Up", "Down"]]], Optional[ProcessorFunc]
+]
 
 # type of wrapper function that that turns a user-defined template processing function
 # (which returns a histogram) into a function that returns None
@@ -56,9 +65,9 @@ class Router:
     @staticmethod
     def _register_processor(
         processor_list: List[Dict[str, Any]],
-        region_name: Optional[str],
-        sample_name: Optional[str],
-        systematic_name: Optional[str],
+        region_name: str,
+        sample_name: str,
+        systematic_name: str,
         template: Optional[str],
     ) -> Callable[[UserTemplateFunc], UserTemplateFunc]:
         """Decorator for registering a custom processor function.
@@ -69,27 +78,19 @@ class Router:
         accordingly.
 
         Args:
-            region_name  (Optional[str]): name of the region to apply the function to,
-                or None to apply to all regions
-            sample_name  (Optional[str]): name of the sample to apply the function to,
-                or None to apply to all samples
-            systematic_name  (Optional[str]): name of the systematic to apply the
-                function to, or None to apply to all systematics
-            template (Optional[str]): name of the template to apply the function to, or
-                None to apply to all templates
+            region_name (str): name of the region to apply the function to, or "*" to
+                apply to all regions
+            sample_name (str): name of the sample to apply the function to, or "*" to
+                apply to all samples
+            systematic_name (str): name of the systematic to apply the function to, or
+               "*" to apply to all systematics
+            template (Optional[str]): name of the template to apply the function to, "*"
+                to apply to all templates, or None to apply to nominal only
 
         Returns:
             Callable[[UserTemplateFunc], UserTemplateFunc]: the function to
             register a processor
         """
-        if region_name is None:
-            region_name = "*"
-        if sample_name is None:
-            sample_name = "*"
-        if systematic_name is None:
-            systematic_name = "*"
-        if template is None:
-            template = "*"
 
         def _register(func: UserTemplateFunc) -> UserTemplateFunc:
             """Registers a processor function to be applied when matching a pattern.
@@ -117,10 +118,10 @@ class Router:
 
     def register_template_builder(
         self,
-        region_name: Optional[str] = None,
-        sample_name: Optional[str] = None,
-        systematic_name: Optional[str] = None,
-        template: Optional[str] = None,
+        region_name: str = "*",
+        sample_name: str = "*",
+        systematic_name: str = "*",
+        template: Optional[str] = "*",
     ) -> Callable[[UserTemplateFunc], UserTemplateFunc]:
         """Decorator for registering a template builder function.
 
@@ -128,14 +129,15 @@ class Router:
         variable.
 
         Args:
-            region_name (Optional[str], optional): name of the region to apply the
-                function to, defaults to None (apply to all regions)
-            sample_name (Optional[str], optional): name of the sample to apply the
-                function to, defaults to None (apply to all samples)
-            systematic_name (Optional[str], optional): name of the systematic to apply
-                the function to, defaults to None (apply to all systematics)
+            region_name (str, optional): name of the region to apply the function to,
+                defaults to "*" (apply to all regions)
+            sample_name (str, optional): name of the sample to apply the function to,
+                defaults to "*" (apply to all samples)
+            systematic_name (str, optional): name of the systematic to apply the
+                function to, defaults to "*" (apply to all systematics)
             template (Optional[str], optional): name of the template to apply the
-                function to, defaults to None (apply to all templates)
+                function to (e.g. "Up" or "Down"), or None to apply to nominal only,
+                defaults to "*" (apply to all templates, including nominal)
 
         Returns:
             Callable[[UserTemplateFunc], UserTemplateFunc]: the function to register a
@@ -151,7 +153,7 @@ class Router:
         region_name: str,
         sample_name: str,
         systematic_name: str,
-        template: str,
+        template: Optional[Literal["Up", "Down"]],
     ) -> Optional[UserTemplateFunc]:
         """Returns a function matching the provided specification.
 
@@ -162,8 +164,9 @@ class Router:
             processor_list (List[Dict[str, Any]]): list of processors to search in
             region_name (str): region name
             sample_name (str): sample name
-            systematic_name (str): systematic name
-            template (str): template name
+            systematic_name (str): systematic name (can use empty string for nominal)
+            template (Optional[Literal["Up", "Down"]]): template name ("Up", "Down"), or
+                None for nominal
 
         Returns:
             Optional[UserTemplateFunc]: processor function matching the description,
@@ -176,7 +179,24 @@ class Router:
             systematic_matches = fnmatch.fnmatch(
                 systematic_name, processor["systematic"]
             )
-            template_matches = fnmatch.fnmatch(template, processor["template"])
+            # template can only be None (nominal), "Up", "Down"
+            # processor["template"] can be
+            #   - None: apply to nominal only
+            #   - "*": apply to all templates
+            #   - another string: do normal matching, can never match nominal then
+            if template is None:
+                # nominal template is matched by processors applying to nominal
+                # templates (None), and by processors applying to all templates ("*")
+                template_matches = (processor["template"] is None) or (
+                    processor["template"] == "*"
+                )
+            elif processor["template"] is None:
+                # template is not None (nominal), but processor is None (nominal), so it
+                # does not match
+                template_matches = False
+            else:
+                # neither template nor processor are None, can do normal matching
+                template_matches = fnmatch.fnmatch(template, processor["template"])
             if (
                 region_matches
                 and sample_matches
@@ -195,7 +215,11 @@ class Router:
         return matches[0]
 
     def _find_template_builder_match(
-        self, region_name: str, sample_name: str, systematic_name: str, template: str
+        self,
+        region_name: str,
+        sample_name: str,
+        systematic_name: str,
+        template: Optional[Literal["Up", "Down"]],
     ) -> Optional[ProcessorFunc]:
         """Returns wrapped template builder function matching provided specification.
 
@@ -205,8 +229,9 @@ class Router:
         Args:
             region_name (str): region name
             sample_name (str): sample name
-            systematic_name (str): systematic name
-            template (str): template name
+            systematic_name (str): systematic name (can use empty string for nominal)
+            template (Optional[Literal["Up", "Down"]]): template name ("Up", "Down"), or
+                None for nominal
 
         Raises:
             ValueError: when no template wrapper is set
@@ -243,7 +268,7 @@ def apply_to_all_templates(
     - the dict specifying region information
     - the dict specifying sample information
     - the dict specifying systematic information
-    - name of the template being considered: "Nominal", "Up", "Down"
+    - the template being considered: "Up", "Down", or None for the nominal template
 
     In addition it is possible to specify a function that returns custom overrides. If
     one is found for a given template, it is used instead of the default.
@@ -264,11 +289,12 @@ def apply_to_all_templates(
             # region dependence of sample is checked below via histogram_is_needed
 
             # loop over nominal templates and all existing systematics
-            for systematic in [{"Name": "Nominal"}] + config.get("Systematics", []):
+            for systematic in [{}] + config.get("Systematics", []):
                 # determine how many templates need to be considered
-                if systematic["Name"] == "Nominal":
+                templates: List[Optional[Literal["Up", "Down"]]]
+                if systematic == {}:
                     # only nominal template is needed
-                    templates = ["Nominal"]
+                    templates = [None]
                 else:
                     # systematics can have up and down template
                     templates = ["Up", "Down"]
@@ -287,16 +313,20 @@ def apply_to_all_templates(
                         continue
 
                     log.debug(
-                        f"      variation {systematic['Name']}"
-                        f"{' ' + template if template != 'Nominal' else ''}"
+                        f"      variation "
+                        f"{systematic['Name'] if template is not None else 'Nominal'}"
+                        f"{' ' + template if template is not None else ''}"
                     )
 
                     func_override = None
                     if match_func is not None:
                         # check whether a user-defined function was registered that
                         # matches this region-sample-systematic-template
+                        systematic_name = (
+                            systematic["Name"] if template is not None else ""
+                        )
                         func_override = match_func(
-                            region["Name"], sample["Name"], systematic["Name"], template
+                            region["Name"], sample["Name"], systematic_name, template
                         )
                     if func_override is not None:
                         # call the user-defined function

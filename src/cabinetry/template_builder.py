@@ -9,13 +9,14 @@ import numpy as np
 from cabinetry import configuration
 from cabinetry import histo
 from cabinetry import route
+from cabinetry._typing import Literal
 
 
 log = logging.getLogger(__name__)
 
 
 def _check_for_override(
-    systematic: Dict[str, Any], template: str, option: str
+    systematic: Dict[str, Any], template: Literal["Up", "Down"], option: str
 ) -> Optional[Union[str, List[str]]]:
     """Returns an override if specified by a template of a systematic.
 
@@ -25,7 +26,7 @@ def _check_for_override(
 
     Args:
         systematic (Dict[str, Any]): containing all systematic information
-        template (str): template to consider: "Nominal", "Up", "Down"
+        template (Literal["Up", "Down"]): template considered: "Up" or "Down"
         option (str): the option for which the presence of an override is checked
 
     Returns:
@@ -40,7 +41,7 @@ def _get_ntuple_paths(
     region: Dict[str, Any],
     sample: Dict[str, Any],
     systematic: Dict[str, Any],
-    template: str,
+    template: Optional[Literal["Up", "Down"]],
 ) -> List[pathlib.Path]:
     """Returns the paths to ntuples for a region-sample-systematic-template.
 
@@ -57,7 +58,8 @@ def _get_ntuple_paths(
         region (Dict[str, Any]): containing all region information
         sample (Dict[str, Any]): containing all sample information
         systematic (Dict[str, Any]): containing all systematic information
-        template (str): which template is considered: "Nominal", "Up", "Down"
+        template (Optional[Literal["Up", "Down"]]): template considered: "Up", "Down",
+            or None for nominal
 
     Returns:
         List[pathlib.Path]: list of paths to ntuples
@@ -67,7 +69,7 @@ def _get_ntuple_paths(
     sample_paths = sample.get("SamplePaths", None)
 
     # check whether a systematic is being processed, and whether overrides exist
-    if systematic.get("Name", "Nominal") != "Nominal":
+    if template is not None:
         # determine whether the template has an override for RegionPath specified
         region_override = _check_for_override(systematic, template, "RegionPath")
         if region_override is not None:
@@ -115,7 +117,7 @@ def _get_variable(
     region: Dict[str, Any],
     sample: Dict[str, Any],
     systematic: Dict[str, Any],
-    template: str,
+    template: Optional[Literal["Up", "Down"]],
 ) -> str:
     """Returns the variable the histogram will be binned in.
 
@@ -126,14 +128,15 @@ def _get_variable(
         region (Dict[str, Any]): containing all region information
         sample (Dict[str, Any]): containing all sample information
         systematic (Dict[str, Any]): containing all systematic information
-        template (str): which template is considered: "Nominal", "Up", "Down"
+        template (Optional[Literal["Up", "Down"]]): template considered: "Up", "Down",
+            or None for nominal
 
     Returns:
         str: name of variable to bin histogram in
     """
     axis_variable = region["Variable"]
     # check whether a systematic is being processed
-    if systematic.get("Name", "Nominal") != "Nominal":
+    if template is not None:
         # determine whether the template has an override specified
         axis_variable_override = _check_for_override(systematic, template, "Variable")
         if axis_variable_override is not None:
@@ -145,7 +148,7 @@ def _get_filter(
     region: Dict[str, Any],
     sample: Dict[str, Any],
     systematic: Dict[str, Any],
-    template: str,
+    template: Optional[Literal["Up", "Down"]],
 ) -> Optional[str]:
     """Returns the filter to be applied for event selection.
 
@@ -156,14 +159,15 @@ def _get_filter(
         region (Dict[str, Any]): containing all region information
         sample (Dict[str, Any]): containing all sample information
         systematic (Dict[str, Any]): containing all systematic information
-        template (str): which template is considered: "Nominal", "Up", "Down"
+        template (Optional[Literal["Up", "Down"]]): template considered: "Up", "Down",
+            or None for nominal
 
     Returns:
         Optional[str]: expression for the filter to be used, or None for no filtering
     """
     selection_filter = region.get("Filter", None)
     # check whether a systematic is being processed
-    if systematic.get("Name", "Nominal") != "Nominal":
+    if template is not None:
         # determine whether the template has an override specified
         selection_filter_override = _check_for_override(systematic, template, "Filter")
         if selection_filter_override is not None:
@@ -175,7 +179,7 @@ def _get_weight(
     region: Dict[str, Any],
     sample: Dict[str, Any],
     systematic: Dict[str, Any],
-    template: str,
+    template: Optional[Literal["Up", "Down"]],
 ) -> Optional[str]:
     """Returns the weight to be used for events in histograms.
 
@@ -186,7 +190,8 @@ def _get_weight(
         region (Dict[str, Any]): containing all region information
         sample (Dict[str, Any]): containing all sample information
         systematic (Dict[str, Any]): containing all systematic information
-        template (str): which template is considered: "Nominal", "Up", "Down"
+        template (Optional[Literal["Up", "Down"]]): template considered: "Up", "Down",
+            or None for nominal
 
     Returns:
         Optional[str]: weight used for events when filled into histograms, or None for
@@ -194,7 +199,7 @@ def _get_weight(
     """
     weight = sample.get("Weight", None)
     # check whether a systematic is being processed
-    if systematic.get("Name", "Nominal") != "Nominal":
+    if template is not None:
         # determine whether the template has an override specified
         weight_override = _check_for_override(systematic, template, "Weight")
         if weight_override is not None:
@@ -203,7 +208,9 @@ def _get_weight(
 
 
 def _get_position_in_file(
-    sample: Dict[str, Any], systematic: Dict[str, Any], template: str
+    sample: Dict[str, Any],
+    systematic: Dict[str, Any],
+    template: Optional[Literal["Up", "Down"]],
 ) -> str:
     """Returns the location of data within a file (e.g. a tree name).
 
@@ -213,14 +220,15 @@ def _get_position_in_file(
     Args:
         sample (Dict[str, Any]): containing all sample information
         systematic (Dict[str, Any]): containing all systematic information
-        template (str): which template is considered: "Nominal", "Up", "Down"
+        template (Optional[Literal["Up", "Down"]]): template considered: "Up", "Down",
+            or None for nominal
 
     Returns:
         str: where in the file to find the data (the name of a tree)
     """
     position = sample["Tree"]
     # check whether a systematic is being processed
-    if systematic.get("Name", "Nominal") != "Nominal":
+    if template is not None:
         # determine whether the template has an override specified
         position_override = _check_for_override(systematic, template, "Tree")
         if position_override is not None:
@@ -271,7 +279,7 @@ class _Builder:
         region: Dict[str, Any],
         sample: Dict[str, Any],
         systematic: Dict[str, Any],
-        template: str,
+        template: Optional[Literal["Up", "Down"]],
     ) -> None:
         """Creates a histogram and writes it to a file.
 
@@ -279,10 +287,11 @@ class _Builder:
         the argument.
 
         Args:
-            region (Dict[str, Any]): specifying region information
-            sample (Dict[str, Any]): specifying sample information
-            systematic (Dict[str, Any]): specifying systematic information
-            template (str): name of the template: "Nominal", "Up", "Down"
+            region (Dict[str, Any]): containing all region information
+            sample (Dict[str, Any]): containing all sample information
+            systematic (Dict[str, Any]): containing all systematic information
+            template (Optional[Literal["Up", "Down"]]): template considered: "Up",
+                "Down", or None for nominal
 
         Raises:
             NotImplementedError: when requesting an unknown backend
@@ -322,16 +331,17 @@ class _Builder:
         region: Dict[str, Any],
         sample: Dict[str, Any],
         systematic: Dict[str, Any],
-        template: str,
+        template: Optional[Literal["Up", "Down"]],
     ) -> None:
         """Generates a unique name for a histogram and saves the histogram.
 
         Args:
             histogram (histo.Histogram): histogram to save
-            region (Dict[str, Any]): dict with region information
-            sample (Dict[str, Any]): dict with sample information
-            systematic (Dict[str, Any]): dict with systematic information
-            template (str): name of the template: "Nominal", "Up", "Down"
+            region (Dict[str, Any]): containing all region information
+            sample (Dict[str, Any]): containing all sample information
+            systematic (Dict[str, Any]): containing all systematic
+            template (Optional[Literal["Up", "Down"]]): template considered: "Up",
+                "Down", or None for nominal
         """
         # generate a name for the histogram
         histogram_name = histo.build_name(region, sample, systematic, template)
@@ -365,7 +375,7 @@ class _Builder:
             region: Dict[str, Any],
             sample: Dict[str, Any],
             systematic: Dict[str, Any],
-            template: str,
+            template: Optional[Literal["Up", "Down"]],
         ) -> None:
             """Executes a user-defined function that returns a histogram and saves it.
 
@@ -373,10 +383,11 @@ class _Builder:
             wrapped with this.
 
             Args:
-                region (Dict[str, Any]): dict with region information
-                sample (Dict[str, Any]): dict with sample information
-                systematic (Dict[str, Any]): dict with systematic information
-                template (str): name of the template: "Nominal", "Up", "Down"
+                region (Dict[str, Any]): containing all region information
+                sample (Dict[str, Any]): containing all sample information
+                systematic (Dict[str, Any]): containing all systematic information
+                template (Optional[Literal["Up", "Down"]]): template considered: "Up",
+                    "Down", or None for nominal
             """
             histogram = func(region, sample, systematic, template)
             if not isinstance(histogram, bh.Histogram):

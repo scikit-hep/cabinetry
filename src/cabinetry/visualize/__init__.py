@@ -87,7 +87,7 @@ def data_MC_from_histograms(
         for sample in config["Samples"][::-1]:
             is_data = sample.get("Data", False)
             histogram = histo.Histogram.from_config(
-                histogram_folder, region, sample, {"Name": "Nominal"}, modified=True
+                histogram_folder, region, sample, {}, modified=True
             )
             histogram_dict_list.append(
                 {
@@ -493,10 +493,7 @@ def templates(
 
                 # extract nominal histogram
                 nominal_histo = histo.Histogram.from_config(
-                    histogram_folder,
-                    region,
-                    sample,
-                    {"Name": "Nominal"},
+                    histogram_folder, region, sample, {}
                 )
                 bins = nominal_histo.bins
                 variable = region["Variable"]

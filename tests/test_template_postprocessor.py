@@ -188,7 +188,7 @@ def test__get_postprocessor(mock_name):
                 ]
 
             # nominal histogram was read
-            assert mock_from_config.call_args[0][3] == {"Name": "Nominal"}
+            assert mock_from_config.call_args[0][3] == {}
 
             # postprocessing called with smoothing algorithm and nominal histogram
             assert mock_postprocessing.call_args == (

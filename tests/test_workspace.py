@@ -77,12 +77,7 @@ def test_WorkspaceBuilder_get_yield_for_sample(mock_histogram):
 
     assert mock_histogram.call_args_list == [
         (
-            (
-                pathlib.Path("path"),
-                {"Name": "region"},
-                {"Name": "signal"},
-                {"Name": "Nominal"},
-            ),
+            (pathlib.Path("path"), {"Name": "region"}, {"Name": "signal"}, {}),
             {"modified": True},
         ),
         (
@@ -115,12 +110,7 @@ def test_WorkspaceBuilder_get_unc_for_sample(mock_histogram):
 
     assert mock_histogram.call_args_list == [
         (
-            (
-                pathlib.Path("path"),
-                {"Name": "region"},
-                {"Name": "signal"},
-                {"Name": "Nominal"},
-            ),
+            (pathlib.Path("path"), {"Name": "region"}, {"Name": "signal"}, {}),
             {"modified": True},
         ),
         (
@@ -239,10 +229,7 @@ def test_WorkspaceBuilder_get_NormPlusShape_modifiers(mock_histogram):
             (pathlib.Path("path"), region, sample, systematic),
             {"modified": True, "template": "Up"},
         ),
-        (
-            (pathlib.Path("path"), region, sample, {"Name": "Nominal"}),
-            {"modified": True},
-        ),
+        ((pathlib.Path("path"), region, sample, {}), {"modified": True}),
         (
             (pathlib.Path("path"), region, sample, systematic),
             {"modified": True, "template": "Down"},
@@ -270,10 +257,7 @@ def test_WorkspaceBuilder_get_NormPlusShape_modifiers(mock_histogram):
             (pathlib.Path("path"), region, sample, systematic),
             {"modified": True, "template": "Up"},
         ),
-        (
-            (pathlib.Path("path"), region, sample, {"Name": "Nominal"}),
-            {"modified": True},
-        ),
+        ((pathlib.Path("path"), region, sample, {}), {"modified": True}),
     ]
 
 

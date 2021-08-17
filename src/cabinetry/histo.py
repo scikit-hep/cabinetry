@@ -1,12 +1,13 @@
 import logging
 import os
 import pathlib
-from typing import Any, Dict, List, Type, TypeVar, Union
+from typing import Any, Dict, List, Optional, Type, TypeVar, Union
 
 import boost_histogram as bh
 import numpy as np
 
 import cabinetry
+from cabinetry._typing import Literal
 
 
 log = logging.getLogger(__name__)
@@ -96,7 +97,7 @@ class Histogram(bh.Histogram, family=cabinetry):
         sample: Dict[str, Any],
         systematic: Dict[str, Any],
         modified: bool = True,
-        template: str = "Nominal",
+        template: Optional[Literal["Up", "Down"]] = None,
     ) -> H:
         """Loads a histogram, using information specified in the configuration file.
 
@@ -111,8 +112,8 @@ class Histogram(bh.Histogram, family=cabinetry):
             systematic (Dict[str, Any]): containing all systematic information
             modified (bool, optional): whether to load the modified histogram (after
                 post-processing), defaults to True
-            template (str): which template (nominal/up/down) to consider, defaults to
-                "Nominal"
+            template (Optional[Literal["Up", "Down"]], optional): which template to
+                consider: "Up", "Down", None for the nominal case, defaults to None
 
         Returns:
             cabinetry.histo.Histogram: the loaded histogram
@@ -239,22 +240,25 @@ def build_name(
     region: Dict[str, Any],
     sample: Dict[str, Any],
     systematic: Dict[str, Any],
-    template: str = "Nominal",
+    template: Optional[Literal["Up", "Down"]] = None,
 ) -> str:
     """Returns a unique name for each histogram.
+
+    If the template is not None, the systematic is required to have a name (guaranteed
+    as long as it follows the config schema).
 
     Args:
         region (Dict[str, Any]): containing all region information
         sample (Dict[str, Any]): containing all sample information
         systematic (Dict[str, Any]): containing all systematic information
-        template (str): which template (nominal/up/down) to consider, defaults to
-            "Nominal"
+        template (Optional[Literal["Up", "Down"]], optional): which template to
+            consider: "Up", "Down", None for the nominal case, defaults to None
 
     Returns:
         str: unique name for the histogram
     """
-    name = f"{region['Name']}_{sample['Name']}_{systematic['Name']}"
-    if template != "Nominal":
-        name += "_" + template
+    name = f"{region['Name']}_{sample['Name']}"
+    if template is not None:
+        name += f"_{systematic['Name']}_{template}"
     name = name.replace(" ", "-")
     return name

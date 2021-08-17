@@ -2,10 +2,12 @@ import json
 import logging
 import pathlib
 import pkgutil
-from typing import Any, Dict, List, Union
+from typing import Any, Dict, List, Optional, Union
 
 import jsonschema
 import yaml
+
+from cabinetry._typing import Literal
 
 
 log = logging.getLogger(__name__)
@@ -193,18 +195,19 @@ def histogram_is_needed(
     region: Dict[str, Any],
     sample: Dict[str, Any],
     systematic: Dict[str, Any],
-    template: str,
+    template: Optional[Literal["Up", "Down"]],
 ) -> bool:
     """Determines whether a histogram is needed for a specific configuration.
 
-    The configuration is defined by the region, sample, systematic and template
-    ("Nominal", "Up" or "Down").
+    The configuration is defined by the region, sample, systematic and template ("Up" or
+    "Down", None for nominal).
 
     Args:
         region (Dict[str, Any]): containing all region information
         sample (Dict[str, Any]): containing all sample information
         systematic (Dict[str, Any]): containing all systematic information
-        template (str): which template is considered: "Nominal", "Up", "Down"
+        template (Optional[Literal["Up", "Down"]]): which template to consider: "Up",
+            "Down", None for the nominal case
 
     Raises:
         NotImplementedError: non-supported systematic variations based on histograms are
@@ -217,7 +220,7 @@ def histogram_is_needed(
         # region does not contain sample
         return False
 
-    if systematic.get("Name", None) == "Nominal":
+    if template is None:
         # for nominal, histograms are generally needed
         histo_needed = True
     else:
@@ -227,6 +230,7 @@ def histogram_is_needed(
             histo_needed = False
         else:
             # handle non-nominal, non-data histograms
+            # this assumes that the systematic dict satisfies config schema requirements
             if systematic["Type"] == "Normalization":
                 # no histogram needed for normalization variation
                 histo_needed = False
