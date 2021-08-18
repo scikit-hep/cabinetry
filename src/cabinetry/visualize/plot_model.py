@@ -18,12 +18,12 @@ def data_mc(
     histogram_dict_list: List[Dict[str, Any]],
     total_model_unc: np.ndarray,
     bin_edges: np.ndarray,
-    figure_path: pathlib.Path,
+    figure_path: Optional[pathlib.Path] = None,
     log_scale: Optional[bool] = None,
     log_scale_x: bool = False,
     label: str = "",
     close_figure: bool = False,
-) -> None:
+) -> mpl.figure.Figure:
     """Draws a data/MC histogram with uncertainty bands and ratio panel.
 
     Args:
@@ -32,7 +32,8 @@ def data_mc(
         total_model_unc (np.ndarray): total model uncertainty, if specified this is used
             instead of calculating it via sum in quadrature, defaults to None
         bin_edges (np.ndarray): bin edges of histogram
-        figure_path (pathlib.Path): path where figure should be saved
+        figure_path (Optional[pathlib.Path], optional): path where figure should be
+            saved, or None to not save it, defaults to None
         log_scale (Optional[bool], optional): whether to use a logarithmic vertical
             axis, defaults to None (automatically determine whether to use linear or log
             scale)
@@ -42,6 +43,9 @@ def data_mc(
         close_figure (bool, optional): whether to close each figure immediately after
             saving it, defaults to False (enable when producing many figures to avoid
             memory issues, prevents rendering in notebooks)
+
+        Returns:
+            matplotlib.figure.Figure: the data/MC figure
     """
     mc_histograms_yields = []
     mc_labels = []
@@ -168,10 +172,11 @@ def data_mc(
         # log vertical axis scale and limits
         ax1.set_yscale("log")
         ax1.set_ylim([y_min / 10, y_max * 10])
-        # add "_log" to the figure name
-        figure_path = figure_path.with_name(
-            figure_path.stem + "_log" + figure_path.suffix
-        )
+        # add "_log" to the figure name if figure should be saved
+        if figure_path is not None:
+            figure_path = figure_path.with_name(
+                figure_path.stem + "_log" + figure_path.suffix
+            )
     else:
         # do not use log scale
         ax1.set_ylim([0, y_max * 1.5])  # 50% headroom
@@ -217,6 +222,7 @@ def data_mc(
     fig.tight_layout()
 
     utils._save_and_close(fig, figure_path, close_figure)
+    return fig
 
 
 def templates(
@@ -227,10 +233,10 @@ def templates(
     down_histo_mod: Dict[str, np.ndarray],
     bin_edges: np.ndarray,
     variable: str,
-    figure_path: pathlib.Path,
+    figure_path: Optional[pathlib.Path] = None,
     label: str = "",
     close_figure: bool = False,
-) -> None:
+) -> mpl.figure.Figure:
     """Draws a nominal template and the associated up/down variations.
 
     If a variation template is an empty dict, it is not drawn.
@@ -243,11 +249,15 @@ def templates(
         down_histo_mod (Dict[str, np.ndarray]): "down" variation after post-processing
         bin_edges (np.ndarray): bin edges of histogram
         variable (str): variable name for the horizontal axis
-        figure_path (pathlib.Path): path where figure should be saved
+        figure_path (Optional[pathlib.Path], optional): path where figure should be
+            saved, or None to not save it, defaults to None
         label (str, optional): label written on the figure, defaults to ""
         close_figure (bool, optional): whether to close each figure immediately after
             saving it, defaults to False (enable when producing many figures to avoid
             memory issues, prevents rendering in notebooks)
+
+    Returns:
+            matplotlib.figure.Figure: the template figure
     """
     bin_width = bin_edges[1:] - bin_edges[:-1]
     bin_centers = 0.5 * (bin_edges[:-1] + bin_edges[1:])
@@ -401,3 +411,4 @@ def templates(
     fig.tight_layout()
 
     utils._save_and_close(fig, figure_path, close_figure)
+    return fig

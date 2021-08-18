@@ -61,7 +61,8 @@ def data_mc_from_histograms(
     log_scale: Optional[bool] = None,
     log_scale_x: bool = False,
     close_figure: bool = False,
-) -> None:
+    save_figure: bool = True,
+) -> List[Dict[str, Any]]:
     """Draws pre-fit data/MC histograms, using histograms created by cabinetry.
 
     The uncertainty band drawn includes only statistical uncertainties.
@@ -77,9 +78,15 @@ def data_mc_from_histograms(
         close_figure (bool, optional): whether to close each figure immediately after
             saving it, defaults to False (enable when producing many figures to avoid
             memory issues, prevents rendering in notebooks)
+        save_figure (bool, optional): whether to save figures, defaults to True
+
+    Returns:
+        List[Dict[str, Any]]: list of dictionaries, where each dictionary contains a
+            figure and the associated region name
     """
     log.info("visualizing histogram")
     histogram_folder = pathlib.Path(config["General"]["HistogramFolder"])
+    figure_list = []
     for region in config["Regions"]:
         histogram_dict_list = []
         model_stdevs = []
@@ -105,9 +112,10 @@ def data_mc_from_histograms(
         total_model_unc = _total_yield_uncertainty(model_stdevs)
         bin_edges = histogram.bins
         label = f"{region['Name']}\npre-fit"
-        figure_path = pathlib.Path(figure_folder) / figure_name
+        # path is None if figure should not be saved
+        figure_path = pathlib.Path(figure_folder) / figure_name if save_figure else None
 
-        plot_model.data_mc(
+        fig = plot_model.data_mc(
             histogram_dict_list,
             total_model_unc,
             bin_edges,
@@ -117,6 +125,8 @@ def data_mc_from_histograms(
             label=label,
             close_figure=close_figure,
         )
+        figure_list.append({"figure": fig, "region": region["Name"]})
+    return figure_list
 
 
 def data_mc(
@@ -129,7 +139,8 @@ def data_mc(
     log_scale_x: bool = False,
     include_table: bool = True,
     close_figure: bool = False,
-) -> None:
+    save_figure: bool = True,
+) -> List[Dict[str, Any]]:
     """Draws pre- and post-fit data/MC histograms for a ``pyhf`` model and data.
 
     The ``config`` argument is optional, but required to determine correct axis labels
@@ -158,6 +169,11 @@ def data_mc(
         close_figure (bool, optional): whether to close each figure immediately after
             saving it, defaults to False (enable when producing many figures to avoid
             memory issues, prevents rendering in notebooks)
+        save_figure (bool, optional): whether to save figures, defaults to True
+
+    Returns:
+        List[Dict[str, Any]]: list of dictionaries, where each dictionary contains a
+            figure and the associated region name
     """
     n_bins_total = sum(model.config.channel_nbins.values())
     if len(data) != n_bins_total:
@@ -222,6 +238,7 @@ def data_mc(
         )
 
     # process channel by channel
+    figure_list = []
     for i_chan, channel_name in enumerate(model.config.channels):
         histogram_dict_list = []  # one dict per region/channel
 
@@ -256,15 +273,22 @@ def data_mc(
         )
 
         if prefit:
-            figure_path = pathlib.Path(figure_folder) / _figure_name(channel_name, True)
+            # path is None if figure should not be saved
+            figure_path = (
+                pathlib.Path(figure_folder) / _figure_name(channel_name, True)
+                if save_figure
+                else None
+            )
             label = f"{channel_name}\npre-fit"
         else:
-            figure_path = pathlib.Path(figure_folder) / _figure_name(
-                channel_name, False
+            figure_path = (
+                pathlib.Path(figure_folder) / _figure_name(channel_name, False)
+                if save_figure
+                else None
             )
             label = f"{channel_name}\npost-fit"
 
-        plot_model.data_mc(
+        fig = plot_model.data_mc(
             histogram_dict_list,
             np.asarray(total_stdev_model_bins[i_chan]),
             bin_edges,
@@ -274,6 +298,8 @@ def data_mc(
             label=label,
             close_figure=close_figure,
         )
+        figure_list.append({"figure": fig, "region": channel_name})
+    return figure_list
 
 
 def correlation_matrix(
@@ -464,7 +490,8 @@ def templates(
     config: Dict[str, Any],
     figure_folder: Union[str, pathlib.Path] = "figures",
     close_figure: bool = False,
-) -> None:
+    save_figure: bool = True,
+) -> List[Dict[str, Any]]:
     """Visualizes template histograms (after post-processing) for systematic variations.
 
     The original template histogram for systematic variations (before post-processing)
@@ -477,12 +504,18 @@ def templates(
         close_figure (bool, optional): whether to close each figure immediately after
             saving it, defaults to False (enable when producing many figures to avoid
             memory issues, prevents rendering in notebooks)
+        save_figure (bool, optional): whether to save figures, defaults to True
+
+    Returns:
+        List[Dict[str, Any]]: list of dictionaries, where each dictionary contains a
+            figure and the associated region / sample / systematic names
     """
     log.info("visualizing systematics templates")
     histogram_folder = pathlib.Path(config["General"]["HistogramFolder"])
     figure_folder = pathlib.Path(figure_folder) / "templates"
 
     # could do this via the route module instead
+    figure_list = []
     for region in config["Regions"]:
         for sample in config["Samples"]:
             if sample.get("Data", False):
@@ -559,9 +592,9 @@ def templates(
                 figure_name = (
                     f"{region['Name']}_{sample['Name']}_{systematic['Name']}.pdf"
                 )
-                figure_path = figure_folder / figure_name
+                figure_path = figure_folder / figure_name if save_figure else None
 
-                plot_model.templates(
+                fig = plot_model.templates(
                     nominal,
                     up_orig,
                     down_orig,
@@ -573,6 +606,15 @@ def templates(
                     label=figure_label,
                     close_figure=close_figure,
                 )
+                figure_list.append(
+                    {
+                        "figure": fig,
+                        "region": region["Name"],
+                        "sample": sample["Name"],
+                        "systematic": systematic["Name"],
+                    }
+                )
+    return figure_list
 
 
 def scan(
