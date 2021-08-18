@@ -6,6 +6,7 @@ import pathlib
 from typing import Any, Dict, List, Optional, Tuple, Union
 
 import awkward as ak
+import matplotlib as mpl
 import numpy as np
 import pyhf
 
@@ -280,7 +281,8 @@ def correlation_matrix(
     figure_folder: Union[str, pathlib.Path] = "figures",
     pruning_threshold: float = 0.0,
     close_figure: bool = False,
-) -> None:
+    save_figure: bool = True,
+) -> mpl.figure.Figure:
     """Draws a correlation matrix.
 
     Args:
@@ -293,7 +295,16 @@ def correlation_matrix(
         close_figure (bool, optional): whether to close each figure immediately after
             saving it, defaults to False (enable when producing many figures to avoid
             memory issues, prevents rendering in notebooks)
+        save_figure (bool, optional): whether to save figure, defaults to True
+
+    Returns:
+        matplotlib.figure.Figure: the correlation matrix figure
     """
+    # path is None if figure should not be saved
+    figure_path = (
+        pathlib.Path(figure_folder) / "correlation_matrix.pdf" if save_figure else None
+    )
+
     # create a matrix that is True if a correlation is below threshold, and True on the
     # diagonal
     below_threshold = np.where(
@@ -314,11 +325,11 @@ def correlation_matrix(
         np.delete(fit_results.corr_mat, delete_indices, axis=1), delete_indices, axis=0
     )
     labels = np.delete(fit_results.labels, delete_indices)
-    figure_path = pathlib.Path(figure_folder) / "correlation_matrix.pdf"
 
-    plot_result.correlation_matrix(
+    fig = plot_result.correlation_matrix(
         corr_mat, labels, figure_path, close_figure=close_figure
     )
+    return fig
 
 
 def pulls(
@@ -326,7 +337,8 @@ def pulls(
     figure_folder: Union[str, pathlib.Path] = "figures",
     exclude: Optional[Union[str, List[str], Tuple[str, ...]]] = None,
     close_figure: bool = False,
-) -> None:
+    save_figure: bool = True,
+) -> mpl.figure.Figure:
     """Draws a pull plot of parameter results and uncertainties.
 
     Args:
@@ -339,8 +351,13 @@ def pulls(
         close_figure (bool, optional): whether to close each figure immediately after
             saving it, defaults to False (enable when producing many figures to avoid
             memory issues, prevents rendering in notebooks)
+        save_figure (bool, optional): whether to save figure, defaults to True
+
+    Returns:
+        matplotlib.figure.Figure: the pull figure
     """
-    figure_path = pathlib.Path(figure_folder) / "pulls.pdf"
+    # path is None if figure should not be saved
+    figure_path = pathlib.Path(figure_folder) / "pulls.pdf" if save_figure else None
     labels_np = np.asarray(fit_results.labels)
 
     if exclude is None:
@@ -368,13 +385,14 @@ def pulls(
     uncertainty = fit_results.uncertainty[mask]
     labels_np = labels_np[mask]
 
-    plot_result.pulls(
+    fig = plot_result.pulls(
         bestfit,
         uncertainty,
         labels_np,
         figure_path,
         close_figure=close_figure,
     )
+    return fig
 
 
 def ranking(
@@ -382,7 +400,8 @@ def ranking(
     figure_folder: Union[str, pathlib.Path] = "figures",
     max_pars: Optional[int] = None,
     close_figure: bool = False,
-) -> None:
+    save_figure: bool = True,
+) -> mpl.figure.Figure:
     """Produces a ranking plot showing the impact of parameters on the POI.
 
     Args:
@@ -394,8 +413,13 @@ def ranking(
         close_figure (bool, optional): whether to close each figure immediately after
             saving it, defaults to False (enable when producing many figures to avoid
             memory issues, prevents rendering in notebooks)
+        save_figure (bool, optional): whether to save figure, defaults to True
+
+    Returns:
+        matplotlib.figure.Figure: the ranking figure
     """
-    figure_path = pathlib.Path(figure_folder) / "ranking.pdf"
+    # path is None if figure should not be saved
+    figure_path = pathlib.Path(figure_folder) / "ranking.pdf" if save_figure else None
 
     # sort parameters by decreasing average post-fit impact
     avg_postfit_impact = (
@@ -422,7 +446,7 @@ def ranking(
         postfit_up = postfit_up[:max_pars]
         postfit_down = postfit_down[:max_pars]
 
-    plot_result.ranking(
+    fig = plot_result.ranking(
         bestfit,
         uncertainty,
         labels,
@@ -433,6 +457,7 @@ def ranking(
         figure_path,
         close_figure=close_figure,
     )
+    return fig
 
 
 def templates(
@@ -554,7 +579,8 @@ def scan(
     scan_results: fit.ScanResults,
     figure_folder: Union[str, pathlib.Path] = "figures",
     close_figure: bool = False,
-) -> None:
+    save_figure: bool = True,
+) -> mpl.figure.Figure:
     """Visualizes the results of a likelihood scan.
 
     Args:
@@ -564,14 +590,19 @@ def scan(
         close_figure (bool, optional): whether to close each figure immediately after
             saving it, defaults to False (enable when producing many figures to avoid
             memory issues, prevents rendering in notebooks)
+        save_figure (bool, optional): whether to save figure, defaults to True
+
+    Returns:
+        matplotlib.figure.Figure: the likelihood scan figure
     """
     # replace [], needed for staterrors
     figure_name = (
         "scan_" + scan_results.name.replace("[", "_").replace("]", "") + ".pdf"
     )
-    figure_path = pathlib.Path(figure_folder) / figure_name
+    # path is None if figure should not be saved
+    figure_path = pathlib.Path(figure_folder) / figure_name if save_figure else None
 
-    plot_result.scan(
+    fig = plot_result.scan(
         scan_results.name,
         scan_results.bestfit,
         scan_results.uncertainty,
@@ -580,13 +611,15 @@ def scan(
         figure_path,
         close_figure=close_figure,
     )
+    return fig
 
 
 def limit(
     limit_results: fit.LimitResults,
     figure_folder: Union[str, pathlib.Path] = "figures",
     close_figure: bool = False,
-) -> None:
+    save_figure: bool = True,
+) -> mpl.figure.Figure:
     """Visualizes observed and expected CLs values as a function of the POI.
 
     Args:
@@ -596,13 +629,19 @@ def limit(
         close_figure (bool, optional): whether to close each figure immediately after
             saving it, defaults to False (enable when producing many figures to avoid
             memory issues, prevents rendering in notebooks)
-    """
-    figure_path = pathlib.Path(figure_folder) / "limit.pdf"
+        save_figure (bool, optional): whether to save figure, defaults to True
 
-    plot_result.limit(
+    Returns:
+        matplotlib.figure.Figure: the CLs figure
+    """
+    # path is None if figure should not be saved
+    figure_path = pathlib.Path(figure_folder) / "limit.pdf" if save_figure else None
+
+    fig = plot_result.limit(
         limit_results.observed_CLs,
         limit_results.expected_CLs,
         limit_results.poi_values,
         figure_path,
         close_figure=close_figure,
     )
+    return fig
