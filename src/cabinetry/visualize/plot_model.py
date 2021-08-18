@@ -216,7 +216,7 @@ def data_mc(
 
     fig.tight_layout()
 
-    utils._save_figure(fig, figure_path, close_figure)
+    utils._save_and_close(fig, figure_path, close_figure)
 
 
 def templates(
@@ -400,4 +400,4 @@ def templates(
 
     fig.tight_layout()
 
-    utils._save_figure(fig, figure_path, close_figure)
+    utils._save_and_close(fig, figure_path, close_figure)

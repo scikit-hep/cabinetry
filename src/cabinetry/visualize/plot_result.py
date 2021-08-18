@@ -2,7 +2,7 @@
 
 import logging
 import pathlib
-from typing import List, Union
+from typing import List, Optional, Union
 
 import matplotlib as mpl
 import matplotlib.pyplot as plt
@@ -17,19 +17,23 @@ log = logging.getLogger(__name__)
 def correlation_matrix(
     corr_mat: np.ndarray,
     labels: Union[List[str], np.ndarray],
-    figure_path: pathlib.Path,
+    figure_path: Optional[pathlib.Path] = None,
     close_figure: bool = False,
-) -> None:
+) -> mpl.figure.Figure:
     """Draws a correlation matrix.
 
     Args:
         corr_mat (np.ndarray): the correlation matrix to plot
         labels (Union[List[str], np.ndarray]): names of parameters in the correlation
             matrix
-        figure_path (pathlib.Path): path where figure should be saved
+        figure_path (Optional[pathlib.Path], optional): path where figure should be
+            saved, or None to not save it, defaults to None
         close_figure (bool, optional): whether to close each figure immediately after
             saving it, defaults to False (enable when producing many figures to avoid
             memory issues, prevents rendering in notebooks)
+
+    Returns:
+        matplotlib.figure.Figure: the correlation matrix figure
     """
     # rounding for test in CI to match reference
     fig, ax = plt.subplots(
@@ -56,26 +60,31 @@ def correlation_matrix(
         if abs(corr) > 0.005:
             ax.text(i, j, f"{corr:.2f}", ha="center", va="center", color=text_color)
 
-    utils._save_figure(fig, figure_path, close_figure)
+    utils._save_and_close(fig, figure_path, close_figure)
+    return fig
 
 
 def pulls(
     bestfit: np.ndarray,
     uncertainty: np.ndarray,
     labels: Union[List[str], np.ndarray],
-    figure_path: pathlib.Path,
+    figure_path: Optional[pathlib.Path] = None,
     close_figure: bool = False,
-) -> None:
+) -> mpl.figure.Figure:
     """Draws a pull plot.
 
     Args:
         bestfit (np.ndarray): best-fit parameter results
         uncertainty (np.ndarray): parameter uncertainties
         labels (Union[List[str], np.ndarray]): parameter names
-        figure_path (pathlib.Path): path where figure should be saved
+        figure_path (Optional[pathlib.Path], optional): path where figure should be
+            saved, or None to not save it, defaults to None
         close_figure (bool, optional): whether to close each figure immediately after
             saving it, defaults to False (enable when producing many figures to avoid
             memory issues, prevents rendering in notebooks)
+
+    Returns:
+        matplotlib.figure.Figure: the pull figure
     """
     num_pars = len(bestfit)
     y_positions = np.arange(num_pars)[::-1]
@@ -96,7 +105,8 @@ def pulls(
     ax.tick_params(direction="in", top=True, right=True, which="both")
     fig.tight_layout()
 
-    utils._save_figure(fig, figure_path, close_figure)
+    utils._save_and_close(fig, figure_path, close_figure)
+    return fig
 
 
 def ranking(
@@ -107,9 +117,9 @@ def ranking(
     impact_prefit_down: np.ndarray,
     impact_postfit_up: np.ndarray,
     impact_postfit_down: np.ndarray,
-    figure_path: pathlib.Path,
+    figure_path: Optional[pathlib.Path] = None,
     close_figure: bool = False,
-) -> None:
+) -> mpl.figure.Figure:
     """Draws a ranking plot.
 
     Args:
@@ -122,10 +132,14 @@ def ranking(
         impact_postfit_up (np.ndarray): post-fit impact in "up" direction per parameter
         impact_postfit_down (np.ndarray): post-fit impact in "down" direction per
             parameter
-        figure_path (pathlib.Path): path where figure should be saved
+        figure_path (Optional[pathlib.Path], optional): path where figure should be
+            saved, or None to not save it, defaults to None
         close_figure (bool, optional): whether to close each figure immediately after
             saving it, defaults to False (enable when producing many figures to avoid
             memory issues, prevents rendering in notebooks)
+
+    Returns:
+        matplotlib.figure.Figure: the ranking figure
     """
     num_pars = len(bestfit)
 
@@ -213,7 +227,8 @@ def ranking(
     leg_space = 1.0 / (num_pars + 3) + 0.03
     fig.tight_layout(rect=[0, 0, 1.0, 1 - leg_space])  # make space for legend on top
 
-    utils._save_figure(fig, figure_path, close_figure)
+    utils._save_and_close(fig, figure_path, close_figure)
+    return fig
 
 
 def scan(
@@ -222,9 +237,9 @@ def scan(
     par_unc: float,
     par_vals: np.ndarray,
     par_nlls: np.ndarray,
-    figure_path: pathlib.Path,
+    figure_path: Optional[pathlib.Path] = None,
     close_figure: bool = False,
-) -> None:
+) -> mpl.figure.Figure:
     """Draws a figure showing the results of a likelihood scan.
 
     Args:
@@ -233,10 +248,14 @@ def scan(
         par_unc (float): best-fit parameter uncertainty
         par_vals (np.ndarray): values used in scan over parameter
         par_nlls (np.ndarray): -2 log(L) offset at each scan point
-        figure_path (pathlib.Path): path where figure should be saved
+        figure_path (Optional[pathlib.Path], optional): path where figure should be
+            saved, or None to not save it, defaults to None
         close_figure (bool, optional): whether to close each figure immediately after
             saving it, defaults to False (enable when producing many figures to avoid
             memory issues, prevents rendering in notebooks)
+
+    Returns:
+        matplotlib.figure.Figure: the likelihood scan figure
     """
     mpl.style.use("seaborn-colorblind")
     fig, ax = plt.subplots()
@@ -285,26 +304,31 @@ def scan(
 
     fig.tight_layout()
 
-    utils._save_figure(fig, figure_path, close_figure)
+    utils._save_and_close(fig, figure_path, close_figure)
+    return fig
 
 
 def limit(
     observed_CLs: np.ndarray,
     expected_CLs: np.ndarray,
     poi_values: np.ndarray,
-    figure_path: pathlib.Path,
+    figure_path: Optional[pathlib.Path] = None,
     close_figure: bool = False,
-) -> None:
+) -> mpl.figure.Figure:
     """Draws observed and expected CLs values as function of the parameter of interest.
 
     Args:
         observed_CLs (np.ndarray): observed CLs values
         expected_CLs (np.ndarray): expected CLs values, including 1 and 2 sigma bands
         poi_values (np.ndarray): parameter of interest values used in scan
-        figure_path (pathlib.Path): path where figure should be saved
+        figure_path (Optional[pathlib.Path], optional): path where figure should be
+            saved, or None to not save it, defaults to None
         close_figure (bool, optional): whether to close each figure immediately after
             saving it, defaults to False (enable when producing many figures to avoid
             memory issues, prevents rendering in notebooks)
+
+    Returns:
+        matplotlib.figure.Figure: the CLs figure
     """
     fig, ax = plt.subplots()
 
@@ -370,4 +394,5 @@ def limit(
 
     fig.tight_layout()
 
-    utils._save_figure(fig, figure_path, close_figure)
+    utils._save_and_close(fig, figure_path, close_figure)
+    return fig

@@ -2,6 +2,7 @@
 
 import logging
 import pathlib
+from typing import Optional
 
 import matplotlib as mpl
 import matplotlib.pyplot as plt
@@ -10,19 +11,20 @@ import matplotlib.pyplot as plt
 log = logging.getLogger(__name__)
 
 
-def _save_figure(
-    fig: mpl.figure.Figure, path: pathlib.Path, close_figure: bool = False
+def _save_and_close(
+    fig: mpl.figure.Figure, path: Optional[pathlib.Path], close_figure: bool
 ) -> None:
-    """Saves a figure at a given location and optionally closes it.
+    """Saves a figure at a given location if path is provided and optionally closes it.
 
     Args:
         fig (matplotlib.figure.Figure): figure to save
-        path (pathlib.Path): path where figure should be saved
-        close_figure (bool, optional): whether to close figure after saving, defaults to
-            False
+        path (Optional[pathlib.Path]): path where figure should be saved, or None to not
+            save it
+        close_figure (bool): whether to close figure after saving
     """
-    path.parent.mkdir(parents=True, exist_ok=True)
-    log.debug(f"saving figure as {path}")
-    fig.savefig(path)
+    if path is not None:
+        path.parent.mkdir(parents=True, exist_ok=True)
+        log.debug(f"saving figure as {path}")
+        fig.savefig(path)
     if close_figure:
         plt.close(fig)
