@@ -7,12 +7,6 @@ import numpy as np
 from cabinetry.visualize import plot_result
 
 
-def test_no_open_figure():
-    # ensure there are no open figures at the start, if this fails then some other part
-    # of the test suite opened a figure without closing it
-    assert len(plt.get_fignums()) == 0
-
-
 def test_correlation_matrix(tmp_path):
     fname = tmp_path / "fig.pdf"
     # one parameter is below threshold so no text is shown for it on the plot
