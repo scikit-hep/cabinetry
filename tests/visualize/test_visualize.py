@@ -2,6 +2,7 @@ from collections import namedtuple
 import pathlib
 from unittest import mock
 
+import matplotlib.figure
 import numpy as np
 import pytest
 
@@ -35,7 +36,9 @@ def test__total_yield_uncertainty():
 
 
 @mock.patch("cabinetry.visualize._total_yield_uncertainty", return_value=[0.2])
-@mock.patch("cabinetry.visualize.plot_model.data_mc")
+@mock.patch(
+    "cabinetry.visualize.plot_model.data_mc", return_value=matplotlib.figure.Figure()
+)
 @mock.patch(
     "cabinetry.histo.Histogram.from_config",
     return_value=MockHistogram([0.0, 1.0], [1.0], [0.1]),
@@ -49,7 +52,10 @@ def test_data_mc_from_histograms(mock_load, mock_draw, mock_stdev):
     figure_folder = pathlib.Path("tmp")
     histogram_folder = pathlib.Path("tmp_hist")
 
-    visualize.data_mc_from_histograms(config, figure_folder=figure_folder)
+    fig_dict = visualize.data_mc_from_histograms(config, figure_folder=figure_folder)
+    assert len(fig_dict) == 1
+    assert type(fig_dict[0]["figure"]) == matplotlib.figure.Figure
+    assert fig_dict[0]["region"] == "reg_1"
 
     # the call_args_list contains calls (outer round brackets), first filled with
     # arguments (inner round brackets) and then keyword arguments
@@ -104,14 +110,16 @@ def test_data_mc_from_histograms(mock_load, mock_draw, mock_stdev):
         )
     ]
 
-    # custom log scale settings, close figure
-    visualize.data_mc_from_histograms(
+    # custom log scale settings, close figure, do not save figure
+    _ = visualize.data_mc_from_histograms(
         config,
         figure_folder=figure_folder,
         log_scale=True,
         log_scale_x=True,
         close_figure=True,
+        save_figure=False,
     )
+    assert mock_draw.call_args[0][3] is None
     assert mock_draw.call_args[1] == {
         "log_scale": True,
         "log_scale_x": True,
@@ -120,7 +128,9 @@ def test_data_mc_from_histograms(mock_load, mock_draw, mock_stdev):
     }
 
 
-@mock.patch("cabinetry.visualize.plot_model.data_mc")
+@mock.patch(
+    "cabinetry.visualize.plot_model.data_mc", return_value=matplotlib.figure.Figure()
+)
 @mock.patch("cabinetry.template_builder._binning", return_value=np.asarray([1, 2]))
 @mock.patch(
     "cabinetry.configuration.region_dict",
@@ -153,7 +163,12 @@ def test_data_mc(
     model, data = model_utils.model_and_data(example_spec)
 
     # pre-fit plot
-    visualize.data_mc(model, data, config=config, figure_folder=figure_folder)
+    fig_dict = visualize.data_mc(
+        model, data, config=config, figure_folder=figure_folder
+    )
+    assert len(fig_dict) == 1
+    assert type(fig_dict[0]["figure"]) == matplotlib.figure.Figure
+    assert fig_dict[0]["region"] == "Signal Region"
 
     # Asimov parameter calculation and pre-fit uncertainties
     assert mock_stdev.call_count == 1
@@ -226,7 +241,7 @@ def test_data_mc(
         np.asarray([[1.0, 0.2], [0.2, 1.0]]),
         0.0,
     )
-    visualize.data_mc(
+    _ = visualize.data_mc(
         model,
         data,
         config=config,
@@ -263,20 +278,26 @@ def test_data_mc(
         "close_figure": True,
     }
 
-    # no yield table
-    visualize.data_mc(model, data, config=config, include_table=False)
+    # no yield table, do not save figure
+    _ = visualize.data_mc(
+        model, data, config=config, include_table=False, save_figure=False
+    )
     assert mock_table_bin.call_count == 2  # 2 calls from before
     assert mock_table_channel.call_count == 2
+    assert mock_draw.call_args[0][3] is None
 
     # no config specified, default variable name and bin edges, data without auxdata
-    visualize.data_mc(model, data[:1])
+    _ = visualize.data_mc(model, data[:1])
     assert mock_draw.call_args[0][0][0]["variable"] == "bin"
     assert mock_draw.call_args[0][0][1]["variable"] == "bin"
     assert mock_draw.call_args[0][0][1]["yields"] == np.asarray(data[:1])
     np.testing.assert_equal(mock_draw.call_args[0][2], np.asarray([0, 1]))
 
 
-@mock.patch("cabinetry.visualize.plot_result.correlation_matrix")
+@mock.patch(
+    "cabinetry.visualize.plot_result.correlation_matrix",
+    return_value=matplotlib.figure.Figure(),
+)
 def test_correlation_matrix(mock_draw):
     corr_mat = np.asarray([[1.0, 0.2, 0.1], [0.2, 1.0, 0.1], [0.1, 0.1, 1.0]])
     corr_mat_pruned = np.asarray([[1.0, 0.2], [0.2, 1.0]])
@@ -287,9 +308,10 @@ def test_correlation_matrix(mock_draw):
     fit_results = fit.FitResults(np.empty(0), np.empty(0), labels, corr_mat, 1.0)
 
     # pruning with threshold
-    visualize.correlation_matrix(
+    fig = visualize.correlation_matrix(
         fit_results, figure_folder=folder_path, pruning_threshold=0.15
     )
+    assert type(fig) == matplotlib.figure.Figure
 
     mock_draw.assert_called_once()
     assert np.allclose(mock_draw.call_args[0][0], corr_mat_pruned)
@@ -300,13 +322,16 @@ def test_correlation_matrix(mock_draw):
     assert mock_draw.call_args[1] == {"close_figure": False}
 
     # pruning of fixed parameter (all zeros in correlation matrix row/column), close
-    # figure
+    # figure, do not save
     corr_mat_fixed = np.asarray([[1.0, 0.2, 0.0], [0.2, 1.0, 0.0], [0.0, 0.0, 0.0]])
     fit_results_fixed = fit.FitResults(
         np.empty(0), np.empty(0), labels, corr_mat_fixed, 1.0
     )
-    visualize.correlation_matrix(
-        fit_results_fixed, figure_folder=folder_path, close_figure=True
+    _ = visualize.correlation_matrix(
+        fit_results_fixed,
+        figure_folder=folder_path,
+        close_figure=True,
+        save_figure=False,
     )
     assert np.allclose(mock_draw.call_args_list[1][0][0], corr_mat_pruned)
     assert np.any(
@@ -315,10 +340,13 @@ def test_correlation_matrix(mock_draw):
             for i in range(len(labels_pruned))
         ]
     )
+    assert mock_draw.call_args[0][2] is None
     assert mock_draw.call_args[1] == {"close_figure": True}
 
 
-@mock.patch("cabinetry.visualize.plot_result.pulls")
+@mock.patch(
+    "cabinetry.visualize.plot_result.pulls", return_value=matplotlib.figure.Figure()
+)
 def test_pulls(mock_draw):
     bestfit = np.asarray([0.8, 1.0, 1.05, 1.1])
     uncertainty = np.asarray([0.9, 1.0, 0.03, 0.7])
@@ -333,7 +361,8 @@ def test_pulls(mock_draw):
     figure_path = pathlib.Path(folder_path) / "pulls.pdf"
 
     # with filtering
-    visualize.pulls(fit_results, figure_folder=folder_path, exclude=exclude)
+    fig = visualize.pulls(fit_results, figure_folder=folder_path, exclude=exclude)
+    assert type(fig) == matplotlib.figure.Figure
 
     mock_draw.assert_called_once()
     assert np.allclose(mock_draw.call_args[0][0], filtered_bestfit)
@@ -348,7 +377,7 @@ def test_pulls(mock_draw):
     assert mock_draw.call_args[1] == {"close_figure": False}
 
     # filtering single parameter instead of list
-    visualize.pulls(fit_results, figure_folder=folder_path, exclude=exclude[0])
+    _ = visualize.pulls(fit_results, figure_folder=folder_path, exclude=exclude[0])
 
     assert np.allclose(mock_draw.call_args[0][0], filtered_bestfit)
     assert np.allclose(mock_draw.call_args[0][1], filtered_uncertainty)
@@ -359,14 +388,16 @@ def test_pulls(mock_draw):
         ]
     )
 
-    # without filtering via list, but with staterror removal, fixed parameter removal
-    # and closing figure
+    # without filtering via list, but with staterror removal, fixed parameter removal,
+    # closing figure, not saving
     fit_results.uncertainty[0] = 0.0
 
     bestfit_expected = np.asarray([1.0, 1.1])
     uncertainty_expected = np.asarray([1.0, 0.7])
     labels_expected = ["b", "c"]
-    visualize.pulls(fit_results, figure_folder=folder_path, close_figure=True)
+    visualize.pulls(
+        fit_results, figure_folder=folder_path, close_figure=True, save_figure=False
+    )
 
     assert np.allclose(mock_draw.call_args[0][0], bestfit_expected)
     assert np.allclose(mock_draw.call_args[0][1], uncertainty_expected)
@@ -376,11 +407,13 @@ def test_pulls(mock_draw):
             for i in range(len(labels_expected))
         ]
     )
-    assert mock_draw.call_args[0][3] == figure_path
+    assert mock_draw.call_args[0][3] is None
     assert mock_draw.call_args[1] == {"close_figure": True}
 
 
-@mock.patch("cabinetry.visualize.plot_result.ranking")
+@mock.patch(
+    "cabinetry.visualize.plot_result.ranking", return_value=matplotlib.figure.Figure()
+)
 def test_ranking(mock_draw):
     bestfit = np.asarray([1.2, 0.1])
     uncertainty = np.asarray([0.2, 0.8])
@@ -405,7 +438,9 @@ def test_ranking(mock_draw):
     uncertainty_expected = np.asarray([0.8, 0.2])
     labels_expected = ["modeling", "staterror_a"]
 
-    visualize.ranking(ranking_results, figure_folder=folder_path)
+    fig = visualize.ranking(ranking_results, figure_folder=folder_path)
+    assert type(fig) == matplotlib.figure.Figure
+
     assert mock_draw.call_count == 1
     assert np.allclose(mock_draw.call_args[0][0], bestfit_expected)
     assert np.allclose(mock_draw.call_args[0][1], uncertainty_expected)
@@ -418,9 +453,13 @@ def test_ranking(mock_draw):
     assert mock_draw.call_args[0][7] == figure_path
     assert mock_draw.call_args[1] == {"close_figure": False}
 
-    # maximum parameter amount specified, close figure
-    visualize.ranking(
-        ranking_results, figure_folder=folder_path, max_pars=1, close_figure=True
+    # maximum parameter amount specified, close figure, do not save figure
+    _ = visualize.ranking(
+        ranking_results,
+        figure_folder=folder_path,
+        max_pars=1,
+        close_figure=True,
+        save_figure=False,
     )
     assert mock_draw.call_count == 2
     assert np.allclose(mock_draw.call_args[0][0], bestfit_expected[0])
@@ -430,7 +469,7 @@ def test_ranking(mock_draw):
     assert np.allclose(mock_draw.call_args[0][4], impact_prefit_down[1])
     assert np.allclose(mock_draw.call_args[0][5], impact_postfit_up[1])
     assert np.allclose(mock_draw.call_args[0][6], impact_postfit_down[1])
-    assert mock_draw.call_args[0][7] == figure_path
+    assert mock_draw.call_args[0][7] is None
     assert mock_draw.call_args[1] == {"close_figure": True}
 
 
@@ -448,7 +487,9 @@ def test_ranking(mock_draw):
     "cabinetry.histo.Histogram.from_config",
     return_value=MockHistogram([0.0, 1.0], [1.0], [0.1]),
 )
-@mock.patch("cabinetry.visualize.plot_model.templates")
+@mock.patch(
+    "cabinetry.visualize.plot_model.templates", return_value=matplotlib.figure.Figure()
+)
 def test_templates(mock_draw, mock_histo_config, mock_histo_path, tmp_path):
     # the side effects are repeated for the patched Histogram.from_path
     # to check all relevant behavior (including the unknown backend check)
@@ -475,7 +516,12 @@ def test_templates(mock_draw, mock_histo_config, mock_histo_path, tmp_path):
     # also add a file that matches pattern but is not needed
     (tmp_path / "region_sample_sys_unknown_modified.npz").touch()
 
-    visualize.templates(config, figure_folder=folder_path)
+    fig_dict = visualize.templates(config, figure_folder=folder_path)
+    assert len(fig_dict) == 1
+    assert type(fig_dict[0]["figure"]) == matplotlib.figure.Figure
+    assert fig_dict[0]["region"] == "region"
+    assert fig_dict[0]["sample"] == "sample"
+    assert fig_dict[0]["systematic"] == "sys"
 
     # nominal histogram loading
     assert mock_histo_config.call_args_list == [[(tmp_path, region, sample, {}), {}]]
@@ -505,10 +551,12 @@ def test_templates(mock_draw, mock_histo_config, mock_histo_path, tmp_path):
         ]
     ]
 
-    # close figure
-    visualize.templates(config, figure_folder=folder_path, close_figure=True)
+    # close figure, do not save figure
+    _ = visualize.templates(
+        config, figure_folder=folder_path, close_figure=True, save_figure=False
+    )
     assert mock_draw.call_args == [
-        (nominal, up_orig, down_orig, up_mod, down_mod, bins, "x", figure_path),
+        (nominal, up_orig, down_orig, up_mod, down_mod, bins, "x", None),
         {
             "label": "region: region\nsample: sample\nsystematic: sys",
             "close_figure": True,
@@ -520,7 +568,7 @@ def test_templates(mock_draw, mock_histo_config, mock_histo_path, tmp_path):
     down_path.unlink()
 
     assert mock_draw.call_count == 2  # two calls so far
-    visualize.templates(config, figure_folder=folder_path)
+    _ = visualize.templates(config, figure_folder=folder_path)
     assert mock_draw.call_count == 2  # no new call, since no variations found
 
     # no systematics in config
@@ -529,11 +577,13 @@ def test_templates(mock_draw, mock_histo_config, mock_histo_path, tmp_path):
         "Regions": [region],
         "Samples": [sample, {"Name": "data", "Data": True}],
     }
-    visualize.templates(config, figure_folder=folder_path)
+    _ = visualize.templates(config, figure_folder=folder_path)
     assert mock_draw.call_count == 2  # no systematics, so no new calls
 
 
-@mock.patch("cabinetry.visualize.plot_result.scan")
+@mock.patch(
+    "cabinetry.visualize.plot_result.scan", return_value=matplotlib.figure.Figure()
+)
 def test_scan(mock_draw):
     folder_path = "tmp"
     figure_path = pathlib.Path(folder_path) / "scan_a_0.pdf"
@@ -545,7 +595,8 @@ def test_scan(mock_draw):
     par_nlls = np.asarray([0.9, 0.0, 1.1])
     scan_results = fit.ScanResults(par_name, par_mle, par_unc, par_vals, par_nlls)
 
-    visualize.scan(scan_results, figure_folder=folder_path)
+    fig = visualize.scan(scan_results, figure_folder=folder_path)
+    assert type(fig) == matplotlib.figure.Figure
 
     assert mock_draw.call_count == 1
     assert mock_draw.call_args[0][0] == par_name
@@ -556,12 +607,17 @@ def test_scan(mock_draw):
     assert mock_draw.call_args[0][5] == figure_path
     assert mock_draw.call_args[1] == {"close_figure": False}
 
-    # close figure
-    visualize.scan(scan_results, figure_folder=folder_path, close_figure=True)
+    # close figure, do not save figure
+    _ = visualize.scan(
+        scan_results, figure_folder=folder_path, close_figure=True, save_figure=False
+    )
+    assert mock_draw.call_args[0][5] is None
     assert mock_draw.call_args[1] == {"close_figure": True}
 
 
-@mock.patch("cabinetry.visualize.plot_result.limit")
+@mock.patch(
+    "cabinetry.visualize.plot_result.limit", return_value=matplotlib.figure.Figure()
+)
 def test_limit(mock_draw):
     folder_path = "tmp"
     figure_path = pathlib.Path(folder_path) / "limit.pdf"
@@ -573,7 +629,8 @@ def test_limit(mock_draw):
         3.0, np.empty(5), observed_CLs, expected_CLs, poi_values
     )
 
-    visualize.limit(limit_results, figure_folder=folder_path)
+    fig = visualize.limit(limit_results, figure_folder=folder_path)
+    assert type(fig) == matplotlib.figure.Figure
 
     assert mock_draw.call_count == 1
     assert np.allclose(mock_draw.call_args[0][0], limit_results.observed_CLs)
@@ -582,6 +639,9 @@ def test_limit(mock_draw):
     assert mock_draw.call_args[0][3] == figure_path
     assert mock_draw.call_args[1] == {"close_figure": False}
 
-    # close figure
-    visualize.limit(limit_results, figure_folder=folder_path, close_figure=True)
+    # close figure, do not save figure
+    _ = visualize.limit(
+        limit_results, figure_folder=folder_path, close_figure=True, save_figure=False
+    )
+    assert mock_draw.call_args[0][3] is None
     assert mock_draw.call_args[1] == {"close_figure": True}
