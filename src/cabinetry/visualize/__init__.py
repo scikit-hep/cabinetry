@@ -302,6 +302,137 @@ def data_mc(
     return figure_dict_list
 
 
+def templates(
+    config: Dict[str, Any],
+    figure_folder: Union[str, pathlib.Path] = "figures",
+    close_figure: bool = False,
+    save_figure: bool = True,
+) -> List[Dict[str, Any]]:
+    """Visualizes template histograms (after post-processing) for systematic variations.
+
+    The original template histogram for systematic variations (before post-processing)
+    is also included in the visualization.
+
+    Args:
+        config (Dict[str, Any]): cabinetry configuration
+        figure_folder (Union[str, pathlib.Path], optional): path to the folder to save
+            figures in, defaults to "figures"
+        close_figure (bool, optional): whether to close each figure immediately after
+            saving it, defaults to False (enable when producing many figures to avoid
+            memory issues, prevents rendering in notebooks)
+        save_figure (bool, optional): whether to save figures, defaults to True
+
+    Returns:
+        List[Dict[str, Any]]: list of dictionaries, where each dictionary contains a
+            figure and the associated region / sample / systematic names
+    """
+    log.info("visualizing systematics templates")
+    histogram_folder = pathlib.Path(config["General"]["HistogramFolder"])
+    figure_folder = pathlib.Path(figure_folder) / "templates"
+
+    # could do this via the route module instead
+    figure_dict_list = []
+    for region in config["Regions"]:
+        for sample in config["Samples"]:
+            if sample.get("Data", False):
+                # skip data
+                continue
+
+            # loop over systematics (if they exist)
+            for systematic in config.get("Systematics", []):
+                histo_name = (
+                    region["Name"]
+                    + "_"
+                    + sample["Name"]
+                    + "_"
+                    + systematic["Name"]
+                    + "*_modified*"
+                )
+                # create a list of paths to histograms matching the pattern
+                variation_paths = [
+                    pathlib.Path(h_name)
+                    for h_name in glob.glob(str(histogram_folder / histo_name))
+                ]
+                # only keep up/down variations, and sort alphabetically
+                # (sorting to have consistent order, and simplified debugging)
+                variation_paths = sorted(
+                    v for v in variation_paths if ("Up" in v.name or "Down" in v.name)
+                )
+
+                if len(variation_paths) == 0:
+                    # no associated templates (normalization systematics)
+                    continue
+
+                # extract nominal histogram
+                nominal_histo = histo.Histogram.from_config(
+                    histogram_folder, region, sample, {}
+                )
+                bins = nominal_histo.bins
+                variable = region["Variable"]
+                nominal = {"yields": nominal_histo.yields, "stdev": nominal_histo.stdev}
+
+                # extract original and modified (after post-processing) variation
+                # histograms, if they exist
+                up_orig = {}
+                down_orig = {}
+                up_mod = {}
+                down_mod = {}
+                for variation_path in variation_paths:
+                    # original variation, before post-processing
+                    variation_path_orig = pathlib.Path(
+                        str(variation_path).replace("_modified", "")
+                    )
+                    var_histo_orig = histo.Histogram.from_path(variation_path_orig)
+                    var_orig = {
+                        "yields": var_histo_orig.yields,
+                        "stdev": var_histo_orig.stdev,
+                    }
+
+                    # variation after post-processing
+                    var_histo_mod = histo.Histogram.from_path(variation_path)
+                    var_mod = {
+                        "yields": var_histo_mod.yields,
+                        "stdev": var_histo_mod.stdev,
+                    }
+                    if "Up" in variation_path.parts[-1]:
+                        up_orig.update(var_orig)
+                        up_mod.update(var_mod)
+                    else:
+                        down_orig.update(var_orig)
+                        down_mod.update(var_mod)
+
+                figure_label = (
+                    f"region: {region['Name']}\nsample: {sample['Name']}"
+                    f"\nsystematic: {systematic['Name']}"
+                )
+                figure_name = (
+                    f"{region['Name']}_{sample['Name']}_{systematic['Name']}.pdf"
+                )
+                figure_path = figure_folder / figure_name if save_figure else None
+
+                fig = plot_model.templates(
+                    nominal,
+                    up_orig,
+                    down_orig,
+                    up_mod,
+                    down_mod,
+                    bins,
+                    variable,
+                    figure_path,
+                    label=figure_label,
+                    close_figure=close_figure,
+                )
+                figure_dict_list.append(
+                    {
+                        "figure": fig,
+                        "region": region["Name"],
+                        "sample": sample["Name"],
+                        "systematic": systematic["Name"],
+                    }
+                )
+    return figure_dict_list
+
+
 def correlation_matrix(
     fit_results: fit.FitResults,
     figure_folder: Union[str, pathlib.Path] = "figures",
@@ -484,137 +615,6 @@ def ranking(
         close_figure=close_figure,
     )
     return fig
-
-
-def templates(
-    config: Dict[str, Any],
-    figure_folder: Union[str, pathlib.Path] = "figures",
-    close_figure: bool = False,
-    save_figure: bool = True,
-) -> List[Dict[str, Any]]:
-    """Visualizes template histograms (after post-processing) for systematic variations.
-
-    The original template histogram for systematic variations (before post-processing)
-    is also included in the visualization.
-
-    Args:
-        config (Dict[str, Any]): cabinetry configuration
-        figure_folder (Union[str, pathlib.Path], optional): path to the folder to save
-            figures in, defaults to "figures"
-        close_figure (bool, optional): whether to close each figure immediately after
-            saving it, defaults to False (enable when producing many figures to avoid
-            memory issues, prevents rendering in notebooks)
-        save_figure (bool, optional): whether to save figures, defaults to True
-
-    Returns:
-        List[Dict[str, Any]]: list of dictionaries, where each dictionary contains a
-            figure and the associated region / sample / systematic names
-    """
-    log.info("visualizing systematics templates")
-    histogram_folder = pathlib.Path(config["General"]["HistogramFolder"])
-    figure_folder = pathlib.Path(figure_folder) / "templates"
-
-    # could do this via the route module instead
-    figure_dict_list = []
-    for region in config["Regions"]:
-        for sample in config["Samples"]:
-            if sample.get("Data", False):
-                # skip data
-                continue
-
-            # loop over systematics (if they exist)
-            for systematic in config.get("Systematics", []):
-                histo_name = (
-                    region["Name"]
-                    + "_"
-                    + sample["Name"]
-                    + "_"
-                    + systematic["Name"]
-                    + "*_modified*"
-                )
-                # create a list of paths to histograms matching the pattern
-                variation_paths = [
-                    pathlib.Path(h_name)
-                    for h_name in glob.glob(str(histogram_folder / histo_name))
-                ]
-                # only keep up/down variations, and sort alphabetically
-                # (sorting to have consistent order, and simplified debugging)
-                variation_paths = sorted(
-                    v for v in variation_paths if ("Up" in v.name or "Down" in v.name)
-                )
-
-                if len(variation_paths) == 0:
-                    # no associated templates (normalization systematics)
-                    continue
-
-                # extract nominal histogram
-                nominal_histo = histo.Histogram.from_config(
-                    histogram_folder, region, sample, {}
-                )
-                bins = nominal_histo.bins
-                variable = region["Variable"]
-                nominal = {"yields": nominal_histo.yields, "stdev": nominal_histo.stdev}
-
-                # extract original and modified (after post-processing) variation
-                # histograms, if they exist
-                up_orig = {}
-                down_orig = {}
-                up_mod = {}
-                down_mod = {}
-                for variation_path in variation_paths:
-                    # original variation, before post-processing
-                    variation_path_orig = pathlib.Path(
-                        str(variation_path).replace("_modified", "")
-                    )
-                    var_histo_orig = histo.Histogram.from_path(variation_path_orig)
-                    var_orig = {
-                        "yields": var_histo_orig.yields,
-                        "stdev": var_histo_orig.stdev,
-                    }
-
-                    # variation after post-processing
-                    var_histo_mod = histo.Histogram.from_path(variation_path)
-                    var_mod = {
-                        "yields": var_histo_mod.yields,
-                        "stdev": var_histo_mod.stdev,
-                    }
-                    if "Up" in variation_path.parts[-1]:
-                        up_orig.update(var_orig)
-                        up_mod.update(var_mod)
-                    else:
-                        down_orig.update(var_orig)
-                        down_mod.update(var_mod)
-
-                figure_label = (
-                    f"region: {region['Name']}\nsample: {sample['Name']}"
-                    f"\nsystematic: {systematic['Name']}"
-                )
-                figure_name = (
-                    f"{region['Name']}_{sample['Name']}_{systematic['Name']}.pdf"
-                )
-                figure_path = figure_folder / figure_name if save_figure else None
-
-                fig = plot_model.templates(
-                    nominal,
-                    up_orig,
-                    down_orig,
-                    up_mod,
-                    down_mod,
-                    bins,
-                    variable,
-                    figure_path,
-                    label=figure_label,
-                    close_figure=close_figure,
-                )
-                figure_dict_list.append(
-                    {
-                        "figure": fig,
-                        "region": region["Name"],
-                        "sample": sample["Name"],
-                        "systematic": systematic["Name"],
-                    }
-                )
-    return figure_dict_list
 
 
 def scan(
