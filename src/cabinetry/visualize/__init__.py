@@ -6,6 +6,7 @@ import pathlib
 from typing import Any, Dict, List, Optional, Tuple, Union
 
 import awkward as ak
+import matplotlib as mpl
 import numpy as np
 import pyhf
 
@@ -60,7 +61,8 @@ def data_mc_from_histograms(
     log_scale: Optional[bool] = None,
     log_scale_x: bool = False,
     close_figure: bool = False,
-) -> None:
+    save_figure: bool = True,
+) -> List[Dict[str, Any]]:
     """Draws pre-fit data/MC histograms, using histograms created by cabinetry.
 
     The uncertainty band drawn includes only statistical uncertainties.
@@ -76,9 +78,15 @@ def data_mc_from_histograms(
         close_figure (bool, optional): whether to close each figure immediately after
             saving it, defaults to False (enable when producing many figures to avoid
             memory issues, prevents rendering in notebooks)
+        save_figure (bool, optional): whether to save figures, defaults to True
+
+    Returns:
+        List[Dict[str, Any]]: list of dictionaries, where each dictionary contains a
+            figure and the associated region name
     """
     log.info("visualizing histogram")
     histogram_folder = pathlib.Path(config["General"]["HistogramFolder"])
+    figure_dict_list = []
     for region in config["Regions"]:
         histogram_dict_list = []
         model_stdevs = []
@@ -104,9 +112,10 @@ def data_mc_from_histograms(
         total_model_unc = _total_yield_uncertainty(model_stdevs)
         bin_edges = histogram.bins
         label = f"{region['Name']}\npre-fit"
-        figure_path = pathlib.Path(figure_folder) / figure_name
+        # path is None if figure should not be saved
+        figure_path = pathlib.Path(figure_folder) / figure_name if save_figure else None
 
-        plot_model.data_mc(
+        fig = plot_model.data_mc(
             histogram_dict_list,
             total_model_unc,
             bin_edges,
@@ -116,6 +125,8 @@ def data_mc_from_histograms(
             label=label,
             close_figure=close_figure,
         )
+        figure_dict_list.append({"figure": fig, "region": region["Name"]})
+    return figure_dict_list
 
 
 def data_mc(
@@ -128,7 +139,8 @@ def data_mc(
     log_scale_x: bool = False,
     include_table: bool = True,
     close_figure: bool = False,
-) -> None:
+    save_figure: bool = True,
+) -> List[Dict[str, Any]]:
     """Draws pre- and post-fit data/MC histograms for a ``pyhf`` model and data.
 
     The ``config`` argument is optional, but required to determine correct axis labels
@@ -157,6 +169,11 @@ def data_mc(
         close_figure (bool, optional): whether to close each figure immediately after
             saving it, defaults to False (enable when producing many figures to avoid
             memory issues, prevents rendering in notebooks)
+        save_figure (bool, optional): whether to save figures, defaults to True
+
+    Returns:
+        List[Dict[str, Any]]: list of dictionaries, where each dictionary contains a
+            figure and the associated region name
     """
     n_bins_total = sum(model.config.channel_nbins.values())
     if len(data) != n_bins_total:
@@ -221,6 +238,7 @@ def data_mc(
         )
 
     # process channel by channel
+    figure_dict_list = []
     for i_chan, channel_name in enumerate(model.config.channels):
         histogram_dict_list = []  # one dict per region/channel
 
@@ -255,15 +273,22 @@ def data_mc(
         )
 
         if prefit:
-            figure_path = pathlib.Path(figure_folder) / _figure_name(channel_name, True)
+            # path is None if figure should not be saved
+            figure_path = (
+                pathlib.Path(figure_folder) / _figure_name(channel_name, True)
+                if save_figure
+                else None
+            )
             label = f"{channel_name}\npre-fit"
         else:
-            figure_path = pathlib.Path(figure_folder) / _figure_name(
-                channel_name, False
+            figure_path = (
+                pathlib.Path(figure_folder) / _figure_name(channel_name, False)
+                if save_figure
+                else None
             )
             label = f"{channel_name}\npost-fit"
 
-        plot_model.data_mc(
+        fig = plot_model.data_mc(
             histogram_dict_list,
             np.asarray(total_stdev_model_bins[i_chan]),
             bin_edges,
@@ -273,173 +298,16 @@ def data_mc(
             label=label,
             close_figure=close_figure,
         )
-
-
-def correlation_matrix(
-    fit_results: fit.FitResults,
-    figure_folder: Union[str, pathlib.Path] = "figures",
-    pruning_threshold: float = 0.0,
-    close_figure: bool = False,
-) -> None:
-    """Draws a correlation matrix.
-
-    Args:
-        fit_results (fit.FitResults): fit results, including correlation matrix and
-            parameter labels
-        figure_folder (Union[str, pathlib.Path], optional): path to the folder to save
-            figures in, defaults to "figures"
-        pruning_threshold (float, optional): minimum correlation for a parameter to
-            have with any other parameters to not get pruned, defaults to 0.0
-        close_figure (bool, optional): whether to close each figure immediately after
-            saving it, defaults to False (enable when producing many figures to avoid
-            memory issues, prevents rendering in notebooks)
-    """
-    # create a matrix that is True if a correlation is below threshold, and True on the
-    # diagonal
-    below_threshold = np.where(
-        np.abs(fit_results.corr_mat) < pruning_threshold, True, False
-    )
-    np.fill_diagonal(below_threshold, True)
-    # get list of booleans specifying if everything in rows/columns is below threshold
-    all_below_threshold = np.all(below_threshold, axis=0)
-    # get list of booleans specifying if rows/columns correspond to fixed parameter
-    # (0 correlations)
-    fixed_parameter = np.all(np.equal(fit_results.corr_mat, 0.0), axis=0)
-    # get indices of rows/columns where everything is below threshold, or the parameter
-    # is fixed
-    delete_indices = np.where(np.logical_or(all_below_threshold, fixed_parameter))
-    # delete rows and columns where all correlations are below threshold / parameter is
-    # fixed
-    corr_mat = np.delete(
-        np.delete(fit_results.corr_mat, delete_indices, axis=1), delete_indices, axis=0
-    )
-    labels = np.delete(fit_results.labels, delete_indices)
-    figure_path = pathlib.Path(figure_folder) / "correlation_matrix.pdf"
-
-    plot_result.correlation_matrix(
-        corr_mat, labels, figure_path, close_figure=close_figure
-    )
-
-
-def pulls(
-    fit_results: fit.FitResults,
-    figure_folder: Union[str, pathlib.Path] = "figures",
-    exclude: Optional[Union[str, List[str], Tuple[str, ...]]] = None,
-    close_figure: bool = False,
-) -> None:
-    """Draws a pull plot of parameter results and uncertainties.
-
-    Args:
-        fit_results (fit.FitResults): fit results, including correlation matrix and
-            parameter labels
-        figure_folder (Union[str, pathlib.Path], optional): path to the folder to save
-            figures in, defaults to "figures"
-        exclude (Optional[Union[str, List[str], Tuple[str, ...]]], optional): parameter
-            or parameters to exclude from plot, defaults to None (nothing excluded)
-        close_figure (bool, optional): whether to close each figure immediately after
-            saving it, defaults to False (enable when producing many figures to avoid
-            memory issues, prevents rendering in notebooks)
-    """
-    figure_path = pathlib.Path(figure_folder) / "pulls.pdf"
-    labels_np = np.asarray(fit_results.labels)
-
-    if exclude is None:
-        exclude_set = set()
-    elif isinstance(exclude, str):
-        exclude_set = {exclude}
-    else:
-        exclude_set = set(exclude)
-
-    # exclude fixed parameters from pull plot
-    exclude_set.update(
-        [
-            label
-            for i_np, label in enumerate(labels_np)
-            if fit_results.uncertainty[i_np] == 0.0
-        ]
-    )
-
-    # exclude staterror parameters from pull plot (they are centered at 1)
-    exclude_set.update([label for label in labels_np if label[0:10] == "staterror_"])
-
-    # filter out user-specified parameters
-    mask = [True if label not in exclude_set else False for label in labels_np]
-    bestfit = fit_results.bestfit[mask]
-    uncertainty = fit_results.uncertainty[mask]
-    labels_np = labels_np[mask]
-
-    plot_result.pulls(
-        bestfit,
-        uncertainty,
-        labels_np,
-        figure_path,
-        close_figure=close_figure,
-    )
-
-
-def ranking(
-    ranking_results: fit.RankingResults,
-    figure_folder: Union[str, pathlib.Path] = "figures",
-    max_pars: Optional[int] = None,
-    close_figure: bool = False,
-) -> None:
-    """Produces a ranking plot showing the impact of parameters on the POI.
-
-    Args:
-        ranking_results (fit.RankingResults): fit results, and pre- and post-fit impacts
-        figure_folder (Union[str, pathlib.Path], optional): path to the folder to save
-            figures in, defaults to "figures"
-        max_pars (Optional[int], optional): number of parameters to include, defaults to
-            None (which means all parameters are included)
-        close_figure (bool, optional): whether to close each figure immediately after
-            saving it, defaults to False (enable when producing many figures to avoid
-            memory issues, prevents rendering in notebooks)
-    """
-    figure_path = pathlib.Path(figure_folder) / "ranking.pdf"
-
-    # sort parameters by decreasing average post-fit impact
-    avg_postfit_impact = (
-        np.abs(ranking_results.postfit_up) + np.abs(ranking_results.postfit_down)
-    ) / 2
-
-    # get indices to sort by decreasing impact
-    sorted_indices = np.argsort(avg_postfit_impact)[::-1]
-    bestfit = ranking_results.bestfit[sorted_indices]
-    uncertainty = ranking_results.uncertainty[sorted_indices]
-    labels = np.asarray(ranking_results.labels)[sorted_indices]  # labels are list
-    prefit_up = ranking_results.prefit_up[sorted_indices]
-    prefit_down = ranking_results.prefit_down[sorted_indices]
-    postfit_up = ranking_results.postfit_up[sorted_indices]
-    postfit_down = ranking_results.postfit_down[sorted_indices]
-
-    if max_pars is not None:
-        # only keep leading parameters in ranking
-        bestfit = bestfit[:max_pars]
-        uncertainty = uncertainty[:max_pars]
-        labels = labels[:max_pars]
-        prefit_up = prefit_up[:max_pars]
-        prefit_down = prefit_down[:max_pars]
-        postfit_up = postfit_up[:max_pars]
-        postfit_down = postfit_down[:max_pars]
-
-    plot_result.ranking(
-        bestfit,
-        uncertainty,
-        labels,
-        prefit_up,
-        prefit_down,
-        postfit_up,
-        postfit_down,
-        figure_path,
-        close_figure=close_figure,
-    )
+        figure_dict_list.append({"figure": fig, "region": channel_name})
+    return figure_dict_list
 
 
 def templates(
     config: Dict[str, Any],
     figure_folder: Union[str, pathlib.Path] = "figures",
     close_figure: bool = False,
-) -> None:
+    save_figure: bool = True,
+) -> List[Dict[str, Any]]:
     """Visualizes template histograms (after post-processing) for systematic variations.
 
     The original template histogram for systematic variations (before post-processing)
@@ -452,12 +320,18 @@ def templates(
         close_figure (bool, optional): whether to close each figure immediately after
             saving it, defaults to False (enable when producing many figures to avoid
             memory issues, prevents rendering in notebooks)
+        save_figure (bool, optional): whether to save figures, defaults to True
+
+    Returns:
+        List[Dict[str, Any]]: list of dictionaries, where each dictionary contains a
+            figure and the associated region / sample / systematic names
     """
     log.info("visualizing systematics templates")
     histogram_folder = pathlib.Path(config["General"]["HistogramFolder"])
     figure_folder = pathlib.Path(figure_folder) / "templates"
 
     # could do this via the route module instead
+    figure_dict_list = []
     for region in config["Regions"]:
         for sample in config["Samples"]:
             if sample.get("Data", False):
@@ -534,9 +408,9 @@ def templates(
                 figure_name = (
                     f"{region['Name']}_{sample['Name']}_{systematic['Name']}.pdf"
                 )
-                figure_path = figure_folder / figure_name
+                figure_path = figure_folder / figure_name if save_figure else None
 
-                plot_model.templates(
+                fig = plot_model.templates(
                     nominal,
                     up_orig,
                     down_orig,
@@ -548,13 +422,207 @@ def templates(
                     label=figure_label,
                     close_figure=close_figure,
                 )
+                figure_dict_list.append(
+                    {
+                        "figure": fig,
+                        "region": region["Name"],
+                        "sample": sample["Name"],
+                        "systematic": systematic["Name"],
+                    }
+                )
+    return figure_dict_list
+
+
+def correlation_matrix(
+    fit_results: fit.FitResults,
+    figure_folder: Union[str, pathlib.Path] = "figures",
+    pruning_threshold: float = 0.0,
+    close_figure: bool = False,
+    save_figure: bool = True,
+) -> mpl.figure.Figure:
+    """Draws a correlation matrix.
+
+    Args:
+        fit_results (fit.FitResults): fit results, including correlation matrix and
+            parameter labels
+        figure_folder (Union[str, pathlib.Path], optional): path to the folder to save
+            figures in, defaults to "figures"
+        pruning_threshold (float, optional): minimum correlation for a parameter to
+            have with any other parameters to not get pruned, defaults to 0.0
+        close_figure (bool, optional): whether to close each figure immediately after
+            saving it, defaults to False (enable when producing many figures to avoid
+            memory issues, prevents rendering in notebooks)
+        save_figure (bool, optional): whether to save figure, defaults to True
+
+    Returns:
+        matplotlib.figure.Figure: the correlation matrix figure
+    """
+    # path is None if figure should not be saved
+    figure_path = (
+        pathlib.Path(figure_folder) / "correlation_matrix.pdf" if save_figure else None
+    )
+
+    # create a matrix that is True if a correlation is below threshold, and True on the
+    # diagonal
+    below_threshold = np.where(
+        np.abs(fit_results.corr_mat) < pruning_threshold, True, False
+    )
+    np.fill_diagonal(below_threshold, True)
+    # get list of booleans specifying if everything in rows/columns is below threshold
+    all_below_threshold = np.all(below_threshold, axis=0)
+    # get list of booleans specifying if rows/columns correspond to fixed parameter
+    # (0 correlations)
+    fixed_parameter = np.all(np.equal(fit_results.corr_mat, 0.0), axis=0)
+    # get indices of rows/columns where everything is below threshold, or the parameter
+    # is fixed
+    delete_indices = np.where(np.logical_or(all_below_threshold, fixed_parameter))
+    # delete rows and columns where all correlations are below threshold / parameter is
+    # fixed
+    corr_mat = np.delete(
+        np.delete(fit_results.corr_mat, delete_indices, axis=1), delete_indices, axis=0
+    )
+    labels = np.delete(fit_results.labels, delete_indices)
+
+    fig = plot_result.correlation_matrix(
+        corr_mat, labels, figure_path, close_figure=close_figure
+    )
+    return fig
+
+
+def pulls(
+    fit_results: fit.FitResults,
+    figure_folder: Union[str, pathlib.Path] = "figures",
+    exclude: Optional[Union[str, List[str], Tuple[str, ...]]] = None,
+    close_figure: bool = False,
+    save_figure: bool = True,
+) -> mpl.figure.Figure:
+    """Draws a pull plot of parameter results and uncertainties.
+
+    Args:
+        fit_results (fit.FitResults): fit results, including correlation matrix and
+            parameter labels
+        figure_folder (Union[str, pathlib.Path], optional): path to the folder to save
+            figures in, defaults to "figures"
+        exclude (Optional[Union[str, List[str], Tuple[str, ...]]], optional): parameter
+            or parameters to exclude from plot, defaults to None (nothing excluded)
+        close_figure (bool, optional): whether to close each figure immediately after
+            saving it, defaults to False (enable when producing many figures to avoid
+            memory issues, prevents rendering in notebooks)
+        save_figure (bool, optional): whether to save figure, defaults to True
+
+    Returns:
+        matplotlib.figure.Figure: the pull figure
+    """
+    # path is None if figure should not be saved
+    figure_path = pathlib.Path(figure_folder) / "pulls.pdf" if save_figure else None
+    labels_np = np.asarray(fit_results.labels)
+
+    if exclude is None:
+        exclude_set = set()
+    elif isinstance(exclude, str):
+        exclude_set = {exclude}
+    else:
+        exclude_set = set(exclude)
+
+    # exclude fixed parameters from pull plot
+    exclude_set.update(
+        [
+            label
+            for i_np, label in enumerate(labels_np)
+            if fit_results.uncertainty[i_np] == 0.0
+        ]
+    )
+
+    # exclude staterror parameters from pull plot (they are centered at 1)
+    exclude_set.update([label for label in labels_np if label[0:10] == "staterror_"])
+
+    # filter out user-specified parameters
+    mask = [True if label not in exclude_set else False for label in labels_np]
+    bestfit = fit_results.bestfit[mask]
+    uncertainty = fit_results.uncertainty[mask]
+    labels_np = labels_np[mask]
+
+    fig = plot_result.pulls(
+        bestfit,
+        uncertainty,
+        labels_np,
+        figure_path,
+        close_figure=close_figure,
+    )
+    return fig
+
+
+def ranking(
+    ranking_results: fit.RankingResults,
+    figure_folder: Union[str, pathlib.Path] = "figures",
+    max_pars: Optional[int] = None,
+    close_figure: bool = False,
+    save_figure: bool = True,
+) -> mpl.figure.Figure:
+    """Produces a ranking plot showing the impact of parameters on the POI.
+
+    Args:
+        ranking_results (fit.RankingResults): fit results, and pre- and post-fit impacts
+        figure_folder (Union[str, pathlib.Path], optional): path to the folder to save
+            figures in, defaults to "figures"
+        max_pars (Optional[int], optional): number of parameters to include, defaults to
+            None (which means all parameters are included)
+        close_figure (bool, optional): whether to close each figure immediately after
+            saving it, defaults to False (enable when producing many figures to avoid
+            memory issues, prevents rendering in notebooks)
+        save_figure (bool, optional): whether to save figure, defaults to True
+
+    Returns:
+        matplotlib.figure.Figure: the ranking figure
+    """
+    # path is None if figure should not be saved
+    figure_path = pathlib.Path(figure_folder) / "ranking.pdf" if save_figure else None
+
+    # sort parameters by decreasing average post-fit impact
+    avg_postfit_impact = (
+        np.abs(ranking_results.postfit_up) + np.abs(ranking_results.postfit_down)
+    ) / 2
+
+    # get indices to sort by decreasing impact
+    sorted_indices = np.argsort(avg_postfit_impact)[::-1]
+    bestfit = ranking_results.bestfit[sorted_indices]
+    uncertainty = ranking_results.uncertainty[sorted_indices]
+    labels = np.asarray(ranking_results.labels)[sorted_indices]  # labels are list
+    prefit_up = ranking_results.prefit_up[sorted_indices]
+    prefit_down = ranking_results.prefit_down[sorted_indices]
+    postfit_up = ranking_results.postfit_up[sorted_indices]
+    postfit_down = ranking_results.postfit_down[sorted_indices]
+
+    if max_pars is not None:
+        # only keep leading parameters in ranking
+        bestfit = bestfit[:max_pars]
+        uncertainty = uncertainty[:max_pars]
+        labels = labels[:max_pars]
+        prefit_up = prefit_up[:max_pars]
+        prefit_down = prefit_down[:max_pars]
+        postfit_up = postfit_up[:max_pars]
+        postfit_down = postfit_down[:max_pars]
+
+    fig = plot_result.ranking(
+        bestfit,
+        uncertainty,
+        labels,
+        prefit_up,
+        prefit_down,
+        postfit_up,
+        postfit_down,
+        figure_path,
+        close_figure=close_figure,
+    )
+    return fig
 
 
 def scan(
     scan_results: fit.ScanResults,
     figure_folder: Union[str, pathlib.Path] = "figures",
     close_figure: bool = False,
-) -> None:
+    save_figure: bool = True,
+) -> mpl.figure.Figure:
     """Visualizes the results of a likelihood scan.
 
     Args:
@@ -564,14 +632,19 @@ def scan(
         close_figure (bool, optional): whether to close each figure immediately after
             saving it, defaults to False (enable when producing many figures to avoid
             memory issues, prevents rendering in notebooks)
+        save_figure (bool, optional): whether to save figure, defaults to True
+
+    Returns:
+        matplotlib.figure.Figure: the likelihood scan figure
     """
     # replace [], needed for staterrors
     figure_name = (
         "scan_" + scan_results.name.replace("[", "_").replace("]", "") + ".pdf"
     )
-    figure_path = pathlib.Path(figure_folder) / figure_name
+    # path is None if figure should not be saved
+    figure_path = pathlib.Path(figure_folder) / figure_name if save_figure else None
 
-    plot_result.scan(
+    fig = plot_result.scan(
         scan_results.name,
         scan_results.bestfit,
         scan_results.uncertainty,
@@ -580,13 +653,15 @@ def scan(
         figure_path,
         close_figure=close_figure,
     )
+    return fig
 
 
 def limit(
     limit_results: fit.LimitResults,
     figure_folder: Union[str, pathlib.Path] = "figures",
     close_figure: bool = False,
-) -> None:
+    save_figure: bool = True,
+) -> mpl.figure.Figure:
     """Visualizes observed and expected CLs values as a function of the POI.
 
     Args:
@@ -596,13 +671,19 @@ def limit(
         close_figure (bool, optional): whether to close each figure immediately after
             saving it, defaults to False (enable when producing many figures to avoid
             memory issues, prevents rendering in notebooks)
-    """
-    figure_path = pathlib.Path(figure_folder) / "limit.pdf"
+        save_figure (bool, optional): whether to save figure, defaults to True
 
-    plot_result.limit(
+    Returns:
+        matplotlib.figure.Figure: the CLs figure
+    """
+    # path is None if figure should not be saved
+    figure_path = pathlib.Path(figure_folder) / "limit.pdf" if save_figure else None
+
+    fig = plot_result.limit(
         limit_results.observed_CLs,
         limit_results.expected_CLs,
         limit_results.poi_values,
         figure_path,
         close_figure=close_figure,
     )
+    return fig

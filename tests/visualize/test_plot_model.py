@@ -1,16 +1,11 @@
 import copy
+from unittest import mock
 
 import matplotlib.pyplot as plt
 from matplotlib.testing.compare import compare_images
 import numpy as np
 
 from cabinetry.visualize import plot_model
-
-
-def test_no_open_figure():
-    # ensure there are no open figures at the start, if this fails then some other part
-    # of the test suite opened a figure without closing it
-    assert len(plt.get_fignums()) == 0
 
 
 def test_data_mc(tmp_path):
@@ -37,7 +32,8 @@ def test_data_mc(tmp_path):
     ]
     total_model_unc = np.sqrt([0.17, 0.29])
     bin_edges = np.asarray([1, 2, 3])
-    plot_model.data_mc(
+
+    fig = plot_model.data_mc(
         histo_dict_list,
         total_model_unc,
         bin_edges,
@@ -46,6 +42,14 @@ def test_data_mc(tmp_path):
     )
     assert (
         compare_images("tests/visualize/reference/data_mc.pdf", str(fname), 0) is None
+    )
+
+    # compare figure returned by function
+    fname_ret = tmp_path / "fig_from_return.pdf"
+    fig.savefig(fname_ret)
+    assert (
+        compare_images("tests/visualize/reference/data_mc.pdf", str(fname_ret), 0)
+        is None
     )
 
     histo_dict_list_log = copy.deepcopy(histo_dict_list)
@@ -82,9 +86,6 @@ def test_data_mc(tmp_path):
         compare_images("tests/visualize/reference/data_mc.pdf", str(fname), 0) is None
     )
 
-    # three open figures, does not change when calling with close_figure
-    assert len(plt.get_fignums()) == 3
-
     # log scale forced
     plot_model.data_mc(
         histo_dict_list_log,
@@ -94,13 +95,23 @@ def test_data_mc(tmp_path):
         log_scale=True,
         log_scale_x=True,
         label="Signal region\npre-fit",
-        close_figure=True,
     )
     assert (
         compare_images("tests/visualize/reference/data_mc_log.pdf", str(fname_log), 0)
         is None
     )
-    assert len(plt.get_fignums()) == 3
+
+    # do not save figure, but close it
+    with mock.patch("cabinetry.visualize.utils._save_and_close") as mock_close_safe:
+        fig = fig = plot_model.data_mc(
+            histo_dict_list_log,
+            total_model_unc_log,
+            bin_edges_log,
+            label="",
+            close_figure=True,
+        )
+        assert mock_close_safe.call_args_list == [[(fig, None, True), {}]]
+
     plt.close("all")
 
 
@@ -130,7 +141,7 @@ def test_templates(tmp_path):
     variable = "x"
     label = "region: Signal region\nsample: Signal\nsystematic: Modeling"
 
-    plot_model.templates(
+    fig = plot_model.templates(
         nominal_histo,
         up_histo_orig,
         down_histo_orig,
@@ -145,21 +156,27 @@ def test_templates(tmp_path):
         compare_images("tests/visualize/reference/templates.pdf", str(fname), 0) is None
     )
 
-    # single open figure, does not change when calling with close_figure
-    assert len(plt.get_fignums()) == 1
-
-    # only single variation specified
-    plot_model.templates(
-        nominal_histo,
-        up_histo_orig,
-        {},
-        up_histo_mod,
-        {},
-        bin_edges,
-        variable,
-        fname,
-        label=label,
-        close_figure=True,
+    # compare figure returned by function
+    fname = tmp_path / "fig_from_return.pdf"
+    fig.savefig(fname)
+    assert (
+        compare_images("tests/visualize/reference/templates.pdf", str(fname), 0) is None
     )
-    assert len(plt.get_fignums()) == 1
+
+    # do not save figure, but close it
+    # only single variation specified
+    with mock.patch("cabinetry.visualize.utils._save_and_close") as mock_close_safe:
+        fig = plot_model.templates(
+            nominal_histo,
+            up_histo_orig,
+            {},
+            up_histo_mod,
+            {},
+            bin_edges,
+            variable,
+            label=label,
+            close_figure=True,
+        )
+        assert mock_close_safe.call_args_list == [[(fig, None, True), {}]]
+
     plt.close("all")
