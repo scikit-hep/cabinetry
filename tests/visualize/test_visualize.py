@@ -54,7 +54,7 @@ def test_data_mc_from_histograms(mock_load, mock_draw, mock_stdev):
 
     fig_dict = visualize.data_mc_from_histograms(config, figure_folder=figure_folder)
     assert len(fig_dict) == 1
-    assert type(fig_dict[0]["figure"]) == matplotlib.figure.Figure
+    assert isinstance(fig_dict[0]["figure"]) == matplotlib.figure.Figure
     assert fig_dict[0]["region"] == "reg_1"
 
     # the call_args_list contains calls (outer round brackets), first filled with
@@ -167,7 +167,7 @@ def test_data_mc(
         model, data, config=config, figure_folder=figure_folder
     )
     assert len(fig_dict) == 1
-    assert type(fig_dict[0]["figure"]) == matplotlib.figure.Figure
+    assert isinstance(fig_dict[0]["figure"]) == matplotlib.figure.Figure
     assert fig_dict[0]["region"] == "Signal Region"
 
     # Asimov parameter calculation and pre-fit uncertainties
@@ -311,7 +311,7 @@ def test_correlation_matrix(mock_draw):
     fig = visualize.correlation_matrix(
         fit_results, figure_folder=folder_path, pruning_threshold=0.15
     )
-    assert type(fig) == matplotlib.figure.Figure
+    assert isinstance(fig) == matplotlib.figure.Figure
 
     mock_draw.assert_called_once()
     assert np.allclose(mock_draw.call_args[0][0], corr_mat_pruned)
@@ -362,7 +362,7 @@ def test_pulls(mock_draw):
 
     # with filtering
     fig = visualize.pulls(fit_results, figure_folder=folder_path, exclude=exclude)
-    assert type(fig) == matplotlib.figure.Figure
+    assert isinstance(fig) == matplotlib.figure.Figure
 
     mock_draw.assert_called_once()
     assert np.allclose(mock_draw.call_args[0][0], filtered_bestfit)
@@ -439,7 +439,7 @@ def test_ranking(mock_draw):
     labels_expected = ["modeling", "staterror_a"]
 
     fig = visualize.ranking(ranking_results, figure_folder=folder_path)
-    assert type(fig) == matplotlib.figure.Figure
+    assert isinstance(fig) == matplotlib.figure.Figure
 
     assert mock_draw.call_count == 1
     assert np.allclose(mock_draw.call_args[0][0], bestfit_expected)
@@ -518,7 +518,7 @@ def test_templates(mock_draw, mock_histo_config, mock_histo_path, tmp_path):
 
     fig_dict = visualize.templates(config, figure_folder=folder_path)
     assert len(fig_dict) == 1
-    assert type(fig_dict[0]["figure"]) == matplotlib.figure.Figure
+    assert isinstance(fig_dict[0]["figure"]) == matplotlib.figure.Figure
     assert fig_dict[0]["region"] == "region"
     assert fig_dict[0]["sample"] == "sample"
     assert fig_dict[0]["systematic"] == "sys"
@@ -596,7 +596,7 @@ def test_scan(mock_draw):
     scan_results = fit.ScanResults(par_name, par_mle, par_unc, par_vals, par_nlls)
 
     fig = visualize.scan(scan_results, figure_folder=folder_path)
-    assert type(fig) == matplotlib.figure.Figure
+    assert isinstance(fig) == matplotlib.figure.Figure
 
     assert mock_draw.call_count == 1
     assert mock_draw.call_args[0][0] == par_name
@@ -630,7 +630,7 @@ def test_limit(mock_draw):
     )
 
     fig = visualize.limit(limit_results, figure_folder=folder_path)
-    assert type(fig) == matplotlib.figure.Figure
+    assert isinstance(fig) == matplotlib.figure.Figure
 
     assert mock_draw.call_count == 1
     assert np.allclose(mock_draw.call_args[0][0], limit_results.observed_CLs)
