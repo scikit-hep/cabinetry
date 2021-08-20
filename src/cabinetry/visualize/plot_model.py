@@ -173,10 +173,7 @@ def data_mc(
         ax1.set_yscale("log")
         ax1.set_ylim([y_min / 10, y_max * 10])
         # add "_log" to the figure name if figure should be saved
-        if figure_path is not None:
-            figure_path = figure_path.with_name(
-                figure_path.stem + "_log" + figure_path.suffix
-            )
+        figure_path = utils._log_figure_path(figure_path)
     else:
         # do not use log scale
         ax1.set_ylim([0, y_max * 1.5])  # 50% headroom

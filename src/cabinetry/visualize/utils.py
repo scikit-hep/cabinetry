@@ -28,3 +28,21 @@ def _save_and_close(
         fig.savefig(path)
     if close_figure:
         plt.close(fig)
+
+
+def _log_figure_path(path: Optional[pathlib.Path]) -> Optional[pathlib.Path]:
+    """Adds a suffix to a figure path to indicate the use of a logarithmic axis.
+
+    If the path is None (since figure should not be saved), it will stay None.
+
+    Args:
+        path (Optional[pathlib.Path]): original path to figure, or None if figure should
+            not be saved
+
+    Returns:
+        Optional[pathlib.Path]: new path to figure including _log suffix, or None if
+            original path is None
+    """
+    if path is not None:
+        return path.with_name(path.stem + "_log" + path.suffix)
+    return None

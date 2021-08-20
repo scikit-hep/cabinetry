@@ -1,3 +1,4 @@
+import pathlib
 from unittest import mock
 
 import matplotlib.pyplot as plt
@@ -20,3 +21,12 @@ def test__save_and_close(tmp_path):
     fig = mock.MagicMock()
     utils._save_and_close(fig, None, True)
     assert not fig.savefig.called  # no path provided, so figure was not saved
+
+
+def test__log_figure_path():
+    path = pathlib.Path("path/to_file.pdf")
+    assert utils._log_figure_path(path) == pathlib.Path("path/to_file_log.pdf")
+
+    # input is None
+    path = None
+    assert utils._log_figure_path(path) is None
