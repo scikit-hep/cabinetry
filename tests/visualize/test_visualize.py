@@ -52,10 +52,12 @@ def test_data_mc_from_histograms(mock_load, mock_draw, mock_stdev):
     figure_folder = pathlib.Path("tmp")
     histogram_folder = pathlib.Path("tmp_hist")
 
-    fig_dict = visualize.data_mc_from_histograms(config, figure_folder=figure_folder)
-    assert len(fig_dict) == 1
-    assert isinstance(fig_dict[0]["figure"], matplotlib.figure.Figure)
-    assert fig_dict[0]["region"] == "reg_1"
+    fig_dict_list = visualize.data_mc_from_histograms(
+        config, figure_folder=figure_folder
+    )
+    assert len(fig_dict_list) == 1
+    assert isinstance(fig_dict_list[0]["figure"], matplotlib.figure.Figure)
+    assert fig_dict_list[0]["region"] == "reg_1"
 
     # the call_args_list contains calls (outer round brackets), first filled with
     # arguments (inner round brackets) and then keyword arguments
@@ -163,12 +165,12 @@ def test_data_mc(
     model, data = model_utils.model_and_data(example_spec)
 
     # pre-fit plot
-    fig_dict = visualize.data_mc(
+    fig_dict_list = visualize.data_mc(
         model, data, config=config, figure_folder=figure_folder
     )
-    assert len(fig_dict) == 1
-    assert isinstance(fig_dict[0]["figure"], matplotlib.figure.Figure)
-    assert fig_dict[0]["region"] == "Signal Region"
+    assert len(fig_dict_list) == 1
+    assert isinstance(fig_dict_list[0]["figure"], matplotlib.figure.Figure)
+    assert fig_dict_list[0]["region"] == "Signal Region"
 
     # Asimov parameter calculation and pre-fit uncertainties
     assert mock_stdev.call_count == 1
@@ -516,12 +518,12 @@ def test_templates(mock_draw, mock_histo_config, mock_histo_path, tmp_path):
     # also add a file that matches pattern but is not needed
     (tmp_path / "region_sample_sys_unknown_modified.npz").touch()
 
-    fig_dict = visualize.templates(config, figure_folder=folder_path)
-    assert len(fig_dict) == 1
-    assert isinstance(fig_dict[0]["figure"], matplotlib.figure.Figure)
-    assert fig_dict[0]["region"] == "region"
-    assert fig_dict[0]["sample"] == "sample"
-    assert fig_dict[0]["systematic"] == "sys"
+    fig_dict_list = visualize.templates(config, figure_folder=folder_path)
+    assert len(fig_dict_list) == 1
+    assert isinstance(fig_dict_list[0]["figure"], matplotlib.figure.Figure)
+    assert fig_dict_list[0]["region"] == "region"
+    assert fig_dict_list[0]["sample"] == "sample"
+    assert fig_dict_list[0]["systematic"] == "sys"
 
     # nominal histogram loading
     assert mock_histo_config.call_args_list == [[(tmp_path, region, sample, {}), {}]]

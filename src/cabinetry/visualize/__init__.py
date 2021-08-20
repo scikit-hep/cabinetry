@@ -86,7 +86,7 @@ def data_mc_from_histograms(
     """
     log.info("visualizing histogram")
     histogram_folder = pathlib.Path(config["General"]["HistogramFolder"])
-    figure_list = []
+    figure_dict_list = []
     for region in config["Regions"]:
         histogram_dict_list = []
         model_stdevs = []
@@ -125,8 +125,8 @@ def data_mc_from_histograms(
             label=label,
             close_figure=close_figure,
         )
-        figure_list.append({"figure": fig, "region": region["Name"]})
-    return figure_list
+        figure_dict_list.append({"figure": fig, "region": region["Name"]})
+    return figure_dict_list
 
 
 def data_mc(
@@ -238,7 +238,7 @@ def data_mc(
         )
 
     # process channel by channel
-    figure_list = []
+    figure_dict_list = []
     for i_chan, channel_name in enumerate(model.config.channels):
         histogram_dict_list = []  # one dict per region/channel
 
@@ -298,8 +298,8 @@ def data_mc(
             label=label,
             close_figure=close_figure,
         )
-        figure_list.append({"figure": fig, "region": channel_name})
-    return figure_list
+        figure_dict_list.append({"figure": fig, "region": channel_name})
+    return figure_dict_list
 
 
 def correlation_matrix(
@@ -515,7 +515,7 @@ def templates(
     figure_folder = pathlib.Path(figure_folder) / "templates"
 
     # could do this via the route module instead
-    figure_list = []
+    figure_dict_list = []
     for region in config["Regions"]:
         for sample in config["Samples"]:
             if sample.get("Data", False):
@@ -606,7 +606,7 @@ def templates(
                     label=figure_label,
                     close_figure=close_figure,
                 )
-                figure_list.append(
+                figure_dict_list.append(
                     {
                         "figure": fig,
                         "region": region["Name"],
@@ -614,7 +614,7 @@ def templates(
                         "systematic": systematic["Name"],
                     }
                 )
-    return figure_list
+    return figure_dict_list
 
 
 def scan(
