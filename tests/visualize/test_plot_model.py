@@ -104,9 +104,9 @@ def test_data_mc(tmp_path):
     # do not save figure, but close it
     with mock.patch("cabinetry.visualize.utils._save_and_close") as mock_close_safe:
         fig = fig = plot_model.data_mc(
-            histo_dict_list,
-            total_model_unc,
-            bin_edges,
+            histo_dict_list_log,
+            total_model_unc_log,
+            bin_edges_log,
             label="",
             close_figure=True,
         )
