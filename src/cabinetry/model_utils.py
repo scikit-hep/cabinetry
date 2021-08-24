@@ -9,6 +9,10 @@ import pyhf
 log = logging.getLogger(__name__)
 
 
+# cache holding results from yield uncertainty calculations
+_YIELD_STDEV_CACHE: Dict[Any, Tuple[List[List[float]], List[float]]] = {}
+
+
 def model_and_data(
     spec: Dict[str, Any], asimov: bool = False, with_aux: bool = True
 ) -> Tuple[pyhf.pdf.Model, List[float]]:
@@ -179,7 +183,8 @@ def yield_stdev(
     Returns both the uncertainties per bin (in a list of channels), and the uncertainty
     of the total yield per channel (again, for a list of channels). To calculate the
     uncertainties for the total yield, the function internally treats the sum of yields
-    per channel like another channel with one bin.
+    per channel like another channel with one bin. The results of this function are
+    cached to speed up subsequent calls with the same arguments.
 
     Args:
         model (pyhf.pdf.Model): the model for which to calculate the standard deviations
@@ -193,6 +198,14 @@ def yield_stdev(
             - list of channels, each channel is a list of standard deviations per bin
             - list of standard deviations per channel
     """
+    # check whether results are already stored in cache
+    cached_results = _YIELD_STDEV_CACHE.get(
+        (model, tuple(parameters), tuple(uncertainty), corr_mat.data.tobytes()), None
+    )
+    if cached_results is not None:
+        # return results from cache
+        return cached_results
+
     # indices where to split to separate all bins into regions
     region_split_indices = _channel_boundary_indices(model)
 
@@ -277,7 +290,22 @@ def yield_stdev(
     total_stdev_per_channel = ak.flatten(np.sqrt(total_variance[n_channels:]))
     log.debug(f"total stdev is {total_stdev_per_bin}")
     log.debug(f"total stdev per channel is {total_stdev_per_channel}")
-    return ak.to_list(total_stdev_per_bin), ak.to_list(total_stdev_per_channel)
+
+    # convert to lists
+    total_stdev_per_bin = ak.to_list(total_stdev_per_bin)
+    total_stdev_per_channel = ak.to_list(total_stdev_per_channel)
+
+    # save to cache
+    _YIELD_STDEV_CACHE.update(
+        {
+            (model, tuple(parameters), tuple(uncertainty), corr_mat.data.tobytes()): (
+                total_stdev_per_bin,
+                total_stdev_per_channel,
+            )
+        }
+    )
+
+    return total_stdev_per_bin, total_stdev_per_channel
 
 
 def unconstrained_parameter_count(model: pyhf.pdf.Model) -> int:
