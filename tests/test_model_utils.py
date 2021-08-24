@@ -180,6 +180,21 @@ def test_yield_stdev(example_spec, example_spec_multibin):
         assert np.allclose(total_stdev_bin[i_reg], expected_stdev_bin[i_reg])
         assert np.allclose(total_stdev_chan[i_reg], expected_stdev_chan[i_reg])
 
+    # test caching by calling again with same arguments
+    total_stdev_bin, total_stdev_chan = model_utils.yield_stdev(
+        model, parameters, uncertainty, corr_mat
+    )
+    for i_reg in range(2):
+        assert np.allclose(total_stdev_bin[i_reg], expected_stdev_bin[i_reg])
+        assert np.allclose(total_stdev_chan[i_reg], expected_stdev_chan[i_reg])
+    # also look up cache directly
+    from_cache = model_utils._YIELD_STDEV_CACHE[
+        model, tuple(parameters), tuple(uncertainty), corr_mat.tobytes()
+    ]
+    for i_reg in range(2):
+        assert np.allclose(from_cache[0][i_reg], expected_stdev_bin[i_reg])
+        assert np.allclose(from_cache[1][i_reg], expected_stdev_chan[i_reg])
+
 
 def test_unconstrained_parameter_count(example_spec, example_spec_shapefactor):
     model = pyhf.Workspace(example_spec).model()
