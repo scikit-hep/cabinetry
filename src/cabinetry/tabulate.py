@@ -57,10 +57,13 @@ def _yields_per_bin(
     table = []  # table containing all yields
     headers = {}  # headers with nicer formatting for output
 
+    # indices of included channels
+    channel_indices = [model.config.channels.index(ch) for ch in channels]
+
     # rows for each individual sample
     for i_sam, sample_name in enumerate(model.config.samples):
         sample_dict = {"sample": sample_name}  # one dict per sample
-        for i_chan, channel_name in enumerate(channels):
+        for i_chan, channel_name in zip(channel_indices, channels):
             for i_bin in range(model.config.channel_nbins[channel_name]):
                 sample_dict.update(
                     {
@@ -74,7 +77,7 @@ def _yields_per_bin(
     # dicts for total model prediction and data
     total_dict = {"sample": "total"}
     data_dict = {"sample": "data"}
-    for i_chan, channel_name in enumerate(channels):
+    for i_chan, channel_name in zip(channel_indices, channels):
         total_model = np.sum(model_yields[i_chan], axis=0)  # sum over samples
         for i_bin in range(model.config.channel_nbins[channel_name]):
             header_name = _header_name(channel_name, i_bin)
@@ -122,17 +125,20 @@ def _yields_per_channel(
     """
     table = []  # table containing all yields
 
+    # indices of included channels
+    channel_indices = [model.config.channels.index(ch) for ch in channels]
+
     # rows for each individual sample
     for i_sam, sample_name in enumerate(model.config.samples):
         sample_dict = {"sample": sample_name}  # one dict per sample
-        for i_chan, channel_name in enumerate(channels):
+        for i_chan, channel_name in zip(channel_indices, channels):
             sample_dict.update({channel_name: f"{model_yields[i_chan][i_sam]:.2f}"})
         table.append(sample_dict)
 
     # dicts for total model prediction and data
     total_dict = {"sample": "total"}
     data_dict = {"sample": "data"}
-    for i_chan, channel_name in enumerate(channels):
+    for i_chan, channel_name in zip(channel_indices, channels):
         total_model = np.sum(model_yields[i_chan], axis=0)  # sum over samples
         total_dict.update(
             {
@@ -171,7 +177,7 @@ def yields(
             table
         data (List[float]): data to include in table, can either include auxdata (the
             auxdata is then stripped internally) or only observed yields
-        channels (Optional[Union[str, List[str]]], optional): name of channels to show,
+        channels (Optional[Union[str, List[str]]], optional): name of channel to show,
             or list of names to include, defaults to None (uses all channels)
         per_bin (bool, optional): whether to show a table with yields per bin, defaults
             to True
