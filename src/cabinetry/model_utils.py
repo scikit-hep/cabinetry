@@ -337,7 +337,7 @@ def prediction(
     fit_results: Optional[FitResults] = None,
     label: Optional[str] = None,
 ) -> ModelPrediction:
-    """Returns model prediction object, including model yields and uncertainties.
+    """Returns model prediction, including model yields and uncertainties.
 
     If the optional fit result is not provided, the pre-fit Asimov yields and
     uncertainties are calculated. If the fit result is provided, the best-fit parameter
