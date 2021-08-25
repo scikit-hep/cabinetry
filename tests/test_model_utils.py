@@ -1,10 +1,28 @@
 import copy
 import logging
+from unittest import mock
 
 import numpy as np
 import pyhf
 
 from cabinetry import model_utils
+from cabinetry.fit.results_containers import FitResults
+
+
+def test_ModelPrediction(example_spec):
+    model = pyhf.Workspace(example_spec).model()
+    model_yields = [[[10.0]]]
+    total_stdev_model_bins = [[2.0]]
+    total_stdev_model_channels = [2.0]
+    label = "abc"
+    model_prediction = model_utils.ModelPrediction(
+        model, model_yields, total_stdev_model_bins, total_stdev_model_channels, label
+    )
+    assert model_prediction.model == model
+    assert model_prediction.model_yields == model_yields
+    assert model_prediction.total_stdev_model_bins == total_stdev_model_bins
+    assert model_prediction.total_stdev_model_channels == total_stdev_model_channels
+    assert model_prediction.label == label
 
 
 def test_model_and_data(example_spec):
@@ -196,6 +214,73 @@ def test_yield_stdev(example_spec, example_spec_multibin):
         assert np.allclose(from_cache[1][i_reg], expected_stdev_chan[i_reg])
 
 
+@mock.patch("cabinetry.model_utils.yield_stdev", return_value=([[0.3]], [0.3]))
+@mock.patch(
+    "cabinetry.model_utils.prefit_uncertainties",
+    return_value=([0.04956657, 0.0]),
+)
+@mock.patch(
+    "cabinetry.model_utils.asimov_parameters",
+    return_value=([1.0, 1.0]),
+)
+def test_prediction(mock_asimov, mock_unc, mock_stdev, example_spec):
+    model = pyhf.Workspace(example_spec).model()
+
+    # pre-fit prediction
+    model_pred = model_utils.prediction(model)
+    assert model_pred.model == model
+    assert model_pred.model_yields == [[[51.8]]]  # from pyhf expected_data call
+    assert model_pred.total_stdev_model_bins == [[0.3]]  # from mock
+    assert model_pred.total_stdev_model_channels == [0.3]  # from mock
+    assert model_pred.label == "pre-fit"
+
+    # Asimov parameter calculation and pre-fit uncertainties
+    assert mock_asimov.call_args_list == [((model,), {})]
+    assert mock_unc.call_args_list == [((model,), {})]
+
+    # call to stdev calculation
+    assert mock_stdev.call_count == 1
+    assert mock_stdev.call_args_list[0][0][0] == model
+    assert np.allclose(mock_stdev.call_args_list[0][0][1], [1.0, 1.0])
+    assert np.allclose(mock_stdev.call_args_list[0][0][2], [0.04956657, 0.0])
+    assert np.allclose(
+        mock_stdev.call_args_list[0][0][3], np.asarray([[1.0, 0.0], [0.0, 1.0]])
+    )
+    assert mock_stdev.call_args_list[0][1] == {}
+
+    # post-fit prediction
+    fit_results = FitResults(
+        np.asarray([1.01, 1.1]),
+        np.asarray([0.03, 0.1]),
+        [],
+        np.asarray([[1.0, 0.2], [0.2, 1.0]]),
+        0.0,
+    )
+    model_pred = model_utils.prediction(model, fit_results=fit_results)
+    assert model_pred.model == model
+    assert np.allclose(model_pred.model_yields, [[[57.54980000]]])  # new par value
+    assert model_pred.total_stdev_model_bins == [[0.3]]  # from mock
+    assert model_pred.total_stdev_model_channels == [0.3]  # from mock
+    assert model_pred.label == "post-fit"
+
+    assert mock_asimov.call_count == 1  # no new call
+    assert mock_unc.call_count == 1  # no new call
+
+    # call to stdev calculation with fit_results propagated
+    assert mock_stdev.call_count == 2
+    assert mock_stdev.call_args_list[1][0][0] == model
+    assert np.allclose(mock_stdev.call_args_list[1][0][1], [1.01, 1.1])
+    assert np.allclose(mock_stdev.call_args_list[1][0][2], [0.03, 0.1])
+    assert np.allclose(
+        mock_stdev.call_args_list[1][0][3], np.asarray([[1.0, 0.2], [0.2, 1.0]])
+    )
+    assert mock_stdev.call_args_list[1][1] == {}
+
+    # custom label
+    model_pred = model_utils.prediction(model, label="abc")
+    assert model_pred.label == "abc"
+
+
 def test_unconstrained_parameter_count(example_spec, example_spec_shapefactor):
     model = pyhf.Workspace(example_spec).model()
     assert model_utils.unconstrained_parameter_count(model) == 1
@@ -221,4 +306,49 @@ def test__parameter_index(caplog):
 
     assert model_utils._parameter_index("x", labels) == -1
     assert "parameter x not found in model" in [rec.message for rec in caplog.records]
+    caplog.clear()
+
+
+def test__strip_auxdata(example_spec):
+    model = pyhf.Workspace(example_spec).model()
+    data_with_aux = list(model.expected_data([1.0, 1.0], include_auxdata=True))
+    data_without_aux = list(model.expected_data([1.0, 1.0], include_auxdata=False))
+
+    assert model_utils._strip_auxdata(model, data_with_aux) == [51.8]
+    assert model_utils._strip_auxdata(model, data_without_aux) == [51.8]
+
+
+@mock.patch("cabinetry.model_utils._channel_boundary_indices", return_value=[2])
+@mock.patch("cabinetry.model_utils._strip_auxdata", return_value=[25.0, 5.0, 8.0])
+def test__data_per_channel(mock_aux, mock_bin, example_spec_multibin):
+    model = pyhf.Workspace(example_spec_multibin).model()
+    data = [25.0, 5.0, 8.0, 1.0, 1.0, 1.0]
+
+    data_per_ch = model_utils._data_per_channel(model, [25.0, 5.0, 8.0, 1.0, 1.0, 1.0])
+    assert data_per_ch == [[25.0, 5.0], [8.0]]  # auxdata stripped and split by channel
+
+    # auxdata and channel index call
+    assert mock_aux.call_args_list == [[(model, data), {}]]
+    assert mock_bin.call_args_list == [[(model,), {}]]
+
+
+def test__filter_channels(example_spec_multibin, caplog):
+    caplog.set_level(logging.DEBUG)
+    model = pyhf.Workspace(example_spec_multibin).model()
+
+    assert model_utils._filter_channels(model, None) == ["region_1", "region_2"]
+    assert model_utils._filter_channels(model, "region_1") == ["region_1"]
+    assert model_utils._filter_channels(model, ["region_1", "region_2"]) == [
+        "region_1",
+        "region_2",
+    ]
+    assert model_utils._filter_channels(model, ["region_1", "abc"]) == ["region_1"]
+    caplog.clear()
+
+    # no matching channels
+    assert model_utils._filter_channels(model, "abc") == []
+    assert (
+        "channel(s) ['abc'] not found in model, available channel(s): "
+        "['region_1', 'region_2']" in [rec.message for rec in caplog.records]
+    )
     caplog.clear()

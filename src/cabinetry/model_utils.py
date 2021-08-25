@@ -1,9 +1,12 @@
 import logging
-from typing import Any, Dict, List, Tuple, Union
+from typing import Any, Dict, List, NamedTuple, Optional, Tuple, Union
 
 import awkward as ak
 import numpy as np
 import pyhf
+
+from cabinetry import configuration
+from cabinetry.fit.results_containers import FitResults
 
 
 log = logging.getLogger(__name__)
@@ -11,6 +14,27 @@ log = logging.getLogger(__name__)
 
 # cache holding results from yield uncertainty calculations
 _YIELD_STDEV_CACHE: Dict[Any, Tuple[List[List[float]], List[float]]] = {}
+
+
+class ModelPrediction(NamedTuple):
+    """Model prediction with yields and total uncertainties per bin and channel.
+
+    Args:
+        model (pyhf.pdf.Model): model to which prediction corresponds to
+        model_yields (List[List[List[float]]]): yields per sample, channel and bin,
+            indices: channel, sample, bin
+        total_stdev_model_bins (List[List[float]]): total yield uncertainty per channel
+            and per bin, indices: channel, bin
+        total_stdev_model_channels (List[float]): total yield uncertainty per channel,
+            index: channel
+        label (str): label for the prediction, e.g. "pre-fit" or "post-fit"
+    """
+
+    model: pyhf.pdf.Model
+    model_yields: List[List[List[float]]]
+    total_stdev_model_bins: List[List[float]]
+    total_stdev_model_channels: List[float]
+    label: str
 
 
 def model_and_data(
@@ -308,6 +332,68 @@ def yield_stdev(
     return total_stdev_per_bin, total_stdev_per_channel
 
 
+def prediction(
+    model: pyhf.pdf.Model,
+    fit_results: Optional[FitResults] = None,
+    label: Optional[str] = None,
+) -> ModelPrediction:
+    """Returns model prediction, including model yields and uncertainties.
+
+    If the optional fit result is not provided, the pre-fit Asimov yields and
+    uncertainties are calculated. If the fit result is provided, the best-fit parameter
+    values, uncertainties, and the parameter correlations are used to obtain the post-
+    fit model and its associated uncertainties.
+
+    Args:
+        model (pyhf.pdf.Model): model to evaluate yield prediction for
+        fit_results (Optional[FitResults], optional): parameter configuration to use,
+            includes best-fit settings and uncertainties, as well as correlation matrix,
+            defaults to None (then the pre-fit configuration is used)
+        label (Optional[str], optional): label to include in model prediction, defaults
+            to None (then will use "pre-fit" if fit results are not included, and "post-
+            fit" otherwise)
+
+    Returns:
+        ModelPrediction: model, yields and uncertainties per bin and channel
+    """
+    if fit_results is not None:
+        # fit results specified, so they are used
+        param_values = fit_results.bestfit
+        param_uncertainty = fit_results.uncertainty
+        corr_mat = fit_results.corr_mat
+        label = "post-fit" if label is None else label
+
+    else:
+        # no fit results specified, generate pre-fit parameter values, uncertainties,
+        # and diagonal correlation matrix
+        param_values = asimov_parameters(model)
+        param_uncertainty = prefit_uncertainties(model)
+        corr_mat = np.zeros(shape=(len(param_values), len(param_values)))
+        np.fill_diagonal(corr_mat, 1.0)
+        label = "pre-fit" if label is None else label
+
+    yields_combined = pyhf.tensorlib.to_numpy(
+        model.main_model.expected_data(param_values, return_by_sample=True)
+    )  # all channels concatenated
+
+    # slice the yields into list of lists (of lists) where first index is channel,
+    # second index is sample (and third index is bin)
+    region_split_indices = _channel_boundary_indices(model)
+    model_yields = [
+        m.tolist() for m in np.split(yields_combined, region_split_indices, axis=1)
+    ]
+
+    # calculate the total standard deviation of the model prediction
+    # indices: channel (and bin) for per-bin uncertainties, channel for per-channel
+    total_stdev_model_bins, total_stdev_model_channels = yield_stdev(
+        model, param_values, param_uncertainty, corr_mat
+    )
+
+    return ModelPrediction(
+        model, model_yields, total_stdev_model_bins, total_stdev_model_channels, label
+    )
+
+
 def unconstrained_parameter_count(model: pyhf.pdf.Model) -> int:
     """Returns the number of unconstrained parameters in a model.
 
@@ -350,3 +436,72 @@ def _parameter_index(par_name: str, labels: Union[List[str], Tuple[str, ...]]) -
     if par_index == -1:
         log.error(f"parameter {par_name} not found in model")
     return par_index
+
+
+def _strip_auxdata(model: pyhf.pdf.Model, data: List[float]) -> List[float]:
+    """Always returns observed yields, no matter whether data includes auxdata.
+
+    Args:
+        model (pyhf.pdf.Model): model to which data corresponds to
+        data (List[float]): data, either including auxdata which is then stripped off or
+            only observed yields
+
+    Returns:
+        List[float]: observed data yields
+    """
+
+    n_bins_total = sum(model.config.channel_nbins.values())
+    if len(data) != n_bins_total:
+        # strip auxdata, only observed yields are needed
+        data = data[:n_bins_total]
+    return data
+
+
+def _data_per_channel(model: pyhf.pdf.Model, data: List[float]) -> List[List[float]]:
+    """Returns data split per channel, and strips off auxiliary data if included.
+
+    Args:
+        model (pyhf.pdf.Model): model to which data corresponds to
+        data (List[float]): data (not split by channel), can either include auxdata
+            which is then stripped off, or only observed yields
+
+    Returns:
+        List[List[float]]: data per channel and per bin
+    """
+    # strip off auxiliary data
+    data_combined = _strip_auxdata(model, data)
+    channel_split_indices = _channel_boundary_indices(model)
+    # data is indexed by channel (and bin)
+    data_yields = [d.tolist() for d in np.split(data_combined, channel_split_indices)]
+    return data_yields
+
+
+def _filter_channels(
+    model: pyhf.pdf.Model, channels: Optional[Union[str, List[str]]]
+) -> List[str]:
+    """Returns a list of channels in a model after applying filtering.
+
+    Args:
+        model (pyhf.pdf.Model): model from which to extract channels
+        channels (Optional[Union[str, List[str]]]): name of channel or list of channels
+            to filter, only including those channels provided via this argument in the
+            return of the function
+
+    Returns:
+        List[str]: list of channels after filtering
+    """
+    # channels included in model
+    filtered_channels = model.config.channels
+    # if one or more custom channels are provided, only include those
+    if channels is not None:
+        channels = configuration._setting_to_list(channels)
+        # only include if channel exists in model
+        filtered_channels = [ch for ch in channels if ch in model.config.channels]
+
+    if filtered_channels == []:
+        log.warning(
+            f"channel(s) {channels} not found in model, available channel(s): "
+            f"{model.config.channels}"
+        )
+
+    return filtered_channels

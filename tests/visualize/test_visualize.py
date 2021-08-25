@@ -4,6 +4,7 @@ from unittest import mock
 
 import matplotlib.figure
 import numpy as np
+import pyhf
 import pytest
 
 from cabinetry import fit
@@ -17,10 +18,10 @@ MockHistogram = namedtuple("MockHistogram", ["bins", "yields", "stdev"])
 @pytest.mark.parametrize(
     "test_input, expected",
     [
-        (("SR", True), "SR_prefit.pdf"),
-        (("SR", False), "SR_postfit.pdf"),
-        (("SR 1", True), "SR-1_prefit.pdf"),
-        (("SR 1", False), "SR-1_postfit.pdf"),
+        (("SR", "pre-fit"), "SR_prefit.pdf"),
+        (("SR", "post-fit"), "SR_postfit.pdf"),
+        (("SR 1", "prefit"), "SR-1_prefit.pdf"),
+        (("SR 1", "postfit"), "SR-1_postfit.pdf"),
     ],
 )
 def test__figure_name(test_input, expected):
@@ -138,23 +139,14 @@ def test_data_mc_from_histograms(mock_load, mock_draw, mock_stdev):
     "cabinetry.configuration.region_dict",
     return_value={"Name": "region", "Variable": "x"},
 )
-@mock.patch("cabinetry.tabulate._yields_per_channel")
-@mock.patch("cabinetry.tabulate._yields_per_bin")
-@mock.patch("cabinetry.model_utils.yield_stdev", return_value=([[0.3]], [0.3]))
 @mock.patch(
-    "cabinetry.model_utils.prefit_uncertainties",
-    return_value=([0.04956657, 0.0]),
+    "cabinetry.model_utils._filter_channels",
+    side_effect=[["Signal Region"], ["Signal Region"], ["Signal Region"], []],
 )
-@mock.patch(
-    "cabinetry.model_utils.asimov_parameters",
-    return_value=([1.0, 1.0]),
-)
+@mock.patch("cabinetry.model_utils._data_per_channel", return_value=[[12.0]])
 def test_data_mc(
-    mock_asimov,
-    mock_unc,
-    mock_stdev,
-    mock_table_bin,
-    mock_table_channel,
+    mock_data,
+    mock_filter,
     mock_dict,
     mock_bins,
     mock_draw,
@@ -162,48 +154,22 @@ def test_data_mc(
 ):
     config = {"config": "abc"}
     figure_folder = "tmp"
-    model, data = model_utils.model_and_data(example_spec)
+    model = pyhf.Workspace(example_spec).model()
+    model_pred = model_utils.ModelPrediction(
+        model, [[[10.0]]], [[0.3]], [0.3], "pre-fit"
+    )
+    data = [12.0, 1.0]
 
     # pre-fit plot
     fig_dict_list = visualize.data_mc(
-        model, data, config=config, figure_folder=figure_folder
+        model_pred, data, config=config, figure_folder=figure_folder
     )
     assert len(fig_dict_list) == 1
     assert isinstance(fig_dict_list[0]["figure"], matplotlib.figure.Figure)
     assert fig_dict_list[0]["region"] == "Signal Region"
 
-    # Asimov parameter calculation and pre-fit uncertainties
-    assert mock_stdev.call_count == 1
-    assert mock_asimov.call_args_list[0][0][0] == model
-    assert mock_unc.call_count == 1
-    assert mock_unc.call_args_list[0][0][0] == model
-
-    # call to stdev calculation
-    assert mock_stdev.call_count == 1
-    assert mock_stdev.call_args_list[0][0][0] == model
-    assert np.allclose(mock_stdev.call_args_list[0][0][1], [1.0, 1.0])
-    assert np.allclose(mock_stdev.call_args_list[0][0][2], [0.04956657, 0.0])
-    assert np.allclose(
-        mock_stdev.call_args_list[0][0][3], np.asarray([[1.0, 0.0], [0.0, 1.0]])
-    )
-    assert mock_stdev.call_args_list[0][1] == {}
-
-    # yield table per bin
-    assert mock_table_bin.call_count == 1
-    assert mock_table_bin.call_args_list[0][0][0] == model
-    assert mock_table_bin.call_args_list[0][0][1] == [[[51.8]]]
-    assert mock_table_bin.call_args_list[0][0][2] == [[0.3]]
-    assert mock_table_bin.call_args_list[0][0][3] == [[data[0]]]
-    assert mock_table_bin.call_args_list[0][1] == {}
-
-    # yield table per channel
-    assert mock_table_channel.call_count == 1
-    assert mock_table_channel.call_args_list[0][0][0] == model
-    assert mock_table_channel.call_args_list[0][0][1] == [[51.8]]
-    assert mock_table_channel.call_args_list[0][0][2] == [0.3]
-    assert mock_table_channel.call_args_list[0][0][3] == [data[0]]
-    assert mock_table_channel.call_args_list[0][1] == {}
-
+    assert mock_data.call_args_list == [[(model, data), {}]]
+    assert mock_filter.call_args_list == [[(model, None), {}]]
     assert mock_dict.call_args_list == [[(config, "Signal Region"), {}]]
     assert mock_bins.call_args_list == [[({"Name": "region", "Variable": "x"},), {}]]
 
@@ -211,13 +177,13 @@ def test_data_mc(
         {
             "label": "Signal",
             "isData": False,
-            "yields": np.asarray([51.8]),
+            "yields": np.asarray([10.0]),
             "variable": "x",
         },
         {
             "label": "Data",
             "isData": True,
-            "yields": np.asarray(data[:1]),
+            "yields": np.asarray([12.0]),
             "variable": "x",
         },
     ]
@@ -235,44 +201,27 @@ def test_data_mc(
         "close_figure": False,
     }
 
-    # post-fit plot, custom scale, close figure
-    fit_results = fit.FitResults(
-        np.asarray([1.01, 1.1]),
-        np.asarray([0.03, 0.1]),
-        [],
-        np.asarray([[1.0, 0.2], [0.2, 1.0]]),
-        0.0,
+    # post-fit plot (different label in model prediction), custom scale, close figure,
+    # do not save figure
+    model_pred = model_utils.ModelPrediction(
+        model, [[[11.0]]], [[0.2]], [0.2], "post-fit"
     )
     _ = visualize.data_mc(
-        model,
+        model_pred,
         data,
         config=config,
         figure_folder=figure_folder,
-        fit_results=fit_results,
         log_scale=False,
         close_figure=True,
+        save_figure=False,
     )
-
-    assert mock_asimov.call_count == 1  # no new call
-
-    # call to stdev calculation
-    assert mock_stdev.call_count == 2
-    assert mock_stdev.call_args_list[1][0][0] == model
-    assert np.allclose(mock_stdev.call_args_list[1][0][1], [1.01, 1.1])
-    assert np.allclose(mock_stdev.call_args_list[1][0][2], [0.03, 0.1])
-    assert np.allclose(
-        mock_stdev.call_args_list[1][0][3], np.asarray([[1.0, 0.2], [0.2, 1.0]])
-    )
-    assert mock_stdev.call_args_list[1][1] == {}
 
     assert mock_draw.call_count == 2
     # yield at best-fit point is different from pre-fit
-    assert np.allclose(mock_draw.call_args_list[1][0][0][0]["yields"], 57.54980000)
-    assert np.allclose(mock_draw.call_args_list[1][0][1], np.asarray([0.3]))
+    assert np.allclose(mock_draw.call_args_list[1][0][0][0]["yields"], 11.0)
+    assert np.allclose(mock_draw.call_args_list[1][0][1], np.asarray([0.2]))
     np.testing.assert_equal(mock_draw.call_args_list[1][0][2], np.asarray([1, 2]))
-    assert mock_draw.call_args_list[1][0][3] == pathlib.Path(
-        "tmp/Signal-Region_postfit.pdf"
-    )
+    assert mock_draw.call_args_list[1][0][3] is None  # figure not saved
     assert mock_draw.call_args_list[1][1] == {
         "log_scale": False,
         "log_scale_x": False,
@@ -280,20 +229,17 @@ def test_data_mc(
         "close_figure": True,
     }
 
-    # no yield table, do not save figure
-    _ = visualize.data_mc(
-        model, data, config=config, include_table=False, save_figure=False
-    )
-    assert mock_table_bin.call_count == 2  # 2 calls from before
-    assert mock_table_channel.call_count == 2
-    assert mock_draw.call_args[0][3] is None
-
-    # no config specified, default variable name and bin edges, data without auxdata
-    _ = visualize.data_mc(model, data[:1])
+    # no config specified, default variable name and bin edges
+    _ = visualize.data_mc(model_pred, data)
     assert mock_draw.call_args[0][0][0]["variable"] == "bin"
     assert mock_draw.call_args[0][0][1]["variable"] == "bin"
     assert mock_draw.call_args[0][0][1]["yields"] == np.asarray(data[:1])
     np.testing.assert_equal(mock_draw.call_args[0][2], np.asarray([0, 1]))
+
+    # no matching channels (via side_effect)
+    assert visualize.data_mc(model_pred, data, channels="abc") is None
+    assert mock_filter.call_args == [(model, "abc"), {}]
+    assert mock_draw.call_count == 3  # no new call
 
 
 @mock.patch(

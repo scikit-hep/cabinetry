@@ -50,7 +50,7 @@ def test_templates(mock_validate, mock_create_histograms, cli_helpers, tmp_path)
     # different method
     result = runner.invoke(cli.templates, ["--method", "unknown", config_path])
     assert result.exit_code == 0
-    assert mock_create_histograms.call_args_list[-1] == (
+    assert mock_create_histograms.call_args == (
         (config,),
         {"method": "unknown"},
     )
@@ -134,8 +134,8 @@ def test_fit(mock_util, mock_fit, mock_pulls, mock_corrmat, tmp_path):
     # Asimov
     result = runner.invoke(cli.fit, ["--asimov", workspace_path])
     assert result.exit_code == 0
-    assert mock_util.call_args_list[-1] == ((workspace,), {"asimov": True})
-    assert mock_fit.call_args_list[-1] == (
+    assert mock_util.call_args == ((workspace,), {"asimov": True})
+    assert mock_fit.call_args == (
         ("model", "data"),
         {"minos": None, "goodness_of_fit": False},
     )
@@ -143,8 +143,8 @@ def test_fit(mock_util, mock_fit, mock_pulls, mock_corrmat, tmp_path):
     # MINOS for one parameter
     result = runner.invoke(cli.fit, ["--minos", "par", workspace_path])
     assert result.exit_code == 0
-    assert mock_util.call_args_list[-1] == ((workspace,), {"asimov": False})
-    assert mock_fit.call_args_list[-1] == (
+    assert mock_util.call_args == ((workspace,), {"asimov": False})
+    assert mock_fit.call_args == (
         ("model", "data"),
         {"minos": ["par"], "goodness_of_fit": False},
     )
@@ -154,8 +154,8 @@ def test_fit(mock_util, mock_fit, mock_pulls, mock_corrmat, tmp_path):
         cli.fit, ["--minos", "par_a", "--minos", "par_b", workspace_path]
     )
     assert result.exit_code == 0
-    assert mock_util.call_args_list[-1] == ((workspace,), {"asimov": False})
-    assert mock_fit.call_args_list[-1] == (
+    assert mock_util.call_args == ((workspace,), {"asimov": False})
+    assert mock_fit.call_args == (
         ("model", "data"),
         {"minos": ["par_a", "par_b"], "goodness_of_fit": False},
     )
@@ -163,8 +163,8 @@ def test_fit(mock_util, mock_fit, mock_pulls, mock_corrmat, tmp_path):
     # goodness-of-fit
     result = runner.invoke(cli.fit, ["--goodness_of_fit", workspace_path])
     assert result.exit_code == 0
-    assert mock_util.call_args_list[-1] == ((workspace,), {"asimov": False})
-    assert mock_fit.call_args_list[-1] == (
+    assert mock_util.call_args == ((workspace,), {"asimov": False})
+    assert mock_fit.call_args == (
         ("model", "data"),
         {"minos": None, "goodness_of_fit": True},
     )
@@ -186,11 +186,11 @@ def test_fit(mock_util, mock_fit, mock_pulls, mock_corrmat, tmp_path):
         cli.fit, ["--figfolder", "folder", "--pulls", "--corrmat", workspace_path]
     )
     assert result.exit_code == 0
-    assert mock_corrmat.call_args_list[-1] == (
+    assert mock_corrmat.call_args == (
         (fit_results,),
         {"figure_folder": "folder"},
     )
-    assert mock_pulls.call_args_list[-1] == (
+    assert mock_pulls.call_args == (
         (fit_results,),
         {"figure_folder": "folder"},
     )
@@ -259,9 +259,9 @@ def test_ranking(mock_util, mock_fit, mock_rank, mock_vis, tmp_path):
         ["--asimov", "--max_pars", 3, "--figfolder", "folder", workspace_path],
     )
     assert result.exit_code == 0
-    assert mock_util.call_args_list[-1] == ((workspace,), {"asimov": True})
-    assert mock_fit.call_args_list[-1] == (("model", "data"), {})
-    assert mock_rank.call_args_list[-1] == (
+    assert mock_util.call_args == ((workspace,), {"asimov": True})
+    assert mock_fit.call_args == (("model", "data"), {})
+    assert mock_rank.call_args == (
         ("model", "data"),
         {"fit_results": fit_results},
     )
@@ -349,8 +349,8 @@ def test_scan(mock_util, mock_scan, mock_vis, tmp_path):
         ],
     )
     assert result.exit_code == 0
-    assert mock_util.call_args_list[-1] == ((workspace,), {"asimov": True})
-    assert mock_scan.call_args_list[-1] == (
+    assert mock_util.call_args == ((workspace,), {"asimov": True})
+    assert mock_scan.call_args == (
         ("model", "data", par_name),
         {"par_range": (0.0, 2.0), "n_steps": 21},
     )
@@ -419,8 +419,8 @@ def test_limit(mock_util, mock_limit, mock_vis, tmp_path):
         ["--asimov", "--tolerance", "0.1", "--figfolder", "folder", workspace_path],
     )
     assert result.exit_code == 0
-    assert mock_util.call_args_list[-1] == ((workspace,), {"asimov": True})
-    assert mock_limit.call_args_list[-1] == (("model", "data"), {"tolerance": 0.1})
+    assert mock_util.call_args == ((workspace,), {"asimov": True})
+    assert mock_limit.call_args == (("model", "data"), {"tolerance": 0.1})
     assert mock_vis.call_args_list[-1][1] == {"figure_folder": "folder"}
 
 
@@ -449,11 +449,14 @@ def test_significance(mock_util, mock_sig, tmp_path):
     # Asimov
     result = runner.invoke(cli.significance, ["--asimov", workspace_path])
     assert result.exit_code == 0
-    assert mock_util.call_args_list[-1] == ((workspace,), {"asimov": True})
-    assert mock_sig.call_args_list[-1] == (("model", "data"), {})
+    assert mock_util.call_args == ((workspace,), {"asimov": True})
+    assert mock_sig.call_args == (("model", "data"), {})
 
 
 @mock.patch("cabinetry.visualize.data_mc", autospec=True)
+@mock.patch(
+    "cabinetry.model_utils.prediction", return_value=("mock_model_pred"), autospec=True
+)
 @mock.patch(
     "cabinetry.fit.fit",
     return_value=fit.FitResults(
@@ -467,7 +470,9 @@ def test_significance(mock_util, mock_sig, tmp_path):
     return_value=("model", "data"),
     autospec=True,
 )
-def test_data_mc(mock_util, mock_validate, mock_fit, mock_vis, cli_helpers, tmp_path):
+def test_data_mc(
+    mock_util, mock_validate, mock_fit, mock_pred, mock_vis, cli_helpers, tmp_path
+):
     workspace = {"workspace": "mock"}
     workspace_path = str(tmp_path / "workspace.json")
 
@@ -483,10 +488,11 @@ def test_data_mc(mock_util, mock_validate, mock_fit, mock_vis, cli_helpers, tmp_
     assert mock_util.call_args_list == [((workspace,), {})]
     assert mock_validate.call_count == 0
     assert mock_fit.call_count == 0
+    assert mock_pred.call_args_list == [(("model",), {"fit_results": None})]
     assert mock_vis.call_args_list == [
         (
-            ("model", "data"),
-            {"config": None, "figure_folder": "figures", "fit_results": None},
+            ("mock_model_pred", "data"),
+            {"config": None, "figure_folder": "figures", "close_figure": True},
         )
     ]
 
@@ -503,10 +509,11 @@ def test_data_mc(mock_util, mock_validate, mock_fit, mock_vis, cli_helpers, tmp_
         [workspace_path, "--config", config_path, "--postfit", "--figfolder", "folder"],
     )
     assert result.exit_code == 0
-    assert mock_util.call_args_list[-1] == ((workspace,), {})
+    assert mock_util.call_args == ((workspace,), {})
     assert mock_validate.call_args_list == [((config,), {})]
     assert mock_fit.call_args_list == [(("model", "data"), {})]
-    assert mock_vis.call_args_list[-1] == (
-        ("model", "data"),
-        {"config": config, "figure_folder": "folder", "fit_results": fit_results},
+    assert mock_pred.call_args == (("model",), {"fit_results": fit_results})
+    assert mock_vis.call_args == (
+        ("mock_model_pred", "data"),
+        {"config": config, "figure_folder": "folder", "close_figure": True},
     )

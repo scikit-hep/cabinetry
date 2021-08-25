@@ -309,12 +309,13 @@ def data_mc(
     # optionally perform maximum likelihood fit to obtain post-fit model
     fit_results = cabinetry_fit.fit(model, data) if postfit else None
 
+    model_prediction = cabinetry_model_utils.prediction(model, fit_results=fit_results)
     cabinetry_visualize.data_mc(
-        model,
+        model_prediction,
         data,
         config=cabinetry_config,
         figure_folder=figfolder,
-        fit_results=fit_results,
+        close_figure=True,
     )
 
 
