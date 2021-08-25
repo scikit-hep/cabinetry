@@ -54,6 +54,12 @@ cabinetry.fit
 .. automodule:: cabinetry.fit
     :members:
 
+cabinetry.fit.results_containers
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. automodule:: cabinetry.fit.results_containers
+    :members:
+
 
 cabinetry.visualize
 -------------------
