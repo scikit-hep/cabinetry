@@ -228,7 +228,6 @@ def test_data_mc(
         "label": "Signal Region\npost-fit",
         "close_figure": True,
     }
-    assert mock_draw.call_args[0][3] is None
 
     # no config specified, default variable name and bin edges
     _ = visualize.data_mc(model_pred, data)
