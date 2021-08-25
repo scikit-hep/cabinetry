@@ -235,10 +235,8 @@ def test_prediction(mock_asimov, mock_unc, mock_stdev, example_spec):
     assert model_pred.label == "pre-fit"
 
     # Asimov parameter calculation and pre-fit uncertainties
-    assert mock_stdev.call_count == 1
-    assert mock_asimov.call_args_list[0][0][0] == model
-    assert mock_unc.call_count == 1
-    assert mock_unc.call_args_list[0][0][0] == model
+    assert mock_asimov.call_args_list == [((model,), {})]
+    assert mock_unc.call_args_list == [((model,), {})]
 
     # call to stdev calculation
     assert mock_stdev.call_count == 1
