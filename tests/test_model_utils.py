@@ -43,12 +43,6 @@ def test_model_and_data(example_spec):
     assert data == [475]
 
 
-def test_parameter_names(example_spec):
-    model = pyhf.Workspace(example_spec).model()
-    labels = model_utils.parameter_names(model)
-    assert labels == ["staterror_Signal-Region", "Signal strength"]
-
-
 def test_asimov_data(example_spec):
     ws = pyhf.Workspace(example_spec)
     model = ws.model()

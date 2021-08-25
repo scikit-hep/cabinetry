@@ -78,7 +78,7 @@ def _fit_model_pyhf(
 
     bestfit = pyhf.tensorlib.to_numpy(result[:, 0])
     uncertainty = pyhf.tensorlib.to_numpy(result[:, 1])
-    labels = model_utils.parameter_names(model)
+    labels = model.config.par_names()
     corr_mat = pyhf.tensorlib.to_numpy(corr_mat)
     best_twice_nll = float(best_twice_nll)  # convert 0-dim np.ndarray to float
 
@@ -125,7 +125,7 @@ def _fit_model_custom(
     # use fix_pars provided in function argument if they exist, else use default
     fix_pars = fix_pars or model.config.suggested_fixed()
 
-    labels = model_utils.parameter_names(model)
+    labels = model.config.par_names()
 
     # set initial step size to 0 for fixed parameters
     # this will cause the associated parameter uncertainties to be 0 post-fit
@@ -381,7 +381,7 @@ def ranking(
     if fit_results is None:
         fit_results = _fit_model(model, data, custom_fit=custom_fit)
 
-    labels = model_utils.parameter_names(model)
+    labels = model.config.par_names()
     prefit_unc = model_utils.prefit_uncertainties(model)
     nominal_poi = fit_results.bestfit[model.config.poi_index]
 
@@ -482,7 +482,7 @@ def scan(
         ScanResults: includes parameter name, scanned values and 2*log(likelihood)
         offset
     """
-    labels = model_utils.parameter_names(model)
+    labels = model.config.par_names()
     init_pars = model.config.suggested_init()
     fix_pars = model.config.suggested_fixed()
 

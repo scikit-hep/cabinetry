@@ -65,20 +65,6 @@ def model_and_data(
     return model, data
 
 
-def parameter_names(model: pyhf.pdf.Model) -> List[str]:
-    """Returns the labels of all fit parameters.
-
-    Vectors that act on one bin per vector entry (gammas) are expanded.
-
-    Args:
-        model (pyhf.pdf.Model): a HistFactory-style model in ``pyhf`` format
-
-    Returns:
-        List[str]: names of fit parameters
-    """
-    return model.config.par_names()
-
-
 def asimov_data(model: pyhf.Model, with_aux: bool = True) -> List[float]:
     """Returns the Asimov dataset (optionally with auxdata) for a model.
 
@@ -279,7 +265,7 @@ def yield_stdev(
         symmetric_uncertainty = (up_variations[i_par] - down_variations[i_par]) / 2
         total_variance = total_variance + symmetric_uncertainty ** 2
 
-    labels = parameter_names(model)
+    labels = model.config.par_names()
     # continue with off-diagonal contributions if there are any
     if np.count_nonzero(corr_mat - np.diag(np.ones_like(parameters))) > 0:
         # loop over pairs of parameters
@@ -411,9 +397,9 @@ def unconstrained_parameter_count(model: pyhf.pdf.Model) -> int:
 def _parameter_index(par_name: str, labels: Union[List[str], Tuple[str, ...]]) -> int:
     """Returns the position of a parameter with a given name in the list of parameters.
 
-    Useful together with ``parameter_names`` to find the position of a parameter
-    when the name is known. If the parameter is not found, logs an error and returns a
-    default value of -1.
+    Useful together with ``pyhf.pdf._ModelConfig.par_names`` to find the position of a
+    parameter when the name is known. If the parameter is not found, logs an error and
+    returns a default value of -1.
 
     Args:
         par_name (str): name of parameter to find in list
