@@ -5,16 +5,13 @@ import logging
 import pathlib
 from typing import Any, Dict, List, Optional, Tuple, Union
 
-import awkward as ak
 import matplotlib as mpl
 import numpy as np
-import pyhf
 
 from cabinetry import configuration
 from cabinetry import fit
 from cabinetry import histo
 from cabinetry import model_utils
-from cabinetry import tabulate
 from cabinetry import template_builder
 from cabinetry.visualize import plot_model
 from cabinetry.visualize import plot_result
@@ -23,22 +20,19 @@ from cabinetry.visualize import plot_result
 log = logging.getLogger(__name__)
 
 
-def _figure_name(region_name: str, is_prefit: bool) -> str:
+def _figure_name(region_name: str, label: str) -> str:
     """Constructs a file name for a figure.
 
     Args:
         region_name (str): name of the region shown in the figure
-        is_prefit (bool): whether the figure shows the pre- or post-fit model
+        label (str): additional label, e.g. from model prediction
 
     Returns:
         str: name of the file the figure should be saved to
     """
-    figure_name = region_name.replace(" ", "-")
-    if is_prefit:
-        figure_name += "_prefit"
-    else:
-        figure_name += "_postfit"
-    figure_name += ".pdf"
+    if label in ["pre-fit", "post-fit"]:
+        label = label.replace("-", "")  # replace pre-fit by prefit, post-fit by postfit
+    figure_name = f"{region_name.replace(' ', '-')}_{label}.pdf"
     return figure_name
 
 
@@ -108,7 +102,7 @@ def data_mc_from_histograms(
             if not is_data:
                 model_stdevs.append(histogram.stdev)
 
-        figure_name = _figure_name(region["Name"], True)
+        figure_name = _figure_name(region["Name"], "pre-fit")
         total_model_unc = _total_yield_uncertainty(model_stdevs)
         bin_edges = histogram.bins
         label = f"{region['Name']}\npre-fit"
@@ -130,17 +124,16 @@ def data_mc_from_histograms(
 
 
 def data_mc(
-    model: pyhf.pdf.Model,
+    model_prediction: model_utils.ModelPrediction,
     data: List[float],
     config: Optional[Dict[str, Any]] = None,
     figure_folder: Union[str, pathlib.Path] = "figures",
-    fit_results: Optional[fit.FitResults] = None,
     log_scale: Optional[bool] = None,
     log_scale_x: bool = False,
-    include_table: bool = True,
+    channels: Optional[Union[str, List[str]]] = None,
     close_figure: bool = False,
     save_figure: bool = True,
-) -> List[Dict[str, Any]]:
+) -> Optional[List[Dict[str, Any]]]:
     """Draws pre- and post-fit data/MC histograms for a ``pyhf`` model and data.
 
     The ``config`` argument is optional, but required to determine correct axis labels
@@ -149,7 +142,7 @@ def data_mc(
     models that were not created with ``cabinetry``, and for which no config exists.
 
     Args:
-        model (pyhf.pdf.Model): model to visualize
+        model_prediction (model_utils.ModelPrediction): model prediction to show
         data (List[float]): data to include in visualization, can either include auxdata
             (the auxdata is then stripped internally) or only observed yields
         config (Optional[Dict[str, Any]], optional): cabinetry configuration needed for
@@ -157,89 +150,43 @@ def data_mc(
             then)
         figure_folder (Union[str, pathlib.Path], optional): path to the folder to save
             figures in, defaults to "figures"
-        fit_results (Optional[fit.FitResults]): parameter configuration to use for plot,
-            includes best-fit settings and uncertainties, as well as correlation matrix,
-            defaults to None (then the pre-fit configuration is drawn)
         log_scale (Optional[bool], optional): whether to use logarithmic vertical axis,
             defaults to None (automatically determine whether to use linear/log scale)
         log_scale_x (bool, optional): whether to use logarithmic horizontal axis,
             defaults to False
-        include_table (bool, optional): whether to also output a yield table, defaults
-            to True
+        channels (Optional[Union[str, List[str]]], optional): name of channel to show,
+            or list of names to include, defaults to None (uses all channels)
         close_figure (bool, optional): whether to close each figure immediately after
             saving it, defaults to False (enable when producing many figures to avoid
             memory issues, prevents rendering in notebooks)
         save_figure (bool, optional): whether to save figures, defaults to True
 
     Returns:
-        List[Dict[str, Any]]: list of dictionaries, where each dictionary contains a
-            figure and the associated region name
+        Optional[List[Dict[str, Any]]]: list of dictionaries, where each dictionary
+            contains a figure and the associated region name, or None if no figure was
+            produced
     """
-    n_bins_total = sum(model.config.channel_nbins.values())
-    if len(data) != n_bins_total:
-        # strip auxdata, only observed yields are needed
-        data_combined = data[:n_bins_total]
-    else:
-        data_combined = data
+    # strip off auxdata (if needed) and obtain data indexed by channel (and bin)
+    data_yields = model_utils._data_per_channel(model_prediction.model, data)
 
-    if fit_results is not None:
-        # fit results specified, draw a post-fit plot with them applied
-        prefit = False
-        param_values = fit_results.bestfit
-        param_uncertainty = fit_results.uncertainty
-        corr_mat = fit_results.corr_mat
+    # channels to include in table, with optional filtering applied
+    filtered_channels = model_utils._filter_channels(model_prediction.model, channels)
 
-    else:
-        # no fit results specified, draw a pre-fit plot
-        prefit = True
-        # use pre-fit parameter values, uncertainties, and diagonal correlation matrix
-        param_values = model_utils.asimov_parameters(model)
-        param_uncertainty = model_utils.prefit_uncertainties(model)
-        corr_mat = np.zeros(shape=(len(param_values), len(param_values)))
-        np.fill_diagonal(corr_mat, 1.0)
+    if filtered_channels == []:
+        log.warning(
+            f"channel(s) {channels} not found in model, available channels: "
+            f"{model_prediction.model.config.channels}"
+        )
+        return None
 
-    yields_combined = pyhf.tensorlib.to_numpy(
-        model.main_model.expected_data(param_values, return_by_sample=True)
-    )  # all channels concatenated
-
-    # slice the yields into list of lists (of lists) where first index is channel,
-    # second index is sample (and third index is bin)
-    region_split_indices = model_utils._channel_boundary_indices(model)
-    model_yields = [
-        m.tolist() for m in np.split(yields_combined, region_split_indices, axis=1)
+    # indices of included channels
+    channel_indices = [
+        model_prediction.model.config.channels.index(ch) for ch in filtered_channels
     ]
-    # data is only indexed by channel (and bin)
-    data_yields = [d.tolist() for d in np.split(data_combined, region_split_indices)]
-
-    # calculate the total standard deviation of the model prediction
-    # indices: channel (and bin) for per-bin uncertainties, channel for per-channel
-    total_stdev_model_bins, total_stdev_model_channels = model_utils.yield_stdev(
-        model, param_values, param_uncertainty, corr_mat
-    )
-
-    if include_table:
-        # show yield table
-        if prefit:
-            log.info("generating pre-fit yield table")
-        else:
-            log.info("generating post-fit yield table")
-        tabulate._yields_per_bin(
-            model, model_yields, total_stdev_model_bins, data_yields
-        )
-
-        # yields per channel
-        model_yields_per_channel = np.sum(ak.from_iter(model_yields), axis=-1).tolist()
-        data_per_channel = [sum(d) for d in data_yields]
-        tabulate._yields_per_channel(
-            model,
-            model_yields_per_channel,
-            total_stdev_model_channels,
-            data_per_channel,
-        )
 
     # process channel by channel
     figure_dict_list = []
-    for i_chan, channel_name in enumerate(model.config.channels):
+    for i_chan, channel_name in zip(channel_indices, filtered_channels):
         histogram_dict_list = []  # one dict per region/channel
 
         if config is not None:
@@ -252,12 +199,12 @@ def data_mc(
             bin_edges = np.arange(len(data_yields[i_chan]) + 1)
             variable = "bin"
 
-        for i_sam, sample_name in enumerate(model.config.samples):
+        for i_sam, sample_name in enumerate(model_prediction.model.config.samples):
             histogram_dict_list.append(
                 {
                     "label": sample_name,
                     "isData": False,
-                    "yields": model_yields[i_chan][i_sam],
+                    "yields": model_prediction.model_yields[i_chan][i_sam],
                     "variable": variable,
                 }
             )
@@ -272,25 +219,18 @@ def data_mc(
             }
         )
 
-        if prefit:
-            # path is None if figure should not be saved
-            figure_path = (
-                pathlib.Path(figure_folder) / _figure_name(channel_name, True)
-                if save_figure
-                else None
-            )
-            label = f"{channel_name}\npre-fit"
-        else:
-            figure_path = (
-                pathlib.Path(figure_folder) / _figure_name(channel_name, False)
-                if save_figure
-                else None
-            )
-            label = f"{channel_name}\npost-fit"
+        # path is None if figure should not be saved
+        figure_path = (
+            pathlib.Path(figure_folder)
+            / _figure_name(channel_name, model_prediction.label)
+            if save_figure
+            else None
+        )
+        label = f"{channel_name}\n{model_prediction.label}"
 
         fig = plot_model.data_mc(
             histogram_dict_list,
-            np.asarray(total_stdev_model_bins[i_chan]),
+            np.asarray(model_prediction.total_stdev_model_bins[i_chan]),
             bin_edges,
             figure_path,
             log_scale=log_scale,
