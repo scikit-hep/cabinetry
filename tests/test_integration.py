@@ -154,21 +154,21 @@ def test_integration(tmp_path, ntuple_creator, caplog):
     caplog.clear()
 
     # pre- and post-fit yield uncertainties
-    cabinetry.visualize.data_mc(model, data, close_figure=True)
-    assert "total stdev is [[69, 58.3, 38.2, 45.3]]" in [
-        rec.message for rec in caplog.records
-    ]
-    assert "total stdev per channel is [137]" in [rec.message for rec in caplog.records]
-    caplog.clear()
+    model_prefit = cabinetry.model_utils.prediction(model)
+    assert np.allclose(
+        model_prefit.total_stdev_model_bins,
+        [[69.040789, 58.343328, 38.219599, 45.296964]],
+    )
+    assert np.allclose(model_prefit.total_stdev_model_channels, [136.791978])
+    _ = cabinetry.visualize.data_mc(model_prefit, data, close_figure=True)
 
-    cabinetry.visualize.data_mc(model, data, fit_results=fit_results, close_figure=True)
-    assert "total stdev is [[11.9, 7.28, 7.41, 7.69]]" in [
-        rec.message for rec in caplog.records
-    ]
-    assert "total stdev per channel is [20.3]" in [
-        rec.message for rec in caplog.records
-    ]
-    caplog.clear()
+    model_postfit = cabinetry.model_utils.prediction(model, fit_results=fit_results)
+    assert np.allclose(
+        model_postfit.total_stdev_model_bins,
+        [[11.898333, 7.283185, 7.414715, 7.687922]],
+    )
+    assert np.allclose(model_postfit.total_stdev_model_channels, [20.329523])
+    _ = cabinetry.visualize.data_mc(model_postfit, data, close_figure=True)
 
     # nuisance parameter ranking
     ranking_results = cabinetry.fit.ranking(
