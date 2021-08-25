@@ -320,6 +320,20 @@ def test__strip_auxdata(example_spec):
     assert model_utils._strip_auxdata(model, data_without_aux) == [51.8]
 
 
+@mock.patch("cabinetry.model_utils._channel_boundary_indices", return_value=[2])
+@mock.patch("cabinetry.model_utils._strip_auxdata", return_value=[25.0, 5.0, 8.0])
+def test__data_per_channel(mock_aux, mock_bin, example_spec_multibin):
+    model = pyhf.Workspace(example_spec_multibin).model()
+    data = [25.0, 5.0, 8.0, 1.0, 1.0, 1.0]
+
+    data_per_ch = model_utils._data_per_channel(model, [25.0, 5.0, 8.0, 1.0, 1.0, 1.0])
+    assert data_per_ch == [[25.0, 5.0], [8.0]]  # auxdata stripped and split by channel
+
+    # auxdata and channel index call
+    assert mock_aux.call_args_list == [[(model, data), {}]]
+    assert mock_bin.call_args_list == [[(model,), {}]]
+
+
 def test__filter_channels(example_spec_multibin, caplog):
     caplog.set_level(logging.DEBUG)
     model = pyhf.Workspace(example_spec_multibin).model()
@@ -340,17 +354,3 @@ def test__filter_channels(example_spec_multibin, caplog):
         "['region_1', 'region_2']" in [rec.message for rec in caplog.records]
     )
     caplog.clear()
-
-
-@mock.patch("cabinetry.model_utils._channel_boundary_indices", return_value=[2])
-@mock.patch("cabinetry.model_utils._strip_auxdata", return_value=[25.0, 5.0, 8.0])
-def test__data_per_channel(mock_aux, mock_bin, example_spec_multibin):
-    model = pyhf.Workspace(example_spec_multibin).model()
-    data = [25.0, 5.0, 8.0, 1.0, 1.0, 1.0]
-
-    data_per_ch = model_utils._data_per_channel(model, [25.0, 5.0, 8.0, 1.0, 1.0, 1.0])
-    assert data_per_ch == [[25.0, 5.0], [8.0]]  # auxdata stripped and split by channel
-
-    # auxdata and channel index call
-    assert mock_aux.call_args_list == [[(model, data), {}]]
-    assert mock_bin.call_args_list == [[(model,), {}]]

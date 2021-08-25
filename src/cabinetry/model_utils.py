@@ -457,6 +457,25 @@ def _strip_auxdata(model: pyhf.pdf.Model, data: List[float]) -> List[float]:
     return data
 
 
+def _data_per_channel(model: pyhf.pdf.Model, data: List[float]) -> List[List[float]]:
+    """Returns data split per channel, and strips off auxiliary data if included.
+
+    Args:
+        model (pyhf.pdf.Model): model to which data corresponds to
+        data (List[float]): data (not split by channel), can either include auxdata
+            which is then stripped off, or only observed yields
+
+    Returns:
+        List[List[float]]: data per channel and per bin
+    """
+    # strip off auxiliary data
+    data_combined = _strip_auxdata(model, data)
+    channel_split_indices = _channel_boundary_indices(model)
+    # data is indexed by channel (and bin)
+    data_yields = [d.tolist() for d in np.split(data_combined, channel_split_indices)]
+    return data_yields
+
+
 def _filter_channels(
     model: pyhf.pdf.Model, channels: Optional[Union[str, List[str]]]
 ) -> List[str]:
@@ -486,22 +505,3 @@ def _filter_channels(
         )
 
     return filtered_channels
-
-
-def _data_per_channel(model: pyhf.pdf.Model, data: List[float]) -> List[List[float]]:
-    """Returns data split per channel, and strips off auxiliary data if included.
-
-    Args:
-        model (pyhf.pdf.Model): model to which data corresponds to
-        data (List[float]): data (not split by channel), can either include auxdata
-            which is then stripped off, or only observed yields
-
-    Returns:
-        List[List[float]]: data per channel and per bin
-    """
-    # strip off auxiliary data
-    data_combined = _strip_auxdata(model, data)
-    channel_split_indices = _channel_boundary_indices(model)
-    # data is indexed by channel (and bin)
-    data_yields = [d.tolist() for d in np.split(data_combined, channel_split_indices)]
-    return data_yields
