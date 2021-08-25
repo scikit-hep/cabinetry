@@ -197,11 +197,8 @@ def yields(
     filtered_channels = model_utils._filter_channels(model_prediction.model, channels)
 
     if filtered_channels == []:
-        log.warning(
-            f"channel(s) {channels} not found in model, available channels: "
-            f"{model_prediction.model.config.channels}"
-        )
-        return
+        # nothing to include in tables, warning already raised via _filter_channels
+        return None
 
     if per_bin:
         # yield table with yields per bin

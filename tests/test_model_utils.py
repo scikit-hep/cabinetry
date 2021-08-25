@@ -320,7 +320,8 @@ def test__strip_auxdata(example_spec):
     assert model_utils._strip_auxdata(model, data_without_aux) == [51.8]
 
 
-def test__filter_channels(example_spec_multibin):
+def test__filter_channels(example_spec_multibin, caplog):
+    caplog.set_level(logging.DEBUG)
     model = pyhf.Workspace(example_spec_multibin).model()
 
     assert model_utils._filter_channels(model, None) == ["region_1", "region_2"]
@@ -330,7 +331,15 @@ def test__filter_channels(example_spec_multibin):
         "region_2",
     ]
     assert model_utils._filter_channels(model, ["region_1", "abc"]) == ["region_1"]
+    caplog.clear()
+
+    # no matching channels
     assert model_utils._filter_channels(model, "abc") == []
+    assert (
+        "channel(s) ['abc'] not found in model, available channel(s): "
+        "['region_1', 'region_2']" in [rec.message for rec in caplog.records]
+    )
+    caplog.clear()
 
 
 @mock.patch("cabinetry.model_utils._channel_boundary_indices", return_value=[2])

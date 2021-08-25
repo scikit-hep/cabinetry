@@ -140,14 +140,9 @@ def test_yields(mock_data, mock_filter, mock_bin, mock_channel, example_spec, ca
 
     # no channels to include
     tabulate.yields(model_pred, data, channels="abc")
-    assert (
-        "channel(s) abc not found in model, available channels: ['Signal Region']"
-        in [rec.message for rec in caplog.records]
-    )
     assert mock_filter.call_args == [(model, "abc"), {}]
-    assert mock_bin.call_count == 1  # one call from before
+    assert mock_bin.call_count == 1  # one call from before, no new call
     assert mock_channel.call_count == 0
-    caplog.clear()
 
     # yields per channel, not per bin
     tabulate.yields(model_pred, data, per_bin=False, per_channel=True)
@@ -155,4 +150,3 @@ def test_yields(mock_data, mock_filter, mock_bin, mock_channel, example_spec, ca
     assert mock_channel.call_args_list == [
         [(model, [[10.0]], [0.3], [12.0], ["SR"]), {}]
     ]
-    caplog.clear()

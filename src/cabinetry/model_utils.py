@@ -472,13 +472,20 @@ def _filter_channels(
         List[str]: list of channels after filtering
     """
     # channels included in model
-    channels_filtered = model.config.channels
+    filtered_channels = model.config.channels
     # if one or more custom channels are provided, only include those
     if channels is not None:
         channels = configuration._setting_to_list(channels)
         # only include if channel exists in model
-        channels_filtered = [ch for ch in channels if ch in model.config.channels]
-    return channels_filtered
+        filtered_channels = [ch for ch in channels if ch in model.config.channels]
+
+    if filtered_channels == []:
+        log.warning(
+            f"channel(s) {channels} not found in model, available channel(s): "
+            f"{model.config.channels}"
+        )
+
+    return filtered_channels
 
 
 def _data_per_channel(model: pyhf.pdf.Model, data: List[float]) -> List[List[float]]:
