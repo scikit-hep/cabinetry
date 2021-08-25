@@ -307,7 +307,7 @@ def test_WorkspaceBuilder_channels(mock_contains, mock_histogram):
     expected_channels = [{"name": "region_1", "samples": []}]
     assert channels == expected_channels
     assert mock_contains.call_count == 2
-    assert mock_contains.call_args_list[-1] == (
+    assert mock_contains.call_args == (
         (example_config["Regions"][0], example_config["Samples"][0]),
         {},
     )
