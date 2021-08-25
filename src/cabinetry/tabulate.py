@@ -40,6 +40,7 @@ def _yields_per_bin(
     total_stdev_model: List[List[float]],
     data: List[List[float]],
     channels: List[str],
+    label: str,
 ) -> List[Dict[str, Any]]:
     """Outputs and returns a yield table with predicted and observed yields per bin.
 
@@ -50,6 +51,7 @@ def _yields_per_bin(
             channel and bin
         data (List[List[float]]): data yield per channel and bin
         channels (List[str]): names of channels to use
+        label (str): label for model prediction to include in log
 
     Returns:
         List[Dict[str, Any]]: yield table for use with the ``tabulate`` package
@@ -94,7 +96,7 @@ def _yields_per_bin(
     table += [total_dict, data_dict]
 
     log.info(
-        "yields per bin:\n"
+        f"yields per bin for {label} model prediction:\n"
         + tabulate.tabulate(
             table,
             headers=headers,
@@ -110,6 +112,7 @@ def _yields_per_channel(
     total_stdev_model: List[float],
     data: List[float],
     channels: List[str],
+    label: str,
 ) -> List[Dict[str, Any]]:
     """Outputs and returns a yield table with predicted and observed yields per channel.
 
@@ -119,6 +122,7 @@ def _yields_per_channel(
         total_stdev_model (List[float]): total model standard deviation per channel
         data (List[float]): data yield per channel
         channels (List[str]): names of channels to use
+        label (str): label for model prediction to include in log
 
     Returns:
         List[Dict[str, Any]]: yield table for use with the ``tabulate`` package
@@ -150,7 +154,7 @@ def _yields_per_channel(
     table += [total_dict, data_dict]
 
     log.info(
-        "yields per channel:\n"
+        f"yields per channel for {label} model prediction:\n"
         + tabulate.tabulate(
             table,
             headers="keys",
@@ -208,6 +212,7 @@ def yields(
             model_prediction.total_stdev_model_bins,
             data_yields,
             filtered_channels,
+            model_prediction.label,
         )
 
     if per_channel:
@@ -222,4 +227,5 @@ def yields(
             model_prediction.total_stdev_model_channels,
             data_per_channel,
             filtered_channels,
+            model_prediction.label,
         )
