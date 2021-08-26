@@ -394,7 +394,7 @@ def test_correlation_matrix(mock_draw):
 def test_pulls(mock_draw):
     bestfit = np.asarray([0.8, 1.0, 1.05, 1.1])
     uncertainty = np.asarray([0.9, 1.0, 0.03, 0.7])
-    labels = ["a", "b", "staterror_region[bin_0]", "c"]
+    labels = ["a", "b", "staterror_region[0]", "c"]
     exclude = ["a"]
     folder_path = "tmp"
     fit_results = fit.FitResults(bestfit, uncertainty, labels, np.empty(0), 1.0)
