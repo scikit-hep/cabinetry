@@ -57,7 +57,7 @@ def model_and_data(
             "normsys": {"interpcode": "code4"},
             "histosys": {"interpcode": "code4p"},
         }
-    )  # use HistFactory InterpCode=4
+    )  # use HistFactory InterpCode=4 (default in pyhf since v0.6.0)
     if not asimov:
         data = workspace.data(model, with_aux=with_aux)
     else:
