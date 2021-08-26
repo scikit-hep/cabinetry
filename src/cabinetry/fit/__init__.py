@@ -66,12 +66,14 @@ def _fit_model_pyhf(
     """
     pyhf.set_backend(pyhf.tensorlib, pyhf.optimize.minuit_optimizer(verbose=1))
 
-    result, result_obj = pyhf.infer.mle.fit(
+    result, corr_mat, best_twice_nll, result_obj = pyhf.infer.mle.fit(
         data,
         model,
         init_pars=init_pars,
         fixed_params=fix_pars,
         return_uncertainties=True,
+        return_correlations=True,
+        return_fitted_val=True,
         return_result_obj=True,
     )
     log.info(f"MINUIT status:\n{result_obj.minuit.fmin}")
@@ -79,8 +81,8 @@ def _fit_model_pyhf(
     bestfit = pyhf.tensorlib.to_numpy(result[:, 0])
     uncertainty = pyhf.tensorlib.to_numpy(result[:, 1])
     labels = model_utils.parameter_names(model)
-    corr_mat = result_obj.hess_inv.correlation()
-    best_twice_nll = float(result_obj.fun)  # convert 0-dim np.ndarray to float
+    corr_mat = pyhf.tensorlib.to_numpy(corr_mat)
+    best_twice_nll = float(best_twice_nll)  # convert 0-dim np.ndarray to float
 
     fit_results = FitResults(bestfit, uncertainty, labels, corr_mat, best_twice_nll)
 
@@ -173,7 +175,7 @@ def _fit_model_custom(
 
     bestfit = np.asarray(m.values)
     uncertainty = np.asarray(m.errors)
-    corr_mat = m.covariance.correlation()
+    corr_mat = m.covariance.correlation()  # iminuit.util.Matrix, subclass of np.ndarray
     best_twice_nll = m.fval
 
     fit_results = FitResults(bestfit, uncertainty, labels, corr_mat, best_twice_nll)
