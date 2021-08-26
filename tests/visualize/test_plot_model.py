@@ -110,7 +110,7 @@ def test_data_mc(tmp_path):
             label="",
             close_figure=True,
         )
-        assert mock_close_safe.call_args_list == [[(fig, None, True), {}]]
+        assert mock_close_safe.call_args_list == [((fig, None, True), {})]
 
     plt.close("all")
 
@@ -177,6 +177,6 @@ def test_templates(tmp_path):
             label=label,
             close_figure=True,
         )
-        assert mock_close_safe.call_args_list == [[(fig, None, True), {}]]
+        assert mock_close_safe.call_args_list == [((fig, None, True), {})]
 
     plt.close("all")

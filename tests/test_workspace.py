@@ -220,9 +220,9 @@ def test_WorkspaceBuilder_sys_modifiers(mock_norm, mock_norm_shape):
         {"mock": "norm"},
         {"mock": "shape"},
     ]
-    assert mock_norm.call_args_list == [[(example_config["Systematics"][0],), {}]]
+    assert mock_norm.call_args_list == [((example_config["Systematics"][0],), {})]
     assert mock_norm_shape.call_args_list == [
-        [(region, sample, example_config["Systematics"][1]), {}]
+        ((region, sample, example_config["Systematics"][1]), {})
     ]
 
     # one systematic not present in region

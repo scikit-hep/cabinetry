@@ -34,7 +34,7 @@ def test_correlation_matrix(tmp_path):
     # do not save figure, but close it
     with mock.patch("cabinetry.visualize.utils._save_and_close") as mock_close_safe:
         fig = plot_result.correlation_matrix(corr_mat, labels, close_figure=True)
-        assert mock_close_safe.call_args_list == [[(fig, None, True), {}]]
+        assert mock_close_safe.call_args_list == [((fig, None, True), {})]
 
     plt.close("all")
 
@@ -56,7 +56,7 @@ def test_pulls(tmp_path):
     # do not save figure, but close it
     with mock.patch("cabinetry.visualize.utils._save_and_close") as mock_close_safe:
         fig = plot_result.pulls(bestfit, uncertainty, labels, close_figure=True)
-        assert mock_close_safe.call_args_list == [[(fig, None, True), {}]]
+        assert mock_close_safe.call_args_list == [((fig, None, True), {})]
 
     plt.close("all")
 
@@ -104,7 +104,7 @@ def test_ranking(tmp_path):
             impact_postfit_down,
             close_figure=True,
         )
-        assert mock_close_safe.call_args_list == [[(fig, None, True), {}]]
+        assert mock_close_safe.call_args_list == [((fig, None, True), {})]
 
     plt.close("all")
 
@@ -132,7 +132,7 @@ def test_scan(tmp_path):
         fig = plot_result.scan(
             par_name, par_mle, par_unc, par_vals, par_nlls, close_figure=True
         )
-        assert mock_close_safe.call_args_list == [[(fig, None, True), {}]]
+        assert mock_close_safe.call_args_list == [((fig, None, True), {})]
 
     plt.close("all")
 
@@ -163,6 +163,6 @@ def test_limit(tmp_path):
         fig = plot_result.limit(
             observed_CLs, expected_CLs, poi_values, close_figure=True
         )
-        assert mock_close_safe.call_args_list == [[(fig, None, True), {}]]
+        assert mock_close_safe.call_args_list == [((fig, None, True), {})]
 
     plt.close("all")

@@ -168,10 +168,10 @@ def test_data_mc(
     assert isinstance(fig_dict_list[0]["figure"], matplotlib.figure.Figure)
     assert fig_dict_list[0]["region"] == "Signal Region"
 
-    assert mock_data.call_args_list == [[(model, data), {}]]
-    assert mock_filter.call_args_list == [[(model, None), {}]]
-    assert mock_dict.call_args_list == [[(config, "Signal Region"), {}]]
-    assert mock_bins.call_args_list == [[({"Name": "region", "Variable": "x"},), {}]]
+    assert mock_data.call_args_list == [((model, data), {})]
+    assert mock_filter.call_args_list == [((model, None), {})]
+    assert mock_dict.call_args_list == [((config, "Signal Region"), {})]
+    assert mock_bins.call_args_list == [(({"Name": "region", "Variable": "x"},), {})]
 
     expected_histograms = [
         {
@@ -238,7 +238,7 @@ def test_data_mc(
 
     # no matching channels (via side_effect)
     assert visualize.data_mc(model_pred, data, channels="abc") is None
-    assert mock_filter.call_args == [(model, "abc"), {}]
+    assert mock_filter.call_args == ((model, "abc"), {})
     assert mock_draw.call_count == 3  # no new call
 
 
@@ -472,15 +472,15 @@ def test_templates(mock_draw, mock_histo_config, mock_histo_path, tmp_path):
     assert fig_dict_list[0]["systematic"] == "sys"
 
     # nominal histogram loading
-    assert mock_histo_config.call_args_list == [[(tmp_path, region, sample, {}), {}]]
+    assert mock_histo_config.call_args_list == [((tmp_path, region, sample, {}), {})]
     # variation histograms
     down_path_orig = pathlib.Path(str(down_path).replace("_modified", ""))
     up_path_orig = pathlib.Path(str(up_path).replace("_modified", ""))
     assert mock_histo_path.call_args_list == [
-        [(down_path_orig,), {}],
-        [(down_path,), {}],
-        [(up_path_orig,), {}],
-        [(up_path,), {}],
+        ((down_path_orig,), {}),
+        ((down_path,), {}),
+        ((up_path_orig,), {}),
+        ((up_path,), {}),
     ]
 
     nominal = {"yields": [1.0], "stdev": [0.1]}
@@ -490,26 +490,26 @@ def test_templates(mock_draw, mock_histo_config, mock_histo_path, tmp_path):
     down_mod = {"yields": [3.0], "stdev": [0.3]}
     bins = [0.0, 1.0]
     assert mock_draw.call_args_list == [
-        [
+        (
             (nominal, up_orig, down_orig, up_mod, down_mod, bins, "x", figure_path),
             {
                 "label": "region: region\nsample: sample\nsystematic: sys",
                 "close_figure": False,
             },
-        ]
+        )
     ]
 
     # close figure, do not save figure
     _ = visualize.templates(
         config, figure_folder=folder_path, close_figure=True, save_figure=False
     )
-    assert mock_draw.call_args == [
+    assert mock_draw.call_args == (
         (nominal, up_orig, down_orig, up_mod, down_mod, bins, "x", None),
         {
             "label": "region: region\nsample: sample\nsystematic: sys",
             "close_figure": True,
         },
-    ]
+    )
 
     # remove files for variation histograms
     up_path.unlink()
