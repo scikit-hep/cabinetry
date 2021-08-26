@@ -144,10 +144,10 @@ def test_yields(mock_data, mock_filter, mock_bin, mock_channel, example_spec, ca
     data = [12.0, 1.0]  # with auxdata to strip via mock
 
     tabulate.yields(model_pred, data)
-    assert mock_data.call_args_list == [[(model, data), {}]]
-    assert mock_filter.call_args_list == [[(model, None), {}]]
+    assert mock_data.call_args_list == [((model, data), {})]
+    assert mock_filter.call_args_list == [((model, None), {})]
     assert mock_bin.call_args_list == [
-        [(model, [[[10.0]]], [[0.3]], [[12.0]], ["SR"], "pred"), {}]
+        ((model, [[[10.0]]], [[0.3]], [[12.0]], ["SR"], "pred"), {})
     ]
     assert mock_channel.call_count == 0
 
@@ -160,7 +160,7 @@ def test_yields(mock_data, mock_filter, mock_bin, mock_channel, example_spec, ca
 
     # no channels to include
     tabulate.yields(model_pred, data, channels="abc")
-    assert mock_filter.call_args == [(model, "abc"), {}]
+    assert mock_filter.call_args == ((model, "abc"), {})
     assert mock_bin.call_count == 1  # one call from before, no new call
     assert mock_channel.call_count == 0
 
@@ -168,5 +168,5 @@ def test_yields(mock_data, mock_filter, mock_bin, mock_channel, example_spec, ca
     tabulate.yields(model_pred, data, per_bin=False, per_channel=True)
     assert mock_bin.call_count == 1  # one call from before
     assert mock_channel.call_args_list == [
-        [(model, [[10.0]], [0.3], [12.0], ["SR"], "pred"), {}]
+        ((model, [[10.0]], [0.3], [12.0], ["SR"], "pred"), {})
     ]

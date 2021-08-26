@@ -328,8 +328,8 @@ def test__data_per_channel(mock_aux, mock_bin, example_spec_multibin):
     assert data_per_ch == [[25.0, 5.0], [8.0]]  # auxdata stripped and split by channel
 
     # auxdata and channel index call
-    assert mock_aux.call_args_list == [[(model, data), {}]]
-    assert mock_bin.call_args_list == [[(model,), {}]]
+    assert mock_aux.call_args_list == [((model, data), {})]
+    assert mock_bin.call_args_list == [((model,), {})]
 
 
 def test__filter_channels(example_spec_multibin, caplog):

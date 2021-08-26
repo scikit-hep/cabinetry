@@ -293,7 +293,7 @@ def test_fit(mock_fit, mock_print, mock_gof):
     # fit through pyhf.infer API
     fit_results = fit.fit(model, data)
     assert mock_fit.call_args_list == [
-        [(model, data), {"minos": None, "custom_fit": False}]
+        ((model, data), {"minos": None, "custom_fit": False})
     ]
     mock_print.assert_called_once()
     assert mock_print.call_args[0][0].bestfit == [1.0]
@@ -304,10 +304,10 @@ def test_fit(mock_fit, mock_print, mock_gof):
     # custom fit
     fit_results = fit.fit(model, data, custom_fit=True)
     assert mock_fit.call_count == 2
-    assert mock_fit.call_args == [
+    assert mock_fit.call_args == (
         (model, data),
         {"minos": None, "custom_fit": True},
-    ]
+    )
     assert mock_print.call_args[0][0].bestfit == [1.0]
     assert mock_print.call_args[0][0].uncertainty == [0.1]
     assert fit_results.bestfit == [1.0]
@@ -324,7 +324,7 @@ def test_fit(mock_fit, mock_print, mock_gof):
 
     # goodness-of-fit test
     fit_results_gof = fit.fit(model, data, goodness_of_fit=True)
-    assert mock_gof.call_args_list == [[(model, data, 2.0), {}]]
+    assert mock_gof.call_args_list == [((model, data, 2.0), {})]
     assert fit_results_gof.goodness_of_fit == 0.1
 
 
