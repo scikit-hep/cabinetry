@@ -352,7 +352,7 @@ def fit(
     log.info("performing maximum likelihood fit")
 
     # convert minos parameter to list if a single parameter is specified as string
-    if minos is not None and isinstance(minos, str):
+    if isinstance(minos, str):
         minos = [minos]
 
     # perform fit

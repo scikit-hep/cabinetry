@@ -5,7 +5,6 @@ import awkward as ak
 import numpy as np
 import pyhf
 
-from cabinetry import configuration
 from cabinetry.fit.results_containers import FitResults
 
 
@@ -494,7 +493,8 @@ def _filter_channels(
     filtered_channels = model.config.channels
     # if one or more custom channels are provided, only include those
     if channels is not None:
-        channels = configuration._setting_to_list(channels)
+        if isinstance(channels, str):
+            channels = [channels]  # ensure list
         # only include if channel exists in model
         filtered_channels = [ch for ch in channels if ch in model.config.channels]
 
