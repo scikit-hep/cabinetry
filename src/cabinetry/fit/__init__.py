@@ -81,6 +81,7 @@ def _fit_model_pyhf(
     bestfit = pyhf.tensorlib.to_numpy(result[:, 0])
     uncertainty = pyhf.tensorlib.to_numpy(result[:, 1])
     labels = model_utils.parameter_names(model)
+    corr_mat = pyhf.tensorlib.to_numpy(corr_mat)
     best_twice_nll = float(best_twice_nll)  # convert 0-dim np.ndarray to float
 
     fit_results = FitResults(bestfit, uncertainty, labels, corr_mat, best_twice_nll)
@@ -174,7 +175,7 @@ def _fit_model_custom(
 
     bestfit = np.asarray(m.values)
     uncertainty = np.asarray(m.errors)
-    corr_mat = m.covariance.correlation()
+    corr_mat = m.covariance.correlation()  # iminuit.util.Matrix, subclass of np.ndarray
     best_twice_nll = m.fval
 
     fit_results = FitResults(bestfit, uncertainty, labels, corr_mat, best_twice_nll)
