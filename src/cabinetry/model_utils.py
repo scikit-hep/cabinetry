@@ -37,14 +37,15 @@ class ModelPrediction(NamedTuple):
 
 
 def model_and_data(
-    spec: Dict[str, Any], asimov: bool = False, with_aux: bool = True
+    spec: Dict[str, Any], asimov: bool = False, include_auxdata: bool = True
 ) -> Tuple[pyhf.pdf.Model, List[float]]:
     """Returns model and data for a ``pyhf`` workspace specification.
 
     Args:
         spec (Dict[str, Any]): a ``pyhf`` workspace specification
         asimov (bool, optional): whether to return the Asimov dataset, defaults to False
-        with_aux (bool, optional): whether to also return auxdata, defaults to True
+        include_auxdata (bool, optional): whether to also return auxdata, defaults to
+            True
 
     Returns:
         Tuple[pyhf.pdf.Model, List[float]]:
@@ -59,13 +60,13 @@ def model_and_data(
         }
     )  # use HistFactory InterpCode=4 (default in pyhf since v0.6.0)
     if not asimov:
-        data = workspace.data(model, with_aux=with_aux)
+        data = workspace.data(model, include_auxdata=include_auxdata)
     else:
-        data = asimov_data(model, with_aux=with_aux)
+        data = asimov_data(model, include_auxdata=include_auxdata)
     return model, data
 
 
-def asimov_data(model: pyhf.Model, with_aux: bool = True) -> List[float]:
+def asimov_data(model: pyhf.Model, include_auxdata: bool = True) -> List[float]:
     """Returns the Asimov dataset (optionally with auxdata) for a model.
 
     Initial parameter settings for normalization factors in the workspace are treated as
@@ -75,13 +76,14 @@ def asimov_data(model: pyhf.Model, with_aux: bool = True) -> List[float]:
 
     Args:
         model (pyhf.Model): the model from which to construct the dataset
-        with_aux (bool, optional): whether to also return auxdata, defaults to True
+        include_auxdata (bool, optional): whether to also return auxdata, defaults to
+            True
 
     Returns:
         List[float]: the Asimov dataset
     """
     asimov_data = pyhf.tensorlib.tolist(
-        model.expected_data(asimov_parameters(model), include_auxdata=with_aux)
+        model.expected_data(asimov_parameters(model), include_auxdata=include_auxdata)
     )
     return asimov_data
 
