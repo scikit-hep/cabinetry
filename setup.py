@@ -1,6 +1,6 @@
 from setuptools import setup
 
-extras_require = {"contrib": ["uproot>=4.0"]}
+extras_require = {"contrib": ["uproot>=4.1"]}  # uproot 4.1 for file writing
 extras_require["test"] = sorted(
     set(
         extras_require["contrib"]
