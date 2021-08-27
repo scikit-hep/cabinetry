@@ -7,9 +7,9 @@ def test_from_uproot(tmp_path, utils):
     fnames = [tmp_path / "test.root"]
     treename = "tree"
     varname = "var"
-    var_array = [1.1, 2.3, 3.0, 3.2]
+    var_array = np.asarray([1.1, 2.3, 3.0, 3.2])
     weightname_write = "weight"
-    weight_array = [1.0, 1.0, 2.0, 1.0]
+    weight_array = np.asarray([1.0, 1.0, 2.0, 1.0])
     bins = np.asarray([1, 2, 3, 4])
     # create something to read
     utils.create_ntuple(

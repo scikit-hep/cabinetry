@@ -3,7 +3,7 @@ import os
 
 import matplotlib.pyplot as plt
 import numpy as np
-import uproot3 as uproot
+import uproot
 
 
 def toy_distribution(noncentral, multiplier, offset, num_events):
@@ -60,35 +60,19 @@ def create_file(file_name, distributions, weights, labels, extra_weights=None):
         for i, label in enumerate(labels):
             lep_charge = create_lepton_charge(n_events)
             if label == "background":
-                f[label] = uproot.newtree(
-                    {
-                        "jet_pt": "float64",
-                        "weight": "float64",
-                        "lep_charge": "int",
-                        "weight_up": "float64",
-                        "weight_down": "float64",
-                    }
-                )
-                f[label].extend(
-                    {
-                        "jet_pt": distributions[i],
-                        "weight": weights[i],
-                        "lep_charge": lep_charge,
-                        "weight_up": extra_weights[0],
-                        "weight_down": extra_weights[1],
-                    }
-                )
+                f[label] = {
+                    "jet_pt": distributions[i],
+                    "weight": weights[i],
+                    "lep_charge": lep_charge,
+                    "weight_up": extra_weights[0],
+                    "weight_down": extra_weights[1],
+                }
             else:
-                f[label] = uproot.newtree(
-                    {"jet_pt": "float64", "weight": "float64", "lep_charge": "int"}
-                )
-                f[label].extend(
-                    {
-                        "jet_pt": distributions[i],
-                        "weight": weights[i],
-                        "lep_charge": lep_charge,
-                    }
-                )
+                f[label] = {
+                    "jet_pt": distributions[i],
+                    "weight": weights[i],
+                    "lep_charge": lep_charge,
+                }
 
 
 def create_file_pseudodata(file_name, pseudodata):
@@ -96,8 +80,7 @@ def create_file_pseudodata(file_name, pseudodata):
     with uproot.recreate(file_name) as f:
         # write pseudodata
         lep_charge = create_lepton_charge(n_events)
-        f["pseudodata"] = uproot.newtree({"jet_pt": "float64", "lep_charge": "int"})
-        f["pseudodata"].extend({"jet_pt": pseudodata, "lep_charge": lep_charge})
+        f["pseudodata"] = {"jet_pt": pseudodata, "lep_charge": lep_charge}
 
 
 def read_file(file_name):
@@ -105,28 +88,23 @@ def read_file(file_name):
     weights = []
     labels = []
     with uproot.open(file_name) as f:
-        all_trees = f.allkeys(
-            filterclass=lambda cls: issubclass(cls, uproot.tree.TTreeMethods)
-        )
+        all_trees = f.keys(filter_classname="TTree", recursive=True)
         for tree in all_trees:
-            distributions.append(f[tree].array("jet_pt"))
-            weights.append(f[tree].array("weight"))
-            labels.append(tree)
+            distributions.append(f[tree]["jet_pt"].array(library="np"))
+            weights.append(f[tree]["weight"].array(library="np"))
+            labels.append(f[tree].name)
     return distributions, weights, labels
 
 
 def read_file_pseudodata(file_name):
     with uproot.open(file_name) as f:
-        distribution = f["pseudodata"].array("jet_pt")
+        distribution = f["pseudodata"]["jet_pt"].array(library="np")
     return distribution
 
 
 def plot_distributions(data, weights, labels, pseudodata, bins):
     bin_width_str = str(int(bins[1] - bins[0]))
-
-    # labels = [l.split('\'')[1] for l in labels]
     yield_each = [str(round(np.sum(w), 1)) for w in weights]
-    labels = [label.decode().split(";")[0] for label in labels]
 
     # plot normalized distributions
     for i in reversed(range(len(data))):
