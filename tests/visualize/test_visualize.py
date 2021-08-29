@@ -509,7 +509,7 @@ def test_ranking(mock_draw):
     assert mock_draw.call_args[0][7] == figure_path
     assert mock_draw.call_args[1] == {"close_figure": True}
 
-    # maximum parameter amount specified, close figure, do not save figure
+    # maximum parameter amount specified, do not close figure, do not save figure
     _ = visualize.ranking(
         ranking_results,
         figure_folder=folder_path,
