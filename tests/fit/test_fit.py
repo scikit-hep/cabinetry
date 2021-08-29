@@ -210,11 +210,7 @@ def test__run_minos(caplog):
             + pars[0]
         )
 
-    m = iminuit.Minuit(
-        func_to_minimize,
-        [1.0, 1.0],
-        name=["a", "b"],
-    )
+    m = iminuit.Minuit(func_to_minimize, [1.0, 1.0], name=["a", "b"])
     m.errordef = 1
     m.migrad()
     fit._run_minos(m, ["b"], ["a", "b"])
@@ -223,10 +219,7 @@ def test__run_minos(caplog):
     caplog.clear()
 
     # proper labels not known to iminuit
-    m = iminuit.Minuit(
-        func_to_minimize,
-        [1.0, 1.0],
-    )
+    m = iminuit.Minuit(func_to_minimize, [1.0, 1.0])
     m.errordef = 1
     m.migrad()
     fit._run_minos(m, ["x0"], ["a", "b"])
@@ -235,10 +228,7 @@ def test__run_minos(caplog):
     caplog.clear()
 
     # unknown parameter, MINOS does not run
-    m = iminuit.Minuit(
-        func_to_minimize,
-        [1.0, 1.0],
-    )
+    m = iminuit.Minuit(func_to_minimize, [1.0, 1.0])
     m.errordef = 1
     m.migrad()
     fit._run_minos(m, ["x2"], ["a", "b"])
@@ -304,10 +294,7 @@ def test_fit(mock_fit, mock_print, mock_gof):
     # custom fit
     fit_results = fit.fit(model, data, custom_fit=True)
     assert mock_fit.call_count == 2
-    assert mock_fit.call_args == (
-        (model, data),
-        {"minos": None, "custom_fit": True},
-    )
+    assert mock_fit.call_args == ((model, data), {"minos": None, "custom_fit": True})
     assert mock_print.call_args[0][0].bestfit == [1.0]
     assert mock_print.call_args[0][0].uncertainty == [0.1]
     assert fit_results.bestfit == [1.0]

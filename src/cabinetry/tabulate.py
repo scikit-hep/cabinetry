@@ -99,11 +99,7 @@ def _yields_per_bin(
 
     log.info(
         f"yields per bin for {label} model prediction:\n"
-        + tabulate.tabulate(
-            table,
-            headers=headers,
-            tablefmt="fancy_grid",
-        )
+        + tabulate.tabulate(table, headers=headers, tablefmt="fancy_grid")
     )
     return table
 
@@ -154,11 +150,7 @@ def _yields_per_channel(
 
     log.info(
         f"yields per channel for {label} model prediction:\n"
-        + tabulate.tabulate(
-            table,
-            headers="keys",
-            tablefmt="fancy_grid",
-        )
+        + tabulate.tabulate(table, headers="keys", tablefmt="fancy_grid")
     )
     return table
 

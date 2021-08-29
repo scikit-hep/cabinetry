@@ -54,9 +54,7 @@ def from_uproot(
     if weight_is_expression:
         # need to read observables and weights
         array_generator = uproot.iterate(
-            paths_with_trees,
-            expressions=[variable, weight],
-            cut=selection_filter,
+            paths_with_trees, expressions=[variable, weight], cut=selection_filter
         )
         obs_list = []
         weight_list = []
@@ -69,9 +67,7 @@ def from_uproot(
     else:
         # only need to read the observables
         array_generator = uproot.iterate(
-            paths_with_trees,
-            expressions=[variable],
-            cut=selection_filter,
+            paths_with_trees, expressions=[variable], cut=selection_filter
         )
         obs_list = []
         for arr in array_generator:

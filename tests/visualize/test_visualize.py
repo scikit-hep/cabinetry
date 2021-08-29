@@ -87,12 +87,7 @@ def test_data_mc_from_histograms(mock_load, mock_draw, mock_stdev):
         (
             (
                 [
-                    {
-                        "label": "data",
-                        "isData": True,
-                        "yields": [1.0],
-                        "variable": "x",
-                    },
+                    {"label": "data", "isData": True, "yields": [1.0], "variable": "x"},
                     {
                         "label": "sample_1",
                         "isData": False,
@@ -144,14 +139,7 @@ def test_data_mc_from_histograms(mock_load, mock_draw, mock_stdev):
     side_effect=[["Signal Region"], ["Signal Region"], ["Signal Region"], []],
 )
 @mock.patch("cabinetry.model_utils._data_per_channel", return_value=[[12.0]])
-def test_data_mc(
-    mock_data,
-    mock_filter,
-    mock_dict,
-    mock_bins,
-    mock_draw,
-    example_spec,
-):
+def test_data_mc(mock_data, mock_filter, mock_dict, mock_bins, mock_draw, example_spec):
     config = {"config": "abc"}
     figure_folder = "tmp"
     model = pyhf.Workspace(example_spec).model()

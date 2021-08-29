@@ -116,10 +116,7 @@ class WorkspaceBuilder:
         return modifier
 
     def normplusshape_modifiers(
-        self,
-        region: Dict[str, Any],
-        sample: Dict[str, Any],
-        systematic: Dict[str, Any],
+        self, region: Dict[str, Any], sample: Dict[str, Any], systematic: Dict[str, Any]
     ) -> List[Dict[str, Any]]:
         """Returns modifiers for a correlated shape + normalization effect.
 
@@ -235,7 +232,7 @@ class WorkspaceBuilder:
                     # OverallSys (norm uncertainty with Gaussian constraint)
                     log.debug(
                         f"adding OverallSys {systematic['Name']} to sample"
-                        f" {sample['Name']} in region {region['Name']}",
+                        f" {sample['Name']} in region {region['Name']}"
                     )
                     modifiers.append(self.normalization_modifier(systematic))
                 elif systematic["Type"] == "NormPlusShape":
@@ -243,7 +240,7 @@ class WorkspaceBuilder:
                     # and a HistoSys for the shape variation
                     log.debug(
                         f"adding OverallSys and HistoSys {systematic['Name']} to sample"
-                        f" {sample['Name']} in region {region['Name']}",
+                        f" {sample['Name']} in region {region['Name']}"
                     )
                     modifiers += self.normplusshape_modifiers(
                         region, sample, systematic

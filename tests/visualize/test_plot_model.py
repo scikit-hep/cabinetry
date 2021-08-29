@@ -129,10 +129,7 @@ def test_templates(tmp_path):
         "yields": np.asarray([0.9, 0.9]),
         "stdev": np.asarray([0.06, 0.07]),
     }
-    up_histo_mod = {
-        "yields": np.asarray([1.3, 1.6]),
-        "stdev": np.asarray([0.05, 0.07]),
-    }
+    up_histo_mod = {"yields": np.asarray([1.3, 1.6]), "stdev": np.asarray([0.05, 0.07])}
     down_histo_mod = {
         "yields": np.asarray([0.85, 0.95]),
         "stdev": np.asarray([0.06, 0.07]),

@@ -242,10 +242,7 @@ def scan(
     help='folder to save figures to (default: "figures")',
 )
 def limit(
-    ws_spec: io.TextIOWrapper,
-    asimov: bool,
-    tolerance: float,
-    figfolder: str,
+    ws_spec: io.TextIOWrapper, asimov: bool, tolerance: float, figfolder: str
 ) -> None:
     """Calculates upper limits and visualizes CLs distribution.
 
@@ -261,10 +258,7 @@ def limit(
 @click.command()
 @click.argument("ws_spec", type=click.File("r"))
 @click.option("--asimov", is_flag=True, help="fit Asimov dataset (default: False)")
-def significance(
-    ws_spec: io.TextIOWrapper,
-    asimov: bool,
-) -> None:
+def significance(ws_spec: io.TextIOWrapper, asimov: bool) -> None:
     """Calculates observed and expected discovery significance.
 
     WS_SPEC: path to workspace used in fit

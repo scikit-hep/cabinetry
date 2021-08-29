@@ -93,10 +93,7 @@ def data_mc(
     mc_containers = []
     for mc_sample_yield in mc_histograms_yields:
         mc_container = ax1.bar(
-            bin_centers,
-            mc_sample_yield,
-            width=bin_width,
-            bottom=total_yield,
+            bin_centers, mc_sample_yield, width=bin_width, bottom=total_yield
         )
         mc_containers.append(mc_container)
 
@@ -266,13 +263,7 @@ def templates(
     ax2 = fig.add_subplot(gs[1])
 
     # ratio plot line through unity and stat. uncertainty of nominal
-    ax2.plot(
-        [bin_edges[0], bin_edges[-1]],
-        [1, 1],
-        "--",
-        color="black",
-        linewidth=1,
-    )
+    ax2.plot([bin_edges[0], bin_edges[-1]], [1, 1], "--", color="black", linewidth=1)
     rel_nominal_stat_unc = nominal_histo["stdev"] / nominal_histo["yields"]
     ax2.bar(
         bin_centers,
@@ -316,13 +307,7 @@ def templates(
         # lines to show each template distribution
         line_y = [y for y in template["yields"] for _ in range(2)]
 
-        ax1.plot(
-            line_x,
-            line_y,
-            color=color,
-            linestyle=linestyle,
-            label=template_label,
-        )
+        ax1.plot(line_x, line_y, color=color, linestyle=linestyle, label=template_label)
         if template_label == "nominal":
             # band for stat. uncertainty of nominal prediction
             ax1.bar(
@@ -349,12 +334,7 @@ def templates(
             template_ratio_plot = template["yields"] / nominal_histo["yields"]
             line_y = [y for y in template_ratio_plot for _ in range(2)]
 
-            ax2.plot(
-                line_x,
-                line_y,
-                color=color,
-                linestyle=linestyle,
-            )
+            ax2.plot(line_x, line_y, color=color, linestyle=linestyle)
             ax2.errorbar(
                 bin_centers,
                 template_ratio_plot,

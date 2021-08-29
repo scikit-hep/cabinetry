@@ -20,9 +20,7 @@ from cabinetry.fit.results_containers import (
 log = logging.getLogger(__name__)
 
 
-def print_results(
-    fit_results: FitResults,
-) -> None:
+def print_results(fit_results: FitResults) -> None:
     """Prints the best-fit parameter results and associated uncertainties.
 
     Args:
@@ -156,11 +154,7 @@ def _fit_model_custom(
         twice_nll = -2 * model.logpdf(pars, data)
         return twice_nll[0]
 
-    m = iminuit.Minuit(
-        twice_nll_func,
-        init_pars,
-        name=labels,
-    )
+    m = iminuit.Minuit(twice_nll_func, init_pars, name=labels)
     m.errors = step_size
     m.limits = par_bounds
     m.fixed = fix_pars

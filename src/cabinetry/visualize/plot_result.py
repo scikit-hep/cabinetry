@@ -363,11 +363,7 @@ def limit(
 
     # expected CLs
     ax.plot(
-        poi_values,
-        expected_CLs[:, 2],
-        "--",
-        color="black",
-        label=r"expected CL$_S$",
+        poi_values, expected_CLs[:, 2], "--", color="black", label=r"expected CL$_S$"
     )
 
     # observed CLs values
