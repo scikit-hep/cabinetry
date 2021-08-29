@@ -243,185 +243,6 @@ def test_data_mc(
 
 
 @mock.patch(
-    "cabinetry.visualize.plot_result.correlation_matrix",
-    return_value=matplotlib.figure.Figure(),
-)
-def test_correlation_matrix(mock_draw):
-    corr_mat = np.asarray([[1.0, 0.2, 0.1], [0.2, 1.0, 0.1], [0.1, 0.1, 1.0]])
-    corr_mat_pruned = np.asarray([[1.0, 0.2], [0.2, 1.0]])
-    labels = ["a", "b", "c"]
-    labels_pruned = ["a", "b"]
-    folder_path = "tmp"
-    figure_path = pathlib.Path(folder_path) / "correlation_matrix.pdf"
-    fit_results = fit.FitResults(np.empty(0), np.empty(0), labels, corr_mat, 1.0)
-
-    # pruning with threshold
-    fig = visualize.correlation_matrix(
-        fit_results, figure_folder=folder_path, pruning_threshold=0.15
-    )
-    assert isinstance(fig, matplotlib.figure.Figure)
-
-    mock_draw.assert_called_once()
-    assert np.allclose(mock_draw.call_args[0][0], corr_mat_pruned)
-    assert np.any(
-        [mock_draw.call_args[0][1][i] == labels[i] for i in range(len(labels_pruned))]
-    )
-    assert mock_draw.call_args[0][2] == figure_path
-    assert mock_draw.call_args[1] == {"close_figure": False}
-
-    # pruning of fixed parameter (all zeros in correlation matrix row/column), close
-    # figure, do not save
-    corr_mat_fixed = np.asarray([[1.0, 0.2, 0.0], [0.2, 1.0, 0.0], [0.0, 0.0, 0.0]])
-    fit_results_fixed = fit.FitResults(
-        np.empty(0), np.empty(0), labels, corr_mat_fixed, 1.0
-    )
-    _ = visualize.correlation_matrix(
-        fit_results_fixed,
-        figure_folder=folder_path,
-        close_figure=True,
-        save_figure=False,
-    )
-    assert np.allclose(mock_draw.call_args_list[1][0][0], corr_mat_pruned)
-    assert np.any(
-        [
-            mock_draw.call_args_list[1][0][1][i] == labels[i]
-            for i in range(len(labels_pruned))
-        ]
-    )
-    assert mock_draw.call_args[0][2] is None
-    assert mock_draw.call_args[1] == {"close_figure": True}
-
-
-@mock.patch(
-    "cabinetry.visualize.plot_result.pulls", return_value=matplotlib.figure.Figure()
-)
-def test_pulls(mock_draw):
-    bestfit = np.asarray([0.8, 1.0, 1.05, 1.1])
-    uncertainty = np.asarray([0.9, 1.0, 0.03, 0.7])
-    labels = ["a", "b", "staterror_region[bin_0]", "c"]
-    exclude = ["a"]
-    folder_path = "tmp"
-    fit_results = fit.FitResults(bestfit, uncertainty, labels, np.empty(0), 1.0)
-
-    filtered_bestfit = np.asarray([1.0, 1.1])
-    filtered_uncertainty = np.asarray([1.0, 0.7])
-    filtered_labels = np.asarray(["b", "c"])
-    figure_path = pathlib.Path(folder_path) / "pulls.pdf"
-
-    # with filtering
-    fig = visualize.pulls(fit_results, figure_folder=folder_path, exclude=exclude)
-    assert isinstance(fig, matplotlib.figure.Figure)
-
-    mock_draw.assert_called_once()
-    assert np.allclose(mock_draw.call_args[0][0], filtered_bestfit)
-    assert np.allclose(mock_draw.call_args[0][1], filtered_uncertainty)
-    assert np.any(
-        [
-            mock_draw.call_args[0][2][i] == filtered_labels[i]
-            for i in range(len(filtered_labels))
-        ]
-    )
-    assert mock_draw.call_args[0][3] == figure_path
-    assert mock_draw.call_args[1] == {"close_figure": False}
-
-    # filtering single parameter instead of list
-    _ = visualize.pulls(fit_results, figure_folder=folder_path, exclude=exclude[0])
-
-    assert np.allclose(mock_draw.call_args[0][0], filtered_bestfit)
-    assert np.allclose(mock_draw.call_args[0][1], filtered_uncertainty)
-    assert np.any(
-        [
-            mock_draw.call_args[0][2][i] == filtered_labels[i]
-            for i in range(len(filtered_labels))
-        ]
-    )
-
-    # without filtering via list, but with staterror removal, fixed parameter removal,
-    # closing figure, not saving
-    fit_results.uncertainty[0] = 0.0
-
-    bestfit_expected = np.asarray([1.0, 1.1])
-    uncertainty_expected = np.asarray([1.0, 0.7])
-    labels_expected = ["b", "c"]
-    visualize.pulls(
-        fit_results, figure_folder=folder_path, close_figure=True, save_figure=False
-    )
-
-    assert np.allclose(mock_draw.call_args[0][0], bestfit_expected)
-    assert np.allclose(mock_draw.call_args[0][1], uncertainty_expected)
-    assert np.any(
-        [
-            mock_draw.call_args[0][2][i] == labels_expected[i]
-            for i in range(len(labels_expected))
-        ]
-    )
-    assert mock_draw.call_args[0][3] is None
-    assert mock_draw.call_args[1] == {"close_figure": True}
-
-
-@mock.patch(
-    "cabinetry.visualize.plot_result.ranking", return_value=matplotlib.figure.Figure()
-)
-def test_ranking(mock_draw):
-    bestfit = np.asarray([1.2, 0.1])
-    uncertainty = np.asarray([0.2, 0.8])
-    labels = ["staterror_a", "modeling"]
-    impact_prefit_up = np.asarray([0.1, 0.5])
-    impact_prefit_down = np.asarray([-0.2, -0.4])
-    impact_postfit_up = np.asarray([0.1, 0.4])
-    impact_postfit_down = np.asarray([-0.2, -0.3])
-    ranking_results = fit.RankingResults(
-        bestfit,
-        uncertainty,
-        labels,
-        impact_prefit_up,
-        impact_prefit_down,
-        impact_postfit_up,
-        impact_postfit_down,
-    )
-    folder_path = "tmp"
-
-    figure_path = pathlib.Path(folder_path) / "ranking.pdf"
-    bestfit_expected = np.asarray([0.1, 1.2])
-    uncertainty_expected = np.asarray([0.8, 0.2])
-    labels_expected = ["modeling", "staterror_a"]
-
-    fig = visualize.ranking(ranking_results, figure_folder=folder_path)
-    assert isinstance(fig, matplotlib.figure.Figure)
-
-    assert mock_draw.call_count == 1
-    assert np.allclose(mock_draw.call_args[0][0], bestfit_expected)
-    assert np.allclose(mock_draw.call_args[0][1], uncertainty_expected)
-    for i_lab, label in enumerate(mock_draw.call_args[0][2]):
-        assert label == labels_expected[i_lab]
-    assert np.allclose(mock_draw.call_args[0][3], impact_prefit_up[::-1])
-    assert np.allclose(mock_draw.call_args[0][4], impact_prefit_down[::-1])
-    assert np.allclose(mock_draw.call_args[0][5], impact_postfit_up[::-1])
-    assert np.allclose(mock_draw.call_args[0][6], impact_postfit_down[::-1])
-    assert mock_draw.call_args[0][7] == figure_path
-    assert mock_draw.call_args[1] == {"close_figure": False}
-
-    # maximum parameter amount specified, close figure, do not save figure
-    _ = visualize.ranking(
-        ranking_results,
-        figure_folder=folder_path,
-        max_pars=1,
-        close_figure=True,
-        save_figure=False,
-    )
-    assert mock_draw.call_count == 2
-    assert np.allclose(mock_draw.call_args[0][0], bestfit_expected[0])
-    assert np.allclose(mock_draw.call_args[0][1], uncertainty_expected[0])
-    assert mock_draw.call_args[0][2] == labels_expected[0]
-    assert np.allclose(mock_draw.call_args[0][3], impact_prefit_up[1])
-    assert np.allclose(mock_draw.call_args[0][4], impact_prefit_down[1])
-    assert np.allclose(mock_draw.call_args[0][5], impact_postfit_up[1])
-    assert np.allclose(mock_draw.call_args[0][6], impact_postfit_down[1])
-    assert mock_draw.call_args[0][7] is None
-    assert mock_draw.call_args[1] == {"close_figure": True}
-
-
-@mock.patch(
     "cabinetry.histo.Histogram.from_path",
     side_effect=[
         MockHistogram([0.0, 1.0], [2.0], [0.2]),
@@ -530,6 +351,185 @@ def test_templates(mock_draw, mock_histo_config, mock_histo_path, tmp_path):
 
 
 @mock.patch(
+    "cabinetry.visualize.plot_result.correlation_matrix",
+    return_value=matplotlib.figure.Figure(),
+)
+def test_correlation_matrix(mock_draw):
+    corr_mat = np.asarray([[1.0, 0.2, 0.1], [0.2, 1.0, 0.1], [0.1, 0.1, 1.0]])
+    corr_mat_pruned = np.asarray([[1.0, 0.2], [0.2, 1.0]])
+    labels = ["a", "b", "c"]
+    labels_pruned = ["a", "b"]
+    folder_path = "tmp"
+    figure_path = pathlib.Path(folder_path) / "correlation_matrix.pdf"
+    fit_results = fit.FitResults(np.empty(0), np.empty(0), labels, corr_mat, 1.0)
+
+    # pruning with threshold
+    fig = visualize.correlation_matrix(
+        fit_results, figure_folder=folder_path, pruning_threshold=0.15
+    )
+    assert isinstance(fig, matplotlib.figure.Figure)
+
+    mock_draw.assert_called_once()
+    assert np.allclose(mock_draw.call_args[0][0], corr_mat_pruned)
+    assert np.any(
+        [mock_draw.call_args[0][1][i] == labels[i] for i in range(len(labels_pruned))]
+    )
+    assert mock_draw.call_args[0][2] == figure_path
+    assert mock_draw.call_args[1] == {"close_figure": True}
+
+    # pruning of fixed parameter (all zeros in correlation matrix row/column), do not
+    # close figure, do not save
+    corr_mat_fixed = np.asarray([[1.0, 0.2, 0.0], [0.2, 1.0, 0.0], [0.0, 0.0, 0.0]])
+    fit_results_fixed = fit.FitResults(
+        np.empty(0), np.empty(0), labels, corr_mat_fixed, 1.0
+    )
+    _ = visualize.correlation_matrix(
+        fit_results_fixed,
+        figure_folder=folder_path,
+        close_figure=False,
+        save_figure=False,
+    )
+    assert np.allclose(mock_draw.call_args_list[1][0][0], corr_mat_pruned)
+    assert np.any(
+        [
+            mock_draw.call_args_list[1][0][1][i] == labels[i]
+            for i in range(len(labels_pruned))
+        ]
+    )
+    assert mock_draw.call_args[0][2] is None
+    assert mock_draw.call_args[1] == {"close_figure": False}
+
+
+@mock.patch(
+    "cabinetry.visualize.plot_result.pulls", return_value=matplotlib.figure.Figure()
+)
+def test_pulls(mock_draw):
+    bestfit = np.asarray([0.8, 1.0, 1.05, 1.1])
+    uncertainty = np.asarray([0.9, 1.0, 0.03, 0.7])
+    labels = ["a", "b", "staterror_region[bin_0]", "c"]
+    exclude = ["a"]
+    folder_path = "tmp"
+    fit_results = fit.FitResults(bestfit, uncertainty, labels, np.empty(0), 1.0)
+
+    filtered_bestfit = np.asarray([1.0, 1.1])
+    filtered_uncertainty = np.asarray([1.0, 0.7])
+    filtered_labels = np.asarray(["b", "c"])
+    figure_path = pathlib.Path(folder_path) / "pulls.pdf"
+
+    # with filtering
+    fig = visualize.pulls(fit_results, figure_folder=folder_path, exclude=exclude)
+    assert isinstance(fig, matplotlib.figure.Figure)
+
+    mock_draw.assert_called_once()
+    assert np.allclose(mock_draw.call_args[0][0], filtered_bestfit)
+    assert np.allclose(mock_draw.call_args[0][1], filtered_uncertainty)
+    assert np.any(
+        [
+            mock_draw.call_args[0][2][i] == filtered_labels[i]
+            for i in range(len(filtered_labels))
+        ]
+    )
+    assert mock_draw.call_args[0][3] == figure_path
+    assert mock_draw.call_args[1] == {"close_figure": True}
+
+    # filtering single parameter instead of list
+    _ = visualize.pulls(fit_results, figure_folder=folder_path, exclude=exclude[0])
+
+    assert np.allclose(mock_draw.call_args[0][0], filtered_bestfit)
+    assert np.allclose(mock_draw.call_args[0][1], filtered_uncertainty)
+    assert np.any(
+        [
+            mock_draw.call_args[0][2][i] == filtered_labels[i]
+            for i in range(len(filtered_labels))
+        ]
+    )
+
+    # without filtering via list, but with staterror removal, fixed parameter removal,
+    # not closing figure, not saving
+    fit_results.uncertainty[0] = 0.0
+
+    bestfit_expected = np.asarray([1.0, 1.1])
+    uncertainty_expected = np.asarray([1.0, 0.7])
+    labels_expected = ["b", "c"]
+    visualize.pulls(
+        fit_results, figure_folder=folder_path, close_figure=False, save_figure=False
+    )
+
+    assert np.allclose(mock_draw.call_args[0][0], bestfit_expected)
+    assert np.allclose(mock_draw.call_args[0][1], uncertainty_expected)
+    assert np.any(
+        [
+            mock_draw.call_args[0][2][i] == labels_expected[i]
+            for i in range(len(labels_expected))
+        ]
+    )
+    assert mock_draw.call_args[0][3] is None
+    assert mock_draw.call_args[1] == {"close_figure": False}
+
+
+@mock.patch(
+    "cabinetry.visualize.plot_result.ranking", return_value=matplotlib.figure.Figure()
+)
+def test_ranking(mock_draw):
+    bestfit = np.asarray([1.2, 0.1])
+    uncertainty = np.asarray([0.2, 0.8])
+    labels = ["staterror_a", "modeling"]
+    impact_prefit_up = np.asarray([0.1, 0.5])
+    impact_prefit_down = np.asarray([-0.2, -0.4])
+    impact_postfit_up = np.asarray([0.1, 0.4])
+    impact_postfit_down = np.asarray([-0.2, -0.3])
+    ranking_results = fit.RankingResults(
+        bestfit,
+        uncertainty,
+        labels,
+        impact_prefit_up,
+        impact_prefit_down,
+        impact_postfit_up,
+        impact_postfit_down,
+    )
+    folder_path = "tmp"
+
+    figure_path = pathlib.Path(folder_path) / "ranking.pdf"
+    bestfit_expected = np.asarray([0.1, 1.2])
+    uncertainty_expected = np.asarray([0.8, 0.2])
+    labels_expected = ["modeling", "staterror_a"]
+
+    fig = visualize.ranking(ranking_results, figure_folder=folder_path)
+    assert isinstance(fig, matplotlib.figure.Figure)
+
+    assert mock_draw.call_count == 1
+    assert np.allclose(mock_draw.call_args[0][0], bestfit_expected)
+    assert np.allclose(mock_draw.call_args[0][1], uncertainty_expected)
+    for i_lab, label in enumerate(mock_draw.call_args[0][2]):
+        assert label == labels_expected[i_lab]
+    assert np.allclose(mock_draw.call_args[0][3], impact_prefit_up[::-1])
+    assert np.allclose(mock_draw.call_args[0][4], impact_prefit_down[::-1])
+    assert np.allclose(mock_draw.call_args[0][5], impact_postfit_up[::-1])
+    assert np.allclose(mock_draw.call_args[0][6], impact_postfit_down[::-1])
+    assert mock_draw.call_args[0][7] == figure_path
+    assert mock_draw.call_args[1] == {"close_figure": True}
+
+    # maximum parameter amount specified, do not close figure, do not save figure
+    _ = visualize.ranking(
+        ranking_results,
+        figure_folder=folder_path,
+        max_pars=1,
+        close_figure=False,
+        save_figure=False,
+    )
+    assert mock_draw.call_count == 2
+    assert np.allclose(mock_draw.call_args[0][0], bestfit_expected[0])
+    assert np.allclose(mock_draw.call_args[0][1], uncertainty_expected[0])
+    assert mock_draw.call_args[0][2] == labels_expected[0]
+    assert np.allclose(mock_draw.call_args[0][3], impact_prefit_up[1])
+    assert np.allclose(mock_draw.call_args[0][4], impact_prefit_down[1])
+    assert np.allclose(mock_draw.call_args[0][5], impact_postfit_up[1])
+    assert np.allclose(mock_draw.call_args[0][6], impact_postfit_down[1])
+    assert mock_draw.call_args[0][7] is None
+    assert mock_draw.call_args[1] == {"close_figure": False}
+
+
+@mock.patch(
     "cabinetry.visualize.plot_result.scan", return_value=matplotlib.figure.Figure()
 )
 def test_scan(mock_draw):
@@ -553,14 +553,14 @@ def test_scan(mock_draw):
     assert np.allclose(mock_draw.call_args[0][3], par_vals)
     assert np.allclose(mock_draw.call_args[0][4], par_nlls)
     assert mock_draw.call_args[0][5] == figure_path
-    assert mock_draw.call_args[1] == {"close_figure": False}
+    assert mock_draw.call_args[1] == {"close_figure": True}
 
-    # close figure, do not save figure
+    # do not close figure, do not save figure
     _ = visualize.scan(
-        scan_results, figure_folder=folder_path, close_figure=True, save_figure=False
+        scan_results, figure_folder=folder_path, close_figure=False, save_figure=False
     )
     assert mock_draw.call_args[0][5] is None
-    assert mock_draw.call_args[1] == {"close_figure": True}
+    assert mock_draw.call_args[1] == {"close_figure": False}
 
 
 @mock.patch(
@@ -585,11 +585,11 @@ def test_limit(mock_draw):
     assert np.allclose(mock_draw.call_args[0][1], limit_results.expected_CLs)
     assert np.allclose(mock_draw.call_args[0][2], limit_results.poi_values)
     assert mock_draw.call_args[0][3] == figure_path
-    assert mock_draw.call_args[1] == {"close_figure": False}
+    assert mock_draw.call_args[1] == {"close_figure": True}
 
-    # close figure, do not save figure
+    # do not close figure, do not save figure
     _ = visualize.limit(
-        limit_results, figure_folder=folder_path, close_figure=True, save_figure=False
+        limit_results, figure_folder=folder_path, close_figure=False, save_figure=False
     )
     assert mock_draw.call_args[0][3] is None
-    assert mock_draw.call_args[1] == {"close_figure": True}
+    assert mock_draw.call_args[1] == {"close_figure": False}

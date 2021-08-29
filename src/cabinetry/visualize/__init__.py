@@ -69,9 +69,9 @@ def data_mc_from_histograms(
             defaults to None (automatically determine whether to use linear/log scale)
         log_scale_x (bool, optional): whether to use logarithmic horizontal axis,
             defaults to False
-        close_figure (bool, optional): whether to close each figure immediately after
-            saving it, defaults to False (enable when producing many figures to avoid
-            memory issues, prevents rendering in notebooks)
+        close_figure (bool, optional): whether to close each figure, defaults to False
+            (enable when producing many figures to avoid memory issues, prevents
+            automatic rendering in notebooks)
         save_figure (bool, optional): whether to save figures, defaults to True
 
     Returns:
@@ -156,9 +156,9 @@ def data_mc(
             defaults to False
         channels (Optional[Union[str, List[str]]], optional): name of channel to show,
             or list of names to include, defaults to None (uses all channels)
-        close_figure (bool, optional): whether to close each figure immediately after
-            saving it, defaults to False (enable when producing many figures to avoid
-            memory issues, prevents rendering in notebooks)
+        close_figure (bool, optional): whether to close each figure, defaults to False
+            (enable when producing many figures to avoid memory issues, prevents
+            automatic rendering in notebooks)
         save_figure (bool, optional): whether to save figures, defaults to True
 
     Returns:
@@ -254,9 +254,9 @@ def templates(
         config (Dict[str, Any]): cabinetry configuration
         figure_folder (Union[str, pathlib.Path], optional): path to the folder to save
             figures in, defaults to "figures"
-        close_figure (bool, optional): whether to close each figure immediately after
-            saving it, defaults to False (enable when producing many figures to avoid
-            memory issues, prevents rendering in notebooks)
+        close_figure (bool, optional): whether to close each figure, defaults to False
+            (enable when producing many figures to avoid memory issues, prevents
+            automatic rendering in notebooks)
         save_figure (bool, optional): whether to save figures, defaults to True
 
     Returns:
@@ -374,7 +374,7 @@ def correlation_matrix(
     fit_results: fit.FitResults,
     figure_folder: Union[str, pathlib.Path] = "figures",
     pruning_threshold: float = 0.0,
-    close_figure: bool = False,
+    close_figure: bool = True,
     save_figure: bool = True,
 ) -> mpl.figure.Figure:
     """Draws a correlation matrix.
@@ -386,9 +386,7 @@ def correlation_matrix(
             figures in, defaults to "figures"
         pruning_threshold (float, optional): minimum correlation for a parameter to
             have with any other parameters to not get pruned, defaults to 0.0
-        close_figure (bool, optional): whether to close each figure immediately after
-            saving it, defaults to False (enable when producing many figures to avoid
-            memory issues, prevents rendering in notebooks)
+        close_figure (bool, optional): whether to close figure, defaults to True
         save_figure (bool, optional): whether to save figure, defaults to True
 
     Returns:
@@ -430,7 +428,7 @@ def pulls(
     fit_results: fit.FitResults,
     figure_folder: Union[str, pathlib.Path] = "figures",
     exclude: Optional[Union[str, List[str], Tuple[str, ...]]] = None,
-    close_figure: bool = False,
+    close_figure: bool = True,
     save_figure: bool = True,
 ) -> mpl.figure.Figure:
     """Draws a pull plot of parameter results and uncertainties.
@@ -442,9 +440,7 @@ def pulls(
             figures in, defaults to "figures"
         exclude (Optional[Union[str, List[str], Tuple[str, ...]]], optional): parameter
             or parameters to exclude from plot, defaults to None (nothing excluded)
-        close_figure (bool, optional): whether to close each figure immediately after
-            saving it, defaults to False (enable when producing many figures to avoid
-            memory issues, prevents rendering in notebooks)
+        close_figure (bool, optional): whether to close figure, defaults to True
         save_figure (bool, optional): whether to save figure, defaults to True
 
     Returns:
@@ -493,7 +489,7 @@ def ranking(
     ranking_results: fit.RankingResults,
     figure_folder: Union[str, pathlib.Path] = "figures",
     max_pars: Optional[int] = None,
-    close_figure: bool = False,
+    close_figure: bool = True,
     save_figure: bool = True,
 ) -> mpl.figure.Figure:
     """Produces a ranking plot showing the impact of parameters on the POI.
@@ -504,9 +500,7 @@ def ranking(
             figures in, defaults to "figures"
         max_pars (Optional[int], optional): number of parameters to include, defaults to
             None (which means all parameters are included)
-        close_figure (bool, optional): whether to close each figure immediately after
-            saving it, defaults to False (enable when producing many figures to avoid
-            memory issues, prevents rendering in notebooks)
+        close_figure (bool, optional): whether to close figure, defaults to True
         save_figure (bool, optional): whether to save figure, defaults to True
 
     Returns:
@@ -557,7 +551,7 @@ def ranking(
 def scan(
     scan_results: fit.ScanResults,
     figure_folder: Union[str, pathlib.Path] = "figures",
-    close_figure: bool = False,
+    close_figure: bool = True,
     save_figure: bool = True,
 ) -> mpl.figure.Figure:
     """Visualizes the results of a likelihood scan.
@@ -566,9 +560,7 @@ def scan(
         scan_results (fit.ScanResults): results of a likelihood scan
         figure_folder (Union[str, pathlib.Path], optional): path to the folder to save
             figures in, defaults to "figures"
-        close_figure (bool, optional): whether to close each figure immediately after
-            saving it, defaults to False (enable when producing many figures to avoid
-            memory issues, prevents rendering in notebooks)
+        close_figure (bool, optional): whether to close figure, defaults to True
         save_figure (bool, optional): whether to save figure, defaults to True
 
     Returns:
@@ -596,7 +588,7 @@ def scan(
 def limit(
     limit_results: fit.LimitResults,
     figure_folder: Union[str, pathlib.Path] = "figures",
-    close_figure: bool = False,
+    close_figure: bool = True,
     save_figure: bool = True,
 ) -> mpl.figure.Figure:
     """Visualizes observed and expected CLs values as a function of the POI.
@@ -605,9 +597,7 @@ def limit(
         limit_results (fit.LimitResults): results of upper limit determination
         figure_folder (Union[str, pathlib.Path], optional): path to the folder to save
             figures in, defaults to "figures"
-        close_figure (bool, optional): whether to close each figure immediately after
-            saving it, defaults to False (enable when producing many figures to avoid
-            memory issues, prevents rendering in notebooks)
+        close_figure (bool, optional): whether to close figure, defaults to True
         save_figure (bool, optional): whether to save figure, defaults to True
 
     Returns:
