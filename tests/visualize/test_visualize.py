@@ -243,6 +243,114 @@ def test_data_mc(
 
 
 @mock.patch(
+    "cabinetry.histo.Histogram.from_path",
+    side_effect=[
+        MockHistogram([0.0, 1.0], [2.0], [0.2]),
+        MockHistogram([0.0, 1.0], [3.0], [0.3]),
+        MockHistogram([0.0, 1.0], [4.0], [0.4]),
+        MockHistogram([0.0, 1.0], [5.0], [0.5]),
+    ]
+    * 3,
+)
+@mock.patch(
+    "cabinetry.histo.Histogram.from_config",
+    return_value=MockHistogram([0.0, 1.0], [1.0], [0.1]),
+)
+@mock.patch(
+    "cabinetry.visualize.plot_model.templates", return_value=matplotlib.figure.Figure()
+)
+def test_templates(mock_draw, mock_histo_config, mock_histo_path, tmp_path):
+    # the side effects are repeated for the patched Histogram.from_path
+    # to check all relevant behavior (including the unknown backend check)
+    nominal_path = tmp_path / "region_sample_Nominal_modified.npz"
+    up_path = tmp_path / "region_sample_sys_Up_modified.npz"
+    down_path = tmp_path / "region_sample_sys_Down_modified.npz"
+    region = {"Name": "region", "Variable": "x"}
+    sample = {"Name": "sample"}
+    config = {
+        "General": {"HistogramFolder": tmp_path},
+        "Regions": [region],
+        "Samples": [sample, {"Name": "data", "Data": True}],
+        "Systematics": [{"Name": "sys"}],
+    }
+
+    folder_path = "tmp"
+    figure_path = pathlib.Path(folder_path) / "templates/region_sample_sys.pdf"
+
+    # add fake histograms for glob
+    nominal_path.touch()
+    up_path.touch()
+    down_path.touch()
+
+    # also add a file that matches pattern but is not needed
+    (tmp_path / "region_sample_sys_unknown_modified.npz").touch()
+
+    fig_dict_list = visualize.templates(config, figure_folder=folder_path)
+    assert len(fig_dict_list) == 1
+    assert isinstance(fig_dict_list[0]["figure"], matplotlib.figure.Figure)
+    assert fig_dict_list[0]["region"] == "region"
+    assert fig_dict_list[0]["sample"] == "sample"
+    assert fig_dict_list[0]["systematic"] == "sys"
+
+    # nominal histogram loading
+    assert mock_histo_config.call_args_list == [((tmp_path, region, sample, {}), {})]
+    # variation histograms
+    down_path_orig = pathlib.Path(str(down_path).replace("_modified", ""))
+    up_path_orig = pathlib.Path(str(up_path).replace("_modified", ""))
+    assert mock_histo_path.call_args_list == [
+        ((down_path_orig,), {}),
+        ((down_path,), {}),
+        ((up_path_orig,), {}),
+        ((up_path,), {}),
+    ]
+
+    nominal = {"yields": [1.0], "stdev": [0.1]}
+    up_orig = {"yields": [4.0], "stdev": [0.4]}
+    down_orig = {"yields": [2.0], "stdev": [0.2]}
+    up_mod = {"yields": [5.0], "stdev": [0.5]}
+    down_mod = {"yields": [3.0], "stdev": [0.3]}
+    bins = [0.0, 1.0]
+    assert mock_draw.call_args_list == [
+        (
+            (nominal, up_orig, down_orig, up_mod, down_mod, bins, "x", figure_path),
+            {
+                "label": "region: region\nsample: sample\nsystematic: sys",
+                "close_figure": False,
+            },
+        )
+    ]
+
+    # close figure, do not save figure
+    _ = visualize.templates(
+        config, figure_folder=folder_path, close_figure=True, save_figure=False
+    )
+    assert mock_draw.call_args == (
+        (nominal, up_orig, down_orig, up_mod, down_mod, bins, "x", None),
+        {
+            "label": "region: region\nsample: sample\nsystematic: sys",
+            "close_figure": True,
+        },
+    )
+
+    # remove files for variation histograms
+    up_path.unlink()
+    down_path.unlink()
+
+    assert mock_draw.call_count == 2  # two calls so far
+    _ = visualize.templates(config, figure_folder=folder_path)
+    assert mock_draw.call_count == 2  # no new call, since no variations found
+
+    # no systematics in config
+    config = {
+        "General": {"HistogramFolder": tmp_path},
+        "Regions": [region],
+        "Samples": [sample, {"Name": "data", "Data": True}],
+    }
+    _ = visualize.templates(config, figure_folder=folder_path)
+    assert mock_draw.call_count == 2  # no systematics, so no new calls
+
+
+@mock.patch(
     "cabinetry.visualize.plot_result.correlation_matrix",
     return_value=matplotlib.figure.Figure(),
 )
@@ -419,115 +527,6 @@ def test_ranking(mock_draw):
     assert np.allclose(mock_draw.call_args[0][6], impact_postfit_down[1])
     assert mock_draw.call_args[0][7] is None
     assert mock_draw.call_args[1] == {"close_figure": False}
-
-
-# TODO: move to new location
-@mock.patch(
-    "cabinetry.histo.Histogram.from_path",
-    side_effect=[
-        MockHistogram([0.0, 1.0], [2.0], [0.2]),
-        MockHistogram([0.0, 1.0], [3.0], [0.3]),
-        MockHistogram([0.0, 1.0], [4.0], [0.4]),
-        MockHistogram([0.0, 1.0], [5.0], [0.5]),
-    ]
-    * 3,
-)
-@mock.patch(
-    "cabinetry.histo.Histogram.from_config",
-    return_value=MockHistogram([0.0, 1.0], [1.0], [0.1]),
-)
-@mock.patch(
-    "cabinetry.visualize.plot_model.templates", return_value=matplotlib.figure.Figure()
-)
-def test_templates(mock_draw, mock_histo_config, mock_histo_path, tmp_path):
-    # the side effects are repeated for the patched Histogram.from_path
-    # to check all relevant behavior (including the unknown backend check)
-    nominal_path = tmp_path / "region_sample_Nominal_modified.npz"
-    up_path = tmp_path / "region_sample_sys_Up_modified.npz"
-    down_path = tmp_path / "region_sample_sys_Down_modified.npz"
-    region = {"Name": "region", "Variable": "x"}
-    sample = {"Name": "sample"}
-    config = {
-        "General": {"HistogramFolder": tmp_path},
-        "Regions": [region],
-        "Samples": [sample, {"Name": "data", "Data": True}],
-        "Systematics": [{"Name": "sys"}],
-    }
-
-    folder_path = "tmp"
-    figure_path = pathlib.Path(folder_path) / "templates/region_sample_sys.pdf"
-
-    # add fake histograms for glob
-    nominal_path.touch()
-    up_path.touch()
-    down_path.touch()
-
-    # also add a file that matches pattern but is not needed
-    (tmp_path / "region_sample_sys_unknown_modified.npz").touch()
-
-    fig_dict_list = visualize.templates(config, figure_folder=folder_path)
-    assert len(fig_dict_list) == 1
-    assert isinstance(fig_dict_list[0]["figure"], matplotlib.figure.Figure)
-    assert fig_dict_list[0]["region"] == "region"
-    assert fig_dict_list[0]["sample"] == "sample"
-    assert fig_dict_list[0]["systematic"] == "sys"
-
-    # nominal histogram loading
-    assert mock_histo_config.call_args_list == [((tmp_path, region, sample, {}), {})]
-    # variation histograms
-    down_path_orig = pathlib.Path(str(down_path).replace("_modified", ""))
-    up_path_orig = pathlib.Path(str(up_path).replace("_modified", ""))
-    assert mock_histo_path.call_args_list == [
-        ((down_path_orig,), {}),
-        ((down_path,), {}),
-        ((up_path_orig,), {}),
-        ((up_path,), {}),
-    ]
-
-    nominal = {"yields": [1.0], "stdev": [0.1]}
-    up_orig = {"yields": [4.0], "stdev": [0.4]}
-    down_orig = {"yields": [2.0], "stdev": [0.2]}
-    up_mod = {"yields": [5.0], "stdev": [0.5]}
-    down_mod = {"yields": [3.0], "stdev": [0.3]}
-    bins = [0.0, 1.0]
-    assert mock_draw.call_args_list == [
-        (
-            (nominal, up_orig, down_orig, up_mod, down_mod, bins, "x", figure_path),
-            {
-                "label": "region: region\nsample: sample\nsystematic: sys",
-                "close_figure": False,
-            },
-        )
-    ]
-
-    # close figure, do not save figure
-    _ = visualize.templates(
-        config, figure_folder=folder_path, close_figure=True, save_figure=False
-    )
-    assert mock_draw.call_args == (
-        (nominal, up_orig, down_orig, up_mod, down_mod, bins, "x", None),
-        {
-            "label": "region: region\nsample: sample\nsystematic: sys",
-            "close_figure": True,
-        },
-    )
-
-    # remove files for variation histograms
-    up_path.unlink()
-    down_path.unlink()
-
-    assert mock_draw.call_count == 2  # two calls so far
-    _ = visualize.templates(config, figure_folder=folder_path)
-    assert mock_draw.call_count == 2  # no new call, since no variations found
-
-    # no systematics in config
-    config = {
-        "General": {"HistogramFolder": tmp_path},
-        "Regions": [region],
-        "Samples": [sample, {"Name": "data", "Data": True}],
-    }
-    _ = visualize.templates(config, figure_folder=folder_path)
-    assert mock_draw.call_count == 2  # no systematics, so no new calls
 
 
 @mock.patch(
