@@ -267,10 +267,10 @@ def test_correlation_matrix(mock_draw):
         [mock_draw.call_args[0][1][i] == labels[i] for i in range(len(labels_pruned))]
     )
     assert mock_draw.call_args[0][2] == figure_path
-    assert mock_draw.call_args[1] == {"close_figure": False}
+    assert mock_draw.call_args[1] == {"close_figure": True}
 
-    # pruning of fixed parameter (all zeros in correlation matrix row/column), close
-    # figure, do not save
+    # pruning of fixed parameter (all zeros in correlation matrix row/column), do not
+    # close figure, do not save
     corr_mat_fixed = np.asarray([[1.0, 0.2, 0.0], [0.2, 1.0, 0.0], [0.0, 0.0, 0.0]])
     fit_results_fixed = fit.FitResults(
         np.empty(0), np.empty(0), labels, corr_mat_fixed, 1.0
@@ -278,7 +278,7 @@ def test_correlation_matrix(mock_draw):
     _ = visualize.correlation_matrix(
         fit_results_fixed,
         figure_folder=folder_path,
-        close_figure=True,
+        close_figure=False,
         save_figure=False,
     )
     assert np.allclose(mock_draw.call_args_list[1][0][0], corr_mat_pruned)
@@ -289,7 +289,7 @@ def test_correlation_matrix(mock_draw):
         ]
     )
     assert mock_draw.call_args[0][2] is None
-    assert mock_draw.call_args[1] == {"close_figure": True}
+    assert mock_draw.call_args[1] == {"close_figure": False}
 
 
 @mock.patch(
@@ -322,7 +322,7 @@ def test_pulls(mock_draw):
         ]
     )
     assert mock_draw.call_args[0][3] == figure_path
-    assert mock_draw.call_args[1] == {"close_figure": False}
+    assert mock_draw.call_args[1] == {"close_figure": True}
 
     # filtering single parameter instead of list
     _ = visualize.pulls(fit_results, figure_folder=folder_path, exclude=exclude[0])
@@ -337,14 +337,14 @@ def test_pulls(mock_draw):
     )
 
     # without filtering via list, but with staterror removal, fixed parameter removal,
-    # closing figure, not saving
+    # not closing figure, not saving
     fit_results.uncertainty[0] = 0.0
 
     bestfit_expected = np.asarray([1.0, 1.1])
     uncertainty_expected = np.asarray([1.0, 0.7])
     labels_expected = ["b", "c"]
     visualize.pulls(
-        fit_results, figure_folder=folder_path, close_figure=True, save_figure=False
+        fit_results, figure_folder=folder_path, close_figure=False, save_figure=False
     )
 
     assert np.allclose(mock_draw.call_args[0][0], bestfit_expected)
@@ -356,7 +356,7 @@ def test_pulls(mock_draw):
         ]
     )
     assert mock_draw.call_args[0][3] is None
-    assert mock_draw.call_args[1] == {"close_figure": True}
+    assert mock_draw.call_args[1] == {"close_figure": False}
 
 
 @mock.patch(
@@ -399,14 +399,14 @@ def test_ranking(mock_draw):
     assert np.allclose(mock_draw.call_args[0][5], impact_postfit_up[::-1])
     assert np.allclose(mock_draw.call_args[0][6], impact_postfit_down[::-1])
     assert mock_draw.call_args[0][7] == figure_path
-    assert mock_draw.call_args[1] == {"close_figure": False}
+    assert mock_draw.call_args[1] == {"close_figure": True}
 
     # maximum parameter amount specified, close figure, do not save figure
     _ = visualize.ranking(
         ranking_results,
         figure_folder=folder_path,
         max_pars=1,
-        close_figure=True,
+        close_figure=False,
         save_figure=False,
     )
     assert mock_draw.call_count == 2
@@ -418,9 +418,10 @@ def test_ranking(mock_draw):
     assert np.allclose(mock_draw.call_args[0][5], impact_postfit_up[1])
     assert np.allclose(mock_draw.call_args[0][6], impact_postfit_down[1])
     assert mock_draw.call_args[0][7] is None
-    assert mock_draw.call_args[1] == {"close_figure": True}
+    assert mock_draw.call_args[1] == {"close_figure": False}
 
 
+# TODO: move to new location
 @mock.patch(
     "cabinetry.histo.Histogram.from_path",
     side_effect=[
@@ -553,14 +554,14 @@ def test_scan(mock_draw):
     assert np.allclose(mock_draw.call_args[0][3], par_vals)
     assert np.allclose(mock_draw.call_args[0][4], par_nlls)
     assert mock_draw.call_args[0][5] == figure_path
-    assert mock_draw.call_args[1] == {"close_figure": False}
+    assert mock_draw.call_args[1] == {"close_figure": True}
 
-    # close figure, do not save figure
+    # do not close figure, do not save figure
     _ = visualize.scan(
-        scan_results, figure_folder=folder_path, close_figure=True, save_figure=False
+        scan_results, figure_folder=folder_path, close_figure=False, save_figure=False
     )
     assert mock_draw.call_args[0][5] is None
-    assert mock_draw.call_args[1] == {"close_figure": True}
+    assert mock_draw.call_args[1] == {"close_figure": False}
 
 
 @mock.patch(
@@ -585,11 +586,11 @@ def test_limit(mock_draw):
     assert np.allclose(mock_draw.call_args[0][1], limit_results.expected_CLs)
     assert np.allclose(mock_draw.call_args[0][2], limit_results.poi_values)
     assert mock_draw.call_args[0][3] == figure_path
-    assert mock_draw.call_args[1] == {"close_figure": False}
+    assert mock_draw.call_args[1] == {"close_figure": True}
 
-    # close figure, do not save figure
+    # do not close figure, do not save figure
     _ = visualize.limit(
-        limit_results, figure_folder=folder_path, close_figure=True, save_figure=False
+        limit_results, figure_folder=folder_path, close_figure=False, save_figure=False
     )
     assert mock_draw.call_args[0][3] is None
-    assert mock_draw.call_args[1] == {"close_figure": True}
+    assert mock_draw.call_args[1] == {"close_figure": False}
