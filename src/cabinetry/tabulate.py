@@ -88,8 +88,10 @@ def _yields_per_bin(
             )
             total_dict.update(
                 {
-                    header_name: f"{total_model[i_bin]:.2f} "
-                    f"\u00B1 {total_stdev_model[i_chan][i_bin]:.2f}"
+                    header_name: (
+                        f"{total_model[i_bin]:.2f} "
+                        f"\u00B1 {total_stdev_model[i_chan][i_bin]:.2f}"
+                    )
                 }
             )
             data_dict.update({header_name: f"{data[i_chan][i_bin]:.2f}"})
@@ -145,10 +147,7 @@ def _yields_per_channel(
     for i_chan, channel_name in zip(channel_indices, channels):
         total_model = np.sum(model_yields[i_chan], axis=0)  # sum over samples
         total_dict.update(
-            {
-                channel_name: f"{total_model:.2f} "
-                f"\u00B1 {total_stdev_model[i_chan]:.2f}"
-            }
+            {channel_name: f"{total_model:.2f} \u00B1 {total_stdev_model[i_chan]:.2f}"}
         )
         data_dict.update({channel_name: f"{data[i_chan]:.2f}"})
     table += [total_dict, data_dict]

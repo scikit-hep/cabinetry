@@ -313,7 +313,7 @@ def apply_to_all_templates(
                         continue
 
                     log.debug(
-                        f"      variation "
+                        "      variation "
                         f"{systematic['Name'] if template is not None else 'Nominal'}"
                         f"{' ' + template if template is not None else ''}"
                     )
@@ -331,8 +331,7 @@ def apply_to_all_templates(
                     if func_override is not None:
                         # call the user-defined function
                         log.debug(
-                            f"executing user-defined override "
-                            f"{func_override.__name__}"
+                            f"executing user-defined override {func_override.__name__}"
                         )
                         func_override(region, sample, systematic, template)
                     else:

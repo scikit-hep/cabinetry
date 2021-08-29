@@ -78,7 +78,7 @@ class Histogram(bh.Histogram, family=cabinetry):
             if not histo_path_modified.with_suffix(".npz").exists():
                 log.warning(
                     f"the modified histogram {histo_path_modified.with_suffix('.npz')} "
-                    f"does not exist",
+                    "does not exist",
                 )
                 log.warning("loading the un-modified histogram instead!")
             else:

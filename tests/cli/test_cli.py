@@ -455,7 +455,7 @@ def test_significance(mock_util, mock_sig, tmp_path):
 
 @mock.patch("cabinetry.visualize.data_mc", autospec=True)
 @mock.patch(
-    "cabinetry.model_utils.prediction", return_value=("mock_model_pred"), autospec=True
+    "cabinetry.model_utils.prediction", return_value="mock_model_pred", autospec=True
 )
 @mock.patch(
     "cabinetry.fit.fit",
