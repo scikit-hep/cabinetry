@@ -386,7 +386,7 @@ def correlation_matrix(
             figures in, defaults to "figures"
         pruning_threshold (float, optional): minimum correlation for a parameter to
             have with any other parameters to not get pruned, defaults to 0.0
-        close_figure (bool, optional): whether to close each figure, defaults to True
+        close_figure (bool, optional): whether to close figure, defaults to True
         save_figure (bool, optional): whether to save figure, defaults to True
 
     Returns:
@@ -440,7 +440,7 @@ def pulls(
             figures in, defaults to "figures"
         exclude (Optional[Union[str, List[str], Tuple[str, ...]]], optional): parameter
             or parameters to exclude from plot, defaults to None (nothing excluded)
-        close_figure (bool, optional): whether to close each figure, defaults to True
+        close_figure (bool, optional): whether to close figure, defaults to True
         save_figure (bool, optional): whether to save figure, defaults to True
 
     Returns:
@@ -500,7 +500,7 @@ def ranking(
             figures in, defaults to "figures"
         max_pars (Optional[int], optional): number of parameters to include, defaults to
             None (which means all parameters are included)
-        close_figure (bool, optional): whether to close each figure, defaults to True
+        close_figure (bool, optional): whether to close figure, defaults to True
         save_figure (bool, optional): whether to save figure, defaults to True
 
     Returns:
@@ -560,7 +560,7 @@ def scan(
         scan_results (fit.ScanResults): results of a likelihood scan
         figure_folder (Union[str, pathlib.Path], optional): path to the folder to save
             figures in, defaults to "figures"
-        close_figure (bool, optional): whether to close each figure, defaults to True
+        close_figure (bool, optional): whether to close figure, defaults to True
         save_figure (bool, optional): whether to save figure, defaults to True
 
     Returns:
@@ -597,7 +597,7 @@ def limit(
         limit_results (fit.LimitResults): results of upper limit determination
         figure_folder (Union[str, pathlib.Path], optional): path to the folder to save
             figures in, defaults to "figures"
-        close_figure (bool, optional): whether to close each figure, defaults to True
+        close_figure (bool, optional): whether to close figure, defaults to True
         save_figure (bool, optional): whether to save figure, defaults to True
 
     Returns:
