@@ -78,7 +78,7 @@ class Histogram(bh.Histogram, family=cabinetry):
             if not histo_path_modified.with_suffix(".npz").exists():
                 log.warning(
                     f"the modified histogram {histo_path_modified.with_suffix('.npz')} "
-                    f"does not exist",
+                    "does not exist"
                 )
                 log.warning("loading the un-modified histogram instead!")
             else:
@@ -213,7 +213,7 @@ class Histogram(bh.Histogram, family=cabinetry):
         if len(not_empty_but_nan) > 0:
             log.warning(
                 f"{name} has non-empty bins with ill-defined stat. unc.: "
-                f"{not_empty_but_nan}",
+                f"{not_empty_but_nan}"
             )
 
     def normalize_to_yield(self, reference_histogram: H) -> float:

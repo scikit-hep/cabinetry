@@ -9,11 +9,7 @@ from cabinetry import tabulate
 
 
 @pytest.mark.parametrize(
-    "test_input, expected",
-    [
-        (("abc", 0), "abc\nbin 1"),
-        (("abc", 2), "abc\nbin 3"),
-    ],
+    "test_input, expected", [(("abc", 0), "abc\nbin 1"), (("abc", 2), "abc\nbin 3")]
 )
 def test__header_name(test_input, expected):
     assert tabulate._header_name(*test_input) == expected
@@ -94,21 +90,13 @@ def test__yields_per_channel(
         model, yields, total_stdev, data, channels, label
     )
     assert yield_table == [
-        {
-            "sample": "Signal",
-            "region_1": "30.00",
-            "region_2": "8.00",
-        },
+        {"sample": "Signal", "region_1": "30.00", "region_2": "8.00"},
         {
             "sample": "total",
             "region_1": "30.00 \u00B1 5.39",
             "region_2": "8.00 \u00B1 1.00",
         },
-        {
-            "sample": "data",
-            "region_1": "43.00",
-            "region_2": "10.00",
-        },
+        {"sample": "data", "region_1": "43.00", "region_2": "10.00"},
     ]
     assert (
         "yields per channel for pre-fit model prediction:" in caplog.records[0].message

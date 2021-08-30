@@ -476,11 +476,7 @@ def pulls(
     labels_np = labels_np[mask]
 
     fig = plot_result.pulls(
-        bestfit,
-        uncertainty,
-        labels_np,
-        figure_path,
-        close_figure=close_figure,
+        bestfit, uncertainty, labels_np, figure_path, close_figure=close_figure
     )
     return fig
 

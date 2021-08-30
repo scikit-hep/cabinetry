@@ -199,11 +199,7 @@ def example_spec_with_background():
             {
                 "config": {
                     "parameters": [
-                        {
-                            "name": "Signal strength",
-                            "bounds": [[0, 10]],
-                            "inits": [1.0],
-                        }
+                        {"name": "Signal strength", "bounds": [[0, 10]], "inits": [1.0]}
                     ],
                     "poi": "Signal strength",
                 },
@@ -230,7 +226,7 @@ def example_spec_no_aux():
                                 "data": None,
                                 "name": "Signal strength",
                                 "type": "normfactor",
-                            },
+                            }
                         ],
                         "name": "Signal",
                     }
@@ -280,7 +276,7 @@ def example_spec_lumi():
                             "inits": [1.05],
                             "name": "lumi",
                             "sigmas": [0.02],
-                        },
+                        }
                     ],
                     "poi": "Signal strength",
                 },

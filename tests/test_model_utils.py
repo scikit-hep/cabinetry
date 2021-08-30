@@ -216,13 +216,9 @@ def test_yield_stdev(example_spec, example_spec_multibin):
 
 @mock.patch("cabinetry.model_utils.yield_stdev", return_value=([[0.3]], [0.3]))
 @mock.patch(
-    "cabinetry.model_utils.prefit_uncertainties",
-    return_value=([0.04956657, 0.0]),
+    "cabinetry.model_utils.prefit_uncertainties", return_value=([0.04956657, 0.0])
 )
-@mock.patch(
-    "cabinetry.model_utils.asimov_parameters",
-    return_value=([1.0, 1.0]),
-)
+@mock.patch("cabinetry.model_utils.asimov_parameters", return_value=([1.0, 1.0]))
 def test_prediction(mock_asimov, mock_unc, mock_stdev, example_spec):
     model = pyhf.Workspace(example_spec).model()
 

@@ -216,10 +216,7 @@ def test_sample_contains_modifier(sample_and_modifier, contained):
             (
                 {},
                 {"Name": "Signal"},
-                {
-                    "Type": "NormPlusShape",
-                    "Up": {"Symmetrize": True},
-                },
+                {"Type": "NormPlusShape", "Up": {"Symmetrize": True}},
                 "Up",
             ),
             False,

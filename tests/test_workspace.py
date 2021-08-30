@@ -484,8 +484,7 @@ def test_WorkspaceBuilder_observations(mock_histogram):
     return_value=[{"name: measurement"}],
 )
 @mock.patch(
-    "cabinetry.workspace.WorkspaceBuilder.channels",
-    return_value=[{"name: channel"}],
+    "cabinetry.workspace.WorkspaceBuilder.channels", return_value=[{"name: channel"}]
 )
 def test_WorkspaceBuilder_build(mock_channels, mock_measuremets, mock_observations):
     ws_builder = workspace.WorkspaceBuilder({"General": {"HistogramFolder": "path"}})

@@ -50,10 +50,7 @@ def test_templates(mock_validate, mock_create_histograms, cli_helpers, tmp_path)
     # different method
     result = runner.invoke(cli.templates, ["--method", "unknown", config_path])
     assert result.exit_code == 0
-    assert mock_create_histograms.call_args == (
-        (config,),
-        {"method": "unknown"},
-    )
+    assert mock_create_histograms.call_args == ((config,), {"method": "unknown"})
 
 
 @mock.patch("cabinetry.template_postprocessor.run", autospec=True)
@@ -186,14 +183,8 @@ def test_fit(mock_util, mock_fit, mock_pulls, mock_corrmat, tmp_path):
         cli.fit, ["--figfolder", "folder", "--pulls", "--corrmat", workspace_path]
     )
     assert result.exit_code == 0
-    assert mock_corrmat.call_args == (
-        (fit_results,),
-        {"figure_folder": "folder"},
-    )
-    assert mock_pulls.call_args == (
-        (fit_results,),
-        {"figure_folder": "folder"},
-    )
+    assert mock_corrmat.call_args == ((fit_results,), {"figure_folder": "folder"})
+    assert mock_pulls.call_args == ((fit_results,), {"figure_folder": "folder"})
 
 
 @mock.patch("cabinetry.visualize.ranking", autospec=True)
@@ -261,10 +252,7 @@ def test_ranking(mock_util, mock_fit, mock_rank, mock_vis, tmp_path):
     assert result.exit_code == 0
     assert mock_util.call_args == ((workspace,), {"asimov": True})
     assert mock_fit.call_args == (("model", "data"), {})
-    assert mock_rank.call_args == (
-        ("model", "data"),
-        {"fit_results": fit_results},
-    )
+    assert mock_rank.call_args == (("model", "data"), {"fit_results": fit_results})
     assert mock_vis.call_args_list[-1][1] == {"figure_folder": "folder", "max_pars": 3}
 
 
@@ -455,7 +443,7 @@ def test_significance(mock_util, mock_sig, tmp_path):
 
 @mock.patch("cabinetry.visualize.data_mc", autospec=True)
 @mock.patch(
-    "cabinetry.model_utils.prediction", return_value=("mock_model_pred"), autospec=True
+    "cabinetry.model_utils.prediction", return_value="mock_model_pred", autospec=True
 )
 @mock.patch(
     "cabinetry.fit.fit",
