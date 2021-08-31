@@ -70,7 +70,7 @@ class LimitResults(NamedTuple):
     """Collects parameter upper limit results in one object.
 
     Args:
-        observed_limit (np.ndarray): observed limit
+        observed_limit (float): observed limit
         expected_limit (np.ndarray): expected limit, including 1 and 2 sigma bands
         observed_CLs (np.ndarray): observed CLs values
         expected_CLs (np.ndarray): expected CLs values, including 1 and 2 sigma bands
