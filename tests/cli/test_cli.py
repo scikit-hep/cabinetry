@@ -253,7 +253,7 @@ def test_ranking(mock_util, mock_fit, mock_rank, mock_vis, tmp_path):
     assert mock_util.call_args == ((workspace,), {"asimov": True})
     assert mock_fit.call_args == (("model", "data"), {})
     assert mock_rank.call_args == (("model", "data"), {"fit_results": fit_results})
-    assert mock_vis.call_args_list[-1][1] == {"figure_folder": "folder", "max_pars": 3}
+    assert mock_vis.call_args[1] == {"figure_folder": "folder", "max_pars": 3}
 
 
 @mock.patch("cabinetry.visualize.scan", autospec=True)
@@ -409,7 +409,7 @@ def test_limit(mock_util, mock_limit, mock_vis, tmp_path):
     assert result.exit_code == 0
     assert mock_util.call_args == ((workspace,), {"asimov": True})
     assert mock_limit.call_args == (("model", "data"), {"tolerance": 0.1})
-    assert mock_vis.call_args_list[-1][1] == {"figure_folder": "folder"}
+    assert mock_vis.call_args[1] == {"figure_folder": "folder"}
 
 
 @mock.patch("cabinetry.fit.significance", autospec=True)

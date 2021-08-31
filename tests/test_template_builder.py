@@ -338,13 +338,13 @@ def test_create_histograms():
     # no router
     with mock.patch("cabinetry.route.apply_to_all_templates") as mock_apply:
         template_builder.create_histograms(config, method)
-        assert len(mock_apply.call_args_list) == 1
-        config_call, func_call = mock_apply.call_args_list[0][0]
+        assert mock_apply.call_count == 1
+        config_call, func_call = mock_apply.call_args[0]
         assert config_call == config
         assert (
             func_call.__name__ == "_create_histogram"
         )  # could also compare to function
-        assert mock_apply.call_args_list[0][1] == {"match_func": None}
+        assert mock_apply.call_args[1] == {"match_func": None}
 
     # including a router
     mock_router = mock.MagicMock()
@@ -357,10 +357,10 @@ def test_create_histograms():
             == "_wrap_custom_template_builder"
         )
 
-        assert len(mock_apply.call_args_list) == 1
-        config_call, func_call = mock_apply.call_args_list[0][0]
+        assert mock_apply.call_count == 1
+        config_call, func_call = mock_apply.call_args[0]
         assert config_call == config
         assert func_call.__name__ == "_create_histogram"
-        assert mock_apply.call_args_list[0][1] == {
+        assert mock_apply.call_args[1] == {
             "match_func": mock_router._find_template_builder_match
         }
