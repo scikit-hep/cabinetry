@@ -362,7 +362,7 @@ class WorkspaceBuilder:
         return measurements
 
     def observations(self) -> List[Dict[str, Any]]:
-        """Returns the observations (data yields) for the workspace.
+        """Returns the observations object (with data yields) for the workspace.
 
         Returns:
             List[Dict[str, Any]]: observations for ``pyhf`` workspace
