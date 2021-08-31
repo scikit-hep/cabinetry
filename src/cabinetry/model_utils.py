@@ -448,7 +448,6 @@ def _strip_auxdata(model: pyhf.pdf.Model, data: List[float]) -> List[float]:
     Returns:
         List[float]: observed data yields
     """
-
     n_bins_total = sum(model.config.channel_nbins.values())
     if len(data) != n_bins_total:
         # strip auxdata, only observed yields are needed

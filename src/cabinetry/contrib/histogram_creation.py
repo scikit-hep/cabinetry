@@ -23,7 +23,7 @@ def from_uproot(
         ntuple_paths (List[pathlib.Path]): list of paths to ntuples
         pos_in_file (str): name of tree within ntuple
         variable (str): variable to bin histogram in
-        bins (numpy.ndarray): bin edges for histogram
+        bins (np.ndarray): bin edges for histogram
         weight (Optional[str], optional): event weight to extract, defaults to None (no
             weights applied)
         selection_filter (Optional[str], optional): filter to be applied on events,
@@ -85,9 +85,9 @@ def _bin_data(
     """Creates a histogram from unbinned data.
 
     Args:
-        observables (numpy.ndarray): values the histogram will be binned in
-        weights (numpy.ndarray): weights to apply for each histogram entry
-        bins (numpy.ndarray): bin edges for histogram
+        observables (np.ndarray): values the histogram will be binned in
+        weights (np.ndarray): weights to apply for each histogram entry
+        bins (np.ndarray): bin edges for histogram
 
     Returns:
         Tuple[np.ndarray, np.ndarray]:

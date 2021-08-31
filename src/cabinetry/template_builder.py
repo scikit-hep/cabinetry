@@ -249,7 +249,7 @@ def _binning(region: Dict[str, Any]) -> np.ndarray:
         NotImplementedError: when the binning is not explicitly defined
 
     Returns:
-        numpy.ndarray: bin boundaries to be used for histogram
+        np.ndarray: bin boundaries to be used for histogram
     """
     if not region.get("Binning", False):
         raise NotImplementedError("cannot determine binning")

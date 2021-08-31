@@ -128,7 +128,7 @@ class Histogram(bh.Histogram, family=cabinetry):
         """Returns the yields per histogram bin.
 
         Returns:
-            numpy.ndarray: yields per bin
+            np.ndarray: yields per bin
         """
         return self.values()
 
@@ -146,7 +146,7 @@ class Histogram(bh.Histogram, family=cabinetry):
         """Returns the stat. uncertainty per histogram bin.
 
         Returns:
-            numpy.ndarray: stat. uncertainty per bin
+            np.ndarray: stat. uncertainty per bin
         """
         return np.sqrt(self.variances())  # type: ignore
 
@@ -155,7 +155,7 @@ class Histogram(bh.Histogram, family=cabinetry):
         """Updates the variance (by specifying the standard deviation).
 
         Args:
-            value (numpy.ndarray): the standard deviation
+            value (np.ndarray): the standard deviation
         """
         self.view().variance = value ** 2  # type: ignore
 
@@ -164,7 +164,7 @@ class Histogram(bh.Histogram, family=cabinetry):
         """Returns the bin edges.
 
         Returns:
-            numpy.ndarray: bin edges
+            np.ndarray: bin edges
         """
         return self.axes[0].edges
 

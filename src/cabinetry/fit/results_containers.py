@@ -7,8 +7,8 @@ class FitResults(NamedTuple):
     """Collects fit results in one object.
 
     Args:
-        bestfit (numpy.ndarray): best-fit results of parameters
-        uncertainty (numpy.ndarray): uncertainties of best-fit parameter results
+        bestfit (np.ndarray): best-fit results of parameters
+        uncertainty (np.ndarray): uncertainties of best-fit parameter results
         labels (List[str]): parameter labels
         corr_mat (np.ndarray): parameter correlation matrix
         best_twice_nll (float): -2 log(likelihood) at best-fit point
@@ -30,13 +30,13 @@ class RankingResults(NamedTuple):
     include the parameter of interest, since no impact for it is calculated.
 
     Args:
-        bestfit (numpy.ndarray): best-fit results of parameters
-        uncertainty (numpy.ndarray): uncertainties of best-fit parameter results
+        bestfit (np.ndarray): best-fit results of parameters
+        uncertainty (np.ndarray): uncertainties of best-fit parameter results
         labels (List[str]): parameter labels
-        prefit_up (numpy.ndarray): pre-fit impact in "up" direction
-        prefit_down (numpy.ndarray): pre-fit impact in "down" direction
-        postfit_up (numpy.ndarray): post-fit impact in "up" direction
-        postfit_down (numpy.ndarray): post-fit impact in "down" direction
+        prefit_up (np.ndarray): pre-fit impact in "up" direction
+        prefit_down (np.ndarray): pre-fit impact in "down" direction
+        postfit_up (np.ndarray): post-fit impact in "up" direction
+        postfit_down (np.ndarray): post-fit impact in "down" direction
     """
 
     bestfit: np.ndarray
@@ -70,7 +70,7 @@ class LimitResults(NamedTuple):
     """Collects parameter upper limit results in one object.
 
     Args:
-        observed_limit (np.ndarray): observed limit
+        observed_limit (float): observed limit
         expected_limit (np.ndarray): expected limit, including 1 and 2 sigma bands
         observed_CLs (np.ndarray): observed CLs values
         expected_CLs (np.ndarray): expected CLs values, including 1 and 2 sigma bands

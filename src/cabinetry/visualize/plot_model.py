@@ -44,8 +44,8 @@ def data_mc(
             saving it, defaults to False (enable when producing many figures to avoid
             memory issues, prevents rendering in notebooks)
 
-        Returns:
-            matplotlib.figure.Figure: the data/MC figure
+    Returns:
+        matplotlib.figure.Figure: the data/MC figure
     """
     mc_histograms_yields = []
     mc_labels = []
@@ -251,7 +251,7 @@ def templates(
             memory issues, prevents rendering in notebooks)
 
     Returns:
-            matplotlib.figure.Figure: the template figure
+        matplotlib.figure.Figure: the template figure
     """
     bin_width = bin_edges[1:] - bin_edges[:-1]
     bin_centers = 0.5 * (bin_edges[:-1] + bin_edges[1:])
