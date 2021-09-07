@@ -18,10 +18,10 @@ extras_require["test"] = sorted(
             "types-PyYAML",
             "typeguard>=2.12.1",  # click 8.0 compatibility
             "black",
-            "pyhf[torch,jax]",
         ]
     )
 )
+extras_require = {"pyhf_backends": ["pyhf[backends]"]}  # JAX, PyTorch, Tensorflow
 extras_require["docs"] = sorted(
     {
         "sphinx",
