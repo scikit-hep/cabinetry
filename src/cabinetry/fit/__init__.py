@@ -78,22 +78,14 @@ def _fit_model_pyhf(
 
     bestfit = pyhf.tensorlib.to_numpy(result[:, 0])
     uncertainty = pyhf.tensorlib.to_numpy(result[:, 1])
-    labels = model_utils.parameter_names(model)
+    labels = model.config.par_names()
     corr_mat = pyhf.tensorlib.to_numpy(corr_mat)
     best_twice_nll = float(best_twice_nll)  # convert 0-dim np.ndarray to float
 
     fit_results = FitResults(bestfit, uncertainty, labels, corr_mat, best_twice_nll)
 
     if minos is not None:
-        parameters_translated = []
-        for minos_par in minos:
-            par_index = model_utils._parameter_index(minos_par, labels)
-            if par_index != -1:
-                # pyhf does not hand over parameter names, all parameters are known as
-                # x0, x1, etc.
-                parameters_translated.append(f"x{par_index}")
-
-        _run_minos(result_obj.minuit, parameters_translated, labels)
+        _run_minos(result_obj.minuit, minos, labels)
 
     return fit_results
 
@@ -133,7 +125,7 @@ def _fit_model_custom(
     # use fix_pars provided in function argument if they exist, else use default
     fix_pars = fix_pars or model.config.suggested_fixed()
 
-    labels = model_utils.parameter_names(model)
+    labels = model.config.par_names()
 
     # set initial step size to 0 for fixed parameters
     # this will cause the associated parameter uncertainties to be 0 post-fit
@@ -239,13 +231,11 @@ def _run_minos(
             knows parameters)
     """
     for par_name in minos:
-        # get index of current parameter in labels (to translate its name if iminuit
-        # did not receive the parameter labels)
-        par_index = model_utils._parameter_index(par_name, minuit_obj.parameters)
-        if par_index == -1:
-            # parameter not found, skip calculation (can only happen with custom fit)
+        if par_name not in minuit_obj.parameters:
+            # parameter not found, skip calculation
+            log.warning(f"parameter {par_name} not found in model")
             continue
-        log.info(f"running MINOS for {labels[par_index]}")
+        log.info(f"running MINOS for {par_name}")
         minuit_obj.minos(par_name)
 
     log.info("MINOS results:")
@@ -391,7 +381,7 @@ def ranking(
     if fit_results is None:
         fit_results = _fit_model(model, data, custom_fit=custom_fit)
 
-    labels = model_utils.parameter_names(model)
+    labels = model.config.par_names()
     prefit_unc = model_utils.prefit_uncertainties(model)
     nominal_poi = fit_results.bestfit[model.config.poi_index]
 
@@ -492,14 +482,14 @@ def scan(
         ScanResults: includes parameter name, scanned values and 2*log(likelihood)
         offset
     """
-    labels = model_utils.parameter_names(model)
+    labels = model.config.par_names()
     init_pars = model.config.suggested_init()
     fix_pars = model.config.suggested_fixed()
 
     # get index of parameter with name par_name
     par_index = model_utils._parameter_index(par_name, labels)
     if par_index == -1:
-        raise ValueError(f"could not find parameter {par_name} in model")
+        raise ValueError(f"parameter {par_name} not found in model")
 
     # run a fit with the parameter not held constant, to find the best-fit point
     fit_results = _fit_model(model, data, custom_fit=custom_fit)

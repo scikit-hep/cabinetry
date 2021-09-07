@@ -39,14 +39,8 @@ def test_model_and_data(example_spec):
     assert data == [51.8, 1.0]
 
     # without auxdata
-    model, data = model_utils.model_and_data(example_spec, with_aux=False)
+    model, data = model_utils.model_and_data(example_spec, include_auxdata=False)
     assert data == [475]
-
-
-def test_parameter_names(example_spec):
-    model = pyhf.Workspace(example_spec).model()
-    labels = model_utils.parameter_names(model)
-    assert labels == ["staterror_Signal-Region", "Signal strength"]
 
 
 def test_asimov_data(example_spec):
@@ -55,7 +49,7 @@ def test_asimov_data(example_spec):
     assert model_utils.asimov_data(model) == [51.8, 1]
 
     # without auxdata
-    assert model_utils.asimov_data(model, with_aux=False) == [51.8]
+    assert model_utils.asimov_data(model, include_auxdata=False) == [51.8]
 
     # respect nominal settings for normfactors
     example_spec["measurements"][0]["config"]["parameters"].append(
@@ -63,7 +57,7 @@ def test_asimov_data(example_spec):
     )
     ws = pyhf.Workspace(example_spec)
     model = ws.model()
-    assert model_utils.asimov_data(model, with_aux=False) == [103.6]
+    assert model_utils.asimov_data(model, include_auxdata=False) == [103.6]
 
 
 def test_asimov_parameters(example_spec, example_spec_shapefactor, example_spec_lumi):

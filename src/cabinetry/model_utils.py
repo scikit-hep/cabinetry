@@ -37,14 +37,15 @@ class ModelPrediction(NamedTuple):
 
 
 def model_and_data(
-    spec: Dict[str, Any], asimov: bool = False, with_aux: bool = True
+    spec: Dict[str, Any], asimov: bool = False, include_auxdata: bool = True
 ) -> Tuple[pyhf.pdf.Model, List[float]]:
     """Returns model and data for a ``pyhf`` workspace specification.
 
     Args:
         spec (Dict[str, Any]): a ``pyhf`` workspace specification
         asimov (bool, optional): whether to return the Asimov dataset, defaults to False
-        with_aux (bool, optional): whether to also return auxdata, defaults to True
+        include_auxdata (bool, optional): whether to also return auxdata, defaults to
+            True
 
     Returns:
         Tuple[pyhf.pdf.Model, List[float]]:
@@ -59,35 +60,13 @@ def model_and_data(
         }
     )  # use HistFactory InterpCode=4 (default in pyhf since v0.6.0)
     if not asimov:
-        data = workspace.data(model, with_aux=with_aux)
+        data = workspace.data(model, include_auxdata=include_auxdata)
     else:
-        data = asimov_data(model, with_aux=with_aux)
+        data = asimov_data(model, include_auxdata=include_auxdata)
     return model, data
 
 
-def parameter_names(model: pyhf.pdf.Model) -> List[str]:
-    """Returns the labels of all fit parameters.
-
-    Vectors that act on one bin per vector entry (gammas) are expanded.
-
-    Args:
-        model (pyhf.pdf.Model): a HistFactory-style model in ``pyhf`` format
-
-    Returns:
-        List[str]: names of fit parameters
-    """
-    labels = []
-    for parname in model.config.par_order:
-        for i_par in range(model.config.param_set(parname).n_parameters):
-            labels.append(
-                f"{parname}[bin_{i_par}]"
-                if model.config.param_set(parname).n_parameters > 1
-                else parname
-            )
-    return labels
-
-
-def asimov_data(model: pyhf.Model, with_aux: bool = True) -> List[float]:
+def asimov_data(model: pyhf.Model, include_auxdata: bool = True) -> List[float]:
     """Returns the Asimov dataset (optionally with auxdata) for a model.
 
     Initial parameter settings for normalization factors in the workspace are treated as
@@ -97,13 +76,14 @@ def asimov_data(model: pyhf.Model, with_aux: bool = True) -> List[float]:
 
     Args:
         model (pyhf.Model): the model from which to construct the dataset
-        with_aux (bool, optional): whether to also return auxdata, defaults to True
+        include_auxdata (bool, optional): whether to also return auxdata, defaults to
+            True
 
     Returns:
         List[float]: the Asimov dataset
     """
     asimov_data = pyhf.tensorlib.tolist(
-        model.expected_data(asimov_parameters(model), include_auxdata=with_aux)
+        model.expected_data(asimov_parameters(model), include_auxdata=include_auxdata)
     )
     return asimov_data
 
@@ -287,7 +267,7 @@ def yield_stdev(
         symmetric_uncertainty = (up_variations[i_par] - down_variations[i_par]) / 2
         total_variance = total_variance + symmetric_uncertainty ** 2
 
-    labels = parameter_names(model)
+    labels = model.config.par_names()
     # continue with off-diagonal contributions if there are any
     if np.count_nonzero(corr_mat - np.diag(np.ones_like(parameters))) > 0:
         # loop over pairs of parameters
@@ -419,9 +399,9 @@ def unconstrained_parameter_count(model: pyhf.pdf.Model) -> int:
 def _parameter_index(par_name: str, labels: Union[List[str], Tuple[str, ...]]) -> int:
     """Returns the position of a parameter with a given name in the list of parameters.
 
-    Useful together with ``parameter_names`` to find the position of a parameter
-    when the name is known. If the parameter is not found, logs an error and returns a
-    default value of -1.
+    Useful together with ``pyhf.pdf._ModelConfig.par_names`` to find the position of a
+    parameter when the name is known. If the parameter is not found, logs an error and
+    returns a default value of -1.
 
     Args:
         par_name (str): name of parameter to find in list

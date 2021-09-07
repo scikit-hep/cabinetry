@@ -148,7 +148,7 @@ def test_integration(tmp_path, ntuple_creator, caplog):
     assert np.allclose(fit_results.goodness_of_fit, 0.24679341)
 
     # minos result
-    assert "Signal_norm                    =  1.6895 -0.9580 +0.9052" in [
+    assert "Signal_norm                =  1.6895 -0.9580 +0.9052" in [
         rec.message for rec in caplog.records
     ]
     caplog.clear()
@@ -166,6 +166,7 @@ def test_integration(tmp_path, ntuple_creator, caplog):
     assert np.allclose(
         model_postfit.total_stdev_model_bins,
         [[11.898333, 7.283185, 7.414715, 7.687922]],
+        rtol=1e-4,
     )
     assert np.allclose(model_postfit.total_stdev_model_channels, [20.329523])
     _ = cabinetry.visualize.data_mc(model_postfit, data, close_figure=True)
