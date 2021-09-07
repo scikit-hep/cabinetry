@@ -17,8 +17,8 @@ extras_require["test"] = sorted(
             "types-tabulate",
             "types-PyYAML",
             "typeguard>=2.12.1",  # click 8.0 compatibility
-            "pyhf[backends]",
             "black",
+            "pyhf[backends]",
         ]
     )
 )

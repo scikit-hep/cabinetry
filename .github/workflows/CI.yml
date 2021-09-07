@@ -22,7 +22,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        python-version: [3.7, 3.8]
+        python-version: [3.7, 3.8, 3.9]
 
     steps:
     - uses: actions/checkout@v2
@@ -53,7 +53,12 @@ jobs:
         sudo apt-get install ghostscript  # for pdf comparison
         pytest --cov-report=xml --typeguard-packages=""  # typeguard issue with typing.NamedTuple in Python 3.7
     - name: Test with pytest and typeguard
-      if: matrix.python-version != 3.7
+      if: matrix.python-version == 3.8
+      run: |
+        sudo apt-get install ghostscript  # for pdf comparison
+        pytest
+    - name: Test with pytest and typeguard, test pyhf backends
+      if: matrix.python-version == 3.9
       run: |
         sudo apt-get install ghostscript  # for pdf comparison
         pytest --runslow  # also test pyhf backends
