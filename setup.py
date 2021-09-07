@@ -21,7 +21,7 @@ extras_require["test"] = sorted(
         ]
     )
 )
-extras_require = {"pyhf_backends": ["pyhf[backends]"]}  # JAX, PyTorch, Tensorflow
+extras_require["pyhf_backends"] = ["pyhf[backends]"]
 extras_require["docs"] = sorted(
     {
         "sphinx",
