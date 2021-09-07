@@ -16,7 +16,7 @@ def reset_backend():
 
 @pytest.mark.slow
 @pytest.mark.no_cover
-@pytest.mark.parametrize("backend", ["jax", "pytorch", "tensorflow"])
+@pytest.mark.parametrize("backend", ["jax", "pytorch"])
 def test_backend_integration(backend, reset_backend):
     """Integration test for the inference pipeline that can be run with all ``pyhf``
     backends to ensure they work. ``typeguard`` will catch type issues at runtime.
