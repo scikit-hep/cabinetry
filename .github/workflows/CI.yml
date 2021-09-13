@@ -50,13 +50,13 @@ jobs:
     - name: Test with pytest, without typeguard, generate coverage report
       if: matrix.python-version == 3.7
       run: |
-        apt-get update
+        sudo apt-get update
         sudo apt-get install ghostscript  # for pdf comparison
         pytest --cov-report=xml --typeguard-packages=""  # typeguard issue with typing.NamedTuple in Python 3.7
     - name: Test with pytest and typeguard
       if: matrix.python-version != 3.7
       run: |
-        apt-get update
+        sudo apt-get update
         sudo apt-get install ghostscript  # for pdf comparison
         python -m pip install .[pyhf_backends]  # install pyhf backends
         pytest --runslow  # also test pyhf backends
