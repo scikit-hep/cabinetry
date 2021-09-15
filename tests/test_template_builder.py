@@ -240,9 +240,9 @@ def test__Builder():
 
 
 @mock.patch("cabinetry.template_builder._Builder._name_and_save")
-@mock.patch("cabinetry.histo.Histogram.from_arrays", return_value="histogram")
+@mock.patch("cabinetry.histo.Histogram", return_value="cabinetry_histogram")
 @mock.patch(
-    "cabinetry.contrib.histogram_creation.from_uproot", return_value=([1], [0.1])
+    "cabinetry.contrib.histogram_creation.from_uproot", return_value="histogram"
 )
 def test__Builder_create_histogram(mock_uproot_builder, mock_histo, mock_save):
     # the binning [0] is not a proper binning, but simplifies the comparison
@@ -266,12 +266,12 @@ def test__Builder_create_histogram(mock_uproot_builder, mock_histo, mock_save):
         )
     ]
 
-    # verify the histogram conversion call
-    assert mock_histo.call_args_list == [(([0], [1], [0.1]), {})]
+    # conversion from bh.Histogram to cabinetry Histogram
+    assert mock_histo.call_args_list == [(("histogram",), {})]
 
-    # verify the call for saving
+    # verify the call for saving wrapped histogram
     assert mock_save.call_args_list == [
-        (("histogram", region, sample, systematic, None), {})
+        (("cabinetry_histogram", region, sample, systematic, None), {})
     ]
 
     # other backends
