@@ -309,7 +309,7 @@ class _Builder:
         if self.method == "uproot":
             from cabinetry.contrib import histogram_creation
 
-            yields, stdev = histogram_creation.from_uproot(
+            histogram = histogram_creation.from_uproot(
                 ntuple_paths,
                 pos_in_file,
                 variable,
@@ -322,8 +322,9 @@ class _Builder:
             raise NotImplementedError(f"unknown backend {self.method}")
 
         # store information in a Histogram instance and save it
-        histogram = histo.Histogram.from_arrays(bins, yields, stdev)
-        self._name_and_save(histogram, region, sample, systematic, template)
+        self._name_and_save(
+            histo.Histogram(histogram), region, sample, systematic, template
+        )
 
     def _name_and_save(
         self,

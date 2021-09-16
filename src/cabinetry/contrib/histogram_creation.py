@@ -1,5 +1,5 @@
 import pathlib
-from typing import List, Optional, Tuple
+from typing import List, Optional
 
 import awkward as ak
 import boost_histogram as bh
@@ -14,8 +14,8 @@ def from_uproot(
     bins: np.ndarray,
     weight: Optional[str] = None,
     selection_filter: Optional[str] = None,
-) -> Tuple[np.ndarray, np.ndarray]:
-    """Reads an ntuple with uproot, and fills a histogram with the observable.
+) -> bh.Histogram:
+    """Reads an ntuple with uproot, fills and returns a histogram with the observable.
 
     The paths may contain wildcards.
 
@@ -30,9 +30,7 @@ def from_uproot(
             defaults to None (no filter)
 
     Returns:
-        Tuple[np.ndarray, np.ndarray]:
-            - yield per bin
-            - stat. uncertainty per bin
+        bh.Histogram: histogram containing data
     """
     # concatenate the path to file and location within file with ":"
     paths_with_trees = [str(path) + ":" + pos_in_file for path in ntuple_paths]
@@ -75,27 +73,7 @@ def from_uproot(
         observables = np.concatenate(obs_list)
         weights = np.ones_like(observables) * float(weight)
 
-    yields, stdev = _bin_data(observables, weights, bins)
-    return yields, stdev
-
-
-def _bin_data(
-    observables: np.ndarray, weights: np.ndarray, bins: np.ndarray
-) -> Tuple[np.ndarray, np.ndarray]:
-    """Creates a histogram from unbinned data.
-
-    Args:
-        observables (np.ndarray): values the histogram will be binned in
-        weights (np.ndarray): weights to apply for each histogram entry
-        bins (np.ndarray): bin edges for histogram
-
-    Returns:
-        Tuple[np.ndarray, np.ndarray]:
-            - yield per bin
-            - stat. uncertainty per bin
-    """
+    # create and return histogram
     hist = bh.Histogram(bh.axis.Variable(bins), storage=bh.storage.Weight())
     hist.fill(observables, weight=weights)
-    yields = hist.values()
-    stdev = np.sqrt(hist.variances())  # type: ignore
-    return yields, stdev
+    return hist
