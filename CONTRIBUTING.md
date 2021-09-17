@@ -4,13 +4,13 @@ Your contributions to `cabinetry` are welcome. Thank you for your interest!
 
 ## Issues
 
-[Issues](https://github.com/alexander-held/cabinetry/issues) are a good place to report bugs, ask questions, request features, or discuss potential changes to `cabinetry`.
+[Issues](https://github.com/scikit-hep/cabinetry/issues) are a good place to report bugs, ask questions, request features, or discuss potential changes to `cabinetry`.
 Before opening a new issue, please have a look through existing issues to avoid duplications.
 Please also take a look at the [documentation](https://cabinetry.readthedocs.io/), which may answer some questions.
 
 ## Pull requests
 
-It can be helpful to first get into contact via issues before getting started with a [pull request](https://github.com/alexander-held/cabinetry/pulls).
+It can be helpful to first get into contact via issues before getting started with a [pull request](https://github.com/scikit-hep/cabinetry/pulls).
 All pull requests are squashed and merged, so feel free to commit as many times as you want to the branch you are working on.
 The final commit message should follow the [conventional commits](https://www.conventionalcommits.org/en/v1.0.0/) specification.
 
