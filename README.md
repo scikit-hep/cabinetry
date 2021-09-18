@@ -8,6 +8,7 @@
 [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
 
 [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.4742752.svg)](https://doi.org/10.5281/zenodo.4742752)
+[![Scikit-HEP](https://scikit-hep.org/assets/images/Scikit--HEP-Project-blue.svg)](https://scikit-hep.org/)
 
 `cabinetry` is a Python library for building and steering binned template fits.
 It is written with applications in High Energy Physics in mind.
