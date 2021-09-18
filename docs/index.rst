@@ -27,7 +27,7 @@ This documentation can be viewed `on Read the Docs <https://cabinetry.readthedoc
     sphinx-build docs docs/_build
     open docs/_build/index.html
 
-See the `README on github <https://github.com/alexander-held/cabinetry/blob/master/README.md>`_ for a simple example of using ``cabinetry``, and the `cabinetry-tutorials <https://github.com/cabinetry/cabinetry-tutorials>`_ repository for a more in-depth version.
+See the `README on github <https://github.com/scikit-hep/cabinetry/blob/master/README.md>`_ for a simple example of using ``cabinetry``, and the `cabinetry-tutorials <https://github.com/cabinetry/cabinetry-tutorials>`_ repository for a more in-depth version.
 
 Presentations of cabinetry
 ----------------------------
