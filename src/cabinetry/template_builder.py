@@ -152,8 +152,9 @@ def _filter(
 ) -> Optional[str]:
     """Returns the filter to be applied for event selection.
 
-    For non-nominal templates, overrides the nominal filter if an alternative is
-    specified for the template.
+    Overrides the (optional) filter provided at the region level by a sample-specific
+    filter, if provided. For non-nominal templates, overrides the nominal filter if an
+    alternative is specified for the template.
 
     Args:
         region (Dict[str, Any]): containing all region information
@@ -166,6 +167,12 @@ def _filter(
         Optional[str]: expression for the filter to be used, or None for no filtering
     """
     selection_filter = region.get("Filter", None)
+
+    # check for sample-specific overrides
+    selection_filter_override = sample.get("Filter", None)
+    if selection_filter_override is not None:
+        selection_filter = selection_filter_override
+
     # check whether a systematic is being processed
     if template is not None:
         # determine whether the template has an override specified

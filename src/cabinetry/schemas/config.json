@@ -151,6 +151,10 @@
                     "description": "name of tree",
                     "type": "string"
                 },
+                "Filter": {
+                    "description": "selection criteria to apply (override for region setting)",
+                    "type": "string"
+                },
                 "Weight": {
                     "description": "weight to apply to events",
                     "type": "string"
