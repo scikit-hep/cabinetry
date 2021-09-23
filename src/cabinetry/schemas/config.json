@@ -105,14 +105,10 @@
             "$$target": "#/definitions/region",
             "description": "a region of phase space",
             "type": "object",
-            "required": ["Name", "Filter", "Variable", "Binning"],
+            "required": ["Name", "Variable", "Binning"],
             "properties": {
                 "Name": {
                     "description": "name of the region",
-                    "type": "string"
-                },
-                "Filter": {
-                    "description": "selection criteria to apply",
                     "type": "string"
                 },
                 "Variable": {
@@ -128,6 +124,10 @@
                         "type": "number"
                     },
                     "uniqueItems": true
+                },
+                "Filter": {
+                    "description": "selection criteria to apply",
+                    "type": "string"
                 },
                 "RegionPath": {
                     "description": "(part of) path to file containing region",
@@ -264,12 +264,12 @@
                     "description": "weight to apply (override for nominal setting)",
                     "type": "string"
                 },
-                "Filter": {
-                    "description": "selection criteria to apply (override for nominal setting)",
-                    "type": "string"
-                },
                 "Variable": {
                     "description": "variable to bin in (override for nominal setting)",
+                    "type": "string"
+                },
+                "Filter": {
+                    "description": "selection criteria to apply (override for nominal setting)",
                     "type": "string"
                 },
                 "RegionPath": {
