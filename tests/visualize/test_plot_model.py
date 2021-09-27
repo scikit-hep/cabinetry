@@ -123,7 +123,7 @@ def test_data_mc(tmp_path, caplog):
     ]
     caplog.clear()
 
-    # expect three RuntimeWarnings from numpy due to divides by zero
+    # expect three RuntimeWarnings from numpy due to division by zero
     assert len(warn_record) == 3
     for i in range(3):
         assert "divide by zero" in str(warn_record[i].message)
