@@ -139,15 +139,16 @@ def data_mc(
         log.warning(
             f"predicted yield is zero in {n_zero_pred} bin(s), excluded from ratio plot"
         )
+    nonzero_model_yield = total_yield != 0.0
 
     # add uncertainty band around y=1
     rel_mc_unc = total_model_unc / total_yield
     # do not show band in bins where total model yield is 0
     ax2.bar(
-        bin_centers[total_yield != 0.0],
-        2 * rel_mc_unc[total_yield != 0.0],
-        width=bin_width[total_yield != 0.0],
-        bottom=1.0 - rel_mc_unc[total_yield != 0.0],
+        bin_centers[nonzero_model_yield],
+        2 * rel_mc_unc[nonzero_model_yield],
+        width=bin_width[nonzero_model_yield],
+        bottom=1.0 - rel_mc_unc[nonzero_model_yield],
         fill=False,
         linewidth=0,
         edgecolor="gray",
@@ -159,9 +160,9 @@ def data_mc(
     data_model_ratio_unc = data_histogram_stdev / total_yield
     # mask data in bins where total model yield is 0
     ax2.errorbar(
-        bin_centers_data[total_yield != 0.0],
-        data_model_ratio[total_yield != 0.0],
-        yerr=data_model_ratio_unc[total_yield != 0.0],
+        bin_centers_data[nonzero_model_yield],
+        data_model_ratio[nonzero_model_yield],
+        yerr=data_model_ratio_unc[nonzero_model_yield],
         fmt="o",
         color="k",
     )
