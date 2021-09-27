@@ -134,13 +134,20 @@ def data_mc(
         linewidth=1,
     )  # reference line along y=1
 
+    n_zero_pred = sum(total_yield == 0.0)  # number of bins with zero predicted yields
+    if n_zero_pred > 0:
+        log.warning(
+            f"predicted yield is zero in {n_zero_pred} bin(s), excluded from ratio plot"
+        )
+
     # add uncertainty band around y=1
     rel_mc_unc = total_model_unc / total_yield
+    # do not show band in bins where total MC yield is 0
     ax2.bar(
-        bin_centers,
-        2 * rel_mc_unc,
-        width=bin_width,
-        bottom=1 - rel_mc_unc,
+        bin_centers[total_yield != 0.0],
+        2 * rel_mc_unc[total_yield != 0.0],
+        width=bin_width[total_yield != 0.0],
+        bottom=1.0 - rel_mc_unc[total_yield != 0.0],
         fill=False,
         linewidth=0,
         edgecolor="gray",
@@ -150,10 +157,11 @@ def data_mc(
     # data in ratio plot
     data_model_ratio = data_histogram_yields / total_yield
     data_model_ratio_unc = data_histogram_stdev / total_yield
+    # mask data in bins where total MC yield is 0
     ax2.errorbar(
-        bin_centers_data,
-        data_model_ratio,
-        yerr=data_model_ratio_unc,
+        bin_centers_data[total_yield != 0.0],
+        data_model_ratio[total_yield != 0.0],
+        yerr=data_model_ratio_unc[total_yield != 0.0],
         fmt="o",
         color="k",
     )
