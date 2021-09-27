@@ -4,11 +4,12 @@ from unittest import mock
 import matplotlib.pyplot as plt
 from matplotlib.testing.compare import compare_images
 import numpy as np
+import pytest
 
 from cabinetry.visualize import plot_model
 
 
-def test_data_mc(tmp_path):
+def test_data_mc(tmp_path, caplog):
     fname = tmp_path / "fig.pdf"
     histo_dict_list = [
         {
@@ -102,15 +103,30 @@ def test_data_mc(tmp_path):
     )
 
     # do not save figure, but close it
+    # one bin with zero model prediction
+    histo_dict_list[0]["yields"] = np.asarray([0, 14])
+    histo_dict_list[1]["yields"] = np.asarray([0, 5])
+    caplog.clear()
     with mock.patch("cabinetry.visualize.utils._save_and_close") as mock_close_safe:
-        fig = fig = plot_model.data_mc(
-            histo_dict_list_log,
-            total_model_unc_log,
-            bin_edges_log,
-            label="",
-            close_figure=True,
-        )
-        assert mock_close_safe.call_args_list == [((fig, None, True), {})]
+        with pytest.warns(None) as warn_record:
+            fig = fig = plot_model.data_mc(
+                histo_dict_list,
+                total_model_unc_log,
+                bin_edges_log,
+                label="",
+                close_figure=True,
+            )
+            assert mock_close_safe.call_args_list == [((fig, None, True), {})]
+
+    assert "predicted yield is zero in 1 bin(s), excluded from ratio plot" in [
+        rec.message for rec in caplog.records
+    ]
+    caplog.clear()
+
+    # expect three RuntimeWarnings from numpy due to divides by zero
+    assert len(warn_record) == 3
+    for i in range(3):
+        assert "divide by zero" in str(warn_record[i].message)
 
     plt.close("all")
 
