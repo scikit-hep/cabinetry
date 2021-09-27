@@ -142,7 +142,7 @@ def data_mc(
 
     # add uncertainty band around y=1
     rel_mc_unc = total_model_unc / total_yield
-    # do not show band in bins where total MC yield is 0
+    # do not show band in bins where total model yield is 0
     ax2.bar(
         bin_centers[total_yield != 0.0],
         2 * rel_mc_unc[total_yield != 0.0],
@@ -157,7 +157,7 @@ def data_mc(
     # data in ratio plot
     data_model_ratio = data_histogram_yields / total_yield
     data_model_ratio_unc = data_histogram_stdev / total_yield
-    # mask data in bins where total MC yield is 0
+    # mask data in bins where total model yield is 0
     ax2.errorbar(
         bin_centers_data[total_yield != 0.0],
         data_model_ratio[total_yield != 0.0],
@@ -168,7 +168,7 @@ def data_mc(
 
     # get the highest single bin yield, from the sum of MC or data
     y_max = max(np.amax(total_yield), np.amax(data_histogram_yields))
-    # lowest MC yield in single bin (not considering empty bins)
+    # lowest model yield in single bin (not considering empty bins)
     y_min = np.amin(total_yield[np.nonzero(total_yield)])
 
     # use log scale if it is requested, otherwise determine scale setting:
