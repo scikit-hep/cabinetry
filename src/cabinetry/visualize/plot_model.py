@@ -134,13 +134,21 @@ def data_mc(
         linewidth=1,
     )  # reference line along y=1
 
+    n_zero_pred = sum(total_yield == 0.0)  # number of bins with zero predicted yields
+    if n_zero_pred > 0:
+        log.warning(
+            f"predicted yield is zero in {n_zero_pred} bin(s), excluded from ratio plot"
+        )
+    nonzero_model_yield = total_yield != 0.0
+
     # add uncertainty band around y=1
     rel_mc_unc = total_model_unc / total_yield
+    # do not show band in bins where total model yield is 0
     ax2.bar(
-        bin_centers,
-        2 * rel_mc_unc,
-        width=bin_width,
-        bottom=1 - rel_mc_unc,
+        bin_centers[nonzero_model_yield],
+        2 * rel_mc_unc[nonzero_model_yield],
+        width=bin_width[nonzero_model_yield],
+        bottom=1.0 - rel_mc_unc[nonzero_model_yield],
         fill=False,
         linewidth=0,
         edgecolor="gray",
@@ -150,17 +158,18 @@ def data_mc(
     # data in ratio plot
     data_model_ratio = data_histogram_yields / total_yield
     data_model_ratio_unc = data_histogram_stdev / total_yield
+    # mask data in bins where total model yield is 0
     ax2.errorbar(
-        bin_centers_data,
-        data_model_ratio,
-        yerr=data_model_ratio_unc,
+        bin_centers_data[nonzero_model_yield],
+        data_model_ratio[nonzero_model_yield],
+        yerr=data_model_ratio_unc[nonzero_model_yield],
         fmt="o",
         color="k",
     )
 
     # get the highest single bin yield, from the sum of MC or data
     y_max = max(np.amax(total_yield), np.amax(data_histogram_yields))
-    # lowest MC yield in single bin (not considering empty bins)
+    # lowest model yield in single bin (not considering empty bins)
     y_min = np.amin(total_yield[np.nonzero(total_yield)])
 
     # use log scale if it is requested, otherwise determine scale setting:
