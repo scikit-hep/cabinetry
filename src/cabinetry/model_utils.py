@@ -484,3 +484,70 @@ def _filter_channels(
         )
 
     return filtered_channels
+
+
+def match_fit_results(model: pyhf.pdf.Model, fit_results: FitResults) -> FitResults:
+    """Matches results from a fit to a model by adding or removing parameters as needed.
+
+    If the fit results contain parameters missing in the model, these parameters are not
+    included in the returned fit results. If the fit results do not include parameters
+    used in the model, they are added to the fit results. The best-fit value for such
+    parameters are the Asimov values as returned by ```asimov_parameters``` (initial
+    parameter settings for unconstrained parameters), and the associated uncertainties
+    as given by ```prefit_uncertainties``` (zero uncertainty for unconstrained or fixed
+    parameters). These parameters furthermore are assumed to have no correlation with
+    any other parameters.
+
+    Args:
+        model (pyhf.pdf.Model): model to match fit results to
+        fit_results (FitResults): fit results to be updated in order to match model
+
+    Returns:
+        FitResults: fit results matching the model
+    """
+    # start with the assumption that the provided fit results contain no relevant
+    # information for the target model at all, and initialize everything accordingly
+    # then inject information contained in provided fit results and return the new
+    # fit results matching the target model at the end
+
+    bestfit = asimov_parameters(model)  # Asimov parameter values for target model
+    uncertainty = prefit_uncertainties(model)  # pre-fit uncertainties for target model
+    labels = model.config.par_names()  # labels for target model
+
+    # indices of parameters in current fit results, or None if they are missing
+    indices_for_corr: List[Optional[int]] = [None] * len(labels)
+
+    # loop over all required parameters
+    for target_idx, target_label in enumerate(labels):
+        # if parameters are missing in fit results, no further action is needed here
+        # as all relevant objects have been initialized with that assumption
+        if target_label in fit_results.labels:
+            # fit results contain parameter, find its position
+            idx_in_fit_results = fit_results.labels.index(target_label)
+            # override pre-fit values by actual fit results for parameters
+            bestfit[target_idx] = fit_results.bestfit[idx_in_fit_results]
+            uncertainty[target_idx] = fit_results.uncertainty[idx_in_fit_results]
+            # update indices for correlation matrix reconstruction
+            indices_for_corr[target_idx] = idx_in_fit_results
+
+    # re-build correlation matrix: start with diagonal matrix (assuming fit results do
+    # not contain relevant info), and then insert values provided in fit results
+    corr_mat = np.diagflat(np.ones_like(labels, dtype=float))
+    for i_target, i_prov in enumerate(indices_for_corr):
+        for j_target, j_prov in enumerate(indices_for_corr):
+            # i_target and j_target are positions in matched correlation matrix
+            # i_prov and j_prov are positions in old matrix, None if missing from there
+            if i_prov is not None and j_prov is not None:
+                # if i_prov or j_prov are None, one of the parameters are not part of
+                # original fit result, and no update to correlation matrix is needed
+                corr_mat[i_target][j_target] = fit_results.corr_mat[i_prov][j_prov]
+
+    fit_results_matched = FitResults(
+        np.asarray(bestfit),
+        np.asarray(uncertainty),
+        labels,
+        corr_mat,
+        fit_results.best_twice_nll,
+        fit_results.goodness_of_fit,
+    )
+    return fit_results_matched
