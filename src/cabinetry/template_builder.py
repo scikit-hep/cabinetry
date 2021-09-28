@@ -154,7 +154,8 @@ def _filter(
 
     Overrides the (optional) filter provided at the region level by a sample-specific
     filter, if provided. For non-nominal templates, overrides the nominal filter if an
-    alternative is specified for the template.
+    alternative is specified for the template. The systematic-specific filter overrides
+    the sample-specific filter if both are provided.
 
     Args:
         region (Dict[str, Any]): containing all region information
