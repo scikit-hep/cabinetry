@@ -269,7 +269,7 @@ def yield_stdev(
 
     labels = model.config.par_names()
     # continue with off-diagonal contributions if there are any
-    if np.count_nonzero(corr_mat - np.diag(np.ones_like(parameters))) > 0:
+    if np.count_nonzero(corr_mat - np.diagflat(np.ones_like(parameters))) > 0:
         # loop over pairs of parameters
         for i_par in range(model.config.npars):
             for j_par in range(model.config.npars):

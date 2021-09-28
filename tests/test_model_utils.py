@@ -164,7 +164,7 @@ def test_yield_stdev(example_spec, example_spec_multibin):
     # pre-fit
     parameters = np.asarray([1.0, 1.0])
     uncertainty = np.asarray([0.0495665682, 0.0])
-    diag_corr_mat = np.diag([1.0, 1.0])
+    diag_corr_mat = np.diagflat([1.0, 1.0])
     total_stdev_bin, total_stdev_chan = model_utils.yield_stdev(
         model, parameters, uncertainty, diag_corr_mat
     )
