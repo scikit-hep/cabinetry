@@ -170,6 +170,25 @@ def test__filter():
         == "jet_pt > 0"
     )
 
+    # sample-specific override
+    assert (
+        template_builder._filter(
+            {"Filter": "jet_pt > 0"}, {"Filter": "jet_pt > 100"}, {}, None
+        )
+        == "jet_pt > 100"
+    )
+
+    # sample-specific override, again overridden by systematic
+    assert (
+        template_builder._filter(
+            {"Filter": "jet_pt > 0"},
+            {"Filter": "jet_pt > 100"},
+            {"Name": "variation", "Up": {"Filter": "jet_pt > 200"}},
+            "Up",
+        )
+        == "jet_pt > 200"
+    )
+
 
 def test__weight():
     # no override
