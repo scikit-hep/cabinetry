@@ -273,7 +273,7 @@
                     "type": "string"
                 },
                 "Filter": {
-                    "description": "selection criteria to apply (override for nominal setting)",
+                    "description": "selection criteria to apply (override for region / sample setting)",
                     "type": "string"
                 },
                 "RegionPath": {
