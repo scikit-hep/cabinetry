@@ -2,9 +2,9 @@
 
 [![CI status](https://github.com/scikit-hep/cabinetry/workflows/CI/badge.svg)](https://github.com/scikit-hep/cabinetry/actions?query=workflow%3ACI)
 [![Documentation Status](https://readthedocs.org/projects/cabinetry/badge/?version=latest)](https://cabinetry.readthedocs.io/en/latest/?badge=latest)
-[![codecov](https://codecov.io/gh/scikit-hep/cabinetry/branch/master/graph/badge.svg)](https://codecov.io/gh/scikit-hep/cabinetry)
+[![Codecov](https://codecov.io/gh/scikit-hep/cabinetry/branch/master/graph/badge.svg)](https://codecov.io/gh/scikit-hep/cabinetry)
 [![PyPI version](https://badge.fury.io/py/cabinetry.svg)](https://badge.fury.io/py/cabinetry)
-[![python version](https://img.shields.io/pypi/pyversions/cabinetry.svg)](https://pypi.org/project/cabinetry/)
+[![Python version](https://img.shields.io/pypi/pyversions/cabinetry.svg)](https://pypi.org/project/cabinetry/)
 [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
 
 [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.4742752.svg)](https://doi.org/10.5281/zenodo.4742752)
