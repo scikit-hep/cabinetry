@@ -239,11 +239,11 @@ def test_prediction(mock_asimov, mock_unc, mock_stdev, caplog, example_spec):
     )
     assert mock_stdev.call_args_list[0][1] == {}
 
-    # post-fit prediction and mis-match in parameter names
+    # post-fit prediction
     fit_results = FitResults(
         np.asarray([1.01, 1.1]),
         np.asarray([0.03, 0.1]),
-        [],
+        ["staterror_Signal-Region[0]", "Signal strength"],
         np.asarray([[1.0, 0.2], [0.2, 1.0]]),
         0.0,
     )
@@ -253,7 +253,7 @@ def test_prediction(mock_asimov, mock_unc, mock_stdev, caplog, example_spec):
     assert model_pred.total_stdev_model_bins == [[0.3]]  # from mock
     assert model_pred.total_stdev_model_channels == [0.3]  # from mock
     assert model_pred.label == "post-fit"
-    assert "parameter names in fit results and model do not match" in [
+    assert "parameter names in fit results and model do not match" not in [
         rec.message for rec in caplog.records
     ]
 
@@ -269,10 +269,21 @@ def test_prediction(mock_asimov, mock_unc, mock_stdev, caplog, example_spec):
         mock_stdev.call_args_list[1][0][3], np.asarray([[1.0, 0.2], [0.2, 1.0]])
     )
     assert mock_stdev.call_args_list[1][1] == {}
+
     caplog.clear()
 
-    # custom prediction label
-    model_pred = model_utils.prediction(model, label="abc")
+    # custom prediction label, mis-match in parameter names
+    fit_results = FitResults(
+        np.asarray([1.01, 1.1]),
+        np.asarray([0.03, 0.1]),
+        ["a", "b"],
+        np.asarray([[1.0, 0.2], [0.2, 1.0]]),
+        0.0,
+    )
+    model_pred = model_utils.prediction(model, fit_results=fit_results, label="abc")
+    assert "parameter names in fit results and model do not match" in [
+        rec.message for rec in caplog.records
+    ]
     assert model_pred.label == "abc"
     caplog.clear()
 
