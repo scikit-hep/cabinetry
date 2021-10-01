@@ -164,7 +164,7 @@ def test_yield_stdev(example_spec, example_spec_multibin):
     # pre-fit
     parameters = np.asarray([1.0, 1.0])
     uncertainty = np.asarray([0.0495665682, 0.0])
-    diag_corr_mat = np.diag([1.0, 1.0])
+    diag_corr_mat = np.diagflat([1.0, 1.0])
     total_stdev_bin, total_stdev_chan = model_utils.yield_stdev(
         model, parameters, uncertainty, diag_corr_mat
     )
@@ -213,7 +213,8 @@ def test_yield_stdev(example_spec, example_spec_multibin):
     "cabinetry.model_utils.prefit_uncertainties", return_value=([0.04956657, 0.0])
 )
 @mock.patch("cabinetry.model_utils.asimov_parameters", return_value=([1.0, 1.0]))
-def test_prediction(mock_asimov, mock_unc, mock_stdev, example_spec):
+def test_prediction(mock_asimov, mock_unc, mock_stdev, caplog, example_spec):
+    caplog.set_level(logging.DEBUG)
     model = pyhf.Workspace(example_spec).model()
 
     # pre-fit prediction
@@ -242,7 +243,7 @@ def test_prediction(mock_asimov, mock_unc, mock_stdev, example_spec):
     fit_results = FitResults(
         np.asarray([1.01, 1.1]),
         np.asarray([0.03, 0.1]),
-        [],
+        ["staterror_Signal-Region[0]", "Signal strength"],
         np.asarray([[1.0, 0.2], [0.2, 1.0]]),
         0.0,
     )
@@ -252,6 +253,9 @@ def test_prediction(mock_asimov, mock_unc, mock_stdev, example_spec):
     assert model_pred.total_stdev_model_bins == [[0.3]]  # from mock
     assert model_pred.total_stdev_model_channels == [0.3]  # from mock
     assert model_pred.label == "post-fit"
+    assert "parameter names in fit results and model do not match" not in [
+        rec.message for rec in caplog.records
+    ]
 
     assert mock_asimov.call_count == 1  # no new call
     assert mock_unc.call_count == 1  # no new call
@@ -266,9 +270,22 @@ def test_prediction(mock_asimov, mock_unc, mock_stdev, example_spec):
     )
     assert mock_stdev.call_args_list[1][1] == {}
 
-    # custom label
-    model_pred = model_utils.prediction(model, label="abc")
+    caplog.clear()
+
+    # custom prediction label, mis-match in parameter names
+    fit_results = FitResults(
+        np.asarray([1.01, 1.1]),
+        np.asarray([0.03, 0.1]),
+        ["a", "b"],
+        np.asarray([[1.0, 0.2], [0.2, 1.0]]),
+        0.0,
+    )
+    model_pred = model_utils.prediction(model, fit_results=fit_results, label="abc")
+    assert "parameter names in fit results and model do not match" in [
+        rec.message for rec in caplog.records
+    ]
     assert model_pred.label == "abc"
+    caplog.clear()
 
 
 def test_unconstrained_parameter_count(example_spec, example_spec_shapefactor):
@@ -342,3 +359,59 @@ def test__filter_channels(example_spec_multibin, caplog):
         "['region_1', 'region_2']" in [rec.message for rec in caplog.records]
     )
     caplog.clear()
+
+
+@mock.patch(
+    "cabinetry.model_utils.prefit_uncertainties",
+    side_effect=[[0.4, 0.5, 0.6], [0.4, 0.5], [0.4, 0.5, 0.6]],
+)
+@mock.patch(
+    "cabinetry.model_utils.asimov_parameters",
+    side_effect=[[4.0, 5.0, 6.0], [4.0, 5.0], [4.0, 5.0, 6.0]],
+)
+def test_match_fit_results(mock_pars, mock_uncs):
+    mock_model = mock.MagicMock()
+    fit_results = FitResults(
+        np.asarray([1.0, 2.0, 3.0]),
+        np.asarray([0.1, 0.2, 0.3]),
+        ["par_a", "par_b", "par_c"],
+        np.asarray([[1.0, 0.2, 0.5], [0.2, 1.0, 0.1], [0.5, 0.1, 1.0]]),
+        5.0,
+        0.1,
+    )
+
+    # remove par_a, flip par_b and par_c, add par_d
+    mock_model.config.par_names.return_value = ["par_c", "par_d", "par_b"]
+    matched_fit_res = model_utils.match_fit_results(mock_model, fit_results)
+    assert mock_pars.call_args_list == [((mock_model,), {})]
+    assert mock_uncs.call_args_list == [((mock_model,), {})]
+    assert np.allclose(matched_fit_res.bestfit, [3.0, 5.0, 2.0])
+    assert np.allclose(matched_fit_res.uncertainty, [0.3, 0.5, 0.2])
+    assert matched_fit_res.labels == ["par_c", "par_d", "par_b"]
+    assert np.allclose(
+        matched_fit_res.corr_mat, [[1.0, 0.0, 0.1], [0.0, 1.0, 0.0], [0.1, 0.0, 1.0]]
+    )
+    assert matched_fit_res.best_twice_nll == 5.0
+    assert matched_fit_res.goodness_of_fit == 0.1
+
+    # all parameters are new
+    mock_model.config.par_names.return_value = ["par_d", "par_e"]
+    matched_fit_res = model_utils.match_fit_results(mock_model, fit_results)
+    assert np.allclose(matched_fit_res.bestfit, [4.0, 5.0])
+    assert np.allclose(matched_fit_res.uncertainty, [0.4, 0.5])
+    assert matched_fit_res.labels == ["par_d", "par_e"]
+    assert np.allclose(matched_fit_res.corr_mat, [[1.0, 0.0], [0.0, 1.0]])
+    assert matched_fit_res.best_twice_nll == 5.0
+    assert matched_fit_res.goodness_of_fit == 0.1
+
+    # fit results already match model exactly
+    mock_model.config.par_names.return_value = ["par_a", "par_b", "par_c"]
+    matched_fit_res = model_utils.match_fit_results(mock_model, fit_results)
+    assert np.allclose(matched_fit_res.bestfit, [1.0, 2.0, 3.0])
+    assert np.allclose(matched_fit_res.uncertainty, [0.1, 0.2, 0.3])
+    assert matched_fit_res.labels == ["par_a", "par_b", "par_c"]
+    assert np.allclose(
+        matched_fit_res.corr_mat, [[1.0, 0.2, 0.5], [0.2, 1.0, 0.1], [0.5, 0.1, 1.0]]
+    )
+    assert matched_fit_res.best_twice_nll == 5.0
+    assert matched_fit_res.goodness_of_fit == 0.1
