@@ -213,7 +213,8 @@ def test_yield_stdev(example_spec, example_spec_multibin):
     "cabinetry.model_utils.prefit_uncertainties", return_value=([0.04956657, 0.0])
 )
 @mock.patch("cabinetry.model_utils.asimov_parameters", return_value=([1.0, 1.0]))
-def test_prediction(mock_asimov, mock_unc, mock_stdev, example_spec):
+def test_prediction(mock_asimov, mock_unc, mock_stdev, caplog, example_spec):
+    caplog.set_level(logging.DEBUG)
     model = pyhf.Workspace(example_spec).model()
 
     # pre-fit prediction
@@ -238,7 +239,7 @@ def test_prediction(mock_asimov, mock_unc, mock_stdev, example_spec):
     )
     assert mock_stdev.call_args_list[0][1] == {}
 
-    # post-fit prediction
+    # post-fit prediction and mis-match in parameter names
     fit_results = FitResults(
         np.asarray([1.01, 1.1]),
         np.asarray([0.03, 0.1]),
@@ -252,6 +253,9 @@ def test_prediction(mock_asimov, mock_unc, mock_stdev, example_spec):
     assert model_pred.total_stdev_model_bins == [[0.3]]  # from mock
     assert model_pred.total_stdev_model_channels == [0.3]  # from mock
     assert model_pred.label == "post-fit"
+    assert "parameter names in fit results and model do not match" in [
+        rec.message for rec in caplog.records
+    ]
 
     assert mock_asimov.call_count == 1  # no new call
     assert mock_unc.call_count == 1  # no new call
@@ -265,10 +269,12 @@ def test_prediction(mock_asimov, mock_unc, mock_stdev, example_spec):
         mock_stdev.call_args_list[1][0][3], np.asarray([[1.0, 0.2], [0.2, 1.0]])
     )
     assert mock_stdev.call_args_list[1][1] == {}
+    caplog.clear()
 
-    # custom label
+    # custom prediction label
     model_pred = model_utils.prediction(model, label="abc")
     assert model_pred.label == "abc"
+    caplog.clear()
 
 
 def test_unconstrained_parameter_count(example_spec, example_spec_shapefactor):

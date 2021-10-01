@@ -336,6 +336,8 @@ def prediction(
         ModelPrediction: model, yields and uncertainties per bin and channel
     """
     if fit_results is not None:
+        if fit_results.labels != model.config.par_names():
+            log.warning("parameter names in fit results and model do not match")
         # fit results specified, so they are used
         param_values = fit_results.bestfit
         param_uncertainty = fit_results.uncertainty
