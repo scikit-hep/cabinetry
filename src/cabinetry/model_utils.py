@@ -533,14 +533,14 @@ def match_fit_results(model: pyhf.pdf.Model, fit_results: FitResults) -> FitResu
     # re-build correlation matrix: start with diagonal matrix (assuming fit results do
     # not contain relevant info), and then insert values provided in fit results
     corr_mat = np.diagflat(np.ones_like(labels, dtype=float))
-    for i_target, i_prov in enumerate(indices_for_corr):
-        for j_target, j_prov in enumerate(indices_for_corr):
+    for i_target, i_orig in enumerate(indices_for_corr):
+        for j_target, j_orig in enumerate(indices_for_corr):
             # i_target and j_target are positions in matched correlation matrix
-            # i_prov and j_prov are positions in old matrix, None if missing from there
-            if i_prov is not None and j_prov is not None:
-                # if i_prov or j_prov are None, one of the parameters are not part of
+            # i_orig and j_orig are positions in old matrix, None if missing from there
+            if i_orig is not None and j_orig is not None:
+                # if i_orig or j_orig are None, one of the parameters are not part of
                 # original fit result, and no update to correlation matrix is needed
-                corr_mat[i_target][j_target] = fit_results.corr_mat[i_prov][j_prov]
+                corr_mat[i_target][j_target] = fit_results.corr_mat[i_orig][j_orig]
 
     fit_results_matched = FitResults(
         np.asarray(bestfit),
