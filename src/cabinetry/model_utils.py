@@ -498,7 +498,8 @@ def match_fit_results(model: pyhf.pdf.Model, fit_results: FitResults) -> FitResu
     parameter settings for unconstrained parameters), and the associated uncertainties
     as given by ```prefit_uncertainties``` (zero uncertainty for unconstrained or fixed
     parameters). These parameters furthermore are assumed to have no correlation with
-    any other parameters.
+    any other parameters. If required, parameters are re-ordered to match the target
+    model.
 
     Args:
         model (pyhf.pdf.Model): model to match fit results to
