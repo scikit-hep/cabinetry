@@ -7,10 +7,12 @@
     "required": ["General", "Regions", "Samples", "NormFactors"],
     "properties": {
         "General": {
+            "title": "General",
             "description": "general settings",
             "$ref": "#/definitions/general"
         },
         "Regions": {
+            "title": "Regions",
             "description": "list of regions",
             "type": "array",
             "minItems": 1,
@@ -21,6 +23,7 @@
             "uniqueItems": true
         },
         "Samples": {
+            "title": "Samples",
             "description": "list of samples",
             "type": "array",
             "minItems": 1,
@@ -31,6 +34,7 @@
             "uniqueItems": true
         },
         "NormFactors": {
+            "title": "NormFactors",
             "description": "list of normalization factors",
             "type": "array",
             "minItems": 1,
@@ -41,6 +45,7 @@
             "uniqueItems": true
         },
         "Systematics": {
+            "title": "Systematics",
             "description": "list of systematics",
             "type": "array",
             "minItems": 0,
@@ -53,7 +58,7 @@
     },
     "definitions": {
         "general": {
-            "title": "General",
+            "title": "General settings",
             "$$target": "#/definitions/general",
             "description": "general settings",
             "type": "object",
@@ -68,7 +73,7 @@
                     "type": "string"
                 },
                 "InputPath": {
-                    "description": "path to input ntuples",
+                    "description": "path to input files",
                     "type": "string"
                 },
                 "HistogramFolder": {
@@ -104,8 +109,19 @@
             "title": "Region",
             "$$target": "#/definitions/region",
             "description": "a region of phase space",
+            "$$description": [
+                "required: Name + Variable + Binning (for ntuple inputs),",
+                "Name + RegionPath (for histogram inputs)"
+            ],
             "type": "object",
-            "required": ["Name", "Variable", "Binning"],
+            "anyOf": [
+                {
+                    "required": ["Name", "Variable", "Binning"]
+                },
+                {
+                    "required": ["Name", "RegionPath"]
+                }
+            ],
             "properties": {
                 "Name": {
                     "description": "name of the region",
@@ -140,8 +156,19 @@
             "title": "Sample",
             "$$target": "#/definitions/sample",
             "description": "a sample of a specific process or data",
+            "$$description": [
+                "required: Name + Tree (for ntuple inputs),",
+                "Name + SamplePaths (for histogram inputs)"
+            ],
             "type": "object",
-            "required": ["Name", "Tree"],
+            "anyOf": [
+                {
+                    "required": ["Name", "Tree"]
+                },
+                {
+                    "required": ["Name", "SamplePaths"]
+                }
+            ],
             "properties": {
                 "Name": {
                     "description": "name of the sample",
@@ -291,6 +318,10 @@
                 "Symmetrize": {
                     "description": "whether to apply symmetrization",
                     "type": "boolean"
+                },
+                "SystematicPath": {
+                    "description": "(part of) path to file containing systematic (for histogram inputs)",
+                    "type": "string"
                 }
             },
             "additionalProperties": false
