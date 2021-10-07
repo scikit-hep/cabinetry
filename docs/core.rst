@@ -38,7 +38,7 @@ The following configuration file excerpt shows an example of specifying paths to
 .. code-block:: yaml
 
     General:
-      InputPath: "ntuples/{RegionPath}/{SamplePaths}"
+      InputPath: "inputs/{RegionPath}/{SamplePaths}"
 
     Regions:
       - Name: "Signal_region"
@@ -66,20 +66,20 @@ The following files will be read to create histograms:
 
 - for *Signal_region*:
 
-    - *Data*: ``ntuples/signal_region/data.root``
-    - *Signal*: ``ntuples/signal_region/signal_1.root``, ``ntuples/signal_region/signal_2.root``
+    - *Data*: ``inputs/signal_region/data.root``
+    - *Signal*: ``inputs/signal_region/signal_1.root``, ``inputs/signal_region/signal_2.root``
 
         - systematic uncertainty:
 
-            - *up*: ``ntuples/signal_region/signal_variation_up.root``
-            - *down*: ``ntuples/signal_region/signal_variation_down.root``
+            - *up*: ``inputs/signal_region/signal_variation_up.root``
+            - *down*: ``inputs/signal_region/signal_variation_down.root``
 
 - for *Control_region*:
 
-    - *Data*: ``ntuples/control_region/data.root``
-    - *Signal*: ``ntuples/control_region/signal_1.root``, ``ntuples/control_region/signal_2.root``
+    - *Data*: ``inputs/control_region/data.root``
+    - *Signal*: ``inputs/control_region/signal_1.root``, ``inputs/control_region/signal_2.root``
 
         - systematic uncertainty:
 
-            - *up*: ``ntuples/control_region/signal_variation_up.root``
-            - *down*: ``ntuples/control_region/signal_variation_down.root``
+            - *up*: ``inputs/control_region/signal_variation_up.root``
+            - *down*: ``inputs/control_region/signal_variation_down.root``

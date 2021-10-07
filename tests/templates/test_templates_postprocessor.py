@@ -6,7 +6,7 @@ import numpy as np
 import pytest
 
 from cabinetry import histo
-from cabinetry import template_postprocessor
+from cabinetry.templates import postprocessor
 
 
 @pytest.mark.parametrize(
@@ -21,7 +21,7 @@ from cabinetry import template_postprocessor
 )
 def test__fix_stat_unc(test_histo, fixed_stdev):
     name = "test_histo"
-    template_postprocessor._fix_stat_unc(test_histo, name)
+    postprocessor._fix_stat_unc(test_histo, name)
     assert np.allclose(test_histo.stdev, fixed_stdev)
 
 
@@ -30,7 +30,7 @@ def test__apply_353qh_twice(mock_smooth):
     var = histo.Histogram.from_arrays([1, 2, 3], [1, 1.5], [0.1, 0.1])
     nom = histo.Histogram.from_arrays([1, 2, 3], [1, 1.2], [0.1, 0.1])
 
-    template_postprocessor._apply_353qh_twice(var, nom, "abc")
+    postprocessor._apply_353qh_twice(var, nom, "abc")
 
     assert np.allclose(nom.yields, [1, 1.2])  # nominal unchanged
     # result of smoothing is [1, 1.3], multiplied by [1, 1.2] -> [1, 1.56]
@@ -43,36 +43,36 @@ def test__smoothing_algorithm():
     sam = {"Name": "sam"}
     sys = {"Name": "sys"}
 
-    assert template_postprocessor._smoothing_algorithm(reg, sam, sys) is None
+    assert postprocessor._smoothing_algorithm(reg, sam, sys) is None
 
     sys = {"Name": "sys", "Smoothing": {"Algorithm": "abc"}}
-    assert template_postprocessor._smoothing_algorithm(reg, sam, sys) == "abc"
+    assert postprocessor._smoothing_algorithm(reg, sam, sys) == "abc"
 
     # region is missing in setting
     sys = {"Name": "sys", "Smoothing": {"Algorithm": "abc", "Regions": "r"}}
-    assert template_postprocessor._smoothing_algorithm(reg, sam, sys) is None
+    assert postprocessor._smoothing_algorithm(reg, sam, sys) is None
 
     # region is included in setting
     sys = {"Name": "sys", "Smoothing": {"Algorithm": "abc", "Regions": ["r", "reg"]}}
-    assert template_postprocessor._smoothing_algorithm(reg, sam, sys) == "abc"
+    assert postprocessor._smoothing_algorithm(reg, sam, sys) == "abc"
 
     # sample is missing in setting
     sys = {"Name": "sys", "Smoothing": {"Algorithm": "abc", "Samples": "s"}}
-    assert template_postprocessor._smoothing_algorithm(reg, sam, sys) is None
+    assert postprocessor._smoothing_algorithm(reg, sam, sys) is None
 
     # sample is included in setting
     sys = {"Name": "sys", "Smoothing": {"Algorithm": "abc", "Samples": ["s", "sam"]}}
-    assert template_postprocessor._smoothing_algorithm(reg, sam, sys) == "abc"
+    assert postprocessor._smoothing_algorithm(reg, sam, sys) == "abc"
 
 
-@mock.patch("cabinetry.template_postprocessor._apply_353qh_twice")
-@mock.patch("cabinetry.template_postprocessor._fix_stat_unc")
+@mock.patch("cabinetry.templates.postprocessor._apply_353qh_twice")
+@mock.patch("cabinetry.templates.postprocessor._fix_stat_unc")
 def test_apply_postprocessing(mock_stat, mock_smooth, caplog):
     caplog.set_level(logging.DEBUG)
     histogram = histo.Histogram.from_arrays([1, 2, 3], [1, 1], [float("nan"), 0.2])
     nom_hist = histo.Histogram.from_arrays([1, 2, 3], [2, 2], [0.1, 0.2])
     name = "test_histo"
-    modified_histogram = template_postprocessor.apply_postprocessing(
+    modified_histogram = postprocessor.apply_postprocessing(
         histogram, name, smoothing_algorithm="353QH, twice", nominal_histogram=nom_hist
     )
 
@@ -102,7 +102,7 @@ def test_apply_postprocessing(mock_stat, mock_smooth, caplog):
     assert np.allclose(histogram.stdev, modified_histogram.stdev, equal_nan=True)
 
     # unknown smoothing algorithm
-    _ = template_postprocessor.apply_postprocessing(
+    _ = postprocessor.apply_postprocessing(
         histogram, name, smoothing_algorithm="abc", nominal_histogram=nom_hist
     )
     assert mock_stat.call_count == 2
@@ -111,7 +111,7 @@ def test_apply_postprocessing(mock_stat, mock_smooth, caplog):
     caplog.clear()
 
     # no smoothing
-    _ = template_postprocessor.apply_postprocessing(
+    _ = postprocessor.apply_postprocessing(
         histogram, name, smoothing_algorithm=None, nominal_histogram=None
     )
     assert mock_stat.call_count == 3
@@ -121,14 +121,14 @@ def test_apply_postprocessing(mock_stat, mock_smooth, caplog):
     with pytest.raises(
         ValueError, match="cannot apply smoothing, nominal histogram missing"
     ):
-        _ = template_postprocessor.apply_postprocessing(
+        _ = postprocessor.apply_postprocessing(
             histogram, name, smoothing_algorithm="353QH, twice", nominal_histogram=None
         )
 
 
 @mock.patch("cabinetry.histo.name", return_value="histo_name")
 def test__postprocessor(mock_name):
-    postprocessor = template_postprocessor._postprocessor(pathlib.Path("path"))
+    processor = postprocessor._postprocessor(pathlib.Path("path"))
 
     region = {"Name": "region"}
     sample = {"Name": "sample"}
@@ -141,15 +141,15 @@ def test__postprocessor(mock_name):
         "cabinetry.histo.Histogram.from_config", return_value=mock_original_histogram
     ) as mock_from_config:
         with mock.patch(
-            "cabinetry.template_postprocessor.apply_postprocessing",
+            "cabinetry.templates.postprocessor.apply_postprocessing",
             return_value=mock_new_histogram,
         ) as mock_postprocessing:
             # execute the provided function
             with mock.patch(
-                "cabinetry.template_postprocessor._smoothing_algorithm",
+                "cabinetry.templates.postprocessor._smoothing_algorithm",
                 return_value=None,
             ) as mock_smooth:
-                postprocessor(region, sample, systematic, template)
+                processor(region, sample, systematic, template)
                 assert mock_smooth.call_args_list == [
                     ((region, sample, systematic), {})
                 ]
@@ -179,10 +179,10 @@ def test__postprocessor(mock_name):
                 "Smoothing": {"Algorithm": "353QH, twice"},
             }
             with mock.patch(
-                "cabinetry.template_postprocessor._smoothing_algorithm",
+                "cabinetry.templates.postprocessor._smoothing_algorithm",
                 return_value="353QH, twice",
             ) as mock_smooth:
-                postprocessor(region, sample, systematic, template)
+                processor(region, sample, systematic, template)
                 assert mock_smooth.call_args_list == [
                     ((region, sample, systematic), {})
                 ]
@@ -198,13 +198,3 @@ def test__postprocessor(mock_name):
                     "nominal_histogram": mock_original_histogram,
                 },
             )
-
-
-@mock.patch("cabinetry.route.apply_to_all_templates")
-@mock.patch("cabinetry.template_postprocessor._postprocessor", return_value="func")
-def test_run(mock_postprocessor, mock_apply):
-    config = {"General": {"HistogramFolder": "path/"}}
-    template_postprocessor.run(config)
-
-    assert mock_postprocessor.call_args_list == [((pathlib.Path("path/"),), {})]
-    assert mock_apply.call_args_list == [((config, "func"), {})]

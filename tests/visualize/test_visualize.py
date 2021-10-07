@@ -129,7 +129,7 @@ def test_data_mc_from_histograms(mock_load, mock_draw, mock_stdev):
 @mock.patch(
     "cabinetry.visualize.plot_model.data_mc", return_value=matplotlib.figure.Figure()
 )
-@mock.patch("cabinetry.template_builder._binning", return_value=np.asarray([1, 2]))
+@mock.patch("cabinetry.templates.builder._binning", return_value=np.asarray([1, 2]))
 @mock.patch(
     "cabinetry.configuration.region_dict",
     return_value={"Name": "region", "Variable": "x"},

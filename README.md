@@ -47,10 +47,10 @@ import cabinetry
 config = cabinetry.configuration.load("config_example.yml")
 
 # create template histograms
-cabinetry.template_builder.create_histograms(config)
+cabinetry.templates.build(config)
 
 # perform histogram post-processing
-cabinetry.template_postprocessor.run(config)
+cabinetry.templates.postprocess(config)
 
 # build a workspace
 ws = cabinetry.workspace.build(config)

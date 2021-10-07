@@ -1,3 +1,5 @@
+"""Creates histograms from ntuples with uproot."""
+
 import pathlib
 from typing import List, Optional
 
@@ -7,7 +9,7 @@ import numpy as np
 import uproot
 
 
-def from_uproot(
+def with_uproot(
     ntuple_paths: List[pathlib.Path],
     pos_in_file: str,
     variable: str,

@@ -31,7 +31,7 @@ def test_cabinetry():
 
 
 # using autospec to catch changes in public API
-@mock.patch("cabinetry.template_builder.create_histograms", autospec=True)
+@mock.patch("cabinetry.templates.build", autospec=True)
 @mock.patch("cabinetry.configuration.validate", autospec=True)
 def test_templates(mock_validate, mock_create_histograms, cli_helpers, tmp_path):
     config = {"General": {"Measurement": "test_config"}}
@@ -53,7 +53,7 @@ def test_templates(mock_validate, mock_create_histograms, cli_helpers, tmp_path)
     assert mock_create_histograms.call_args == ((config,), {"method": "unknown"})
 
 
-@mock.patch("cabinetry.template_postprocessor.run", autospec=True)
+@mock.patch("cabinetry.templates.postprocess", autospec=True)
 @mock.patch("cabinetry.configuration.validate", autospec=True)
 def test_postprocess(mock_validate, mock_postprocess, cli_helpers, tmp_path):
     config = {"General": {"Measurement": "test_config"}}

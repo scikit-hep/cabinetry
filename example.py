@@ -17,10 +17,10 @@ if __name__ == "__main__":
     cabinetry.configuration.print_overview(config)
 
     # create template histograms
-    cabinetry.template_builder.create_histograms(config, method="uproot")
+    cabinetry.templates.build(config, method="uproot")
 
     # perform histogram post-processing
-    cabinetry.template_postprocessor.run(config)
+    cabinetry.templates.postprocess(config)
 
     # visualize systematics templates
     cabinetry.visualize.templates(config)

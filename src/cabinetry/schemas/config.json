@@ -101,6 +101,10 @@
                         "additionalProperties": false
                     },
                     "uniqueItems": true
+                },
+                "VariationPath": {
+                    "description": "(part of) path to file containing variation (for histogram inputs), defaults to empty string",
+                    "type": "string"
                 }
             },
             "additionalProperties": false
@@ -284,7 +288,7 @@
         "template_setting": {
             "title": "Template",
             "$$target": "#/definitions/template_setting",
-            "description": "a systematics template (up/down)",
+            "description": "a systematic template (up/down)",
             "type": "object",
             "properties": {
                 "Tree": {
@@ -319,8 +323,8 @@
                     "description": "whether to apply symmetrization",
                     "type": "boolean"
                 },
-                "SystematicPath": {
-                    "description": "(part of) path to file containing systematic (for histogram inputs)",
+                "VariationPath": {
+                    "description": "(part of) path to file containing variation (for histogram inputs, override for general setting)",
                     "type": "string"
                 }
             },

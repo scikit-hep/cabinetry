@@ -12,7 +12,7 @@ from cabinetry import configuration
 from cabinetry import fit
 from cabinetry import histo
 from cabinetry import model_utils
-from cabinetry import template_builder
+from cabinetry.templates import builder
 from cabinetry.visualize import plot_model
 from cabinetry.visualize import plot_result
 
@@ -189,7 +189,7 @@ def data_mc(
         if config is not None:
             # get the region dictionary from the config for binning / variable name
             region_dict = configuration.region_dict(config, channel_name)
-            bin_edges = template_builder._binning(region_dict)
+            bin_edges = builder._binning(region_dict)
             variable = region_dict["Variable"]
         else:
             # fall back to defaults
@@ -263,7 +263,7 @@ def templates(
         List[Dict[str, Any]]: list of dictionaries, where each dictionary contains a
             figure and the associated region / sample / systematic names
     """
-    log.info("visualizing systematics templates")
+    log.info("visualizing systematic templates")
     histogram_folder = pathlib.Path(config["General"]["HistogramFolder"])
     figure_folder = pathlib.Path(figure_folder) / "templates"
 
@@ -305,6 +305,7 @@ def templates(
                     histogram_folder, region, sample, {}
                 )
                 bins = nominal_histo.bins
+                # TODO: currently with histograms, variable no longer mandatory
                 variable = region["Variable"]
                 nominal = {"yields": nominal_histo.yields, "stdev": nominal_histo.stdev}
 

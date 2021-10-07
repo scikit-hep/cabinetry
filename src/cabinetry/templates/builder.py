@@ -1,7 +1,9 @@
+"""Creates required template histograms from columnar data."""
+
 import functools
 import logging
 import pathlib
-from typing import Any, Dict, List, Optional, Union
+from typing import Any, Dict, List, Optional
 
 import boost_histogram as bh
 import numpy as np
@@ -10,30 +12,10 @@ from cabinetry import configuration
 from cabinetry import histo
 from cabinetry import route
 from cabinetry._typing import Literal
+from cabinetry.templates import utils
 
 
 log = logging.getLogger(__name__)
-
-
-def _check_for_override(
-    systematic: Dict[str, Any], template: Literal["Up", "Down"], option: str
-) -> Optional[Union[str, List[str]]]:
-    """Returns an override if specified by a template of a systematic.
-
-    Given a systematic and a string specifying which template is currently under
-    consideration, check whether the systematic defines an override for an option.
-    Return the override if it exists, otherwise return None.
-
-    Args:
-        systematic (Dict[str, Any]): containing all systematic information
-        template (Literal["Up", "Down"]): template considered: "Up" or "Down"
-        option (str): the option for which the presence of an override is checked
-
-    Returns:
-        Optional[Union[str, List[str]]]: either None if no override exists, or the
-        override
-    """
-    return systematic.get(template, {}).get(option, None)
 
 
 def _ntuple_paths(
@@ -54,12 +36,18 @@ def _ntuple_paths(
 
     Args:
         general_path (str): path specified in general settings, with sections that can
-            be overridden by region / sample settings
+            be overridden by region / sample / systematic settings
         region (Dict[str, Any]): containing all region information
         sample (Dict[str, Any]): containing all sample information
         systematic (Dict[str, Any]): containing all systematic information
         template (Optional[Literal["Up", "Down"]]): template considered: "Up", "Down",
             or None for nominal
+
+    Raises:
+        ValueError: when ``RegionPath`` placeholder is used, but region setting is not
+            specified
+        ValueError: when ``SamplePaths`` placeholder is used, but sample setting is not
+            specified
 
     Returns:
         List[pathlib.Path]: list of paths to ntuples
@@ -71,12 +59,12 @@ def _ntuple_paths(
     # check whether a systematic is being processed, and whether overrides exist
     if template is not None:
         # determine whether the template has an override for RegionPath specified
-        region_override = _check_for_override(systematic, template, "RegionPath")
+        region_override = utils._check_for_override(systematic, template, "RegionPath")
         if region_override is not None:
             region_path = region_override
 
         # check for SamplePaths override
-        sample_override = _check_for_override(systematic, template, "SamplePaths")
+        sample_override = utils._check_for_override(systematic, template, "SamplePaths")
         if sample_override is not None:
             sample_paths = sample_override
 
@@ -138,7 +126,9 @@ def _variable(
     # check whether a systematic is being processed
     if template is not None:
         # determine whether the template has an override specified
-        axis_variable_override = _check_for_override(systematic, template, "Variable")
+        axis_variable_override = utils._check_for_override(
+            systematic, template, "Variable"
+        )
         if axis_variable_override is not None:
             axis_variable = axis_variable_override
     return axis_variable
@@ -177,7 +167,9 @@ def _filter(
     # check whether a systematic is being processed
     if template is not None:
         # determine whether the template has an override specified
-        selection_filter_override = _check_for_override(systematic, template, "Filter")
+        selection_filter_override = utils._check_for_override(
+            systematic, template, "Filter"
+        )
         if selection_filter_override is not None:
             selection_filter = selection_filter_override
     return selection_filter
@@ -209,7 +201,7 @@ def _weight(
     # check whether a systematic is being processed
     if template is not None:
         # determine whether the template has an override specified
-        weight_override = _check_for_override(systematic, template, "Weight")
+        weight_override = utils._check_for_override(systematic, template, "Weight")
         if weight_override is not None:
             weight = weight_override
     return weight
@@ -238,7 +230,7 @@ def _position_in_file(
     # check whether a systematic is being processed
     if template is not None:
         # determine whether the template has an override specified
-        position_override = _check_for_override(systematic, template, "Tree")
+        position_override = utils._check_for_override(systematic, template, "Tree")
         if position_override is not None:
             position = position_override
     return position
@@ -260,6 +252,7 @@ def _binning(region: Dict[str, Any]) -> np.ndarray:
         np.ndarray: bin boundaries to be used for histogram
     """
     if not region.get("Binning", False):
+        # TODO: handling with histogram inputs if binning is optional
         raise NotImplementedError("cannot determine binning")
 
     return np.asarray(region["Binning"])
@@ -315,9 +308,9 @@ class _Builder:
 
         # obtain the histogram
         if self.method == "uproot":
-            from cabinetry.contrib import histogram_creation
+            from cabinetry.contrib import histogram_creator
 
-            histogram = histogram_creation.from_uproot(
+            histogram = histogram_creator.with_uproot(
                 ntuple_paths,
                 pos_in_file,
                 variable,
@@ -330,37 +323,14 @@ class _Builder:
             raise NotImplementedError(f"unknown backend {self.method}")
 
         # store information in a Histogram instance and save it
-        self._name_and_save(
-            histo.Histogram(histogram), region, sample, systematic, template
+        utils._name_and_save(
+            self.histogram_folder,
+            histo.Histogram(histogram),
+            region,
+            sample,
+            systematic,
+            template,
         )
-
-    def _name_and_save(
-        self,
-        histogram: histo.Histogram,
-        region: Dict[str, Any],
-        sample: Dict[str, Any],
-        systematic: Dict[str, Any],
-        template: Optional[Literal["Up", "Down"]],
-    ) -> None:
-        """Generates a unique name for a histogram and saves the histogram.
-
-        Args:
-            histogram (histo.Histogram): histogram to save
-            region (Dict[str, Any]): containing all region information
-            sample (Dict[str, Any]): containing all sample information
-            systematic (Dict[str, Any]): containing all systematic
-            template (Optional[Literal["Up", "Down"]]): template considered: "Up",
-                "Down", or None for nominal
-        """
-        # generate a name for the histogram
-        histogram_name = histo.name(region, sample, systematic, template)
-
-        # check the histogram for common issues
-        histogram.validate(histogram_name)
-
-        # save it
-        histo_path = self.histogram_folder / histogram_name
-        histogram.save(histo_path)
 
     def _wrap_custom_template_builder(
         self, func: route.UserTemplateFunc
@@ -403,42 +373,13 @@ class _Builder:
                 raise TypeError(
                     f"{func.__name__} must return a boost_histogram.Histogram"
                 )
-            self._name_and_save(
-                histo.Histogram(histogram), region, sample, systematic, template
+            utils._name_and_save(
+                self.histogram_folder,
+                histo.Histogram(histogram),
+                region,
+                sample,
+                systematic,
+                template,
             )
 
         return wrapper
-
-
-def create_histograms(
-    config: Dict[str, Any],
-    method: str = "uproot",
-    router: Optional[route.Router] = None,
-) -> None:
-    """Produces all required histograms specified by the configuration file.
-
-    Uses either a default method specified via ``method``, or a custom user-defined
-    override through ``router``.
-
-    Args:
-        config (Dict[str, Any]): cabinetry configuration
-        method (str, optional): backend to use for histogram production, defaults to
-            "uproot"
-        router (Optional[route.Router], optional): instance of cabinetry.route.Router
-            that contains user-defined overrides, defaults to None
-    """
-    # create an instance of the class doing the template building
-    histogram_folder = pathlib.Path(config["General"]["HistogramFolder"])
-    general_path = config["General"]["InputPath"]
-    builder = _Builder(histogram_folder, general_path, method)
-
-    match_func: Optional[route.MatchFunc] = None
-    if router is not None:
-        # specify the wrapper for user-defined functions
-        router.template_builder_wrapper = builder._wrap_custom_template_builder
-        # get a function that can be queried to return a user-defined template builder
-        match_func = router._find_template_builder_match
-
-    route.apply_to_all_templates(
-        config, builder._create_histogram, match_func=match_func
-    )

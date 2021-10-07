@@ -494,9 +494,9 @@ def match_fit_results(model: pyhf.pdf.Model, fit_results: FitResults) -> FitResu
     If the fit results contain parameters missing in the model, these parameters are not
     included in the returned fit results. If the fit results do not include parameters
     used in the model, they are added to the fit results. The best-fit value for such
-    parameters are the Asimov values as returned by ```asimov_parameters``` (initial
+    parameters are the Asimov values as returned by ``asimov_parameters`` (initial
     parameter settings for unconstrained parameters), and the associated uncertainties
-    as given by ```prefit_uncertainties``` (zero uncertainty for unconstrained or fixed
+    as given by ``prefit_uncertainties`` (zero uncertainty for unconstrained or fixed
     parameters). These parameters furthermore are assumed to have no correlation with
     any other parameters. If required, parameters are re-ordered to match the target
     model.

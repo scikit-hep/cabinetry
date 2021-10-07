@@ -27,17 +27,34 @@ cabinetry.histo
     :members:
 
 
-cabinetry.template_builder
---------------------------
+cabinetry.templates
+-------------------
 
-.. automodule:: cabinetry.template_builder
+.. automodule:: cabinetry.templates
     :members:
 
+cabinetry.templates.builder
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-cabinetry.template_postprocessor
---------------------------------
+.. automodule:: cabinetry.templates.builder
+    :members:
 
-.. automodule:: cabinetry.template_postprocessor
+cabinetry.templates.collector
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. automodule:: cabinetry.templates.collector
+    :members:
+
+cabinetry.templates.postprocessor
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. automodule:: cabinetry.templates.postprocessor
+    :members:
+
+cabinetry.templates.utils
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. automodule:: cabinetry.templates.utils
     :members:
 
 
@@ -112,8 +129,14 @@ cabinetry.contrib
 
 .. automodule:: cabinetry.contrib
 
-cabinetry.contrib.histogram_creation
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+cabinetry.contrib.histogram_creator
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-.. automodule:: cabinetry.contrib.histogram_creation
+.. automodule:: cabinetry.contrib.histogram_creator
+    :members:
+
+cabinetry.contrib.histogram_reader
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. automodule:: cabinetry.contrib.histogram_reader
     :members:

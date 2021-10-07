@@ -1,3 +1,5 @@
+"""Applies optional post-processing to template histograms."""
+
 import copy
 import logging
 import pathlib
@@ -129,7 +131,7 @@ def _postprocessor(histogram_folder: pathlib.Path) -> route.ProcessorFunc:
     ``Postprocessor`` class that contains processors.
 
     Args:
-        histogram_folder (Union[str, pathlib.Path]): folder containing histograms
+        histogram_folder (pathlib.Path): folder containing histograms
 
     Returns:
         route.ProcessorFunc: function to apply to a template histogram
@@ -182,14 +184,3 @@ def _postprocessor(histogram_folder: pathlib.Path) -> route.ProcessorFunc:
         new_histogram.save(new_histo_path)
 
     return process_template
-
-
-def run(config: Dict[str, Any]) -> None:
-    """Applies postprocessing to all histograms.
-
-    Args:
-        config (Dict[str, Any]): cabinetry configuration
-    """
-    histogram_folder = pathlib.Path(config["General"]["HistogramFolder"])
-    postprocessor = _postprocessor(histogram_folder)
-    route.apply_to_all_templates(config, postprocessor)

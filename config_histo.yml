@@ -1,30 +1,25 @@
+# TODO: consider removing this file
 General:
   Measurement: "minimal_example"
   POI: "Signal_norm"
   HistogramFolder: "histograms/"
-  InputPath: "inputs/{SamplePaths}"
+  InputPath: "inputs/histograms.root:{RegionPath}/{SamplePaths}/{VariationPath}"
+  VariationPath: "Nominal"
 
 Regions:
   - Name: "Signal_region"
-    Variable: "jet_pt"
-    Filter: "lep_charge > 0"
-    Binning: [200, 300, 400, 500, 600]
+    RegionPath: "SR"
 
 Samples:
   - Name: "Data"
-    Tree: "pseudodata"
-    SamplePaths: "data.root"
+    SamplePaths: "Data"
     Data: True
 
   - Name: "Signal"
-    Tree: "signal"
-    SamplePaths: "prediction.root"
-    Weight: "weight"
+    SamplePaths: "Signal"
 
   - Name: "Background"
-    Tree: "background"
-    SamplePaths: "prediction.root"
-    Weight: "weight"
+    SamplePaths: "Background"
 
 Systematics:
   - Name: "Luminosity"
@@ -36,8 +31,7 @@ Systematics:
 
   - Name: "Modeling"
     Up:
-      SamplePaths: "prediction.root"
-      Tree: "background_varied"
+      VariationPath: "Modeling_Up"
     Down:
       Symmetrize: True
     Samples: "Background"
@@ -45,9 +39,9 @@ Systematics:
 
   - Name: "WeightBasedModeling"
     Up:
-      Weight: "weight_up"
+      VariationPath: "WeightBasedModeling_Up"
     Down:
-      Weight: "0.7*weight"
+      VariationPath: "WeightBasedModeling_Down"
     Samples: "Background"
     Type: "NormPlusShape"
 
