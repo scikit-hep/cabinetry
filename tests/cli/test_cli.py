@@ -104,7 +104,7 @@ def test_workspace(mock_validate, mock_build, cli_helpers, tmp_path):
     return_value=("model", "data"),
     autospec=True,
 )
-def test_fit(mock_util, mock_fit, mock_pulls, mock_corrmat, tmp_path):
+def test_fit(mock_utils, mock_fit, mock_pulls, mock_corrmat, tmp_path):
     workspace = {"workspace": "mock"}
     bestfit = np.asarray([1.0])
     uncertainty = np.asarray([0.1])
@@ -123,7 +123,7 @@ def test_fit(mock_util, mock_fit, mock_pulls, mock_corrmat, tmp_path):
     # default
     result = runner.invoke(cli.fit, [workspace_path])
     assert result.exit_code == 0
-    assert mock_util.call_args_list == [((workspace,), {"asimov": False})]
+    assert mock_utils.call_args_list == [((workspace,), {"asimov": False})]
     assert mock_fit.call_args_list == [
         (("model", "data"), {"minos": None, "goodness_of_fit": False})
     ]
@@ -131,7 +131,7 @@ def test_fit(mock_util, mock_fit, mock_pulls, mock_corrmat, tmp_path):
     # Asimov
     result = runner.invoke(cli.fit, ["--asimov", workspace_path])
     assert result.exit_code == 0
-    assert mock_util.call_args == ((workspace,), {"asimov": True})
+    assert mock_utils.call_args == ((workspace,), {"asimov": True})
     assert mock_fit.call_args == (
         ("model", "data"),
         {"minos": None, "goodness_of_fit": False},
@@ -140,7 +140,7 @@ def test_fit(mock_util, mock_fit, mock_pulls, mock_corrmat, tmp_path):
     # MINOS for one parameter
     result = runner.invoke(cli.fit, ["--minos", "par", workspace_path])
     assert result.exit_code == 0
-    assert mock_util.call_args == ((workspace,), {"asimov": False})
+    assert mock_utils.call_args == ((workspace,), {"asimov": False})
     assert mock_fit.call_args == (
         ("model", "data"),
         {"minos": ["par"], "goodness_of_fit": False},
@@ -151,7 +151,7 @@ def test_fit(mock_util, mock_fit, mock_pulls, mock_corrmat, tmp_path):
         cli.fit, ["--minos", "par_a", "--minos", "par_b", workspace_path]
     )
     assert result.exit_code == 0
-    assert mock_util.call_args == ((workspace,), {"asimov": False})
+    assert mock_utils.call_args == ((workspace,), {"asimov": False})
     assert mock_fit.call_args == (
         ("model", "data"),
         {"minos": ["par_a", "par_b"], "goodness_of_fit": False},
@@ -160,7 +160,7 @@ def test_fit(mock_util, mock_fit, mock_pulls, mock_corrmat, tmp_path):
     # goodness-of-fit
     result = runner.invoke(cli.fit, ["--goodness_of_fit", workspace_path])
     assert result.exit_code == 0
-    assert mock_util.call_args == ((workspace,), {"asimov": False})
+    assert mock_utils.call_args == ((workspace,), {"asimov": False})
     assert mock_fit.call_args == (
         ("model", "data"),
         {"minos": None, "goodness_of_fit": True},
@@ -213,7 +213,7 @@ def test_fit(mock_util, mock_fit, mock_pulls, mock_corrmat, tmp_path):
     return_value=("model", "data"),
     autospec=True,
 )
-def test_ranking(mock_util, mock_fit, mock_rank, mock_vis, tmp_path):
+def test_ranking(mock_utils, mock_fit, mock_rank, mock_vis, tmp_path):
     workspace = {"workspace": "mock"}
     bestfit = np.asarray([1.0])
     uncertainty = np.asarray([0.1])
@@ -232,7 +232,7 @@ def test_ranking(mock_util, mock_fit, mock_rank, mock_vis, tmp_path):
     # default
     result = runner.invoke(cli.ranking, [workspace_path])
     assert result.exit_code == 0
-    assert mock_util.call_args_list == [((workspace,), {"asimov": False})]
+    assert mock_utils.call_args_list == [((workspace,), {"asimov": False})]
     assert mock_fit.call_args_list == [(("model", "data"), {})]
     assert mock_rank.call_args_list == [
         (("model", "data"), {"fit_results": fit_results})
@@ -250,7 +250,7 @@ def test_ranking(mock_util, mock_fit, mock_rank, mock_vis, tmp_path):
         ["--asimov", "--max_pars", 3, "--figfolder", "folder", workspace_path],
     )
     assert result.exit_code == 0
-    assert mock_util.call_args == ((workspace,), {"asimov": True})
+    assert mock_utils.call_args == ((workspace,), {"asimov": True})
     assert mock_fit.call_args == (("model", "data"), {})
     assert mock_rank.call_args == (("model", "data"), {"fit_results": fit_results})
     assert mock_vis.call_args[1] == {"figure_folder": "folder", "max_pars": 3}
@@ -267,7 +267,7 @@ def test_ranking(mock_util, mock_fit, mock_rank, mock_vis, tmp_path):
     return_value=("model", "data"),
     autospec=True,
 )
-def test_scan(mock_util, mock_scan, mock_vis, tmp_path):
+def test_scan(mock_utils, mock_scan, mock_vis, tmp_path):
     workspace = {"workspace": "mock"}
     workspace_path = str(tmp_path / "workspace.json")
 
@@ -285,7 +285,7 @@ def test_scan(mock_util, mock_scan, mock_vis, tmp_path):
     # default
     result = runner.invoke(cli.scan, [workspace_path, par_name])
     assert result.exit_code == 0
-    assert mock_util.call_args_list == [((workspace,), {"asimov": False})]
+    assert mock_utils.call_args_list == [((workspace,), {"asimov": False})]
     assert mock_scan.call_args_list == [
         (("model", "data", par_name), {"par_range": None, "n_steps": 11})
     ]
@@ -337,7 +337,7 @@ def test_scan(mock_util, mock_scan, mock_vis, tmp_path):
         ],
     )
     assert result.exit_code == 0
-    assert mock_util.call_args == ((workspace,), {"asimov": True})
+    assert mock_utils.call_args == ((workspace,), {"asimov": True})
     assert mock_scan.call_args == (
         ("model", "data", par_name),
         {"par_range": (0.0, 2.0), "n_steps": 21},
@@ -362,7 +362,7 @@ def test_scan(mock_util, mock_scan, mock_vis, tmp_path):
     return_value=("model", "data"),
     autospec=True,
 )
-def test_limit(mock_util, mock_limit, mock_vis, tmp_path):
+def test_limit(mock_utils, mock_limit, mock_vis, tmp_path):
     workspace = {"workspace": "mock"}
     workspace_path = str(tmp_path / "workspace.json")
 
@@ -383,7 +383,7 @@ def test_limit(mock_util, mock_limit, mock_vis, tmp_path):
     # default
     result = runner.invoke(cli.limit, [workspace_path])
     assert result.exit_code == 0
-    assert mock_util.call_args_list == [((workspace,), {"asimov": False})]
+    assert mock_utils.call_args_list == [((workspace,), {"asimov": False})]
     assert mock_limit.call_args_list == [(("model", "data"), {"tolerance": 0.01})]
     assert mock_vis.call_count == 1
     assert np.allclose(
@@ -407,7 +407,7 @@ def test_limit(mock_util, mock_limit, mock_vis, tmp_path):
         ["--asimov", "--tolerance", "0.1", "--figfolder", "folder", workspace_path],
     )
     assert result.exit_code == 0
-    assert mock_util.call_args == ((workspace,), {"asimov": True})
+    assert mock_utils.call_args == ((workspace,), {"asimov": True})
     assert mock_limit.call_args == (("model", "data"), {"tolerance": 0.1})
     assert mock_vis.call_args[1] == {"figure_folder": "folder"}
 
@@ -418,7 +418,7 @@ def test_limit(mock_util, mock_limit, mock_vis, tmp_path):
     return_value=("model", "data"),
     autospec=True,
 )
-def test_significance(mock_util, mock_sig, tmp_path):
+def test_significance(mock_utils, mock_sig, tmp_path):
     workspace = {"workspace": "mock"}
     workspace_path = str(tmp_path / "workspace.json")
 
@@ -431,13 +431,13 @@ def test_significance(mock_util, mock_sig, tmp_path):
     # default
     result = runner.invoke(cli.significance, [workspace_path])
     assert result.exit_code == 0
-    assert mock_util.call_args_list == [((workspace,), {"asimov": False})]
+    assert mock_utils.call_args_list == [((workspace,), {"asimov": False})]
     assert mock_sig.call_args_list == [(("model", "data"), {})]
 
     # Asimov
     result = runner.invoke(cli.significance, ["--asimov", workspace_path])
     assert result.exit_code == 0
-    assert mock_util.call_args == ((workspace,), {"asimov": True})
+    assert mock_utils.call_args == ((workspace,), {"asimov": True})
     assert mock_sig.call_args == (("model", "data"), {})
 
 
@@ -459,7 +459,7 @@ def test_significance(mock_util, mock_sig, tmp_path):
     autospec=True,
 )
 def test_data_mc(
-    mock_util, mock_validate, mock_fit, mock_pred, mock_vis, cli_helpers, tmp_path
+    mock_utils, mock_validate, mock_fit, mock_pred, mock_vis, cli_helpers, tmp_path
 ):
     workspace = {"workspace": "mock"}
     workspace_path = str(tmp_path / "workspace.json")
@@ -473,7 +473,7 @@ def test_data_mc(
     # default
     result = runner.invoke(cli.data_mc, [workspace_path])
     assert result.exit_code == 0
-    assert mock_util.call_args_list == [((workspace,), {})]
+    assert mock_utils.call_args_list == [((workspace,), {})]
     assert mock_validate.call_count == 0
     assert mock_fit.call_count == 0
     assert mock_pred.call_args_list == [(("model",), {"fit_results": None})]
@@ -497,7 +497,7 @@ def test_data_mc(
         [workspace_path, "--config", config_path, "--postfit", "--figfolder", "folder"],
     )
     assert result.exit_code == 0
-    assert mock_util.call_args == ((workspace,), {})
+    assert mock_utils.call_args == ((workspace,), {})
     assert mock_validate.call_args_list == [((config,), {})]
     assert mock_fit.call_args_list == [(("model", "data"), {})]
     assert mock_pred.call_args == (("model",), {"fit_results": fit_results})
