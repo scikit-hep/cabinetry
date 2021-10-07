@@ -39,7 +39,7 @@ python -m pip install cabinetry[contrib]
 
 ## Hello world
 
-To run the following example, first generate the input files via the script `util/create_ntuples.py`.
+To run the following example, first generate the input files via the script `utils/create_ntuples.py`.
 
 ```python
 import cabinetry

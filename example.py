@@ -9,7 +9,7 @@ if __name__ == "__main__":
 
     # check whether input data exists
     if not os.path.exists("ntuples/"):
-        print("run util/create_ntuples.py to create input data")
+        print("run utils/create_ntuples.py to create input data")
         raise SystemExit
 
     # import example config file
