@@ -2,7 +2,7 @@
 
 import logging
 import pathlib
-from typing import Any, Dict, Optional
+from typing import Any, cast, Dict, Optional
 
 from cabinetry import histo
 from cabinetry import route
@@ -60,9 +60,9 @@ def _histo_path(
             systematic, template, "VariationPath"
         )
         if variation_override is not None:
-            # skip mypy for next line: _check_for_override should return Optional[str]
-            # for VariationPath, and not a list, but mypy cannot know this
-            variation_path = variation_override  # type: ignore
+            # _check_for_override should return Optional[str] for VariationPath, but
+            # mypy cannot know that it will not be a list, so explicitly cast to str
+            variation_path = cast(str, variation_override)
         else:
             log.warning(
                 f"no VariationPath override specified for {region['Name']} / "
