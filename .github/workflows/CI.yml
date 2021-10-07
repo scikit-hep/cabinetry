@@ -45,7 +45,7 @@ jobs:
         black --check --diff --verbose .
     - name: Run example
       run: |
-        python util/create_ntuples.py
+        python utils/create_ntuples.py
         python example.py
     - name: Test with pytest, without typeguard, generate coverage report
       if: matrix.python-version == 3.7

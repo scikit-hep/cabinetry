@@ -4,7 +4,7 @@ import numpy as np
 import pytest
 
 import cabinetry
-from util import create_ntuples
+from utils import create_ntuples
 
 
 @pytest.fixture

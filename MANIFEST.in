@@ -1,6 +1,7 @@
 prune **
 graft src
 graft tests
+graft utils
 
 include setup.py
 include setup.cfg
