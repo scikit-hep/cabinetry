@@ -319,8 +319,8 @@ def test_templates(mock_draw, mock_histo_config, mock_histo_path, tmp_path):
         )
     ]
 
-    # close figure, do not save figure, and remove binning / variable information from
-    # config (simulating histogram inputs), so variable defaults to "observable"
+    # close figure, do not save figure, and remove variable information from config
+    # (simulating histogram inputs), so variable defaults to "observable"
     histo_config = copy.deepcopy(config)
     histo_config["Regions"] = [{"Name": "region"}]
     _ = visualize.templates(
