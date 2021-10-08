@@ -2,7 +2,7 @@ General:
   Measurement: "minimal_example"
   POI: "Signal_norm"
   HistogramFolder: "histograms/"
-  InputPath: "inputs/{SamplePaths}"
+  InputPath: "inputs/{SamplePath}"
 
 Regions:
   - Name: "Signal_region"
@@ -13,17 +13,17 @@ Regions:
 Samples:
   - Name: "Data"
     Tree: "pseudodata"
-    SamplePaths: "data.root"
+    SamplePath: "data.root"
     Data: True
 
   - Name: "Signal"
     Tree: "signal"
-    SamplePaths: "prediction.root"
+    SamplePath: "prediction.root"
     Weight: "weight"
 
   - Name: "Background"
     Tree: "background"
-    SamplePaths: "prediction.root"
+    SamplePath: "prediction.root"
     Weight: "weight"
 
 Systematics:
@@ -36,7 +36,7 @@ Systematics:
 
   - Name: "Modeling"
     Up:
-      SamplePaths: "prediction.root"
+      SamplePath: "prediction.root"
       Tree: "background_varied"
     Down:
       Symmetrize: True

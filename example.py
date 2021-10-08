@@ -8,7 +8,7 @@ if __name__ == "__main__":
     cabinetry.set_logging()
 
     # check whether input data exists
-    if not os.path.exists("ntuples/"):
+    if not os.path.exists("inputs/"):
         print("run utils/create_ntuples.py to create input data")
         raise SystemExit
 

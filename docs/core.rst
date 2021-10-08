@@ -7,7 +7,7 @@ Input file path specification
 Paths to input files for histogram production are specified with the mandatory ``InputPath`` setting in the ``General`` config section.
 If everything is in one file, the value should be the path to this file.
 It is common to have multiple input files, split across phase space regions or samples.
-For this purpose, the ``InputPath`` value can take two placeholders: ``{RegionPath}`` and ``{SamplePaths}``.
+For this purpose, the ``InputPath`` value can take two placeholders: ``{RegionPath}`` and ``{SamplePath}``.
 
 RegionPath
 ^^^^^^^^^^
@@ -15,19 +15,19 @@ RegionPath
 When building histograms for a specific region, the ``{RegionPath}`` placeholder takes the value specified in the ``RegionPath`` setting of the corresponding region.
 The value of ``RegionPath`` has to be a string.
 
-SamplePaths
-^^^^^^^^^^^
+SamplePath
+^^^^^^^^^^
 
-The ``{SamplePaths}`` placeholder takes the value given by ``SamplePaths`` of the sample currently processed.
+The ``{SamplePath}`` placeholder takes the value given by ``SamplePath`` of the sample currently processed.
 This value can either be a string or a list of strings.
-If it is a list, multiple copies of ``InputPath`` are created, and in each of them the ``{SamplePaths}`` placeholder takes the value of a different entry in the list.
+If it is a list, multiple copies of ``InputPath`` are created, and in each of them the ``{SamplePath}`` placeholder takes the value of a different entry in the list.
 All input files are processed, and their contributions are summed together.
-The histogram created by ``SamplePaths: ["a.root", "b.root"]`` is equivalent to the histogram created with ``SamplePaths: "a_plus_b.root"``, where ``a_plus_b.root`` is produced by merging both files.
+The histogram created by ``SamplePath: ["a.root", "b.root"]`` is equivalent to the histogram created with ``SamplePath: "a_plus_b.root"``, where ``a_plus_b.root`` is produced by merging both files.
 
 Systematics
 ^^^^^^^^^^^
 
-It is possible to specify overrides for the ``RegionPath`` and ``SamplePaths`` values in systematic templates.
+It is possible to specify overrides for the ``RegionPath`` and ``SamplePath`` values in systematic templates.
 If those settings are specified in the ``Up`` or ``Down`` template section of a systematic uncertainty, then the corresponding values are used when building the path to the file used to construct the histogram for this specific template.
 
 An example
@@ -38,7 +38,7 @@ The following configuration file excerpt shows an example of specifying paths to
 .. code-block:: yaml
 
     General:
-      InputPath: "inputs/{RegionPath}/{SamplePaths}"
+      InputPath: "inputs/{RegionPath}/{SamplePath}"
 
     Regions:
       - Name: "Signal_region"
@@ -49,17 +49,17 @@ The following configuration file excerpt shows an example of specifying paths to
 
     Samples:
       - Name: "Data"
-        SamplePaths: "data.root"
+        SamplePath: "data.root"
 
       - Name: "Signal"
-        SamplePaths: ["signal_1.root", "signal_2.root"]
+        SamplePath: ["signal_1.root", "signal_2.root"]
 
     Systematics:
       - Name: "Signal_modeling"
         Up:
-          SamplePaths: "signal_variation_up.root"
+          SamplePath: "signal_variation_up.root"
         Down:
-          SamplePaths: "signal_variation_down.root"
+          SamplePath: "signal_variation_down.root"
         Samples: "Signal"
 
 The following files will be read to create histograms:

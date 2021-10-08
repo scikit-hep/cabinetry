@@ -42,7 +42,7 @@ def _histo_path(
     Raises:
         ValueError: when ``RegionPath`` placeholder is used, but region setting is not
             specified
-        ValueError: when ``SamplePaths`` placeholder is used, but sample setting is not
+        ValueError: when ``SamplePath`` placeholder is used, but sample setting is not
             specified
 
     Returns:
@@ -50,7 +50,7 @@ def _histo_path(
     """
     # obtain region and sample paths, if they are defined
     region_path = region.get("RegionPath", None)
-    sample_path = sample.get("SamplePaths", None)
+    sample_path = sample.get("SamplePath", None)
 
     # check whether a systematic is being processed
     if template is not None:
@@ -82,13 +82,13 @@ def _histo_path(
         raise ValueError(f"no path setting found for region {region['Name']}")
 
     # handle sample-specific setting
-    sample_template_exists = "{SamplePaths}" in general_path
+    sample_template_exists = "{SamplePath}" in general_path
     if sample_path is not None:
         if not sample_template_exists:
             log.warning(
-                "sample override specified, but {SamplePaths} not found in default path"
+                "sample override specified, but {SamplePath} not found in default path"
             )
-        path = path.replace("{SamplePaths}", sample_path)
+        path = path.replace("{SamplePath}", sample_path)
     elif sample_template_exists:
         raise ValueError(f"no path setting found for sample {sample['Name']}")
 

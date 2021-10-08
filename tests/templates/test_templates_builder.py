@@ -20,37 +20,37 @@ def test__ntuple_paths(caplog):
     # general path with region and sample templates
     assert (
         builder._ntuple_paths(
-            "{RegionPath}/{SamplePaths}",
+            "{RegionPath}/{SamplePath}",
             {"RegionPath": "region"},
-            {"SamplePaths": "sample.root"},
+            {"SamplePath": "sample.root"},
             {},
             None,
         )
         == [pathlib.Path("region/sample.root")]
     )
 
-    # two SamplePaths
+    # two SamplePath
     assert (
         builder._ntuple_paths(
-            "{RegionPath}/{SamplePaths}",
+            "{RegionPath}/{SamplePath}",
             {"RegionPath": "region"},
-            {"SamplePaths": ["sample.root", "new.root"]},
+            {"SamplePath": ["sample.root", "new.root"]},
             {},
             None,
         )
         == [pathlib.Path("region/sample.root"), pathlib.Path("region/new.root")]
     )
 
-    # systematic with override for RegionPath and SamplePaths
+    # systematic with override for RegionPath and SamplePath
     assert (
         builder._ntuple_paths(
-            "{RegionPath}/{SamplePaths}",
+            "{RegionPath}/{SamplePath}",
             {"RegionPath": "reg_1"},
-            {"SamplePaths": "path.root"},
+            {"SamplePath": "path.root"},
             {
                 "Name": "variation",
                 "Up": {
-                    "SamplePaths": ["variation.root", "new.root"],
+                    "SamplePath": ["variation.root", "new.root"],
                     "RegionPath": "reg_2",
                 },
             },
@@ -61,7 +61,7 @@ def test__ntuple_paths(caplog):
 
     # systematic without override
     assert builder._ntuple_paths(
-        "{SamplePaths}", {}, {"SamplePaths": "path.root"}, {"Name": "variation"}, "Up"
+        "{SamplePath}", {}, {"SamplePath": "path.root"}, {"Name": "variation"}, "Up"
     ) == [pathlib.Path("path.root")]
 
     caplog.clear()
@@ -77,9 +77,9 @@ def test__ntuple_paths(caplog):
 
     # warning: no sample path in template
     assert builder._ntuple_paths(
-        "path.root", {}, {"SamplePaths": "sample.root"}, {}, None
+        "path.root", {}, {"SamplePath": "sample.root"}, {}, None
     ) == [pathlib.Path("path.root")]
-    assert "sample override specified, but {SamplePaths} not found in default path" in [
+    assert "sample override specified, but {SamplePath} not found in default path" in [
         rec.message for rec in caplog.records
     ]
     caplog.clear()
@@ -88,9 +88,9 @@ def test__ntuple_paths(caplog):
     with pytest.raises(ValueError, match="no path setting found for region region"):
         builder._ntuple_paths("{RegionPath}", {"Name": "region"}, {}, {}, None)
 
-    # error: no override for {SamplePaths}
+    # error: no override for {SamplePath}
     with pytest.raises(ValueError, match="no path setting found for sample sample"):
-        builder._ntuple_paths("{SamplePaths}", {}, {"Name": "sample"}, {}, None)
+        builder._ntuple_paths("{SamplePath}", {}, {"Name": "sample"}, {}, None)
 
 
 def test__variable():
@@ -225,13 +225,13 @@ def test__Builder_create_histogram(
     mock_path, mock_uproot_builder, mock_histo, mock_save
 ):
     histogram_folder = pathlib.Path("path")
-    general_path = "{SamplePaths}"
+    general_path = "{SamplePath}"
     # the binning [0] is not a proper binning, but simplifies the comparison
     region = {"Name": "test_region", "Variable": "x", "Binning": [0], "Filter": "x>3"}
     sample = {
         "Name": "sample",
         "Tree": "tree",
-        "SamplePaths": "path_to_sample",
+        "SamplePath": "path_to_sample",
         "Weight": "weight_mc",
     }
     systematic = {}
@@ -272,7 +272,7 @@ def test__Builder_create_histogram(
     ]
 
     # other backends
-    builder_unknown = builder._Builder(histogram_folder, "{SamplePaths}", "unknown")
+    builder_unknown = builder._Builder(histogram_folder, "{SamplePath}", "unknown")
     with pytest.raises(NotImplementedError, match="unknown backend unknown"):
         builder_unknown._create_histogram(region, sample, systematic, template)
 

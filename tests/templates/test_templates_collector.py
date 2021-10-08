@@ -16,10 +16,10 @@ def test__histo_path(caplog):
     # general path with region, sample and nominal variation
     assert (
         collector._histo_path(
-            "{RegionPath}.root:{SamplePaths}_{VariationPath}",
+            "{RegionPath}.root:{SamplePath}_{VariationPath}",
             "nominal",
             {"RegionPath": "region"},
-            {"SamplePaths": "sample"},
+            {"SamplePath": "sample"},
             {},
             None,
         )
@@ -29,10 +29,10 @@ def test__histo_path(caplog):
     # systematic with override for VariationPath
     assert (
         collector._histo_path(
-            "{RegionPath}.root:{SamplePaths}_{VariationPath}",
+            "{RegionPath}.root:{SamplePath}_{VariationPath}",
             "nominal",
             {"RegionPath": "reg_1"},
-            {"SamplePaths": "path"},
+            {"SamplePath": "path"},
             {"Name": "variation", "Up": {"VariationPath": "up"}},
             "Up",
         )
@@ -73,11 +73,11 @@ def test__histo_path(caplog):
     # warning: no sample path in template
     assert (
         collector._histo_path(
-            "f.root:h1", "", {}, {"SamplePaths": "sample.root"}, {}, None
+            "f.root:h1", "", {}, {"SamplePath": "sample.root"}, {}, None
         )
         == "f.root:h1"
     )
-    assert "sample override specified, but {SamplePaths} not found in default path" in [
+    assert "sample override specified, but {SamplePath} not found in default path" in [
         rec.message for rec in caplog.records
     ]
     caplog.clear()
@@ -93,9 +93,9 @@ def test__histo_path(caplog):
     with pytest.raises(ValueError, match="no path setting found for region region"):
         collector._histo_path("{RegionPath}", "", {"Name": "region"}, {}, {}, None)
 
-    # error: no override for {SamplePaths}
+    # error: no override for {SamplePath}
     with pytest.raises(ValueError, match="no path setting found for sample sample"):
-        collector._histo_path("{SamplePaths}", "", {}, {"Name": "sample"}, {}, None)
+        collector._histo_path("{SamplePath}", "", {}, {"Name": "sample"}, {}, None)
 
 
 @mock.patch("cabinetry.templates.utils._name_and_save")

@@ -162,7 +162,7 @@
             "description": "a sample of a specific process or data",
             "$$description": [
                 "required: Name + Tree (for ntuple inputs),",
-                "Name + SamplePaths (for histogram inputs)"
+                "Name + SamplePath (for histogram inputs)"
             ],
             "type": "object",
             "anyOf": [
@@ -170,7 +170,7 @@
                     "required": ["Name", "Tree"]
                 },
                 {
-                    "required": ["Name", "SamplePaths"]
+                    "required": ["Name", "SamplePath"]
                 }
             ],
             "properties": {
@@ -190,9 +190,9 @@
                     "description": "weight to apply to events",
                     "type": "string"
                 },
-                "SamplePaths": {
+                "SamplePath": {
                     "description": "(part of) path(s) to input file(s)",
-                    "$ref": "#/definitions/samplepaths_setting"
+                    "$ref": "#/definitions/samplepath_setting"
                 },
                 "Data": {
                     "description": "if it is a data sample",
@@ -311,9 +311,9 @@
                     "description": "(part of) path to file containing region (override for nominal setting)",
                     "type": "string"
                 },
-                "SamplePaths": {
+                "SamplePath": {
                     "description": "(part of) path(s) to input file(s) (override for nominal setting)",
-                    "$ref": "#/definitions/samplepaths_setting"
+                    "$ref": "#/definitions/samplepath_setting"
                 },
                 "Normalization": {
                     "description": "normalization uncertainty to apply",
@@ -351,10 +351,11 @@
                 }
             ]
         },
-        "samplepaths_setting": {
-            "title": "SamplePaths setting",
-            "$$target": "#/definitions/samplepaths_setting",
-            "description": "path(s) to input file(s) for ntuple production",
+        "samplepath_setting": {
+            "title": "SamplePath setting",
+            "$$target": "#/definitions/samplepath_setting",
+            "description": "path(s) to input file(s) for histogram production",
+            "$$description": "a list of paths is only supported for ntuple inputs",
             "oneOf": [
                 {
                     "description": "path to single file",

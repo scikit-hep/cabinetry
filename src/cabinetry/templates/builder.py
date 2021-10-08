@@ -30,8 +30,8 @@ def _ntuple_paths(
     A path is built starting from the path specified in the general options in the
     configuration file. This path can contain placeholders for region- and sample-
     specific overrides, via ``{Region}`` and ``{Sample}``. For non-nominal templates, it
-    is possible to override the sample path if the ``SamplePaths`` option is specified
-    for the template. If ``SamplePaths`` is a list, return a list of paths (one per
+    is possible to override the sample path if the ``SamplePath`` option is specified
+    for the template. If ``SamplePath`` is a list, return a list of paths (one per
     entry in the list).
 
     Args:
@@ -46,7 +46,7 @@ def _ntuple_paths(
     Raises:
         ValueError: when ``RegionPath`` placeholder is used, but region setting is not
             specified
-        ValueError: when ``SamplePaths`` placeholder is used, but sample setting is not
+        ValueError: when ``SamplePath`` placeholder is used, but sample setting is not
             specified
 
     Returns:
@@ -54,7 +54,7 @@ def _ntuple_paths(
     """
     # obtain region and sample paths, if they are defined
     region_path = region.get("RegionPath", None)
-    sample_paths = sample.get("SamplePaths", None)
+    sample_paths = sample.get("SamplePath", None)
 
     # check whether a systematic is being processed, and whether overrides exist
     if template is not None:
@@ -63,8 +63,8 @@ def _ntuple_paths(
         if region_override is not None:
             region_path = region_override
 
-        # check for SamplePaths override
-        sample_override = utils._check_for_override(systematic, template, "SamplePaths")
+        # check for SamplePath override
+        sample_override = utils._check_for_override(systematic, template, "SamplePath")
         if sample_override is not None:
             sample_paths = sample_override
 
@@ -78,21 +78,21 @@ def _ntuple_paths(
     elif region_template_exists:
         raise ValueError(f"no path setting found for region {region['Name']}")
 
-    sample_template_exists = "{SamplePaths}" in general_path
+    sample_template_exists = "{SamplePath}" in general_path
     if sample_paths is not None:
         if not sample_template_exists:
             log.warning(
-                "sample override specified, but {SamplePaths} not found in default path"
+                "sample override specified, but {SamplePath} not found in default path"
             )
-        # SamplePaths can be a list, so need to construct all possible paths
+        # SamplePath can be a list, so need to construct all possible paths
         sample_paths = configuration._setting_to_list(sample_paths)
         path_list = []
         for sample_path in sample_paths:
-            path_list.append(general_path.replace("{SamplePaths}", sample_path))
+            path_list.append(general_path.replace("{SamplePath}", sample_path))
     elif sample_template_exists:
         raise ValueError(f"no path setting found for sample {sample['Name']}")
     else:
-        # no need for multiple paths, and no SamplePaths are present, so turn
+        # no need for multiple paths, and no SamplePath are present, so turn
         # the existing path into a list
         path_list = [general_path]
 

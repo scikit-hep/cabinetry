@@ -28,7 +28,7 @@ def test_integration(tmp_path, ntuple_creator, caplog):
 
     # override config options to point to tmp_path
     cabinetry_config["General"]["HistogramFolder"] = str(tmp_path / "histograms")
-    cabinetry_config["General"]["InputPath"] = str(tmp_path / "{SamplePaths}")
+    cabinetry_config["General"]["InputPath"] = str(tmp_path / "{SamplePath}")
 
     caplog.set_level(logging.DEBUG)
 
@@ -273,7 +273,7 @@ def test_histogram_reading(tmp_path, histogram_creator, caplog):
     cabinetry_config["General"]["HistogramFolder"] = str(tmp_path / "histograms")
     cabinetry_config["General"]["InputPath"] = (
         f"{tmp_path / 'histograms.root'}:"
-        f"{{RegionPath}}/{{SamplePaths}}/{{VariationPath}}"
+        f"{{RegionPath}}/{{SamplePath}}/{{VariationPath}}"
     )
 
     caplog.set_level(logging.DEBUG)

@@ -3,7 +3,7 @@ General:
   Measurement: "minimal_example"
   POI: "Signal_norm"
   HistogramFolder: "histograms/"
-  InputPath: "inputs/histograms.root:{RegionPath}/{SamplePaths}/{VariationPath}"
+  InputPath: "inputs/histograms.root:{RegionPath}/{SamplePath}/{VariationPath}"
   VariationPath: "Nominal"
 
 Regions:
@@ -12,14 +12,14 @@ Regions:
 
 Samples:
   - Name: "Data"
-    SamplePaths: "Data"
+    SamplePath: "Data"
     Data: True
 
   - Name: "Signal"
-    SamplePaths: "Signal"
+    SamplePath: "Signal"
 
   - Name: "Background"
-    SamplePaths: "Background"
+    SamplePath: "Background"
 
 Systematics:
   - Name: "Luminosity"
