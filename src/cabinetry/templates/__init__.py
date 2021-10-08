@@ -51,8 +51,8 @@ def build(
 def collect(config: Dict[str, Any], method: str = "uproot") -> None:
     """Collects all required histograms specified by the configuration file.
 
-    Histograms already exist, and this collects and saves them in the format used for
-    further processing. If no default for VariationPath is specified in the general
+    Histograms must already exist, and this collects and saves them in the format used
+    for further processing. If no default for VariationPath is specified in the general
     settings, it defaults to an empty string.
 
     Args:
