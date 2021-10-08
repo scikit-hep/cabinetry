@@ -263,7 +263,7 @@ def test_integration(tmp_path, ntuple_creator, caplog):
 
 
 @pytest.mark.no_cover
-def test_histogram_reading(tmp_path, histogram_creator, caplog):
+def test_histogram_reading(tmp_path, histogram_creator):
     histogram_creator(str(tmp_path))
 
     cabinetry_config = cabinetry.configuration.load("utils/config_histograms.yml")
@@ -274,8 +274,6 @@ def test_histogram_reading(tmp_path, histogram_creator, caplog):
         f"{tmp_path / 'histograms.root'}:"
         f"{{RegionPath}}/{{SamplePath}}/{{VariationPath}}"
     )
-
-    caplog.set_level(logging.DEBUG)
 
     cabinetry.templates.collect(cabinetry_config, method="uproot")
     cabinetry.templates.postprocess(cabinetry_config)
