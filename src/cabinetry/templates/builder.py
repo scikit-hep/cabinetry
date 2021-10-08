@@ -252,7 +252,6 @@ def _binning(region: Dict[str, Any]) -> np.ndarray:
         np.ndarray: bin boundaries to be used for histogram
     """
     if not region.get("Binning", False):
-        # TODO: handling with histogram inputs if binning is optional
         raise NotImplementedError("cannot determine binning")
 
     return np.asarray(region["Binning"])

@@ -188,11 +188,16 @@ def data_mc(
 
         if config is not None:
             # get the region dictionary from the config for binning / variable name
+            # for histogram inputs this information is not available, so need to fall
+            # back to defaults
             region_dict = configuration.region_dict(config, channel_name)
-            bin_edges = builder._binning(region_dict)
-            variable = region_dict["Variable"]
+            if region_dict.get("Binning", None) is not None:
+                bin_edges = builder._binning(region_dict)
+            else:
+                bin_edges = np.arange(len(data_yields[i_chan]) + 1)
+            variable = region_dict.get("Variable", "bin")
         else:
-            # fall back to defaults
+            # fall back to defaults if no config is specified
             bin_edges = np.arange(len(data_yields[i_chan]) + 1)
             variable = "bin"
 
@@ -305,8 +310,10 @@ def templates(
                     histogram_folder, region, sample, {}
                 )
                 bins = nominal_histo.bins
-                # TODO: currently with histograms, variable no longer mandatory
-                variable = region["Variable"]
+                # variable is a required config setting for ntuple inputs, but not for
+                # histogram inputs, so default to "observable" for these cases (the
+                # actual bin edges are preseved here, so not using "bin" as in data_mc)
+                variable = region.get("Variable", "observable")
                 nominal = {"yields": nominal_histo.yields, "stdev": nominal_histo.stdev}
 
                 # extract original and modified (after post-processing) variation
