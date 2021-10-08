@@ -266,8 +266,7 @@ def test_integration(tmp_path, ntuple_creator, caplog):
 def test_histogram_reading(tmp_path, histogram_creator, caplog):
     histogram_creator(str(tmp_path))
 
-    # TODO: move config to dict?
-    cabinetry_config = cabinetry.configuration.load("config_histo.yml")
+    cabinetry_config = cabinetry.configuration.load("utils/config_histograms.yml")
 
     # override config options to point to tmp_path
     cabinetry_config["General"]["HistogramFolder"] = str(tmp_path / "histograms")
