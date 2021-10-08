@@ -99,7 +99,7 @@ class WorkspaceBuilder:
         Returns:
             Dict[str, Any]: single `normsys` modifier for ``pyhf`` workspace
         """
-        # take name of modifier from ModifierName if set, default to systematics name
+        # take name of modifier from ModifierName if set, default to systematic name
         modifier_name = systematic.get("ModifierName", systematic["Name"])
 
         modifier = {}
@@ -186,7 +186,7 @@ class WorkspaceBuilder:
             histo_yield_up = list(histogram_up.yields / norm_effect_up)
             histo_yield_down = list(histogram_down.yields / norm_effect_down)
 
-        # take name of modifier from ModifierName if set, default to systematics name
+        # take name of modifier from ModifierName if set, default to systematic name
         modifier_name = systematic.get("ModifierName", systematic["Name"])
 
         # add the normsys

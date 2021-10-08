@@ -60,11 +60,11 @@ When no user-defined function matches a given histogram that has to be produced,
         return hist
 
 
-    cabinetry.template_builder.create_histograms(
+    cabinetry.templates.build(
         cabinetry_config, method="uproot", router=my_router
     )
 
-The instance of ``cabinetry.route.Router`` is handed to ``cabinetry.template_builder.create_histograms`` to enable the use of ``build_data_hist``.
+The instance of ``cabinetry.route.Router`` is handed to ``cabinetry.templates.build`` to enable the use of ``build_data_hist``.
 
 The function ``build_data_hist`` in this example always returns the same histogram.
 Given that the dictionaries in the function signature provide additional information, it is for example possible to return different yields per region:

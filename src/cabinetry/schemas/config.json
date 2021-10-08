@@ -7,10 +7,12 @@
     "required": ["General", "Regions", "Samples", "NormFactors"],
     "properties": {
         "General": {
+            "title": "General",
             "description": "general settings",
             "$ref": "#/definitions/general"
         },
         "Regions": {
+            "title": "Regions",
             "description": "list of regions",
             "type": "array",
             "minItems": 1,
@@ -21,6 +23,7 @@
             "uniqueItems": true
         },
         "Samples": {
+            "title": "Samples",
             "description": "list of samples",
             "type": "array",
             "minItems": 1,
@@ -31,6 +34,7 @@
             "uniqueItems": true
         },
         "NormFactors": {
+            "title": "NormFactors",
             "description": "list of normalization factors",
             "type": "array",
             "minItems": 1,
@@ -41,6 +45,7 @@
             "uniqueItems": true
         },
         "Systematics": {
+            "title": "Systematics",
             "description": "list of systematics",
             "type": "array",
             "minItems": 0,
@@ -53,7 +58,7 @@
     },
     "definitions": {
         "general": {
-            "title": "General",
+            "title": "General settings",
             "$$target": "#/definitions/general",
             "description": "general settings",
             "type": "object",
@@ -68,7 +73,7 @@
                     "type": "string"
                 },
                 "InputPath": {
-                    "description": "path to input ntuples",
+                    "description": "path to input files",
                     "type": "string"
                 },
                 "HistogramFolder": {
@@ -96,6 +101,10 @@
                         "additionalProperties": false
                     },
                     "uniqueItems": true
+                },
+                "VariationPath": {
+                    "description": "(part of) path to file containing variation (for histogram inputs), defaults to empty string",
+                    "type": "string"
                 }
             },
             "additionalProperties": false
@@ -104,8 +113,19 @@
             "title": "Region",
             "$$target": "#/definitions/region",
             "description": "a region of phase space",
+            "$$description": [
+                "required: Name + Variable + Binning (for ntuple inputs),",
+                "Name + RegionPath (for histogram inputs)"
+            ],
             "type": "object",
-            "required": ["Name", "Variable", "Binning"],
+            "anyOf": [
+                {
+                    "required": ["Name", "Variable", "Binning"]
+                },
+                {
+                    "required": ["Name", "RegionPath"]
+                }
+            ],
             "properties": {
                 "Name": {
                     "description": "name of the region",
@@ -140,8 +160,19 @@
             "title": "Sample",
             "$$target": "#/definitions/sample",
             "description": "a sample of a specific process or data",
+            "$$description": [
+                "required: Name + Tree (for ntuple inputs),",
+                "Name + SamplePath (for histogram inputs)"
+            ],
             "type": "object",
-            "required": ["Name", "Tree"],
+            "anyOf": [
+                {
+                    "required": ["Name", "Tree"]
+                },
+                {
+                    "required": ["Name", "SamplePath"]
+                }
+            ],
             "properties": {
                 "Name": {
                     "description": "name of the sample",
@@ -159,9 +190,9 @@
                     "description": "weight to apply to events",
                     "type": "string"
                 },
-                "SamplePaths": {
+                "SamplePath": {
                     "description": "(part of) path(s) to input file(s)",
-                    "$ref": "#/definitions/samplepaths_setting"
+                    "$ref": "#/definitions/samplepath_setting"
                 },
                 "Data": {
                     "description": "if it is a data sample",
@@ -257,7 +288,7 @@
         "template_setting": {
             "title": "Template",
             "$$target": "#/definitions/template_setting",
-            "description": "a systematics template (up/down)",
+            "description": "a systematic template (up/down)",
             "type": "object",
             "properties": {
                 "Tree": {
@@ -280,9 +311,9 @@
                     "description": "(part of) path to file containing region (override for nominal setting)",
                     "type": "string"
                 },
-                "SamplePaths": {
+                "SamplePath": {
                     "description": "(part of) path(s) to input file(s) (override for nominal setting)",
-                    "$ref": "#/definitions/samplepaths_setting"
+                    "$ref": "#/definitions/samplepath_setting"
                 },
                 "Normalization": {
                     "description": "normalization uncertainty to apply",
@@ -291,6 +322,10 @@
                 "Symmetrize": {
                     "description": "whether to apply symmetrization",
                     "type": "boolean"
+                },
+                "VariationPath": {
+                    "description": "(part of) path to file containing variation (for histogram inputs, override for general setting)",
+                    "type": "string"
                 }
             },
             "additionalProperties": false
@@ -316,10 +351,11 @@
                 }
             ]
         },
-        "samplepaths_setting": {
-            "title": "SamplePaths setting",
-            "$$target": "#/definitions/samplepaths_setting",
-            "description": "path(s) to input file(s) for ntuple production",
+        "samplepath_setting": {
+            "title": "SamplePath setting",
+            "$$target": "#/definitions/samplepath_setting",
+            "description": "path(s) to input file(s) for histogram production",
+            "$$description": "a list of paths is only supported for ntuple inputs",
             "oneOf": [
                 {
                     "description": "path to single file",

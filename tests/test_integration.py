@@ -4,7 +4,12 @@ import numpy as np
 import pytest
 
 import cabinetry
-from utils import create_ntuples
+from utils import create_histograms, create_ntuples
+
+
+@pytest.fixture
+def histogram_creator():
+    return create_histograms.run
 
 
 @pytest.fixture
@@ -23,12 +28,12 @@ def test_integration(tmp_path, ntuple_creator, caplog):
 
     # override config options to point to tmp_path
     cabinetry_config["General"]["HistogramFolder"] = str(tmp_path / "histograms")
-    cabinetry_config["General"]["InputPath"] = str(tmp_path / "{SamplePaths}")
+    cabinetry_config["General"]["InputPath"] = str(tmp_path / "{SamplePath}")
 
     caplog.set_level(logging.DEBUG)
 
-    cabinetry.template_builder.create_histograms(cabinetry_config, method="uproot")
-    cabinetry.template_postprocessor.run(cabinetry_config)
+    cabinetry.templates.build(cabinetry_config, method="uproot")
+    cabinetry.templates.postprocess(cabinetry_config)
     workspace_path = tmp_path / "example_workspace.json"
     ws = cabinetry.workspace.build(cabinetry_config)
     cabinetry.workspace.save(ws, workspace_path)
@@ -255,3 +260,39 @@ def test_integration(tmp_path, ntuple_creator, caplog):
     np.allclose(significance_results.observed_significance, 1.80118813)
     np.allclose(significance_results.expected_p_value, 0.14775040)
     np.allclose(significance_results.expected_significance, 1.04613046)
+
+
+@pytest.mark.no_cover
+def test_histogram_reading(tmp_path, histogram_creator):
+    histogram_creator(str(tmp_path))
+
+    cabinetry_config = cabinetry.configuration.load("utils/config_histograms.yml")
+
+    # override config options to point to tmp_path
+    cabinetry_config["General"]["HistogramFolder"] = str(tmp_path / "histograms")
+    cabinetry_config["General"]["InputPath"] = (
+        f"{tmp_path / 'histograms.root'}:"
+        f"{{RegionPath}}/{{SamplePath}}/{{VariationPath}}"
+    )
+
+    cabinetry.templates.collect(cabinetry_config, method="uproot")
+    cabinetry.templates.postprocess(cabinetry_config)
+    ws = cabinetry.workspace.build(cabinetry_config)
+    model, data = cabinetry.model_utils.model_and_data(ws)
+    fit_results = cabinetry.fit.fit(
+        model, data, minos="Signal_norm", goodness_of_fit=True
+    )
+
+    bestfit_expected = [
+        1.00102289,
+        0.98910429,
+        1.01970061,
+        0.98296235,
+        1.68953317,
+        -0.0880332,
+        -0.32457145,
+        -0.58582788,
+    ]
+    best_twice_nll_expected = 17.194205
+    assert np.allclose(fit_results.bestfit, bestfit_expected)
+    assert np.allclose(fit_results.best_twice_nll, best_twice_nll_expected)

@@ -201,7 +201,7 @@ def run(output_directory, visualize=False):
 
 
 if __name__ == "__main__":
-    output_directory = "ntuples/"
+    output_directory = "inputs/"
     if not os.path.exists(output_directory):
         os.mkdir(output_directory)
     run(output_directory)

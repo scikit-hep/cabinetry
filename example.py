@@ -8,7 +8,7 @@ if __name__ == "__main__":
     cabinetry.set_logging()
 
     # check whether input data exists
-    if not os.path.exists("ntuples/"):
+    if not os.path.exists("inputs/"):
         print("run utils/create_ntuples.py to create input data")
         raise SystemExit
 
@@ -17,12 +17,12 @@ if __name__ == "__main__":
     cabinetry.configuration.print_overview(config)
 
     # create template histograms
-    cabinetry.template_builder.create_histograms(config, method="uproot")
+    cabinetry.templates.build(config, method="uproot")
 
     # perform histogram post-processing
-    cabinetry.template_postprocessor.run(config)
+    cabinetry.templates.postprocess(config)
 
-    # visualize systematics templates
+    # visualize systematic templates
     cabinetry.visualize.templates(config)
 
     # build a workspace and save to file

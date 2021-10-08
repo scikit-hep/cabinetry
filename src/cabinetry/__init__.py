@@ -6,8 +6,7 @@ import cabinetry.model_utils  # noqa: F401
 import cabinetry.route  # noqa: F401
 import cabinetry.smooth  # noqa: F401
 import cabinetry.tabulate  # noqa: F401
-import cabinetry.template_builder  # noqa: F401
-import cabinetry.template_postprocessor  # noqa: F401
+import cabinetry.templates  # noqa: F401
 import cabinetry.visualize  # noqa: F401
 import cabinetry.workspace  # noqa: F401
 

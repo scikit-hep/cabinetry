@@ -10,8 +10,7 @@ import yaml
 from cabinetry import configuration as cabinetry_configuration
 from cabinetry import fit as cabinetry_fit
 from cabinetry import model_utils as cabinetry_model_utils
-from cabinetry import template_builder as cabinetry_template_builder
-from cabinetry import template_postprocessor as cabinetry_template_postprocessor
+from cabinetry import templates as cabinetry_templates
 from cabinetry import visualize as cabinetry_visualize
 from cabinetry import workspace as cabinetry_workspace
 
@@ -51,7 +50,7 @@ def templates(config: io.TextIOWrapper, method: str) -> None:
     _set_logging()
     cabinetry_config = yaml.safe_load(config)
     cabinetry_configuration.validate(cabinetry_config)
-    cabinetry_template_builder.create_histograms(cabinetry_config, method=method)
+    cabinetry_templates.build(cabinetry_config, method=method)
 
 
 @click.command()
@@ -64,7 +63,7 @@ def postprocess(config: io.TextIOWrapper) -> None:
     _set_logging()
     cabinetry_config = yaml.safe_load(config)
     cabinetry_configuration.validate(cabinetry_config)
-    cabinetry_template_postprocessor.run(cabinetry_config)
+    cabinetry_templates.postprocess(cabinetry_config)
 
 
 @click.command()

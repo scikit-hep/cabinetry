@@ -12,7 +12,7 @@ from cabinetry import configuration
 from cabinetry import fit
 from cabinetry import histo
 from cabinetry import model_utils
-from cabinetry import template_builder
+from cabinetry.templates import builder
 from cabinetry.visualize import plot_model
 from cabinetry.visualize import plot_result
 
@@ -188,11 +188,16 @@ def data_mc(
 
         if config is not None:
             # get the region dictionary from the config for binning / variable name
+            # for histogram inputs this information is not available, so need to fall
+            # back to defaults
             region_dict = configuration.region_dict(config, channel_name)
-            bin_edges = template_builder._binning(region_dict)
-            variable = region_dict["Variable"]
+            if region_dict.get("Binning", None) is not None:
+                bin_edges = builder._binning(region_dict)
+            else:
+                bin_edges = np.arange(len(data_yields[i_chan]) + 1)
+            variable = region_dict.get("Variable", "bin")
         else:
-            # fall back to defaults
+            # fall back to defaults if no config is specified
             bin_edges = np.arange(len(data_yields[i_chan]) + 1)
             variable = "bin"
 
@@ -263,7 +268,7 @@ def templates(
         List[Dict[str, Any]]: list of dictionaries, where each dictionary contains a
             figure and the associated region / sample / systematic names
     """
-    log.info("visualizing systematics templates")
+    log.info("visualizing systematic templates")
     histogram_folder = pathlib.Path(config["General"]["HistogramFolder"])
     figure_folder = pathlib.Path(figure_folder) / "templates"
 
@@ -305,7 +310,10 @@ def templates(
                     histogram_folder, region, sample, {}
                 )
                 bins = nominal_histo.bins
-                variable = region["Variable"]
+                # variable is a required config setting for ntuple inputs, but not for
+                # histogram inputs, so default to "observable" for these cases (the
+                # actual bin edges are preseved here, so not using "bin" as in data_mc)
+                variable = region.get("Variable", "observable")
                 nominal = {"yields": nominal_histo.yields, "stdev": nominal_histo.stdev}
 
                 # extract original and modified (after post-processing) variation

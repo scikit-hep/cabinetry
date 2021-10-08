@@ -1,4 +1,5 @@
 from collections import namedtuple
+import copy
 import pathlib
 from unittest import mock
 
@@ -129,10 +130,13 @@ def test_data_mc_from_histograms(mock_load, mock_draw, mock_stdev):
 @mock.patch(
     "cabinetry.visualize.plot_model.data_mc", return_value=matplotlib.figure.Figure()
 )
-@mock.patch("cabinetry.template_builder._binning", return_value=np.asarray([1, 2]))
+@mock.patch("cabinetry.templates.builder._binning", return_value=np.asarray([1, 2]))
 @mock.patch(
     "cabinetry.configuration.region_dict",
-    return_value={"Name": "region", "Variable": "x"},
+    side_effect=[
+        {"Name": "region", "Variable": "x", "Binning": [1, 2]},
+        {"Name": "region"},
+    ],
 )
 @mock.patch(
     "cabinetry.model_utils._filter_channels",
@@ -159,7 +163,9 @@ def test_data_mc(mock_data, mock_filter, mock_dict, mock_bins, mock_draw, exampl
     assert mock_data.call_args_list == [((model, data), {})]
     assert mock_filter.call_args_list == [((model, None), {})]
     assert mock_dict.call_args_list == [((config, "Signal Region"), {})]
-    assert mock_bins.call_args_list == [(({"Name": "region", "Variable": "x"},), {})]
+    assert mock_bins.call_args_list == [
+        (({"Name": "region", "Variable": "x", "Binning": [1, 2]},), {})
+    ]
 
     expected_histograms = [
         {
@@ -190,7 +196,8 @@ def test_data_mc(mock_data, mock_filter, mock_dict, mock_bins, mock_draw, exampl
     }
 
     # post-fit plot (different label in model prediction), custom scale, close figure,
-    # do not save figure
+    # do not save figure, histogram input mode: no binning or variable specified (via
+    # side effect)
     model_pred = model_utils.ModelPrediction(
         model, [[[11.0]]], [[0.2]], [0.2], "post-fit"
     )
@@ -206,11 +213,15 @@ def test_data_mc(mock_data, mock_filter, mock_dict, mock_bins, mock_draw, exampl
 
     assert mock_draw.call_count == 2
     # yield at best-fit point is different from pre-fit
-    assert np.allclose(mock_draw.call_args_list[1][0][0][0]["yields"], 11.0)
-    assert np.allclose(mock_draw.call_args_list[1][0][1], np.asarray([0.2]))
-    np.testing.assert_equal(mock_draw.call_args_list[1][0][2], np.asarray([1, 2]))
-    assert mock_draw.call_args_list[1][0][3] is None  # figure not saved
-    assert mock_draw.call_args_list[1][1] == {
+    assert np.allclose(mock_draw.call_args[0][0][0]["yields"], 11.0)
+    assert np.allclose(mock_draw.call_args[0][1], np.asarray([0.2]))
+    # observable defaults to "bin"
+    assert mock_draw.call_args[0][0][0]["variable"] == "bin"
+    assert mock_draw.call_args[0][0][1]["variable"] == "bin"
+    # binning falls back to default
+    np.testing.assert_equal(mock_draw.call_args[0][2], np.asarray([0, 1]))
+    assert mock_draw.call_args[0][3] is None  # figure not saved
+    assert mock_draw.call_args[1] == {
         "log_scale": False,
         "log_scale_x": False,
         "label": "Signal Region\npost-fit",
@@ -308,12 +319,15 @@ def test_templates(mock_draw, mock_histo_config, mock_histo_path, tmp_path):
         )
     ]
 
-    # close figure, do not save figure
+    # close figure, do not save figure, and remove variable information from config
+    # (simulating histogram inputs), so variable defaults to "observable"
+    histo_config = copy.deepcopy(config)
+    histo_config["Regions"] = [{"Name": "region"}]
     _ = visualize.templates(
-        config, figure_folder=folder_path, close_figure=True, save_figure=False
+        histo_config, figure_folder=folder_path, close_figure=True, save_figure=False
     )
     assert mock_draw.call_args == (
-        (nominal, up_orig, down_orig, up_mod, down_mod, bins, "x", None),
+        (nominal, up_orig, down_orig, up_mod, down_mod, bins, "observable", None),
         {
             "label": "region: region\nsample: sample\nsystematic: sys",
             "close_figure": True,
