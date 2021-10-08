@@ -13,7 +13,6 @@ from cabinetry.templates import utils
 log = logging.getLogger(__name__)
 
 
-# TODO: rename to _histo_paths if supporting multiple input paths
 def _histo_path(
     general_path: str,
     variation_path: str,
