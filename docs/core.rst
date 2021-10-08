@@ -5,7 +5,7 @@ Inputs to cabinetry: ntuples or histograms
 ------------------------------------------
 
 ``cabinetry`` supports two types of input files when building a workspace: ntuples containing columnar data and histograms.
-When using ntuple inputs, ``cabinetry`` needs to know not only where to find the input files for every template histogram it needs to build, but also what selections to apply, which column to extract and how to weigh every event.
+When using ntuple inputs, ``cabinetry`` needs to know not only where to find the input files for every template histogram it needs to build, but also what selections to apply, which column to extract and how to weight every event.
 The configuration schema lists the required options, see :ref:`config` for more information.
 Less information is required when using histogram inputs: only the path to each histogram needs to be specified in this case.
 
