@@ -66,7 +66,7 @@ def collect(config: Dict[str, Any], method: str = "uproot") -> None:
     if variation_path is None:
         # default to empty string and emit warning
         variation_path = ""
-        log.warning('no VariationPath specified in general settings, defaulting to ""')
+        log.info('no VariationPath specified in general settings, defaulting to ""')
     processor = collector._collector(
         histogram_folder, general_path, variation_path, method
     )
