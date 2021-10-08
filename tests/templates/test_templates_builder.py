@@ -29,7 +29,7 @@ def test__ntuple_paths(caplog):
         == [pathlib.Path("region/sample.root")]
     )
 
-    # two SamplePath
+    # SamplePath with list of two samples
     assert (
         builder._ntuple_paths(
             "{RegionPath}/{SamplePath}",
