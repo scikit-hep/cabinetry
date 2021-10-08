@@ -20,8 +20,9 @@ def build(
 ) -> None:
     """Produces all required histograms specified by the configuration file.
 
-    Uses either a default method specified via ``method``, or a custom user-defined
-    override through ``router``.
+    Inputs to the histogram production are ntuples containing columnar data. Uses either
+    a default method specified via ``method``, or a custom user-defined override through
+    ``router``.
 
     Args:
         config (Dict[str, Any]): cabinetry configuration
@@ -58,9 +59,6 @@ def collect(config: Dict[str, Any], method: str = "uproot") -> None:
         config (Dict[str, Any]): cabinetry configuration
         method (str, optional): backend to use for histogram production, defaults to
             "uproot"
-
-    Raises:
-        ValueError: if VariationPath is not specified in general settings
     """
     histogram_folder = pathlib.Path(config["General"]["HistogramFolder"])
     general_path = config["General"]["InputPath"]

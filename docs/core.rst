@@ -103,6 +103,8 @@ The ``VariationPath`` setting will default to an empty string if not specified, 
 A major difference to the ntuple path construction is that the histogram path needs to not only include the path to the file containing a given histogram, but also to the histogram within the file.
 This is achieved by using a colon ``:`` to distinguish between both parts of the path: ``folder/file.root:abc/h1`` points to a histogram called ``h1`` located in a folder called ``abc`` which itself exists within a file called ``file.root`` which can be found in a folder called ``folder``.
 
+When using histogram inputs, use ``cabinetry.templates.collect`` instead of ``cabinetry.templates.build`` (which is used for ntuple inputs).
+
 RegionPath
 """"""""""
 
