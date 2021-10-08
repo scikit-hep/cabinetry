@@ -22,7 +22,7 @@ if __name__ == "__main__":
     # perform histogram post-processing
     cabinetry.templates.postprocess(config)
 
-    # visualize systematics templates
+    # visualize systematic templates
     cabinetry.visualize.templates(config)
 
     # build a workspace and save to file
