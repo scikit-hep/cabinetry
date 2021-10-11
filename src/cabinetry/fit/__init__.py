@@ -1,3 +1,5 @@
+"""High-level entry point for statistical inference."""
+
 import logging
 from typing import Any, Dict, List, Optional, Tuple, Union
 
@@ -38,6 +40,7 @@ def print_results(fit_results: FitResults) -> None:
 def _fit_model_pyhf(
     model: pyhf.pdf.Model,
     data: List[float],
+    *,
     init_pars: Optional[List[float]] = None,
     fix_pars: Optional[List[bool]] = None,
     minos: Optional[Union[List[str], Tuple[str, ...]]] = None,
@@ -93,6 +96,7 @@ def _fit_model_pyhf(
 def _fit_model_custom(
     model: pyhf.pdf.Model,
     data: List[float],
+    *,
     init_pars: Optional[List[float]] = None,
     fix_pars: Optional[List[bool]] = None,
     minos: Optional[Union[List[str], Tuple[str, ...]]] = None,
@@ -175,6 +179,7 @@ def _fit_model_custom(
 def _fit_model(
     model: pyhf.pdf.Model,
     data: List[float],
+    *,
     init_pars: Optional[List[float]] = None,
     fix_pars: Optional[List[bool]] = None,
     minos: Optional[Union[List[str], Tuple[str, ...]]] = None,
@@ -312,6 +317,7 @@ def _goodness_of_fit(
 def fit(
     model: pyhf.pdf.Model,
     data: List[float],
+    *,
     minos: Optional[Union[str, List[str], Tuple[str, ...]]] = None,
     goodness_of_fit: bool = False,
     custom_fit: bool = False,
@@ -357,6 +363,7 @@ def fit(
 def ranking(
     model: pyhf.pdf.Model,
     data: List[float],
+    *,
     fit_results: Optional[FitResults] = None,
     custom_fit: bool = False,
 ) -> RankingResults:
@@ -454,6 +461,7 @@ def scan(
     model: pyhf.pdf.Model,
     data: List[float],
     par_name: str,
+    *,
     par_range: Optional[Tuple[float, float]] = None,
     n_steps: int = 11,
     custom_fit: bool = False,
@@ -531,6 +539,7 @@ def scan(
 def limit(
     model: pyhf.pdf.Model,
     data: List[float],
+    *,
     bracket: Optional[Union[List[float], Tuple[float, float]]] = None,
     tolerance: float = 0.01,
     maxiter: int = 100,

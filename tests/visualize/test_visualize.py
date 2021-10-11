@@ -185,10 +185,8 @@ def test_data_mc(mock_data, mock_filter, mock_dict, mock_bins, mock_draw, exampl
     assert mock_draw.call_args_list[0][0][0] == expected_histograms
     assert np.allclose(mock_draw.call_args_list[0][0][1], np.asarray([0.3]))
     np.testing.assert_equal(mock_draw.call_args_list[0][0][2], np.asarray([1, 2]))
-    assert mock_draw.call_args_list[0][0][3] == pathlib.Path(
-        "tmp/Signal-Region_prefit.pdf"
-    )
     assert mock_draw.call_args_list[0][1] == {
+        "figure_path": pathlib.Path("tmp/Signal-Region_prefit.pdf"),
         "log_scale": None,
         "log_scale_x": False,
         "label": "Signal Region\npre-fit",
@@ -220,8 +218,8 @@ def test_data_mc(mock_data, mock_filter, mock_dict, mock_bins, mock_draw, exampl
     assert mock_draw.call_args[0][0][1]["variable"] == "bin"
     # binning falls back to default
     np.testing.assert_equal(mock_draw.call_args[0][2], np.asarray([0, 1]))
-    assert mock_draw.call_args[0][3] is None  # figure not saved
     assert mock_draw.call_args[1] == {
+        "figure_path": None,  # figure not saved
         "log_scale": False,
         "log_scale_x": False,
         "label": "Signal Region\npost-fit",

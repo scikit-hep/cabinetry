@@ -91,6 +91,7 @@ def _smoothing_algorithm(
 def apply_postprocessing(
     histogram: histo.Histogram,
     name: str,
+    *,
     smoothing_algorithm: Optional[str] = None,
     nominal_histogram: Optional[histo.Histogram] = None,
 ) -> histo.Histogram:
@@ -160,7 +161,7 @@ def _postprocessor(histogram_folder: pathlib.Path) -> route.ProcessorFunc:
             template=template,
             modified=False,
         )
-        histogram_name = histo.name(region, sample, systematic, template)
+        histogram_name = histo.name(region, sample, systematic, template=template)
 
         smoothing_algorithm = _smoothing_algorithm(region, sample, systematic)
         if smoothing_algorithm is None:

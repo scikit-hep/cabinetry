@@ -1,3 +1,5 @@
+"""Creates yield tables."""
+
 import logging
 from typing import Any, Dict, List, Optional, Union
 
@@ -12,7 +14,7 @@ from cabinetry import model_utils
 log = logging.getLogger(__name__)
 
 
-def _header_name(channel_name: str, i_bin: int, unique: bool = True) -> str:
+def _header_name(channel_name: str, i_bin: int, *, unique: bool = True) -> str:
     """Constructs the header name for a column in a yield table.
 
     There are two modes: by default the names are unique (to be used as keys). With
@@ -158,6 +160,7 @@ def _yields_per_channel(
 def yields(
     model_prediction: model_utils.ModelPrediction,
     data: List[float],
+    *,
     channels: Optional[Union[str, List[str]]] = None,
     per_bin: bool = True,
     per_channel: bool = False,

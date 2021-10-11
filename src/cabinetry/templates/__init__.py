@@ -15,6 +15,7 @@ log = logging.getLogger(__name__)
 
 def build(
     config: Dict[str, Any],
+    *,
     method: str = "uproot",
     router: Optional[route.Router] = None,
 ) -> None:
@@ -48,7 +49,7 @@ def build(
     )
 
 
-def collect(config: Dict[str, Any], method: str = "uproot") -> None:
+def collect(config: Dict[str, Any], *, method: str = "uproot") -> None:
     """Collects all required histograms specified by the configuration file.
 
     Histograms must already exist, and this collects and saves them in the format used

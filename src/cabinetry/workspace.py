@@ -1,3 +1,5 @@
+"""Constructs HistFactory workspaces in JSON format."""
+
 import json
 import logging
 import pathlib
@@ -405,7 +407,7 @@ class WorkspaceBuilder:
         return ws
 
 
-def build(config: Dict[str, Any], with_validation: bool = True) -> Dict[str, Any]:
+def build(config: Dict[str, Any], *, with_validation: bool = True) -> Dict[str, Any]:
     """Returns a `HistFactory` workspace in ``pyhf`` format.
 
     Args:

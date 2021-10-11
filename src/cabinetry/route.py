@@ -1,3 +1,5 @@
+"""Provides features to apply functions to template histograms."""
+
 import fnmatch
 import logging
 from typing import Any, Callable, Dict, List, Optional
@@ -118,6 +120,7 @@ class Router:
 
     def register_template_builder(
         self,
+        *,
         region_name: str = "*",
         sample_name: str = "*",
         systematic_name: str = "*",
@@ -258,6 +261,7 @@ class Router:
 def apply_to_all_templates(
     config: Dict[str, Any],
     default_func: ProcessorFunc,
+    *,
     match_func: Optional[MatchFunc] = None,
 ) -> None:
     """Applies the supplied function ``default_func`` to all templates.

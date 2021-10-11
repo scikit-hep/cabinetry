@@ -12,7 +12,7 @@ def test_build(mock_builder, mock_apply):
     method = "uproot"
 
     # no router
-    templates.build(config, method)
+    templates.build(config, method=method)
     assert mock_builder.call_args_list == [
         ((pathlib.Path("path/"), "file.root", method), {})
     ]
@@ -24,7 +24,7 @@ def test_build(mock_builder, mock_apply):
 
     # including a router
     mock_router = mock.MagicMock()
-    templates.build(config, method, router=mock_router)
+    templates.build(config, method=method, router=mock_router)
 
     # verify wrapper was set
     assert (
@@ -54,7 +54,7 @@ def test_collect(mock_collector, mock_apply, caplog):
     }
     method = "uproot"
 
-    templates.collect(config, method)
+    templates.collect(config, method=method)
     assert mock_collector.call_args_list == [
         ((pathlib.Path("path/"), "f.root:{VariationPath}", "nominal", method), {})
     ]
@@ -66,7 +66,7 @@ def test_collect(mock_collector, mock_apply, caplog):
     config = {
         "General": {"HistogramFolder": "path/", "InputPath": "f.root:{VariationPath}"}
     }
-    templates.collect(config, method)
+    templates.collect(config, method=method)
     assert 'no VariationPath specified in general settings, defaulting to ""' in [
         rec.message for rec in caplog.records
     ]

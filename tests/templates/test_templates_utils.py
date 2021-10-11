@@ -33,6 +33,8 @@ def test__name_and_save(mock_name):
     utils._name_and_save(histogram_folder, histogram, region, sample, systematic, "Up")
 
     # check that the naming function was called, the histogram was validated and saved
-    assert mock_name.call_args_list == [((region, sample, systematic, "Up"), {})]
+    assert mock_name.call_args_list == [
+        ((region, sample, systematic), {"template": "Up"})
+    ]
     assert histogram.validate.call_args_list == [mock.call("name")]
     assert histogram.save.call_args_list == [mock.call(pathlib.Path("path/name"))]
