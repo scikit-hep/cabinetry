@@ -115,7 +115,7 @@
             "description": "a region of phase space",
             "$$description": [
                 "required: Name + Variable + Binning (for ntuple inputs),",
-                "Name + RegionPath (for histogram inputs)"
+                "Name (for histogram inputs)"
             ],
             "type": "object",
             "anyOf": [
@@ -123,7 +123,7 @@
                     "required": ["Name", "Variable", "Binning"]
                 },
                 {
-                    "required": ["Name", "RegionPath"]
+                    "required": ["Name"]
                 }
             ],
             "properties": {
@@ -162,7 +162,7 @@
             "description": "a sample of a specific process or data",
             "$$description": [
                 "required: Name + Tree (for ntuple inputs),",
-                "Name + SamplePath (for histogram inputs)"
+                "Name (for histogram inputs)"
             ],
             "type": "object",
             "anyOf": [
@@ -170,7 +170,7 @@
                     "required": ["Name", "Tree"]
                 },
                 {
-                    "required": ["Name", "SamplePath"]
+                    "required": ["Name"]
                 }
             ],
             "properties": {
