@@ -36,4 +36,5 @@ repos:
     rev: 6.1.1
     hooks:
     -   id: pydocstyle
+        # configuration duplicated in setup.cfg
         args: ["--match=(?!setup|example).*\\.py'", "--match-dir='^(?!(tests|utils|docs)).*'", "--convention=google"]
