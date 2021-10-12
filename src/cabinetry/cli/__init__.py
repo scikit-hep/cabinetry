@@ -1,3 +1,5 @@
+"""Implements the command line interface."""
+
 import io
 import json
 import logging
@@ -19,6 +21,7 @@ class OrderedGroup(click.Group):
     """A group that shows commands in the order they were added."""
 
     def list_commands(self, _: Any) -> List[str]:
+        """Returns a list of commands."""
         return list(self.commands.keys())
 
 

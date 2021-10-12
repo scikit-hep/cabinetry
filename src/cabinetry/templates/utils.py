@@ -1,4 +1,4 @@
-"""Contains utilities for template histogram handling."""
+"""Provides utilities for template histogram handling."""
 
 import pathlib
 from typing import Any, Dict, List, Optional, Union
