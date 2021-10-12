@@ -1,3 +1,5 @@
+"""Implements histogram smoothing algorithms."""
+
 import logging
 import statistics
 from typing import List, TypeVar, Union

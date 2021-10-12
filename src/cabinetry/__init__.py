@@ -1,3 +1,5 @@
+"""The cabinetry library."""
+
 import logging
 
 import cabinetry.configuration  # noqa: F401

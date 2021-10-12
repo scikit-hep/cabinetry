@@ -1,3 +1,5 @@
+"""Provides utilities to handle the cabinetry configuration."""
+
 import json
 import logging
 import pathlib

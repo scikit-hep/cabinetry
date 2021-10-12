@@ -1,4 +1,4 @@
-"""Contains visualization utilities."""
+"""Provides visualization utilities."""
 
 import logging
 import pathlib

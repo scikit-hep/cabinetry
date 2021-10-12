@@ -1,3 +1,5 @@
+"""Provides containers for inference results."""
+
 from typing import List, NamedTuple
 
 import numpy as np
