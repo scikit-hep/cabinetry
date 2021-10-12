@@ -1,3 +1,5 @@
+"""Provides utilities for pyhf models."""
+
 import logging
 from typing import Any, Dict, List, NamedTuple, Optional, Tuple, Union
 
@@ -37,7 +39,7 @@ class ModelPrediction(NamedTuple):
 
 
 def model_and_data(
-    spec: Dict[str, Any], asimov: bool = False, include_auxdata: bool = True
+    spec: Dict[str, Any], *, asimov: bool = False, include_auxdata: bool = True
 ) -> Tuple[pyhf.pdf.Model, List[float]]:
     """Returns model and data for a ``pyhf`` workspace specification.
 
@@ -66,7 +68,7 @@ def model_and_data(
     return model, data
 
 
-def asimov_data(model: pyhf.Model, include_auxdata: bool = True) -> List[float]:
+def asimov_data(model: pyhf.Model, *, include_auxdata: bool = True) -> List[float]:
     """Returns the Asimov dataset (optionally with auxdata) for a model.
 
     Initial parameter settings for normalization factors in the workspace are treated as
@@ -313,6 +315,7 @@ def yield_stdev(
 
 def prediction(
     model: pyhf.pdf.Model,
+    *,
     fit_results: Optional[FitResults] = None,
     label: Optional[str] = None,
 ) -> ModelPrediction:

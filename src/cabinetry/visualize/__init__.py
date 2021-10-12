@@ -51,6 +51,7 @@ def _total_yield_uncertainty(stdev_list: List[np.ndarray]) -> np.ndarray:
 
 def data_mc_from_histograms(
     config: Dict[str, Any],
+    *,
     figure_folder: Union[str, pathlib.Path] = "figures",
     log_scale: Optional[bool] = None,
     log_scale_x: bool = False,
@@ -113,7 +114,7 @@ def data_mc_from_histograms(
             histogram_dict_list,
             total_model_unc,
             bin_edges,
-            figure_path,
+            figure_path=figure_path,
             log_scale=log_scale,
             log_scale_x=log_scale_x,
             label=label,
@@ -126,6 +127,7 @@ def data_mc_from_histograms(
 def data_mc(
     model_prediction: model_utils.ModelPrediction,
     data: List[float],
+    *,
     config: Optional[Dict[str, Any]] = None,
     figure_folder: Union[str, pathlib.Path] = "figures",
     log_scale: Optional[bool] = None,
@@ -234,7 +236,7 @@ def data_mc(
             histogram_dict_list,
             np.asarray(model_prediction.total_stdev_model_bins[i_chan]),
             bin_edges,
-            figure_path,
+            figure_path=figure_path,
             log_scale=log_scale,
             log_scale_x=log_scale_x,
             label=label,
@@ -246,6 +248,7 @@ def data_mc(
 
 def templates(
     config: Dict[str, Any],
+    *,
     figure_folder: Union[str, pathlib.Path] = "figures",
     close_figure: bool = False,
     save_figure: bool = True,
@@ -363,7 +366,7 @@ def templates(
                     down_mod,
                     bins,
                     variable,
-                    figure_path,
+                    figure_path=figure_path,
                     label=figure_label,
                     close_figure=close_figure,
                 )
@@ -380,6 +383,7 @@ def templates(
 
 def correlation_matrix(
     fit_results: fit.FitResults,
+    *,
     figure_folder: Union[str, pathlib.Path] = "figures",
     pruning_threshold: float = 0.0,
     close_figure: bool = True,
@@ -427,13 +431,14 @@ def correlation_matrix(
     labels = np.delete(fit_results.labels, delete_indices)
 
     fig = plot_result.correlation_matrix(
-        corr_mat, labels, figure_path, close_figure=close_figure
+        corr_mat, labels, figure_path=figure_path, close_figure=close_figure
     )
     return fig
 
 
 def pulls(
     fit_results: fit.FitResults,
+    *,
     figure_folder: Union[str, pathlib.Path] = "figures",
     exclude: Optional[Union[str, List[str], Tuple[str, ...]]] = None,
     close_figure: bool = True,
@@ -484,13 +489,18 @@ def pulls(
     labels_np = labels_np[mask]
 
     fig = plot_result.pulls(
-        bestfit, uncertainty, labels_np, figure_path, close_figure=close_figure
+        bestfit,
+        uncertainty,
+        labels_np,
+        figure_path=figure_path,
+        close_figure=close_figure,
     )
     return fig
 
 
 def ranking(
     ranking_results: fit.RankingResults,
+    *,
     figure_folder: Union[str, pathlib.Path] = "figures",
     max_pars: Optional[int] = None,
     close_figure: bool = True,
@@ -546,7 +556,7 @@ def ranking(
         prefit_down,
         postfit_up,
         postfit_down,
-        figure_path,
+        figure_path=figure_path,
         close_figure=close_figure,
     )
     return fig
@@ -554,6 +564,7 @@ def ranking(
 
 def scan(
     scan_results: fit.ScanResults,
+    *,
     figure_folder: Union[str, pathlib.Path] = "figures",
     close_figure: bool = True,
     save_figure: bool = True,
@@ -583,7 +594,7 @@ def scan(
         scan_results.uncertainty,
         scan_results.parameter_values,
         scan_results.delta_nlls,
-        figure_path,
+        figure_path=figure_path,
         close_figure=close_figure,
     )
     return fig
@@ -591,6 +602,7 @@ def scan(
 
 def limit(
     limit_results: fit.LimitResults,
+    *,
     figure_folder: Union[str, pathlib.Path] = "figures",
     close_figure: bool = True,
     save_figure: bool = True,
@@ -614,7 +626,7 @@ def limit(
         limit_results.observed_CLs,
         limit_results.expected_CLs,
         limit_results.poi_values,
-        figure_path,
+        figure_path=figure_path,
         close_figure=close_figure,
     )
     return fig

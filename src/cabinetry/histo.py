@@ -1,3 +1,5 @@
+"""Provides a histogram class based on boost-histogram."""
+
 import logging
 import os
 import pathlib
@@ -59,7 +61,9 @@ class Histogram(bh.Histogram, family=cabinetry):
         return out
 
     @classmethod
-    def from_path(cls: Type[H], histo_path: pathlib.Path, modified: bool = True) -> H:
+    def from_path(
+        cls: Type[H], histo_path: pathlib.Path, *, modified: bool = True
+    ) -> H:
         """Builds a histogram from disk.
 
         Loads the "modified" version of the histogram by default (which received post-
@@ -96,6 +100,7 @@ class Histogram(bh.Histogram, family=cabinetry):
         region: Dict[str, Any],
         sample: Dict[str, Any],
         systematic: Dict[str, Any],
+        *,
         template: Optional[Literal["Up", "Down"]] = None,
         modified: bool = True,
     ) -> H:
@@ -119,9 +124,9 @@ class Histogram(bh.Histogram, family=cabinetry):
             cabinetry.histo.Histogram: the loaded histogram
         """
         # find the histogram name given config information, and then load the histogram
-        histo_name = name(region, sample, systematic, template)
+        histo_name = name(region, sample, systematic, template=template)
         histo_path = pathlib.Path(histo_folder) / histo_name
-        return cls.from_path(histo_path, modified)
+        return cls.from_path(histo_path, modified=modified)
 
     @property
     def yields(self) -> np.ndarray:
@@ -240,6 +245,7 @@ def name(
     region: Dict[str, Any],
     sample: Dict[str, Any],
     systematic: Dict[str, Any],
+    *,
     template: Optional[Literal["Up", "Down"]] = None,
 ) -> str:
     """Returns a unique name for each histogram.

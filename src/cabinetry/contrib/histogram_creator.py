@@ -14,6 +14,7 @@ def with_uproot(
     pos_in_file: str,
     variable: str,
     bins: np.ndarray,
+    *,
     weight: Optional[str] = None,
     selection_filter: Optional[str] = None,
 ) -> bh.Histogram:

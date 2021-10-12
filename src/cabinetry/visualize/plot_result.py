@@ -17,6 +17,7 @@ log = logging.getLogger(__name__)
 def correlation_matrix(
     corr_mat: np.ndarray,
     labels: Union[List[str], np.ndarray],
+    *,
     figure_path: Optional[pathlib.Path] = None,
     close_figure: bool = False,
 ) -> mpl.figure.Figure:
@@ -68,6 +69,7 @@ def pulls(
     bestfit: np.ndarray,
     uncertainty: np.ndarray,
     labels: Union[List[str], np.ndarray],
+    *,
     figure_path: Optional[pathlib.Path] = None,
     close_figure: bool = False,
 ) -> mpl.figure.Figure:
@@ -117,6 +119,7 @@ def ranking(
     impact_prefit_down: np.ndarray,
     impact_postfit_up: np.ndarray,
     impact_postfit_down: np.ndarray,
+    *,
     figure_path: Optional[pathlib.Path] = None,
     close_figure: bool = False,
 ) -> mpl.figure.Figure:
@@ -237,6 +240,7 @@ def scan(
     par_unc: float,
     par_vals: np.ndarray,
     par_nlls: np.ndarray,
+    *,
     figure_path: Optional[pathlib.Path] = None,
     close_figure: bool = False,
 ) -> mpl.figure.Figure:
@@ -312,6 +316,7 @@ def limit(
     observed_CLs: np.ndarray,
     expected_CLs: np.ndarray,
     poi_values: np.ndarray,
+    *,
     figure_path: Optional[pathlib.Path] = None,
     close_figure: bool = False,
 ) -> mpl.figure.Figure:

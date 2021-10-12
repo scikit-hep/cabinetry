@@ -48,7 +48,7 @@ def _name_and_save(
             "Down", or None for nominal
     """
     # generate a name for the histogram
-    histogram_name = histo.name(region, sample, systematic, template)
+    histogram_name = histo.name(region, sample, systematic, template=template)
 
     # check the histogram for common issues
     histogram.validate(histogram_name)

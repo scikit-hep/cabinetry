@@ -38,7 +38,7 @@ def test_data_mc(tmp_path, caplog):
         histo_dict_list,
         total_model_unc,
         bin_edges,
-        fname,
+        figure_path=fname,
         label="Signal region\npre-fit",
     )
     assert (
@@ -65,7 +65,7 @@ def test_data_mc(tmp_path, caplog):
         histo_dict_list_log,
         total_model_unc_log,
         bin_edges_log,
-        fname,
+        figure_path=fname,
         log_scale_x=True,
         label="Signal region\npre-fit",
     )
@@ -79,7 +79,7 @@ def test_data_mc(tmp_path, caplog):
         histo_dict_list,
         total_model_unc,
         bin_edges,
-        fname,
+        figure_path=fname,
         log_scale=False,
         label="Signal region\npre-fit",
     )
@@ -92,7 +92,7 @@ def test_data_mc(tmp_path, caplog):
         histo_dict_list_log,
         total_model_unc_log,
         bin_edges_log,
-        fname,
+        figure_path=fname,
         log_scale=True,
         log_scale_x=True,
         label="Signal region\npre-fit",
@@ -162,7 +162,7 @@ def test_templates(tmp_path):
         down_histo_mod,
         bin_edges,
         variable,
-        fname,
+        figure_path=fname,
         label=label,
     )
     assert (
