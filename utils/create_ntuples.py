@@ -51,7 +51,7 @@ def create_lepton_charge(n_events):
     return charge
 
 
-def create_file(file_name, distributions, weights, labels, extra_weights=None):
+def create_file(file_name, distributions, weights, labels, *, extra_weights=None):
     if extra_weights is None:
         extra_weights = []
     n_events = len(weights[0])
@@ -150,7 +150,7 @@ def plot_distributions(data, weights, labels, pseudodata, bins):
     plt.close()
 
 
-def run(output_directory, visualize=False):
+def run(output_directory, *, visualize=False):
     # configuration
     num_events = 5000
     yield_s = 125
