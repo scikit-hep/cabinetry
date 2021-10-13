@@ -143,7 +143,7 @@ def test_Router__find_match(processor_examples, caplog):
         is None
     )
 
-    # no matches available due to string mis-match
+    # no matches available due to string mismatch
     assert (
         example_router._find_match(
             example_router.template_builders, "reg", "background", "sys", "Up"

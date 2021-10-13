@@ -272,7 +272,7 @@ def test_prediction(mock_asimov, mock_unc, mock_stdev, caplog, example_spec):
 
     caplog.clear()
 
-    # custom prediction label, mis-match in parameter names
+    # custom prediction label, mismatch in parameter names
     fit_results = FitResults(
         np.asarray([1.01, 1.1]),
         np.asarray([0.03, 0.1]),

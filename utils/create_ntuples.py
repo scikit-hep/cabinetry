@@ -156,7 +156,7 @@ def run(output_directory, *, visualize=False):
     yield_s = 125
     yield_b = 1000
     yield_b_var = 1000
-    labels = ["signal", "background", "background_varied"]  # names of prcesses
+    labels = ["signal", "background", "background_varied"]  # names of processes
     file_name = output_directory + "/prediction.root"
     file_name_pseudodata = output_directory + "/data.root"
 
