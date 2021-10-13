@@ -43,4 +43,3 @@ repos:
     hooks:
     -   id: codespell
         args: ["-L", "hist", "src", "tests", "utils", "docs/*rst"]
-
