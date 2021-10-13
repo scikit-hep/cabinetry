@@ -315,7 +315,7 @@ def templates(
                 bins = nominal_histo.bins
                 # variable is a required config setting for ntuple inputs, but not for
                 # histogram inputs, so default to "observable" for these cases (the
-                # actual bin edges are preseved here, so not using "bin" as in data_mc)
+                # actual bin edges are preserved here, so not using "bin" as in data_mc)
                 variable = region.get("Variable", "observable")
                 nominal = {"yields": nominal_histo.yields, "stdev": nominal_histo.stdev}
 
