@@ -1,6 +1,6 @@
 from setuptools import setup
 
-extras_require = {"contrib": ["uproot>=4.1.4"]}  # file writing with TStreamerInfo
+extras_require = {"contrib": ["uproot>=4.1.5"]}  # file writing bug-fixes
 extras_require["test"] = sorted(
     set(
         extras_require["contrib"]
