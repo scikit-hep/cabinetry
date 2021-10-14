@@ -318,9 +318,9 @@ class _Builder:
                 selection_filter=selection_filter,
             )
         elif self.method == "coffea":
-            from .contrib import coffea_wrapper
+            from cabinetry.contrib import coffea_wrapper
 
-            yields, stdev = coffea_wrapper.build_single_histogram(
+            histogram = coffea_wrapper.build_single_histogram(
                 ntuple_paths,
                 pos_in_file,
                 variable,

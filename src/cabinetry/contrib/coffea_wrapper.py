@@ -1,6 +1,7 @@
 import pathlib
-from typing import List, Optional, Tuple
+from typing import List, Optional
 
+import boost_histogram as bh
 import coffea.hist
 from coffea.nanoevents.methods.base import NanoEventsArray
 import coffea.processor
@@ -94,7 +95,7 @@ def build_single_histogram(
     bins: np.ndarray,
     weight: Optional[str] = None,
     selection_filter: Optional[str] = None,
-) -> Tuple[np.ndarray, np.ndarray]:
+) -> bh.Histogram:
     # sample can have generic name, not needed here
     # need to convert list of paths to list of strings
     samples = {
@@ -133,7 +134,7 @@ def build_single_histogram(
         {"schema": coffea.nanoevents.BaseSchema},
     )
 
-    yields, variance = result["generic_channel_name"].values(sumw2=True)[
-        ("generic_name", "generic_template_name")
+    hist = result["generic_channel_name"].to_boost()[
+        bh.loc("generic_name"), bh.loc("generic_template_name"), :
     ]
-    return yields, np.sqrt(variance)
+    return hist
