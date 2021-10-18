@@ -71,7 +71,7 @@ def test_asimov_parameters(example_spec, example_spec_shapefactor, example_spec_
     )
     model = pyhf.Workspace(example_spec_shapefactor).model()
     pars = model_utils.asimov_parameters(model)
-    assert np.allclose(pars, [1.2, 1.1, 1.0])
+    assert np.allclose(pars, [1.0, 1.2, 1.1])
 
     # respect normfactor initial values
     normfactor_spec = copy.deepcopy(example_spec)
@@ -80,7 +80,7 @@ def test_asimov_parameters(example_spec, example_spec_shapefactor, example_spec_
     )
     model = pyhf.Workspace(normfactor_spec).model()
     pars = model_utils.asimov_parameters(model)
-    assert np.allclose(pars, [1.0, 2.0])
+    assert np.allclose(pars, [2.0, 1.0])
 
     # modifier with nominal value 0 and different initial value (which is ignored)
     normsys_spec = copy.deepcopy(example_spec)
@@ -92,7 +92,7 @@ def test_asimov_parameters(example_spec, example_spec_shapefactor, example_spec_
     )
     model = pyhf.Workspace(normsys_spec).model()
     pars = model_utils.asimov_parameters(model)
-    assert np.allclose(pars, [1.0, 1.0, 0.0])
+    assert np.allclose(pars, [1.0, 0.0, 1.0])
 
     # shapesys modifier with nominal value 1 and different initial value (ignored)
     shapesys_spec = copy.deepcopy(example_spec)
@@ -121,7 +121,7 @@ def test_prefit_uncertainties(
 
     model = pyhf.Workspace(example_spec_multibin).model()
     unc = model_utils.prefit_uncertainties(model)
-    assert np.allclose(unc, [0.2, 0.4, 0.0, 0.125])
+    assert np.allclose(unc, [0.0, 0.2, 0.4, 0.125])
 
     model = pyhf.Workspace(example_spec_shapefactor).model()
     unc = model_utils.prefit_uncertainties(model)
@@ -150,7 +150,7 @@ def test__hashable_model_key(example_spec):
 
 def test_yield_stdev(example_spec, example_spec_multibin):
     model = pyhf.Workspace(example_spec).model()
-    parameters = np.asarray([1.05, 0.95])
+    parameters = np.asarray([0.95, 1.05])
     uncertainty = np.asarray([0.1, 0.1])
     corr_mat = np.asarray([[1.0, 0.2], [0.2, 1.0]])
 
@@ -162,7 +162,7 @@ def test_yield_stdev(example_spec, example_spec_multibin):
 
     # pre-fit
     parameters = np.asarray([1.0, 1.0])
-    uncertainty = np.asarray([0.0495665682, 0.0])
+    uncertainty = np.asarray([0.0, 0.0495665682])
     diag_corr_mat = np.diagflat([1.0, 1.0])
     total_stdev_bin, total_stdev_chan = model_utils.yield_stdev(
         model, parameters, uncertainty, diag_corr_mat
@@ -172,14 +172,14 @@ def test_yield_stdev(example_spec, example_spec_multibin):
 
     # multiple channels, bins, staterrors
     model = pyhf.Workspace(example_spec_multibin).model()
-    parameters = np.asarray([0.9, 1.05, 1.3, 0.95])
-    uncertainty = np.asarray([0.1, 0.05, 0.3, 0.1])
+    parameters = np.asarray([1.3, 0.9, 1.05, 0.95])
+    uncertainty = np.asarray([0.3, 0.1, 0.05, 0.1])
     corr_mat = np.asarray(
         [
-            [1.0, 0.1, 0.2, 0.1],
-            [0.1, 1.0, 0.2, 0.3],
-            [0.2, 0.2, 1.0, 0.3],
-            [0.1, 0.3, 0.3, 1.0],
+            [1.0, 0.2, 0.2, 0.3],
+            [0.2, 1.0, 0.1, 0.1],
+            [0.2, 0.1, 1.0, 0.3],
+            [0.3, 0.1, 0.3, 1.0],
         ]
     )
     total_stdev_bin, total_stdev_chan = model_utils.yield_stdev(
@@ -220,7 +220,7 @@ def test_yield_stdev(example_spec, example_spec_multibin):
 )
 @mock.patch(
     "cabinetry.model_utils.prefit_uncertainties",
-    side_effect=[[0.2, 0.4, 0.0, 0.125], [0.04956657, 0.0], [0.04956657, 0.0]],
+    return_value=np.asarray([0.0, 0.2, 0.4, 0.125]),
 )
 @mock.patch(
     "cabinetry.model_utils.asimov_parameters",
@@ -253,7 +253,7 @@ def test_prediction(
     assert mock_stdev.call_count == 1
     assert mock_stdev.call_args_list[0][0][0] == model
     assert np.allclose(mock_stdev.call_args_list[0][0][1], [1.0, 1.0, 1.0, 1.0])
-    assert np.allclose(mock_stdev.call_args_list[0][0][2], [0.2, 0.4, 0.0, 0.125])
+    assert np.allclose(mock_stdev.call_args_list[0][0][2], [0.0, 0.2, 0.4, 0.125])
     assert np.allclose(
         mock_stdev.call_args_list[0][0][3], np.diagflat([1.0, 1.0, 1.0, 1.0])
     )
@@ -262,9 +262,9 @@ def test_prediction(
     # post-fit prediction, single-channel model
     model = pyhf.Workspace(example_spec).model()
     fit_results = FitResults(
-        np.asarray([1.01, 1.1]),
-        np.asarray([0.03, 0.1]),
-        ["staterror_Signal-Region[0]", "Signal strength"],
+        np.asarray([1.1, 1.01]),
+        np.asarray([0.1, 0.03]),
+        ["Signal strength", "staterror_Signal-Region[0]"],
         np.asarray([[1.0, 0.2], [0.2, 1.0]]),
         0.0,
     )
@@ -284,8 +284,8 @@ def test_prediction(
     # call to stdev calculation with fit_results propagated
     assert mock_stdev.call_count == 2
     assert mock_stdev.call_args_list[1][0][0] == model
-    assert np.allclose(mock_stdev.call_args_list[1][0][1], [1.01, 1.1])
-    assert np.allclose(mock_stdev.call_args_list[1][0][2], [0.03, 0.1])
+    assert np.allclose(mock_stdev.call_args_list[1][0][1], [1.1, 1.01])
+    assert np.allclose(mock_stdev.call_args_list[1][0][2], [0.1, 0.03])
     assert np.allclose(
         mock_stdev.call_args_list[1][0][3], np.asarray([[1.0, 0.2], [0.2, 1.0]])
     )
@@ -295,8 +295,8 @@ def test_prediction(
 
     # custom prediction label, mismatch in parameter names
     fit_results = FitResults(
-        np.asarray([1.01, 1.1]),
-        np.asarray([0.03, 0.1]),
+        np.asarray([1.1, 1.01]),
+        np.asarray([0.1, 0.03]),
         ["a", "b"],
         np.asarray([[1.0, 0.2], [0.2, 1.0]]),
         0.0,
