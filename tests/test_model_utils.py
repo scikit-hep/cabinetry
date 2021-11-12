@@ -128,27 +128,6 @@ def test_prefit_uncertainties(
     assert np.allclose(unc, [0.0, 0.0, 0.0])
 
 
-def test__channel_boundary_indices(example_spec, example_spec_multibin):
-    model = pyhf.Workspace(example_spec).model()
-    indices = model_utils._channel_boundary_indices(model)
-    assert indices == []
-
-    model = pyhf.Workspace(example_spec_multibin).model()
-    indices = model_utils._channel_boundary_indices(model)
-    assert indices == [2]
-
-    # add extra channel to model to test three channels (two indices needed)
-    three_channel_model = copy.deepcopy(example_spec_multibin)
-    extra_channel = copy.deepcopy(three_channel_model["channels"][0])
-    extra_channel["name"] = "region_3"
-    extra_channel["samples"][0]["modifiers"][0]["name"] = "staterror_region_3"
-    three_channel_model["channels"].append(extra_channel)
-    three_channel_model["observations"].append({"data": [35, 8], "name": "region_3"})
-    model = pyhf.Workspace(three_channel_model).model()
-    indices = model_utils._channel_boundary_indices(model)
-    assert indices == [2, 3]
-
-
 def test_yield_stdev(example_spec, example_spec_multibin):
     model = pyhf.Workspace(example_spec).model()
     parameters = np.asarray([1.05, 0.95])
@@ -325,9 +304,8 @@ def test__strip_auxdata(example_spec):
     assert model_utils._strip_auxdata(model, data_without_aux) == [51.8]
 
 
-@mock.patch("cabinetry.model_utils._channel_boundary_indices", return_value=[2])
 @mock.patch("cabinetry.model_utils._strip_auxdata", return_value=[25.0, 5.0, 8.0])
-def test__data_per_channel(mock_aux, mock_bin, example_spec_multibin):
+def test__data_per_channel(mock_aux, example_spec_multibin):
     model = pyhf.Workspace(example_spec_multibin).model()
     data = [25.0, 5.0, 8.0, 1.0, 1.0, 1.0]
 
@@ -336,7 +314,6 @@ def test__data_per_channel(mock_aux, mock_bin, example_spec_multibin):
 
     # auxdata and channel index call
     assert mock_aux.call_args_list == [((model, data), {})]
-    assert mock_bin.call_args_list == [((model,), {})]
 
 
 def test__filter_channels(example_spec_multibin, caplog):
