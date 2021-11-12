@@ -155,28 +155,6 @@ def prefit_uncertainties(model: pyhf.pdf.Model) -> np.ndarray:
     return np.asarray(pre_fit_unc)
 
 
-def _channel_boundary_indices(model: pyhf.pdf.Model) -> List[int]:
-    """Returns indices for splitting a concatenated list of observations into channels.
-
-    This is useful in combination with ``pyhf.pdf.Model.expected_data``, which returns
-    the yields across all bins in all channels. These indices mark the positions where a
-    channel begins. No index is returned for the first channel, which begins at ``[0]``.
-    The returned indices can be used with ``numpy.split``.
-
-    Args:
-        model (pyhf.pdf.Model): the model that defines the channels
-
-    Returns:
-        List[int]: indices of positions where a channel begins, no index is included for
-        the first bin of the first channel (which is always at ``[0]``)
-    """
-    # get the amount of bins per channel
-    bins_per_channel = [model.config.channel_nbins[ch] for ch in model.config.channels]
-    # indices of positions where a new channel starts (from the second channel onwards)
-    channel_start = [sum(bins_per_channel[:i]) for i in range(1, len(bins_per_channel))]
-    return channel_start
-
-
 def yield_stdev(
     model: pyhf.pdf.Model,
     parameters: np.ndarray,
@@ -211,9 +189,6 @@ def yield_stdev(
         # return results from cache
         return cached_results
 
-    # indices where to split to separate all bins into regions
-    region_split_indices = _channel_boundary_indices(model)
-
     # the lists up_variations and down_variations will contain the model distributions
     # with all parameters varied individually within uncertainties
     # indices: variation, channel, bin
@@ -233,26 +208,32 @@ def yield_stdev(
         down_pars[i_par] -= uncertainty[i_par]
 
         # total model distribution with this parameter varied up
-        up_combined = pyhf.tensorlib.to_numpy(
+        up_comb = pyhf.tensorlib.to_numpy(
             model.expected_data(up_pars, include_auxdata=False)
         )
-        up_yields = np.split(up_combined, region_split_indices)
+        # turn into list of channels
+        up_yields = [
+            up_comb[model.config.channel_slices[ch]] for ch in model.config.channels
+        ]
         # append list of yields summed per channel
         up_yields += [np.asarray([sum(chan_yields)]) for chan_yields in up_yields]
         up_variations.append(up_yields)
 
         # total model distribution with this parameter varied down
-        down_combined = pyhf.tensorlib.to_numpy(
+        down_comb = pyhf.tensorlib.to_numpy(
             model.expected_data(down_pars, include_auxdata=False)
         )
-        down_yields = np.split(down_combined, region_split_indices)
+        # turn into list of channels
+        down_yields = [
+            down_comb[model.config.channel_slices[ch]] for ch in model.config.channels
+        ]
         # append list of yields summed per channel
         down_yields += [np.asarray([sum(chan_yields)]) for chan_yields in down_yields]
         down_variations.append(down_yields)
 
     # convert to awkward arrays for further processing
-    up_variations = ak.from_iter(up_variations)
-    down_variations = ak.from_iter(down_variations)
+    up_variations_ak = ak.from_iter(up_variations)
+    down_variations_ak = ak.from_iter(down_variations)
 
     # total variance, indices are: channel, bin
     n_channels = len(model.config.channels)
@@ -266,8 +247,8 @@ def yield_stdev(
     # loop over parameters to sum up total variance
     # first do the diagonal of the correlation matrix
     for i_par in range(model.config.npars):
-        symmetric_uncertainty = (up_variations[i_par] - down_variations[i_par]) / 2
-        total_variance = total_variance + symmetric_uncertainty ** 2
+        symmetric_unc = (up_variations_ak[i_par] - down_variations_ak[i_par]) / 2
+        total_variance = total_variance + symmetric_unc ** 2
 
     labels = model.config.par_names()
     # continue with off-diagonal contributions if there are any
@@ -285,8 +266,8 @@ def yield_stdev(
                     and labels[j_par][0:10] == "staterror_"
                 ):
                     continue  # two different staterrors are orthogonal, no contribution
-                sym_unc_i = (up_variations[i_par] - down_variations[i_par]) / 2
-                sym_unc_j = (up_variations[j_par] - down_variations[j_par]) / 2
+                sym_unc_i = (up_variations_ak[i_par] - down_variations_ak[i_par]) / 2
+                sym_unc_j = (up_variations_ak[j_par] - down_variations_ak[j_par]) / 2
                 # factor of two below is there since loop is only over half the matrix
                 total_variance = total_variance + 2 * (corr * sym_unc_i * sym_unc_j)
 
@@ -362,9 +343,9 @@ def prediction(
 
     # slice the yields into list of lists (of lists) where first index is channel,
     # second index is sample (and third index is bin)
-    region_split_indices = _channel_boundary_indices(model)
     model_yields = [
-        m.tolist() for m in np.split(yields_combined, region_split_indices, axis=1)
+        yields_combined[model.config.channel_slices[ch]].tolist()
+        for ch in model.config.channels
     ]
 
     # calculate the total standard deviation of the model prediction
@@ -453,9 +434,11 @@ def _data_per_channel(model: pyhf.pdf.Model, data: List[float]) -> List[List[flo
     """
     # strip off auxiliary data
     data_combined = _strip_auxdata(model, data)
-    channel_split_indices = _channel_boundary_indices(model)
+
     # data is indexed by channel (and bin)
-    data_yields = [d.tolist() for d in np.split(data_combined, channel_split_indices)]
+    data_yields = [
+        data_combined[model.config.channel_slices[ch]] for ch in model.config.channels
+    ]
     return data_yields
 
 
