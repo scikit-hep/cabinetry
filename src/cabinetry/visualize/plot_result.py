@@ -340,6 +340,31 @@ def limit(
     xmin = min(poi_values)
     xmax = max(poi_values)
 
+    # observed CLs values
+    ax.plot(poi_values, observed_CLs, "o-", color="black", label=r"observed CL$_S$")
+
+    # expected CLs
+    ax.plot(
+        poi_values, expected_CLs[:, 2], "--", color="black", label=r"expected CL$_S$"
+    )
+
+    # 1 and 2 sigma bands
+    ax.fill_between(
+        poi_values,
+        expected_CLs[:, 1],
+        expected_CLs[:, 3],
+        color="limegreen",
+        label=r"expected CL$_S$ $\pm 1\sigma$",
+    )
+    ax.fill_between(
+        poi_values,
+        expected_CLs[:, 0],
+        expected_CLs[:, 4],
+        color="yellow",
+        label=r"expected CL$_S$ $\pm 2\sigma$",
+        zorder=0,  # draw beneath 1 sigma band
+    )
+
     # line through CLs = 0.05
     ax.hlines(
         0.05,
@@ -348,31 +373,8 @@ def limit(
         linestyle="dashdot",
         color="red",
         label=r"CL$_S$ = 5%",
+        zorder=1,  # draw beneath observed / expected
     )
-
-    # 1 and 2 sigma bands
-    ax.fill_between(
-        poi_values,
-        expected_CLs[:, 0],
-        expected_CLs[:, 4],
-        color="yellow",
-        label=r"expected CL$_S$ $\pm 2\sigma$",
-    )
-    ax.fill_between(
-        poi_values,
-        expected_CLs[:, 1],
-        expected_CLs[:, 3],
-        color="limegreen",
-        label=r"expected CL$_S$ $\pm 1\sigma$",
-    )
-
-    # expected CLs
-    ax.plot(
-        poi_values, expected_CLs[:, 2], "--", color="black", label=r"expected CL$_S$"
-    )
-
-    # observed CLs values
-    ax.plot(poi_values, observed_CLs, "o-", color="black", label=r"observed CL$_S$")
 
     # increase font sizes
     for item in (
