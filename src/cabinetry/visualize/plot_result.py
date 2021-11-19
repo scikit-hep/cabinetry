@@ -53,7 +53,7 @@ def correlation_matrix(
 
     fig.colorbar(im, ax=ax)
     ax.set_aspect("auto")  # to get colorbar aligned with matrix
-    fig.tight_layout()
+    fig.set_tight_layout(True)
 
     # add correlation as text
     for (j, i), corr in np.ndenumerate(corr_mat):
@@ -105,7 +105,7 @@ def pulls(
     ax.xaxis.set_minor_locator(mpl.ticker.AutoMinorLocator())  # minor ticks
     ax.tick_params(axis="both", which="major", pad=8)
     ax.tick_params(direction="in", top=True, right=True, which="both")
-    fig.tight_layout()
+    fig.set_tight_layout(True)
 
     utils._save_and_close(fig, figure_path, close_figure)
     return fig
@@ -306,7 +306,7 @@ def scan(
 
     ax.legend(frameon=False, fontsize="large")
 
-    fig.tight_layout()
+    fig.set_tight_layout(True)
 
     utils._save_and_close(fig, figure_path, close_figure)
     return fig
@@ -395,7 +395,7 @@ def limit(
     ax.tick_params(axis="both", which="major", pad=8)
     ax.tick_params(direction="in", top=True, right=True, which="both")
 
-    fig.tight_layout()
+    fig.set_tight_layout(True)
 
     utils._save_and_close(fig, figure_path, close_figure)
     return fig
