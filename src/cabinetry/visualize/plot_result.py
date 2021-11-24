@@ -228,6 +228,7 @@ def ranking(
         fontsize="large",
     )
     leg_space = 1.0 / (num_pars + 3) + 0.03
+    # there might be a way to use set_tight_layout here as well with a bounding box
     fig.tight_layout(rect=[0, 0, 1.0, 1 - leg_space])  # make space for legend on top
 
     utils._save_and_close(fig, figure_path, close_figure)

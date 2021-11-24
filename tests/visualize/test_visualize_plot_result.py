@@ -8,7 +8,7 @@ from cabinetry.visualize import plot_result
 
 
 def test_correlation_matrix(tmp_path):
-    fname = tmp_path / "fig.pdf"
+    fname = tmp_path / "fig.png"
     # one parameter is below threshold so no text is shown for it on the plot
     corr_mat = np.asarray([[1.0, 0.35, 0.002], [0.35, 1.0, -0.2], [0.002, -0.2, 1.0]])
     labels = ["a", "b", "c"]
@@ -16,17 +16,17 @@ def test_correlation_matrix(tmp_path):
     fig = plot_result.correlation_matrix(corr_mat, labels, figure_path=fname)
     assert (
         compare_images(
-            "tests/visualize/reference/correlation_matrix.pdf", str(fname), 0
+            "tests/visualize/reference/correlation_matrix.png", str(fname), 0
         )
         is None
     )
 
     # compare figure returned by function
-    fname = tmp_path / "fig_from_return.pdf"
+    fname = tmp_path / "fig_from_return.png"
     fig.savefig(fname)
     assert (
         compare_images(
-            "tests/visualize/reference/correlation_matrix.pdf", str(fname), 0
+            "tests/visualize/reference/correlation_matrix.png", str(fname), 0
         )
         is None
     )
@@ -40,18 +40,18 @@ def test_correlation_matrix(tmp_path):
 
 
 def test_pulls(tmp_path):
-    fname = tmp_path / "fig.pdf"
+    fname = tmp_path / "fig.png"
     bestfit = np.asarray([-0.2, 0.0, 0.1])
     uncertainty = np.asarray([0.9, 1.0, 0.7])
     labels = np.asarray(["a", "b", "c"])
 
     fig = plot_result.pulls(bestfit, uncertainty, labels, figure_path=fname)
-    assert compare_images("tests/visualize/reference/pulls.pdf", str(fname), 0) is None
+    assert compare_images("tests/visualize/reference/pulls.png", str(fname), 0) is None
 
     # compare figure returned by function
-    fname = tmp_path / "fig_from_return.pdf"
+    fname = tmp_path / "fig_from_return.png"
     fig.savefig(fname)
-    assert compare_images("tests/visualize/reference/pulls.pdf", str(fname), 0) is None
+    assert compare_images("tests/visualize/reference/pulls.png", str(fname), 0) is None
 
     # do not save figure, but close it
     with mock.patch("cabinetry.visualize.utils._save_and_close") as mock_close_safe:
@@ -62,7 +62,7 @@ def test_pulls(tmp_path):
 
 
 def test_ranking(tmp_path):
-    fname = tmp_path / "fig.pdf"
+    fname = tmp_path / "fig.png"
     bestfit = np.asarray([0.3, -0.1])
     uncertainty = np.asarray([0.8, 1.0])
     labels = np.asarray(["jet energy scale", "modeling uncertainty"])
@@ -82,14 +82,14 @@ def test_ranking(tmp_path):
         figure_path=fname,
     )
     assert (
-        compare_images("tests/visualize/reference/ranking.pdf", str(fname), 0) is None
+        compare_images("tests/visualize/reference/ranking.png", str(fname), 0) is None
     )
 
     # compare figure returned by function
-    fname = tmp_path / "fig_from_return.pdf"
+    fname = tmp_path / "fig_from_return.png"
     fig.savefig(fname)
     assert (
-        compare_images("tests/visualize/reference/ranking.pdf", str(fname), 0) is None
+        compare_images("tests/visualize/reference/ranking.png", str(fname), 0) is None
     )
 
     # do not save figure, but close it
@@ -110,7 +110,7 @@ def test_ranking(tmp_path):
 
 
 def test_scan(tmp_path):
-    fname = tmp_path / "fig.pdf"
+    fname = tmp_path / "fig.png"
     par_name = "a"
     par_mle = 1.5
     par_unc = 0.2
@@ -120,12 +120,13 @@ def test_scan(tmp_path):
     fig = plot_result.scan(
         par_name, par_mle, par_unc, par_vals, par_nlls, figure_path=fname
     )
-    assert compare_images("tests/visualize/reference/scan.pdf", str(fname), 0) is None
+    assert compare_images("tests/visualize/reference/scan.png", str(fname), 0) is None
 
     # compare figure returned by function
-    fname = tmp_path / "fig_from_return.pdf"
+    fname = tmp_path / "fig_from_return.png"
+    fig.set_tight_layout(False)  # https://github.com/matplotlib/matplotlib/issues/21742
     fig.savefig(fname)
-    assert compare_images("tests/visualize/reference/scan.pdf", str(fname), 0) is None
+    assert compare_images("tests/visualize/reference/scan.png", str(fname), 0) is None
 
     # do not save figure, but close it
     with mock.patch("cabinetry.visualize.utils._save_and_close") as mock_close_safe:
@@ -140,7 +141,7 @@ def test_scan(tmp_path):
 
 
 def test_limit(tmp_path):
-    fname = tmp_path / "fig.pdf"
+    fname = tmp_path / "fig.png"
     observed_CLs = np.asarray([0.31, 0.05, 0.005, 0.0001])
     expected_CLs = np.asarray(
         [
@@ -153,12 +154,12 @@ def test_limit(tmp_path):
     poi_values = np.asarray([0.5, 1.0, 1.5, 2.0])
 
     fig = plot_result.limit(observed_CLs, expected_CLs, poi_values, figure_path=fname)
-    assert compare_images("tests/visualize/reference/limit.pdf", str(fname), 0) is None
+    assert compare_images("tests/visualize/reference/limit.png", str(fname), 0) is None
 
     # compare figure returned by function
-    fname = tmp_path / "fig_from_return.pdf"
+    fname = tmp_path / "fig_from_return.png"
     fig.savefig(fname)
-    assert compare_images("tests/visualize/reference/limit.pdf", str(fname), 0) is None
+    assert compare_images("tests/visualize/reference/limit.png", str(fname), 0) is None
 
     # do not save figure, but close it
     with mock.patch("cabinetry.visualize.utils._save_and_close") as mock_close_safe:
