@@ -223,7 +223,7 @@ def data_mc(
     ax2.tick_params(axis="both", which="major", pad=8)
     ax2.tick_params(direction="in", top=True, right=True, which="both")
 
-    fig.tight_layout()
+    fig.set_tight_layout(True)
 
     utils._save_and_close(fig, figure_path, close_figure)
     return fig
@@ -396,7 +396,7 @@ def templates(
     ax2.tick_params(axis="both", which="major", pad=8)
     ax2.tick_params(direction="in", top=True, right=True, which="both")
 
-    fig.tight_layout()
+    fig.set_tight_layout(True)
 
     utils._save_and_close(fig, figure_path, close_figure)
     return fig

@@ -53,7 +53,7 @@ def correlation_matrix(
 
     fig.colorbar(im, ax=ax)
     ax.set_aspect("auto")  # to get colorbar aligned with matrix
-    fig.tight_layout()
+    fig.set_tight_layout(True)
 
     # add correlation as text
     for (j, i), corr in np.ndenumerate(corr_mat):
@@ -105,7 +105,7 @@ def pulls(
     ax.xaxis.set_minor_locator(mpl.ticker.AutoMinorLocator())  # minor ticks
     ax.tick_params(axis="both", which="major", pad=8)
     ax.tick_params(direction="in", top=True, right=True, which="both")
-    fig.tight_layout()
+    fig.set_tight_layout(True)
 
     utils._save_and_close(fig, figure_path, close_figure)
     return fig
@@ -228,6 +228,7 @@ def ranking(
         fontsize="large",
     )
     leg_space = 1.0 / (num_pars + 3) + 0.03
+    # there might be a way to use set_tight_layout here as well with a bounding box
     fig.tight_layout(rect=[0, 0, 1.0, 1 - leg_space])  # make space for legend on top
 
     utils._save_and_close(fig, figure_path, close_figure)
@@ -306,7 +307,7 @@ def scan(
 
     ax.legend(frameon=False, fontsize="large")
 
-    fig.tight_layout()
+    fig.set_tight_layout(True)
 
     utils._save_and_close(fig, figure_path, close_figure)
     return fig
@@ -340,6 +341,31 @@ def limit(
     xmin = min(poi_values)
     xmax = max(poi_values)
 
+    # observed CLs values
+    ax.plot(poi_values, observed_CLs, "o-", color="black", label=r"observed CL$_S$")
+
+    # expected CLs
+    ax.plot(
+        poi_values, expected_CLs[:, 2], "--", color="black", label=r"expected CL$_S$"
+    )
+
+    # 1 and 2 sigma bands
+    ax.fill_between(
+        poi_values,
+        expected_CLs[:, 1],
+        expected_CLs[:, 3],
+        color="limegreen",
+        label=r"expected CL$_S$ $\pm 1\sigma$",
+    )
+    ax.fill_between(
+        poi_values,
+        expected_CLs[:, 0],
+        expected_CLs[:, 4],
+        color="yellow",
+        label=r"expected CL$_S$ $\pm 2\sigma$",
+        zorder=0,  # draw beneath 1 sigma band
+    )
+
     # line through CLs = 0.05
     ax.hlines(
         0.05,
@@ -348,31 +374,8 @@ def limit(
         linestyle="dashdot",
         color="red",
         label=r"CL$_S$ = 5%",
+        zorder=1,  # draw beneath observed / expected
     )
-
-    # 1 and 2 sigma bands
-    ax.fill_between(
-        poi_values,
-        expected_CLs[:, 0],
-        expected_CLs[:, 4],
-        color="yellow",
-        label=r"expected CL$_S$ $\pm 2\sigma$",
-    )
-    ax.fill_between(
-        poi_values,
-        expected_CLs[:, 1],
-        expected_CLs[:, 3],
-        color="limegreen",
-        label=r"expected CL$_S$ $\pm 1\sigma$",
-    )
-
-    # expected CLs
-    ax.plot(
-        poi_values, expected_CLs[:, 2], "--", color="black", label=r"expected CL$_S$"
-    )
-
-    # observed CLs values
-    ax.plot(poi_values, observed_CLs, "o-", color="black", label=r"observed CL$_S$")
 
     # increase font sizes
     for item in (
@@ -393,7 +396,7 @@ def limit(
     ax.tick_params(axis="both", which="major", pad=8)
     ax.tick_params(direction="in", top=True, right=True, which="both")
 
-    fig.tight_layout()
+    fig.set_tight_layout(True)
 
     utils._save_and_close(fig, figure_path, close_figure)
     return fig

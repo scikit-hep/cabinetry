@@ -10,7 +10,7 @@ from cabinetry.visualize import plot_model
 
 
 def test_data_mc(tmp_path, caplog):
-    fname = tmp_path / "fig.pdf"
+    fname = tmp_path / "fig.png"
     histo_dict_list = [
         {
             "label": "Background",
@@ -42,14 +42,14 @@ def test_data_mc(tmp_path, caplog):
         label="Signal region\npre-fit",
     )
     assert (
-        compare_images("tests/visualize/reference/data_mc.pdf", str(fname), 0) is None
+        compare_images("tests/visualize/reference/data_mc.png", str(fname), 0) is None
     )
 
     # compare figure returned by function
-    fname_ret = tmp_path / "fig_from_return.pdf"
+    fname_ret = tmp_path / "fig_from_return.png"
     fig.savefig(fname_ret)
     assert (
-        compare_images("tests/visualize/reference/data_mc.pdf", str(fname_ret), 0)
+        compare_images("tests/visualize/reference/data_mc.png", str(fname_ret), 0)
         is None
     )
 
@@ -70,7 +70,7 @@ def test_data_mc(tmp_path, caplog):
         label="Signal region\npre-fit",
     )
     assert (
-        compare_images("tests/visualize/reference/data_mc_log.pdf", str(fname_log), 0)
+        compare_images("tests/visualize/reference/data_mc_log.png", str(fname_log), 0)
         is None
     )
 
@@ -84,7 +84,7 @@ def test_data_mc(tmp_path, caplog):
         label="Signal region\npre-fit",
     )
     assert (
-        compare_images("tests/visualize/reference/data_mc.pdf", str(fname), 0) is None
+        compare_images("tests/visualize/reference/data_mc.png", str(fname), 0) is None
     )
 
     # log scale forced
@@ -98,7 +98,7 @@ def test_data_mc(tmp_path, caplog):
         label="Signal region\npre-fit",
     )
     assert (
-        compare_images("tests/visualize/reference/data_mc_log.pdf", str(fname_log), 0)
+        compare_images("tests/visualize/reference/data_mc_log.png", str(fname_log), 0)
         is None
     )
 
@@ -132,7 +132,7 @@ def test_data_mc(tmp_path, caplog):
 
 
 def test_templates(tmp_path):
-    fname = tmp_path / "fig.pdf"
+    fname = tmp_path / "fig.png"
     nominal_histo = {
         "yields": np.asarray([1.0, 1.2]),
         "stdev": np.asarray([0.05, 0.06]),
@@ -166,14 +166,15 @@ def test_templates(tmp_path):
         label=label,
     )
     assert (
-        compare_images("tests/visualize/reference/templates.pdf", str(fname), 0) is None
+        compare_images("tests/visualize/reference/templates.png", str(fname), 0) is None
     )
 
     # compare figure returned by function
-    fname = tmp_path / "fig_from_return.pdf"
+    fname = tmp_path / "fig_from_return.png"
+    fig.set_tight_layout(False)  # https://github.com/matplotlib/matplotlib/issues/21742
     fig.savefig(fname)
     assert (
-        compare_images("tests/visualize/reference/templates.pdf", str(fname), 0) is None
+        compare_images("tests/visualize/reference/templates.png", str(fname), 0) is None
     )
 
     # do not save figure, but close it
