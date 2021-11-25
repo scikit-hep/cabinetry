@@ -47,10 +47,8 @@ jobs:
       run: |
         python utils/create_ntuples.py
         python example.py
-    - name: Install ghostscript and pyhf backends
+    - name: Install pyhf backends
       run: |
-        sudo apt-get update
-        sudo apt-get install ghostscript  # for pdf comparison
         python -m pip install .[pyhf_backends]  # install pyhf backends
     - name: Test with pytest and generate coverage report
       if: matrix.python-version == 3.7
