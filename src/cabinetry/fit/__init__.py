@@ -85,10 +85,18 @@ def _fit_model_pyhf(
     corr_mat = pyhf.tensorlib.to_numpy(corr_mat)
     best_twice_nll = float(best_twice_nll)  # convert 0-dim np.ndarray to float
 
-    fit_results = FitResults(bestfit, uncertainty, labels, corr_mat, best_twice_nll)
+    minos_results = (
+        _run_minos(result_obj.minuit, minos, labels) if minos is not None else {}
+    )
 
-    if minos is not None:
-        _run_minos(result_obj.minuit, minos, labels)
+    fit_results = FitResults(
+        bestfit,
+        uncertainty,
+        labels,
+        corr_mat,
+        best_twice_nll,
+        minos_uncertainty=minos_results,
+    )
 
     return fit_results
 
@@ -168,10 +176,16 @@ def _fit_model_custom(
     corr_mat = m.covariance.correlation()  # iminuit.util.Matrix, subclass of np.ndarray
     best_twice_nll = m.fval
 
-    fit_results = FitResults(bestfit, uncertainty, labels, corr_mat, best_twice_nll)
+    minos_results = _run_minos(m, minos, labels) if minos is not None else {}
 
-    if minos is not None:
-        _run_minos(m, minos, labels)
+    fit_results = FitResults(
+        bestfit,
+        uncertainty,
+        labels,
+        corr_mat,
+        best_twice_nll,
+        minos_uncertainty=minos_results,
+    )
 
     return fit_results
 
@@ -225,7 +239,7 @@ def _run_minos(
     minuit_obj: iminuit.Minuit,
     minos: Union[List[str], Tuple[str, ...]],
     labels: List[str],
-) -> None:
+) -> Dict[str, Tuple[float, float]]:
     """Determines parameter uncertainties for a list of parameters with MINOS.
 
     Args:
@@ -234,6 +248,9 @@ def _run_minos(
         labels (List[str]]): names of all parameters known to ``iminuit``, these names
             are used in output (may be the same as the names under which ``iminiuit``
             knows parameters)
+
+    Returns:
+        Dict[str, Tuple[float, float]]: uncertainties indexed by parameter name
     """
     for par_name in minos:
         if par_name not in minuit_obj.parameters:
@@ -242,6 +259,8 @@ def _run_minos(
             continue
         log.info(f"running MINOS for {par_name}")
         minuit_obj.minos(par_name)
+
+    minos_results = {}
 
     log.info("MINOS results:")
     max_label_length = max(len(label) for label in labels)
@@ -253,6 +272,9 @@ def _run_minos(
                 f"{labels[i_par]:<{max_label_length}} = "
                 f"{minuit_obj.values[i_par]: .4f} {unc[0]:+.4f} {unc[1]:+.4f}"
             )
+            minos_results.update({labels[i_par]: (unc[0], unc[1])})
+
+    return minos_results
 
 
 def _goodness_of_fit(
