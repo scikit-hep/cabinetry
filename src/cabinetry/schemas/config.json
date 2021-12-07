@@ -80,6 +80,10 @@
                     "description": "folder to save histograms to and read histograms from",
                     "type": "string"
                 },
+                "Filters": {
+                    "description": "selection criteria to apply when using ntuple inputs",
+                    "$ref": "#/definitions/filters_setting"
+                },
                 "Fixed": {
                     "description": "list of parameters to treat as constant in fits",
                     "type": "array",
@@ -145,9 +149,9 @@
                     },
                     "uniqueItems": true
                 },
-                "Filter": {
-                    "description": "selection criteria to apply",
-                    "type": "string"
+                "Filters": {
+                    "description": "selection criteria to apply when using ntuple inputs (can override filters at general level)",
+                    "$ref": "#/definitions/filters_setting"
                 },
                 "RegionPath": {
                     "description": "(part of) path to file containing region",
@@ -182,9 +186,9 @@
                     "description": "name of tree",
                     "type": "string"
                 },
-                "Filter": {
-                    "description": "selection criteria to apply (override for region setting)",
-                    "type": "string"
+                "Filters": {
+                    "description": "selection criteria to apply when using ntuple inputs (can override filters at general and region level)",
+                    "$ref": "#/definitions/filters_setting"
                 },
                 "Weight": {
                     "description": "weight to apply to events",
@@ -307,9 +311,9 @@
                     "description": "variable to bin in (override for nominal setting)",
                     "type": "string"
                 },
-                "Filter": {
-                    "description": "selection criteria to apply (override for region / sample setting)",
-                    "type": "string"
+                "Filters": {
+                    "description": "selection criteria to apply when using ntuple inputs (can override filters at general, region and sample level)",
+                    "$ref": "#/definitions/filters_setting"
                 },
                 "RegionPath": {
                     "description": "(part of) path to file containing region (override for nominal setting)",
@@ -417,6 +421,45 @@
                 "Samples": {
                     "description": "sample(s) to apply smoothing to, defaults to all samples",
                     "$ref": "#/definitions/samples_setting"
+                }
+            },
+            "additionalProperties": false
+        },
+        "filters_setting": {
+            "title": "Filters setting",
+            "$$target": "#/definitions/filters_setting",
+            "description": "filter(s) to apply when processing ntuple inputs",
+            "oneOf": [
+                {
+                    "description": "single filter",
+                    "$ref": "#/definitions/filter_setting"
+                },
+                {
+                    "description": "list of filters",
+                    "type": "array",
+                    "minItems": 1,
+                    "items": {
+                        "description": "single filter",
+                        "$ref": "#/definitions/filter_setting"
+                    },
+                    "uniqueItems": true
+                }
+            ]
+        },
+        "filter_setting": {
+            "title": "Filter setting",
+            "$$target": "#/definitions/filter_setting",
+            "description": "filter setting, filters with the same name override each other",
+            "type": "object",
+            "required": ["Name", "Filter"],
+            "properties": {
+                "Name": {
+                    "description": "name of filter, filters can be overridden by other filters with the same name",
+                    "type": "string"
+                },
+                "Filter": {
+                    "description": "filter to apply",
+                    "type": "string"
                 }
             },
             "additionalProperties": false

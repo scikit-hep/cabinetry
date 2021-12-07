@@ -157,21 +157,31 @@ def _filter(
     Returns:
         Optional[str]: expression for the filter to be used, or None for no filtering
     """
-    selection_filter = region.get("Filter", None)
+    # TODO: pass through info from general config block, requires changes in
+    # apply_to_all_templates to propagate this information
 
-    # check for sample-specific overrides
-    selection_filter_override = sample.get("Filter", None)
-    if selection_filter_override is not None:
-        selection_filter = selection_filter_override
+    selection_filters = {}
+
+    # regions can set default filters (general level not implemented yet)
+    for filter in configuration._setting_to_list(region.get("Filters", [])):
+        selection_filters.update({filter["Name"]: filter["Filter"]})
+
+    # samples can append to and override filters
+    for filter in configuration._setting_to_list(sample.get("Filters", [])):
+        selection_filters.update({filter["Name"]: filter["Filter"]})
 
     # check whether a systematic is being processed
     if template is not None:
-        # determine whether the template has an override specified
-        selection_filter_override = utils._check_for_override(
-            systematic, template, "Filter"
-        )
-        if selection_filter_override is not None:
-            selection_filter = selection_filter_override
+        # templates can append to and override filters
+        template_filters = systematic.get(template, {}).get("Filters", [])
+        for filter in configuration._setting_to_list(template_filters):
+            selection_filters.update({filter["Name"]: filter["Filter"]})
+
+    if selection_filters == {}:
+        return None
+
+    # combine all filters
+    selection_filter = "*".join([f"({f})" for f in selection_filters.values()])
     return selection_filter
 
 

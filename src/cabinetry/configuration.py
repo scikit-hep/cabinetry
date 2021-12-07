@@ -4,7 +4,7 @@ import json
 import logging
 import pathlib
 import pkgutil
-from typing import Any, Dict, List, Optional, Union
+from typing import Any, Dict, List, Optional, TypeVar, Union
 
 import jsonschema
 import yaml
@@ -13,6 +13,10 @@ from cabinetry._typing import Literal
 
 
 log = logging.getLogger(__name__)
+
+
+# used in _setting_to_list below
+T = TypeVar("T", str, Dict[str, Any])
 
 
 def load(file_path_string: Union[str, pathlib.Path]) -> Dict[str, Any]:
@@ -99,7 +103,8 @@ def print_overview(config: Dict[str, Any]) -> None:
         log.info(f"  {len(config['Systematics'])} Systematic(s)")
 
 
-def _setting_to_list(setting: Union[str, List[str]]) -> List[str]:
+# TODO: probably better to move this to a generic utils module
+def _setting_to_list(setting: Union[T, List[T]]) -> List[T]:
     """Converts a configuration setting to a list.
 
     The config allows for two ways of specifying some settings, for example samples. A
@@ -108,10 +113,12 @@ def _setting_to_list(setting: Union[str, List[str]]) -> List[str]:
     converted to a list.
 
     Args:
-        setting (Union[str, List[str]]): name of single setting value or list of values
+        setting (Union[Union[str, Dict[str, Any]], List[Union[str, Dict[str, Any]]]]):
+            single setting value (string or dictionary) or list of values (each being
+            strings or dictionaries)
 
     Returns:
-        list: name(s) of sample(s)
+        list: values (strings or dictionaries) in list form
     """
     if not isinstance(setting, list):
         setting = [setting]
