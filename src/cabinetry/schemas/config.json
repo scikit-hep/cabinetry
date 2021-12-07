@@ -81,7 +81,8 @@
                     "type": "string"
                 },
                 "Filters": {
-                    "description": "selection criteria to apply when using ntuple inputs",
+                    "description": "selection criteria to apply",
+                    "$$description": "only affects ntuple inputs",
                     "$ref": "#/definitions/filters_setting"
                 },
                 "Fixed": {
@@ -150,7 +151,8 @@
                     "uniqueItems": true
                 },
                 "Filters": {
-                    "description": "selection criteria to apply when using ntuple inputs (can override filters at general level)",
+                    "description": "selection criteria to apply (can override filters at general level)",
+                    "$$description": "only affects ntuple inputs",
                     "$ref": "#/definitions/filters_setting"
                 },
                 "RegionPath": {
@@ -187,7 +189,8 @@
                     "type": "string"
                 },
                 "Filters": {
-                    "description": "selection criteria to apply when using ntuple inputs (can override filters at general and region level)",
+                    "description": "selection criteria to apply (can override filters at general and region level)",
+                    "$$description": "only affects ntuple inputs",
                     "$ref": "#/definitions/filters_setting"
                 },
                 "Weight": {
@@ -312,7 +315,8 @@
                     "type": "string"
                 },
                 "Filters": {
-                    "description": "selection criteria to apply when using ntuple inputs (can override filters at general, region and sample level)",
+                    "description": "selection criteria to apply (can override filters at general, region and sample level)",
+                    "$$description": "only affects ntuple inputs",
                     "$ref": "#/definitions/filters_setting"
                 },
                 "RegionPath": {
@@ -428,7 +432,7 @@
         "filters_setting": {
             "title": "Filters setting",
             "$$target": "#/definitions/filters_setting",
-            "description": "filter(s) to apply when processing ntuple inputs",
+            "description": "filter(s) to apply for histogram creation",
             "oneOf": [
                 {
                     "description": "single filter",
@@ -454,7 +458,7 @@
             "required": ["Name", "Filter"],
             "properties": {
                 "Name": {
-                    "description": "name of filter, filters can be overridden by other filters with the same name",
+                    "description": "name of filter (filters can be overridden by other filters with the same name)",
                     "type": "string"
                 },
                 "Filter": {
