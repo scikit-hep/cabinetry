@@ -1,6 +1,6 @@
 """Provides containers for inference results."""
 
-from typing import List, NamedTuple
+from typing import Dict, List, NamedTuple, Tuple
 
 import numpy as np
 
@@ -10,11 +10,14 @@ class FitResults(NamedTuple):
 
     Args:
         bestfit (np.ndarray): best-fit results of parameters
-        uncertainty (np.ndarray): uncertainties of best-fit parameter results
+        uncertainty (np.ndarray): uncertainties of best-fit parameter results, evaluated
+            with Hessian
         labels (List[str]): parameter labels
         corr_mat (np.ndarray): parameter correlation matrix
         best_twice_nll (float): -2 log(likelihood) at best-fit point
         goodess_of_fit (float, optional): goodness-of-fit p-value, defaults to -1
+        minos_uncertainty (Dict[str, Tuple[float, float]]): uncertainties of best-fit
+            parameter results indexed by parameter name, calculated with MINOS
     """
 
     bestfit: np.ndarray
@@ -23,6 +26,7 @@ class FitResults(NamedTuple):
     corr_mat: np.ndarray
     best_twice_nll: float
     goodness_of_fit: float = -1
+    minos_uncertainty: Dict[str, Tuple[float, float]] = {}
 
 
 class RankingResults(NamedTuple):
