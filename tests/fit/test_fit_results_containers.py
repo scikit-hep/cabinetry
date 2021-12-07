@@ -18,6 +18,7 @@ def test_FitResults():
     assert np.allclose(fit_results.corr_mat, corr_mat)
     assert fit_results.best_twice_nll == best_twice_nll
     assert fit_results.goodness_of_fit == -1
+    assert fit_results.minos_uncertainty == {}
 
 
 def test_RankingResults():

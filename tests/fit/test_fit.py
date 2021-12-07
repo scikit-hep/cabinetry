@@ -27,7 +27,7 @@ def test_print_results(caplog):
 # skip a "RuntimeWarning: numpy.ufunc size changed" warning
 # due to different numpy versions used in dependencies
 @pytest.mark.filterwarnings("ignore::RuntimeWarning")
-@mock.patch("cabinetry.fit._run_minos")
+@mock.patch("cabinetry.fit._run_minos", return_value={"Signal strength": (-0.1, 0.2)})
 def test__fit_model_pyhf(mock_minos, example_spec, example_spec_multibin):
     model, data = model_utils.model_and_data(example_spec)
     fit_results = fit._fit_model_pyhf(model, data)
@@ -66,6 +66,7 @@ def test__fit_model_pyhf(mock_minos, example_spec, example_spec_multibin):
     # including minos, one parameter is unknown
     model, data = model_utils.model_and_data(example_spec)
     fit_results = fit._fit_model_pyhf(model, data, minos=["Signal strength", "abc"])
+    assert fit_results.minos_uncertainty["Signal strength"] == (-0.1, 0.2)
     assert mock_minos.call_count == 1
     # first argument to minos call is the Minuit instance
     assert mock_minos.call_args[0][1] == ["Signal strength", "abc"]
@@ -77,7 +78,7 @@ def test__fit_model_pyhf(mock_minos, example_spec, example_spec_multibin):
 
 
 @pytest.mark.filterwarnings("ignore::RuntimeWarning")
-@mock.patch("cabinetry.fit._run_minos")
+@mock.patch("cabinetry.fit._run_minos", return_value={"Signal strength": (-0.1, 0.2)})
 def test__fit_model_custom(mock_minos, example_spec, example_spec_multibin):
     model, data = model_utils.model_and_data(example_spec)
     fit_results = fit._fit_model_custom(model, data)
@@ -116,6 +117,7 @@ def test__fit_model_custom(mock_minos, example_spec, example_spec_multibin):
     # including minos
     model, data = model_utils.model_and_data(example_spec)
     fit_results = fit._fit_model_custom(model, data, minos=["Signal strength"])
+    assert fit_results.minos_uncertainty["Signal strength"] == (-0.1, 0.2)
     assert mock_minos.call_count == 1
     # first argument to minos call is the Minuit instance
     assert mock_minos.call_args[0][1] == ["Signal strength"]
@@ -219,7 +221,10 @@ def test__run_minos(caplog):
     m = iminuit.Minuit(func_to_minimize, [1.0, 1.0], name=["a", "b"])
     m.errordef = 1
     m.migrad()
-    fit._run_minos(m, ["b"], ["a", "b"])
+
+    minos_results = fit._run_minos(m, ["b"], ["a", "b"])
+    assert np.allclose(minos_results["b"][0], -0.72622053)
+    assert np.allclose(minos_results["b"][1], 0.47381869)
     assert "running MINOS for b" in [rec.message for rec in caplog.records]
     assert "b =  1.5909 -0.7262 +0.4738" in [rec.message for rec in caplog.records]
     caplog.clear()
@@ -228,7 +233,9 @@ def test__run_minos(caplog):
     m = iminuit.Minuit(func_to_minimize, [1.0, 1.0])
     m.errordef = 1
     m.migrad()
-    fit._run_minos(m, ["x2"], ["a", "b"])
+
+    minos_results = fit._run_minos(m, ["x2"], ["a", "b"])
+    assert minos_results == {}
     assert [rec.message for rec in caplog.records] == [
         "parameter x2 not found in model",
         "MINOS results:",
