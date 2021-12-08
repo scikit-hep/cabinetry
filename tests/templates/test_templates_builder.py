@@ -120,7 +120,7 @@ def test__filter():
             {},
             None,
         )
-        == "(c1)*(c2)"
+        == "(c1) & (c2)"
     )
 
     # no filter
@@ -159,7 +159,7 @@ def test__filter():
             {},
             None,
         )
-        == "(c1)*(c3)"
+        == "(c1) & (c3)"
     )
 
     # sample-specific override, overridden by systematic too
@@ -184,7 +184,7 @@ def test__filter():
             {"Name": "variation", "Up": {"Filters": {"Name": "c", "Filter": "c3"}}},
             "Up",
         )
-        == "(c1)*(c2)*(c3)"
+        == "(c1) & (c2) & (c3)"
     )
 
 

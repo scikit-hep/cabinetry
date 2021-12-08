@@ -181,7 +181,7 @@ def _filter(
         return None
 
     # combine all filters
-    selection_filter = "*".join([f"({f})" for f in selection_filters.values()])
+    selection_filter = " & ".join([f"({f})" for f in selection_filters.values()])
     return selection_filter
 
 
