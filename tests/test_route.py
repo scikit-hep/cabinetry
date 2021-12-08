@@ -1,5 +1,6 @@
 import functools
 import logging
+from typing import Optional
 from unittest import mock
 
 import boost_histogram as bh
@@ -13,7 +14,7 @@ class ProcessorExamples:
     @staticmethod
     def get_example_template_builder():
         def example_template_builder(
-            reg: dict, sam: dict, sys: dict, tem: str
+            gen: dict, reg: dict, sam: dict, sys: dict, tem: Optional[str]
         ) -> bh.Histogram:
             hist = bh.Histogram(bh.axis.Variable([0, 1]), storage=bh.storage.Weight())
             yields = np.asarray([2])
@@ -197,9 +198,9 @@ def test_Router__find_template_builder_match(processor_examples):
 
     def example_wrapper(func):
         @functools.wraps(func)
-        def wrapper(reg, sam, sys, tem):
+        def wrapper(gen, reg, sam, sys, tem):
             # return the bin yield of the histogram to have something to compare
-            return func(reg, sam, sys, tem).values()
+            return func(gen, reg, sam, sys, tem).values()
 
         return wrapper
 
@@ -224,7 +225,7 @@ def test_Router__find_template_builder_match(processor_examples):
         # assert wrapped_builder == expected_wrap
 
         # compare instead the behavior for an example call
-        assert wrapped_builder({}, {}, {}, {}) == expected_wrap({}, {}, {}, {})
+        assert wrapped_builder({}, {}, {}, {}, "") == expected_wrap({}, {}, {}, {}, "")
 
 
 def test_apply_to_all_templates():
@@ -232,15 +233,16 @@ def test_apply_to_all_templates():
     # define a custom override function that logs its arguments when called
     override_call_args = []
 
-    def match_func(reg: str, sam: str, sys: str, tem: str):
-        def f(reg: dict, sam: dict, sys: dict, tem: str):
-            override_call_args.append((reg, sam, sys, tem))
+    def match_func(reg: str, sam: str, sys: str, tem: Optional[str]):
+        def f(gen: dict, reg: dict, sam: dict, sys: dict, tem: Optional[str]):
+            override_call_args.append((gen, reg, sam, sys, tem))
 
         return f
 
     default_func = mock.MagicMock()
 
     example_config = {
+        "General": {"Filters": {"Name": "f", "Filter": "cut"}},
         "Regions": [{"Name": "test_region"}],
         "Samples": [{"Name": "sample"}],
         "Systematics": [
@@ -255,23 +257,31 @@ def test_apply_to_all_templates():
     # check that the default function was called for all templates
     assert default_func.call_count == 3
     assert default_func.call_args_list[0] == (
-        ({"Name": "test_region"}, {"Name": "sample"}, {}, None),
+        (
+            example_config["General"],
+            example_config["Regions"][0],
+            example_config["Samples"][0],
+            {},
+            None,
+        ),
         {},
     )
     assert default_func.call_args_list[1] == (
         (
-            {"Name": "test_region"},
-            {"Name": "sample"},
-            {"Name": "var", "Type": "NormPlusShape"},
+            example_config["General"],
+            example_config["Regions"][0],
+            example_config["Samples"][0],
+            example_config["Systematics"][1],
             "Up",
         ),
         {},
     )
     assert default_func.call_args_list[2] == (
         (
-            {"Name": "test_region"},
-            {"Name": "sample"},
-            {"Name": "var", "Type": "NormPlusShape"},
+            example_config["General"],
+            example_config["Regions"][0],
+            example_config["Samples"][0],
+            example_config["Systematics"][1],
             "Down",
         ),
         {},
@@ -281,30 +291,34 @@ def test_apply_to_all_templates():
     route.apply_to_all_templates(example_config, default_func, match_func=match_func)
     assert len(override_call_args) == 3
     assert override_call_args[0] == (
-        {"Name": "test_region"},
-        {"Name": "sample"},
+        example_config["General"],
+        example_config["Regions"][0],
+        example_config["Samples"][0],
         {},
         None,
     )
     assert override_call_args[1] == (
-        {"Name": "test_region"},
-        {"Name": "sample"},
-        {"Name": "var", "Type": "NormPlusShape"},
+        example_config["General"],
+        example_config["Regions"][0],
+        example_config["Samples"][0],
+        example_config["Systematics"][1],
         "Up",
     )
     assert override_call_args[2] == (
-        {"Name": "test_region"},
-        {"Name": "sample"},
-        {"Name": "var", "Type": "NormPlusShape"},
+        example_config["General"],
+        example_config["Regions"][0],
+        example_config["Samples"][0],
+        example_config["Systematics"][1],
         "Down",
     )
 
     # no systematics
     example_config = {
+        "General": {"abc": "def"},
         "Regions": [{"Name": "test_region"}],
         "Samples": [{"Name": "sample"}],
     }
     route.apply_to_all_templates(example_config, default_func)
     # previously 3 calls of default_func, now one more for nominal template
     assert default_func.call_count == 4
-    assert default_func.call_args_list[3][0][3] is None
+    assert default_func.call_args_list[3][0][4] is None  # template is None

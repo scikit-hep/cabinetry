@@ -103,7 +103,6 @@ def print_overview(config: Dict[str, Any]) -> None:
         log.info(f"  {len(config['Systematics'])} Systematic(s)")
 
 
-# TODO: probably better to move this to a generic utils module
 def _setting_to_list(setting: Union[T, List[T]]) -> List[T]:
     """Converts a configuration setting to a list.
 

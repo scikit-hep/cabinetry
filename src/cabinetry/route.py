@@ -13,19 +13,26 @@ from cabinetry._typing import Literal
 log = logging.getLogger(__name__)
 
 
-# type of a function processing templates, takes sample-region-systematic-template,
-# returns None
+# type of a function processing templates, takes general-region-sample-systematic-
+# template, returns None
 # template can be "Up" / "Down" for variations, or None for nominal
 ProcessorFunc = Callable[
-    [Dict[str, Any], Dict[str, Any], Dict[str, Any], Optional[Literal["Up", "Down"]]],
+    [
+        Dict[str, Any],
+        Dict[str, Any],
+        Dict[str, Any],
+        Dict[str, Any],
+        Optional[Literal["Up", "Down"]],
+    ],
     None,
 ]
 
-# type of a user-defined function for template processing, takes sample-region-
+# type of a user-defined function for template processing, takes general-region-sample-
 # systematic-template, returns a boost_histogram.Histogram
 # template can be any string (to match "Up" / "Down"), or None / "*" to match nominal
 UserTemplateFunc = Callable[
-    [Dict[str, Any], Dict[str, Any], Dict[str, Any], Optional[str]], bh.Histogram
+    [Dict[str, Any], Dict[str, Any], Dict[str, Any], Dict[str, Any], Optional[str]],
+    bh.Histogram,
 ]
 
 # type of a function called with names of region-sample-systematic-template,
@@ -269,6 +276,7 @@ def apply_to_all_templates(
     The templates are specified by the configuration file. The function takes four
     arguments in this order:
 
+    - the dict specifying general information
     - the dict specifying region information
     - the dict specifying sample information
     - the dict specifying systematic information
@@ -322,6 +330,7 @@ def apply_to_all_templates(
                         f"{' ' + template if template is not None else ''}"
                     )
 
+                    general = config["General"]
                     func_override = None
                     if match_func is not None:
                         # check whether a user-defined function was registered that
@@ -337,7 +346,7 @@ def apply_to_all_templates(
                         log.debug(
                             f"executing user-defined override {func_override.__name__}"
                         )
-                        func_override(region, sample, systematic, template)
+                        func_override(general, region, sample, systematic, template)
                     else:
                         # call the provided default function
-                        default_func(region, sample, systematic, template)
+                        default_func(general, region, sample, systematic, template)

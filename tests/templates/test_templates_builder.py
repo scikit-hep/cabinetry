@@ -1,5 +1,6 @@
 import logging
 import pathlib
+from typing import Optional
 from unittest import mock
 
 import boost_histogram as bh
@@ -107,7 +108,7 @@ def test__filter():
     # no override, dict provided
     assert (
         builder._filter(
-            {"Filters": {"Name": "f", "Filter": "jet_pt > 0"}}, {}, {}, None
+            {"Filters": {"Name": "f", "Filter": "jet_pt > 0"}}, {}, {}, {}, None
         )
         == "(jet_pt > 0)"
     )
@@ -118,18 +119,20 @@ def test__filter():
             {"Filters": [{"Name": "a", "Filter": "c1"}, {"Name": "b", "Filter": "c2"}]},
             {},
             {},
+            {},
             None,
         )
         == "(c1) & (c2)"
     )
 
     # no filter
-    assert builder._filter({}, {}, {}, None) is None
+    assert builder._filter({}, {}, {}, {}, None) is None
 
     # systematic with override
     assert (
         builder._filter(
             {"Filters": {"Name": "f", "Filter": "jet_pt > 0"}},
+            {},
             {},
             {
                 "Name": "variation",
@@ -145,15 +148,17 @@ def test__filter():
         builder._filter(
             {"Filters": {"Name": "f", "Filter": "jet_pt > 0"}},
             {},
+            {},
             {"Name": "variation"},
             "Up",
         )
         == "(jet_pt > 0)"
     )
 
-    # sample-specific override for part of filter
+    # sample-specific override for part of a region filter
     assert (
         builder._filter(
+            {},
             {"Filters": [{"Name": "a", "Filter": "c1"}, {"Name": "b", "Filter": "c2"}]},
             {"Filters": {"Name": "b", "Filter": "c3"}},
             {},
@@ -162,18 +167,19 @@ def test__filter():
         == "(c1) & (c3)"
     )
 
-    # sample-specific override, overridden by systematic too
+    # filter with region-, sample-, and systematic override
     assert (
         builder._filter(
             {"Filters": {"Name": "f", "Filter": "jet_pt > 0"}},
             {"Filters": {"Name": "f", "Filter": "jet_pt > 100"}},
+            {"Filters": {"Name": "f", "Filter": "jet_pt > 200"}},
             {
                 "Name": "variation",
-                "Up": {"Filters": {"Name": "f", "Filter": "jet_pt > 200"}},
+                "Up": {"Filters": {"Name": "f", "Filter": "jet_pt > 300"}},
             },
             "Up",
         )
-        == "(jet_pt > 200)"
+        == "(jet_pt > 300)"
     )
 
     # filters at all levels combining
@@ -181,10 +187,11 @@ def test__filter():
         builder._filter(
             {"Filters": {"Name": "a", "Filter": "c1"}},
             {"Filters": {"Name": "b", "Filter": "c2"}},
-            {"Name": "variation", "Up": {"Filters": {"Name": "c", "Filter": "c3"}}},
+            {"Filters": {"Name": "c", "Filter": "c3"}},
+            {"Name": "variation", "Up": {"Filters": {"Name": "d", "Filter": "c4"}}},
             "Up",
         )
-        == "(c1) & (c2) & (c3)"
+        == "(c1) & (c2) & (c3) & (c4)"
     )
 
 
@@ -248,15 +255,17 @@ def test__Builder():
 @mock.patch("cabinetry.templates.utils._name_and_save")
 @mock.patch("cabinetry.histo.Histogram", return_value="cabinetry_histogram")
 @mock.patch("cabinetry.contrib.histogram_creator.with_uproot", return_value="histogram")
+@mock.patch("cabinetry.templates.builder._filter", return_value="(x>3)")
 @mock.patch(
     "cabinetry.templates.builder._ntuple_paths",
     return_value=[pathlib.Path("path_to_ntuple")],
 )
 def test__Builder_create_histogram(
-    mock_path, mock_uproot_builder, mock_histo, mock_save
+    mock_path, mock_filter, mock_uproot_builder, mock_histo, mock_save
 ):
     histogram_folder = pathlib.Path("path")
     general_path = "{SamplePath}"
+    general = {"Filters": {"Name": "f", "Filter": "c"}}
     # the binning [0] is not a proper binning, but simplifies the comparison
     region = {
         "Name": "test_region",
@@ -274,11 +283,16 @@ def test__Builder_create_histogram(
     template = "Up"
 
     builder_instance = builder._Builder(histogram_folder, general_path, "uproot")
-    builder_instance._create_histogram(region, sample, systematic, template)
+    builder_instance._create_histogram(general, region, sample, systematic, template)
 
     # call to path creation
     assert mock_path.call_args_list == [
         ((general_path, region, sample, systematic, template), {})
+    ]
+
+    # filter creation
+    assert mock_filter.call_args_list == [
+        ((general, region, sample, systematic, template), {})
     ]
 
     # verify the backend call happened properly
@@ -310,18 +324,19 @@ def test__Builder_create_histogram(
     # other backends
     builder_unknown = builder._Builder(histogram_folder, "{SamplePath}", "unknown")
     with pytest.raises(NotImplementedError, match="unknown backend unknown"):
-        builder_unknown._create_histogram(region, sample, systematic, template)
+        builder_unknown._create_histogram(general, region, sample, systematic, template)
 
 
 @mock.patch("cabinetry.templates.utils._name_and_save")
 def test__Builder__wrap_custom_template_builder(mock_save):
     histogram = bh.Histogram(bh.axis.Variable([0, 1]))
+    general = {"Filters": {"Name": "f", "Filter": "c"}}
     region = {"Name": "test_region"}
     sample = {"Name": "sample"}
     systematic = {}
     histogram_folder = pathlib.Path("path")
 
-    def test_func(reg, sam, sys, tem):
+    def test_func(gen: dict, reg: dict, sam: dict, sys: dict, tem: Optional[str]):
         return histogram
 
     builder_instance = builder._Builder(histogram_folder, "file.root", "uproot")
@@ -329,18 +344,20 @@ def test__Builder__wrap_custom_template_builder(mock_save):
 
     # check the behavior of the wrapped function
     # when called, it should save the returned histogram
-    wrapped_func(region, sample, systematic, "Up")
+    wrapped_func(general, region, sample, systematic, "Up")
 
     assert mock_save.call_args_list == [
         ((histogram_folder, histogram, region, sample, systematic, "Up"), {})
     ]
 
     # wrapped function returns wrong type
-    def test_func_wrong_return(reg, sam, sys, tem):
+    def test_func_wrong_return(
+        gen: dict, reg: dict, sam: dict, sys: dict, tem: Optional[str]
+    ):
         return None
 
     wrapped_func_wrong_return = builder_instance._wrap_custom_template_builder(
         test_func_wrong_return
     )
     with pytest.raises(TypeError, match="must return a boost_histogram.Histogram"):
-        wrapped_func_wrong_return(region, sample, systematic, "Up")
+        wrapped_func_wrong_return(general, region, sample, systematic, "Up")

@@ -135,6 +135,7 @@ def _variable(
 
 
 def _filter(
+    general: Dict[str, Any],
     region: Dict[str, Any],
     sample: Dict[str, Any],
     systematic: Dict[str, Any],
@@ -148,6 +149,7 @@ def _filter(
     the sample-specific filter if both are provided.
 
     Args:
+        general (Dict[str, Any]): containing general configuration information
         region (Dict[str, Any]): containing all region information
         sample (Dict[str, Any]): containing all sample information
         systematic (Dict[str, Any]): containing all systematic information
@@ -157,10 +159,11 @@ def _filter(
     Returns:
         Optional[str]: expression for the filter to be used, or None for no filtering
     """
-    # TODO: pass through info from general config block, requires changes in
-    # apply_to_all_templates to propagate this information
-
     selection_filters = {}
+
+    # general options can set standard values for filter
+    for filter in configuration._setting_to_list(general.get("Filters", [])):
+        selection_filters.update({filter["Name"]: filter["Filter"]})
 
     # regions can set default filters (general level not implemented yet)
     for filter in configuration._setting_to_list(region.get("Filters", [])):
@@ -286,6 +289,7 @@ class _Builder:
 
     def _create_histogram(
         self,
+        general: Dict[str, Any],
         region: Dict[str, Any],
         sample: Dict[str, Any],
         systematic: Dict[str, Any],
@@ -297,6 +301,7 @@ class _Builder:
         the argument.
 
         Args:
+            general (Dict[str, Any]): containing general configuration information
             region (Dict[str, Any]): containing all region information
             sample (Dict[str, Any]): containing all sample information
             systematic (Dict[str, Any]): containing all systematic information
@@ -313,7 +318,7 @@ class _Builder:
         variable = _variable(region, sample, systematic, template)
         bins = _binning(region)
         weight = _weight(region, sample, systematic, template)
-        selection_filter = _filter(region, sample, systematic, template)
+        selection_filter = _filter(general, region, sample, systematic, template)
 
         # obtain the histogram
         if self.method == "uproot":
@@ -360,6 +365,7 @@ class _Builder:
         # different (the return value becomes None)
         @functools.wraps(func)
         def wrapper(
+            general: Dict[str, Any],
             region: Dict[str, Any],
             sample: Dict[str, Any],
             systematic: Dict[str, Any],
@@ -371,13 +377,14 @@ class _Builder:
             wrapped with this.
 
             Args:
+                general (Dict[str, Any]): containing general configuration information
                 region (Dict[str, Any]): containing all region information
                 sample (Dict[str, Any]): containing all sample information
                 systematic (Dict[str, Any]): containing all systematic information
                 template (Optional[Literal["Up", "Down"]]): template considered: "Up",
                     "Down", or None for nominal
             """
-            histogram = func(region, sample, systematic, template)
+            histogram = func(general, region, sample, systematic, template)
             if not isinstance(histogram, bh.Histogram):
                 raise TypeError(
                     f"{func.__name__} must return a boost_histogram.Histogram"
