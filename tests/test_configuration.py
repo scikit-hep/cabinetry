@@ -21,7 +21,7 @@ def test_validate():
             "HistogramFolder": "",
             "InputPath": "",
         },
-        "Regions": [{"Name": "", "Filter": "", "Variable": "", "Binning": [0, 1]}],
+        "Regions": [{"Name": "", "Variable": "", "Binning": [0, 1]}],
         "Samples": [{"Name": "", "Tree": "", "Data": True}],
         "NormFactors": [{"Name": ""}],
     }
@@ -34,7 +34,7 @@ def test_validate():
             "HistogramFolder": "",
             "InputPath": "",
         },
-        "Regions": [{"Name": "", "Filter": "", "Variable": "", "Binning": [0, 1]}],
+        "Regions": [{"Name": "", "Variable": "", "Binning": [0, 1]}],
         "Samples": [{"Name": "", "Tree": ""}],
         "NormFactors": [{"Name": ""}],
     }

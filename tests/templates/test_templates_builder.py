@@ -215,7 +215,12 @@ def test__Builder_create_histogram(
     histogram_folder = pathlib.Path("path")
     general_path = "{SamplePath}"
     # the binning [0] is not a proper binning, but simplifies the comparison
-    region = {"Name": "test_region", "Variable": "x", "Binning": [0], "Filter": "x>3"}
+    region = {
+        "Name": "test_region",
+        "Variable": "x",
+        "Binning": [0],
+        "Filter": {"f": "x>3"},
+    }
     sample = {
         "Name": "sample",
         "Tree": "tree",
