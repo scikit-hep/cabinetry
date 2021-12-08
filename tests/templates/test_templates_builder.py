@@ -104,8 +104,24 @@ def test__variable():
 
 
 def test__filter():
-    # no override
-    assert builder._filter({"Filter": "jet_pt > 0"}, {}, {}, None) == "jet_pt > 0"
+    # no override, dict provided
+    assert (
+        builder._filter(
+            {"Filters": {"Name": "f", "Filter": "jet_pt > 0"}}, {}, {}, None
+        )
+        == "(jet_pt > 0)"
+    )
+
+    # list of dictionaries without overrides
+    assert (
+        builder._filter(
+            {"Filters": [{"Name": "a", "Filter": "c1"}, {"Name": "b", "Filter": "c2"}]},
+            {},
+            {},
+            None,
+        )
+        == "(c1)*(c2)"
+    )
 
     # no filter
     assert builder._filter({}, {}, {}, None) is None
@@ -113,35 +129,62 @@ def test__filter():
     # systematic with override
     assert (
         builder._filter(
-            {"Filter": "jet_pt > 0"},
+            {"Filters": {"Name": "f", "Filter": "jet_pt > 0"}},
             {},
-            {"Name": "variation", "Up": {"Filter": "jet_pt > 100"}},
+            {
+                "Name": "variation",
+                "Up": {"Filters": {"Name": "f", "Filter": "jet_pt > 100"}},
+            },
             "Up",
         )
-        == "jet_pt > 100"
+        == "(jet_pt > 100)"
     )
 
     # systematic without override
     assert (
-        builder._filter({"Filter": "jet_pt > 0"}, {}, {"Name": "variation"}, "Up")
-        == "jet_pt > 0"
-    )
-
-    # sample-specific override
-    assert (
-        builder._filter({"Filter": "jet_pt > 0"}, {"Filter": "jet_pt > 100"}, {}, None)
-        == "jet_pt > 100"
-    )
-
-    # sample-specific override, again overridden by systematic
-    assert (
         builder._filter(
-            {"Filter": "jet_pt > 0"},
-            {"Filter": "jet_pt > 100"},
-            {"Name": "variation", "Up": {"Filter": "jet_pt > 200"}},
+            {"Filters": {"Name": "f", "Filter": "jet_pt > 0"}},
+            {},
+            {"Name": "variation"},
             "Up",
         )
-        == "jet_pt > 200"
+        == "(jet_pt > 0)"
+    )
+
+    # sample-specific override for part of filter
+    assert (
+        builder._filter(
+            {"Filters": [{"Name": "a", "Filter": "c1"}, {"Name": "b", "Filter": "c2"}]},
+            {"Filters": {"Name": "b", "Filter": "c3"}},
+            {},
+            None,
+        )
+        == "(c1)*(c3)"
+    )
+
+    # sample-specific override, overridden by systematic too
+    assert (
+        builder._filter(
+            {"Filters": {"Name": "f", "Filter": "jet_pt > 0"}},
+            {"Filters": {"Name": "f", "Filter": "jet_pt > 100"}},
+            {
+                "Name": "variation",
+                "Up": {"Filters": {"Name": "f", "Filter": "jet_pt > 200"}},
+            },
+            "Up",
+        )
+        == "(jet_pt > 200)"
+    )
+
+    # filters at all levels combining
+    assert (
+        builder._filter(
+            {"Filters": {"Name": "a", "Filter": "c1"}},
+            {"Filters": {"Name": "b", "Filter": "c2"}},
+            {"Name": "variation", "Up": {"Filters": {"Name": "c", "Filter": "c3"}}},
+            "Up",
+        )
+        == "(c1)*(c2)*(c3)"
     )
 
 
@@ -219,7 +262,7 @@ def test__Builder_create_histogram(
         "Name": "test_region",
         "Variable": "x",
         "Binning": [0],
-        "Filter": {"f": "x>3"},
+        "Filters": {"Name": "f", "Filter": "x>3"},
     }
     sample = {
         "Name": "sample",
@@ -242,7 +285,7 @@ def test__Builder_create_histogram(
     assert mock_uproot_builder.call_args_list == [
         (
             ([pathlib.Path("path_to_ntuple")], "tree", "x", [0]),
-            {"weight": "weight_mc", "selection_filter": "x>3"},
+            {"weight": "weight_mc", "selection_filter": "(x>3)"},
         )
     ]
 
