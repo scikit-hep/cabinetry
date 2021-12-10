@@ -11,10 +11,10 @@ def test_build(mock_builder, mock_apply):
     config = {"General": {"HistogramFolder": "path/", "InputPath": "file.root"}}
     method = "uproot"
 
-    # no router
+    # no router or filter
     templates.build(config, method=method)
     assert mock_builder.call_args_list == [
-        ((pathlib.Path("path/"), "file.root", method), {})
+        ((pathlib.Path("path/"), "file.root", {}, method), {})
     ]
     assert mock_apply.call_count == 1
     config_call, func_call = mock_apply.call_args[0]
@@ -22,9 +22,15 @@ def test_build(mock_builder, mock_apply):
     assert func_call._extract_mock_name() == "_Builder()._create_histogram"
     assert mock_apply.call_args[1] == {"match_func": None}
 
-    # including a router
+    # including a router and general filter
+    filter_dict = {"Name": "f", "Filter": "c"}
+    config["General"].update({"Filters": filter_dict})
     mock_router = mock.MagicMock()
     templates.build(config, method=method, router=mock_router)
+    assert mock_builder.call_args == (
+        (pathlib.Path("path/"), "file.root", filter_dict, method),
+        {},
+    )
 
     # verify wrapper was set
     assert (

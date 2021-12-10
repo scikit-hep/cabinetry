@@ -17,13 +17,7 @@ log = logging.getLogger(__name__)
 # template, returns None
 # template can be "Up" / "Down" for variations, or None for nominal
 ProcessorFunc = Callable[
-    [
-        Dict[str, Any],
-        Dict[str, Any],
-        Dict[str, Any],
-        Dict[str, Any],
-        Optional[Literal["Up", "Down"]],
-    ],
+    [Dict[str, Any], Dict[str, Any], Dict[str, Any], Optional[Literal["Up", "Down"]]],
     None,
 ]
 
@@ -31,7 +25,7 @@ ProcessorFunc = Callable[
 # systematic-template, returns a boost_histogram.Histogram
 # template can be any string (to match "Up" / "Down"), or None / "*" to match nominal
 UserTemplateFunc = Callable[
-    [Dict[str, Any], Dict[str, Any], Dict[str, Any], Dict[str, Any], Optional[str]],
+    [Dict[str, Any], Dict[str, Any], Dict[str, Any], Optional[str]],
     bh.Histogram,
 ]
 
@@ -276,7 +270,6 @@ def apply_to_all_templates(
     The templates are specified by the configuration file. The function takes four
     arguments in this order:
 
-    - the dict specifying general information
     - the dict specifying region information
     - the dict specifying sample information
     - the dict specifying systematic information
@@ -330,7 +323,6 @@ def apply_to_all_templates(
                         f"{' ' + template if template is not None else ''}"
                     )
 
-                    general = config["General"]
                     func_override = None
                     if match_func is not None:
                         # check whether a user-defined function was registered that
@@ -346,7 +338,7 @@ def apply_to_all_templates(
                         log.debug(
                             f"executing user-defined override {func_override.__name__}"
                         )
-                        func_override(general, region, sample, systematic, template)
+                        func_override(region, sample, systematic, template)
                     else:
                         # call the provided default function
-                        default_func(general, region, sample, systematic, template)
+                        default_func(region, sample, systematic, template)

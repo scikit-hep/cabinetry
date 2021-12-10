@@ -274,22 +274,27 @@ class _Builder:
     """Handles the instructions for backends to create histograms."""
 
     def __init__(
-        self, histogram_folder: pathlib.Path, general_path: str, method: str
+        self,
+        histogram_folder: pathlib.Path,
+        general_path: str,
+        general_filters: Dict[str, Any],
+        method: str,
     ) -> None:
         """Creates an instance, sets histogram folder, path template and method.
 
         Args:
             histogram_folder (pathlib.Path): folder to save the histograms to
             general_path (str): template for paths to input files for histogram building
+            general_filters (Dict[str, Any]): dictionary with general filters to apply
             method (str): backend to use for histogram production
         """
         self.histogram_folder = histogram_folder
         self.general_path = general_path
+        self.general_filters = general_filters
         self.method = method
 
     def _create_histogram(
         self,
-        general: Dict[str, Any],
         region: Dict[str, Any],
         sample: Dict[str, Any],
         systematic: Dict[str, Any],
@@ -301,7 +306,6 @@ class _Builder:
         the argument.
 
         Args:
-            general (Dict[str, Any]): containing general configuration information
             region (Dict[str, Any]): containing all region information
             sample (Dict[str, Any]): containing all sample information
             systematic (Dict[str, Any]): containing all systematic information
@@ -318,7 +322,9 @@ class _Builder:
         variable = _variable(region, sample, systematic, template)
         bins = _binning(region)
         weight = _weight(region, sample, systematic, template)
-        selection_filter = _filter(general, region, sample, systematic, template)
+        selection_filter = _filter(
+            self.general_filters, region, sample, systematic, template
+        )
 
         # obtain the histogram
         if self.method == "uproot":
@@ -365,7 +371,6 @@ class _Builder:
         # different (the return value becomes None)
         @functools.wraps(func)
         def wrapper(
-            general: Dict[str, Any],
             region: Dict[str, Any],
             sample: Dict[str, Any],
             systematic: Dict[str, Any],
@@ -377,14 +382,13 @@ class _Builder:
             wrapped with this.
 
             Args:
-                general (Dict[str, Any]): containing general configuration information
                 region (Dict[str, Any]): containing all region information
                 sample (Dict[str, Any]): containing all sample information
                 systematic (Dict[str, Any]): containing all systematic information
                 template (Optional[Literal["Up", "Down"]]): template considered: "Up",
                     "Down", or None for nominal
             """
-            histogram = func(general, region, sample, systematic, template)
+            histogram = func(region, sample, systematic, template)
             if not isinstance(histogram, bh.Histogram):
                 raise TypeError(
                     f"{func.__name__} must return a boost_histogram.Histogram"

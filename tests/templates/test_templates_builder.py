@@ -246,9 +246,12 @@ def test__binning():
 
 
 def test__Builder():
-    builder_instance = builder._Builder(pathlib.Path("path"), "file.root", "uproot")
+    builder_instance = builder._Builder(
+        pathlib.Path("path"), "file.root", {"Name": "f", "Filter": "c"}, "uproot"
+    )
     assert builder_instance.histogram_folder == pathlib.Path("path")
     assert builder_instance.general_path == "file.root"
+    assert builder_instance.general_filters == {"Name": "f", "Filter": "c"}
     assert builder_instance.method == "uproot"
 
 
@@ -265,14 +268,9 @@ def test__Builder_create_histogram(
 ):
     histogram_folder = pathlib.Path("path")
     general_path = "{SamplePath}"
-    general = {"Filters": {"Name": "f", "Filter": "c"}}
+    general_filters = {"Name": "f", "Filter": "c"}
     # the binning [0] is not a proper binning, but simplifies the comparison
-    region = {
-        "Name": "test_region",
-        "Variable": "x",
-        "Binning": [0],
-        "Filters": {"Name": "f", "Filter": "x>3"},
-    }
+    region = {"Name": "test_region", "Variable": "x", "Binning": [0]}
     sample = {
         "Name": "sample",
         "Tree": "tree",
@@ -282,8 +280,10 @@ def test__Builder_create_histogram(
     systematic = {}
     template = "Up"
 
-    builder_instance = builder._Builder(histogram_folder, general_path, "uproot")
-    builder_instance._create_histogram(general, region, sample, systematic, template)
+    builder_instance = builder._Builder(
+        histogram_folder, general_path, general_filters, "uproot"
+    )
+    builder_instance._create_histogram(region, sample, systematic, template)
 
     # call to path creation
     assert mock_path.call_args_list == [
@@ -292,7 +292,7 @@ def test__Builder_create_histogram(
 
     # filter creation
     assert mock_filter.call_args_list == [
-        ((general, region, sample, systematic, template), {})
+        ((general_filters, region, sample, systematic, template), {})
     ]
 
     # verify the backend call happened properly
@@ -322,42 +322,39 @@ def test__Builder_create_histogram(
     ]
 
     # other backends
-    builder_unknown = builder._Builder(histogram_folder, "{SamplePath}", "unknown")
+    builder_unknown = builder._Builder(histogram_folder, "{SamplePath}", {}, "unknown")
     with pytest.raises(NotImplementedError, match="unknown backend unknown"):
-        builder_unknown._create_histogram(general, region, sample, systematic, template)
+        builder_unknown._create_histogram(region, sample, systematic, template)
 
 
 @mock.patch("cabinetry.templates.utils._name_and_save")
 def test__Builder__wrap_custom_template_builder(mock_save):
     histogram = bh.Histogram(bh.axis.Variable([0, 1]))
-    general = {"Filters": {"Name": "f", "Filter": "c"}}
     region = {"Name": "test_region"}
     sample = {"Name": "sample"}
     systematic = {}
     histogram_folder = pathlib.Path("path")
 
-    def test_func(gen: dict, reg: dict, sam: dict, sys: dict, tem: Optional[str]):
+    def test_func(reg: dict, sam: dict, sys: dict, tem: Optional[str]):
         return histogram
 
-    builder_instance = builder._Builder(histogram_folder, "file.root", "uproot")
+    builder_instance = builder._Builder(histogram_folder, "file.root", {}, "uproot")
     wrapped_func = builder_instance._wrap_custom_template_builder(test_func)
 
     # check the behavior of the wrapped function
     # when called, it should save the returned histogram
-    wrapped_func(general, region, sample, systematic, "Up")
+    wrapped_func(region, sample, systematic, "Up")
 
     assert mock_save.call_args_list == [
         ((histogram_folder, histogram, region, sample, systematic, "Up"), {})
     ]
 
     # wrapped function returns wrong type
-    def test_func_wrong_return(
-        gen: dict, reg: dict, sam: dict, sys: dict, tem: Optional[str]
-    ):
+    def test_func_wrong_return(reg: dict, sam: dict, sys: dict, tem: Optional[str]):
         return None
 
     wrapped_func_wrong_return = builder_instance._wrap_custom_template_builder(
         test_func_wrong_return
     )
     with pytest.raises(TypeError, match="must return a boost_histogram.Histogram"):
-        wrapped_func_wrong_return(general, region, sample, systematic, "Up")
+        wrapped_func_wrong_return(region, sample, systematic, "Up")
