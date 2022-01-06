@@ -25,8 +25,7 @@ ProcessorFunc = Callable[
 # systematic-template, returns a boost_histogram.Histogram
 # template can be any string (to match "Up" / "Down"), or None / "*" to match nominal
 UserTemplateFunc = Callable[
-    [Dict[str, Any], Dict[str, Any], Dict[str, Any], Optional[str]],
-    bh.Histogram,
+    [Dict[str, Any], Dict[str, Any], Dict[str, Any], Optional[str]], bh.Histogram
 ]
 
 # type of a function called with names of region-sample-systematic-template,
