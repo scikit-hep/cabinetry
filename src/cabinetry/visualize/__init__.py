@@ -604,6 +604,7 @@ def limit(
     limit_results: fit.LimitResults,
     *,
     figure_folder: Union[str, pathlib.Path] = "figures",
+    confidence_level: float = 0.95,
     close_figure: bool = True,
     save_figure: bool = True,
 ) -> mpl.figure.Figure:
@@ -613,6 +614,8 @@ def limit(
         limit_results (fit.LimitResults): results of upper limit determination
         figure_folder (Union[str, pathlib.Path], optional): path to the folder to save
             figures in, defaults to "figures"
+        confidence_level: (float, optional): confidence level to visualize via target
+            CLs value, defaults to 0.95 (95%)
         close_figure (bool, optional): whether to close figure, defaults to True
         save_figure (bool, optional): whether to save figure, defaults to True
 
@@ -626,6 +629,7 @@ def limit(
         limit_results.observed_CLs,
         limit_results.expected_CLs,
         limit_results.poi_values,
+        1 - confidence_level,
         figure_path=figure_path,
         close_figure=close_figure,
     )
