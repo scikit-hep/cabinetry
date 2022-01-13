@@ -187,21 +187,39 @@ def test_yield_stdev(example_spec, example_spec_multibin):
         assert np.allclose(from_cache[1][i_reg], expected_stdev_chan[i_reg])
 
 
-@mock.patch("cabinetry.model_utils.yield_stdev", return_value=([[0.3]], [0.3]))
 @mock.patch(
-    "cabinetry.model_utils.prefit_uncertainties", return_value=([0.04956657, 0.0])
+    "cabinetry.model_utils.yield_stdev",
+    side_effect=[
+        ([[5.0, 2.0], [1.0]], [5.38516481, 1.0]),
+        ([[0.3]], [0.3]),
+        ([[0.3]], [0.3]),
+    ],
 )
-@mock.patch("cabinetry.model_utils.asimov_parameters", return_value=([1.0, 1.0]))
-def test_prediction(mock_asimov, mock_unc, mock_stdev, caplog, example_spec):
+@mock.patch(
+    "cabinetry.model_utils.prefit_uncertainties",
+    side_effect=[[0.2, 0.4, 0.0, 0.125], [0.04956657, 0.0], [0.04956657, 0.0]],
+)
+@mock.patch(
+    "cabinetry.model_utils.asimov_parameters",
+    side_effect=[
+        np.asarray([1.0, 1.0, 1.0, 1.0]),
+        np.asarray([1.0, 1.0]),
+        np.asarray([1.0, 1.0]),
+    ],
+)
+def test_prediction(
+    mock_asimov, mock_unc, mock_stdev, caplog, example_spec_multibin, example_spec
+):
     caplog.set_level(logging.DEBUG)
-    model = pyhf.Workspace(example_spec).model()
+    model = pyhf.Workspace(example_spec_multibin).model()
 
-    # pre-fit prediction
+    # pre-fit prediction, multi-channel model
     model_pred = model_utils.prediction(model)
     assert model_pred.model == model
-    assert model_pred.model_yields == [[[51.8]]]  # from pyhf expected_data call
-    assert model_pred.total_stdev_model_bins == [[0.3]]  # from mock
-    assert model_pred.total_stdev_model_channels == [0.3]  # from mock
+    # yields from pyhf expected_data call, per-bin / per-channel uncertainty from mock
+    assert model_pred.model_yields == [[[25.0, 5.0]], [[8.0]]]
+    assert model_pred.total_stdev_model_bins == [[5.0, 2.0], [1.0]]
+    assert np.allclose(model_pred.total_stdev_model_channels, [5.38516481, 1.0])
     assert model_pred.label == "pre-fit"
 
     # Asimov parameter calculation and pre-fit uncertainties
@@ -211,14 +229,15 @@ def test_prediction(mock_asimov, mock_unc, mock_stdev, caplog, example_spec):
     # call to stdev calculation
     assert mock_stdev.call_count == 1
     assert mock_stdev.call_args_list[0][0][0] == model
-    assert np.allclose(mock_stdev.call_args_list[0][0][1], [1.0, 1.0])
-    assert np.allclose(mock_stdev.call_args_list[0][0][2], [0.04956657, 0.0])
+    assert np.allclose(mock_stdev.call_args_list[0][0][1], [1.0, 1.0, 1.0, 1.0])
+    assert np.allclose(mock_stdev.call_args_list[0][0][2], [0.2, 0.4, 0.0, 0.125])
     assert np.allclose(
-        mock_stdev.call_args_list[0][0][3], np.asarray([[1.0, 0.0], [0.0, 1.0]])
+        mock_stdev.call_args_list[0][0][3], np.diagflat([1.0, 1.0, 1.0, 1.0])
     )
     assert mock_stdev.call_args_list[0][1] == {}
 
-    # post-fit prediction
+    # post-fit prediction, single-channel model
+    model = pyhf.Workspace(example_spec).model()
     fit_results = FitResults(
         np.asarray([1.01, 1.1]),
         np.asarray([0.03, 0.1]),
