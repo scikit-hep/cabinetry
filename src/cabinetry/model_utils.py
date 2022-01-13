@@ -344,7 +344,7 @@ def prediction(
     # slice the yields into list of lists (of lists) where first index is channel,
     # second index is sample (and third index is bin)
     model_yields = [
-        yields_combined[model.config.channel_slices[ch]].tolist()
+        yields_combined[:, model.config.channel_slices[ch]].tolist()
         for ch in model.config.channels
     ]
 
