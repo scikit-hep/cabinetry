@@ -236,7 +236,14 @@ def scan(
 @click.option(
     "--tolerance",
     default=0.01,
-    help="tolerance for convergence to CLs=0.05 (default: 0.01)",
+    help="tolerance for convergence to CLs=1-confidence_level (default: 0.01)",
+)
+@click.option(
+    "--confidence_level",
+    "--cl",
+    default=0.95,
+    type=click.FloatRange(0.0, 1.0, min_open=True, max_open=True),
+    help="confidence level for parameter limits (default: 0.95)",
 )
 @click.option(
     "--figfolder",
@@ -244,7 +251,11 @@ def scan(
     help='folder to save figures to (default: "figures")',
 )
 def limit(
-    ws_spec: io.TextIOWrapper, asimov: bool, tolerance: float, figfolder: str
+    ws_spec: io.TextIOWrapper,
+    asimov: bool,
+    tolerance: float,
+    confidence_level: float,
+    figfolder: str,
 ) -> None:
     """Calculates upper limits and visualizes CLs distribution.
 
@@ -253,7 +264,9 @@ def limit(
     _set_logging()
     ws = json.load(ws_spec)
     model, data = cabinetry_model_utils.model_and_data(ws, asimov=asimov)
-    limit_results = cabinetry_fit.limit(model, data, tolerance=tolerance)
+    limit_results = cabinetry_fit.limit(
+        model, data, tolerance=tolerance, confidence_level=confidence_level
+    )
     cabinetry_visualize.limit(limit_results, figure_folder=figfolder)
 
 

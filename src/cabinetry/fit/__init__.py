@@ -765,6 +765,7 @@ def limit(
         observed_CLs_np,
         expected_CLs_np,
         poi_arr,
+        confidence_level,
     )
     return limit_results
 
