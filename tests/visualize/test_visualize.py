@@ -567,8 +567,9 @@ def test_limit(mock_draw):
     observed_CLs = np.asarray([0.75, 0.32, 0.02])
     expected_CLs = np.asarray([[0.1, 0.2, 0.3, 0.4, 0.5] for _ in range(3)])
     poi_values = np.asarray([0, 1, 2])
+    confidence_level = 0.90
     limit_results = fit.LimitResults(
-        3.0, np.empty(5), observed_CLs, expected_CLs, poi_values
+        3.0, np.empty(5), observed_CLs, expected_CLs, poi_values, confidence_level
     )
 
     fig = visualize.limit(limit_results, figure_folder=folder_path)
@@ -578,6 +579,7 @@ def test_limit(mock_draw):
     assert np.allclose(mock_draw.call_args[0][0], limit_results.observed_CLs)
     assert np.allclose(mock_draw.call_args[0][1], limit_results.expected_CLs)
     assert np.allclose(mock_draw.call_args[0][2], limit_results.poi_values)
+    assert np.allclose(mock_draw.call_args[0][3], 1 - limit_results.confidence_level)
     assert mock_draw.call_args[1] == {"figure_path": figure_path, "close_figure": True}
 
     # do not close figure, do not save figure
