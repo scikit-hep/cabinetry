@@ -596,8 +596,12 @@ def limit(
     """
     pyhf.set_backend(pyhf.tensorlib, pyhf.optimize.minuit_optimizer(verbose=1))
 
+    # show two decimals only if confidence level in percent is not an integer
+    cl_label = (
+        f"{confidence_level:.{0 if (confidence_level * 100).is_integer() else 2}%}"
+    )
     log.info(
-        f"calculating {confidence_level:.2%} confidence level upper limit for "
+        f"calculating {cl_label} confidence level upper limit for "
         f"{model.config.poi_name}"
     )
 
@@ -701,7 +705,7 @@ def limit(
             # invalid starting bracket is most common issue
             log.error(
                 f"CLs values at {bracket[0]:.4f} and {bracket[1]:.4f} do not bracket "
-                f"CLs={cls_target}, try a different starting bracket"
+                f"CLs={cls_target:.4f}, try a different starting bracket"
             )
             raise
 
@@ -748,7 +752,7 @@ def limit(
     log.info(f"total of {steps_total} steps to calculate all limits")
     if not all_converged:
         log.error("one or more calculations did not converge, check log")
-    log.info(f"summary of {confidence_level:.2%} confidence level upper limits:")
+    log.info(f"summary of {cl_label} confidence level upper limits:")
     for i_limit, limit_label in enumerate(limit_labels):
         log.info(f"{limit_label.ljust(17)}: {all_limits[i_limit]:.4f}")
 

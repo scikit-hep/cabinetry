@@ -1,6 +1,7 @@
 """Visualizes inference results with matplotlib."""
 
 import logging
+import math
 import pathlib
 from typing import List, Optional, Union
 
@@ -368,8 +369,11 @@ def limit(
         zorder=0,  # draw beneath 1 sigma band
     )
 
+    # determine whether CLs value shown in percent is integer (float.is_integer() is not
+    # sufficient after calculation of 1-confidence_level in fit.limit)
+    cls_pct_is_integer = math.isclose(cls_target * 100, round(cls_target * 100))
+    cls_label = f"{cls_target:.{0 if cls_pct_is_integer else 2}%}"
     # line through CLs = cls_target
-    cls_label = f"{cls_target:.{0 if (cls_target * 100).is_integer() else 2}%}"
     ax.hlines(
         cls_target,
         xmin=xmin,

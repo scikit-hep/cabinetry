@@ -501,6 +501,7 @@ def test_limit(example_spec_with_background, caplog):
     assert np.allclose(limit_results.observed_CLs[-1], 0.0)
     assert np.allclose(limit_results.expected_CLs[-1], [0.0, 0.0, 0.0, 0.0, 0.0])
     assert np.allclose(limit_results.poi_values[-1], 8.0)  # from custom POI range
+    assert limit_results.confidence_level == 0.95
     # verify that POI values are sorted
     assert np.allclose(limit_results.poi_values, sorted(limit_results.poi_values))
     caplog.clear()
@@ -531,15 +532,15 @@ def test_limit(example_spec_with_background, caplog):
     assert np.allclose(limit_results.expected_limit, expected_limit, rtol=2e-2)
     caplog.clear()
 
-    # bracket does not contain root
+    # bracket does not contain root, custom confidence level
     with pytest.raises(
         ValueError, match=re.escape("f(a) and f(b) must have different signs")
     ):
-        fit.limit(model, data, bracket=(1.0, 2.0))
-        assert (
-            "CLs values at 1.000 and 2.000 do not bracket CLs=0.05, try a different "
-            "starting bracket" in [rec.message for rec in caplog.records]
-        )
+        fit.limit(model, data, bracket=(1.0, 2.0), confidence_level=0.9)
+    assert (
+        "CLs values at 1.0000 and 2.0000 do not bracket CLs=0.1000, try a different "
+        "starting bracket" in [rec.message for rec in caplog.records]
+    )
     caplog.clear()
 
     # bracket with identical values
