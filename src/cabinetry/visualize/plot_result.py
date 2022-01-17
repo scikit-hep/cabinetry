@@ -369,13 +369,14 @@ def limit(
     )
 
     # line through CLs = cls_target
+    cls_label = f"{cls_target:.{0 if (cls_target * 100).is_integer() else 2}%}"
     ax.hlines(
         cls_target,
         xmin=xmin,
         xmax=xmax,
         linestyle="dashdot",
         color="red",
-        label=f"CL$_S$ = {cls_target:.2%}",
+        label="CL$_S$ = " + cls_label,  # 2 decimals unless they are both 0, then 0
         zorder=1,  # draw beneath observed / expected
     )
 

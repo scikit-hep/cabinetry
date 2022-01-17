@@ -153,8 +153,11 @@ def test_limit(tmp_path):
         ]
     )
     poi_values = np.asarray([0.5, 1.0, 1.5, 2.0])
+    cls_target = 0.05
 
-    fig = plot_result.limit(observed_CLs, expected_CLs, poi_values, figure_path=fname)
+    fig = plot_result.limit(
+        observed_CLs, expected_CLs, poi_values, cls_target, figure_path=fname
+    )
     assert compare_images("tests/visualize/reference/limit.png", str(fname), 0) is None
 
     # compare figure returned by function
@@ -165,7 +168,7 @@ def test_limit(tmp_path):
     # do not save figure, but close it
     with mock.patch("cabinetry.visualize.utils._save_and_close") as mock_close_safe:
         fig = plot_result.limit(
-            observed_CLs, expected_CLs, poi_values, close_figure=True
+            observed_CLs, expected_CLs, poi_values, cls_target, close_figure=True
         )
         assert mock_close_safe.call_args_list == [((fig, None, True), {})]
 
