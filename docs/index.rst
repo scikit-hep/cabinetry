@@ -35,7 +35,7 @@ Presentations of cabinetry
 - `vCHEP 2021 <https://indico.cern.ch/event/948465/>`_
 
   - short talk: https://indico.cern.ch/event/948465/contributions/4324154/
-  - associated paper: `10.5281/zenodo.4627037 <https://doi.org/10.5281/zenodo.4627037>`_
+  - associated paper: `10.1051/epjconf/202125103067 <https://doi.org/10.1051/epjconf/202125103067>`_
 
 - `PyHEP 2021 <https://indico.cern.ch/event/1019958/>`_
 
