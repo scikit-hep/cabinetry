@@ -81,6 +81,7 @@ class LimitResults(NamedTuple):
         observed_CLs (np.ndarray): observed CLs values
         expected_CLs (np.ndarray): expected CLs values, including 1 and 2 sigma bands
         poi_values (np.ndarray): POI values used in scan
+        confidence_level (float): confidence level used for parameter limits
     """
 
     observed_limit: float
@@ -88,6 +89,7 @@ class LimitResults(NamedTuple):
     observed_CLs: np.ndarray
     expected_CLs: np.ndarray
     poi_values: np.ndarray
+    confidence_level: float
 
 
 class SignificanceResults(NamedTuple):

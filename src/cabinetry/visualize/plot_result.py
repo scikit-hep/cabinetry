@@ -1,6 +1,7 @@
 """Visualizes inference results with matplotlib."""
 
 import logging
+import math
 import pathlib
 from typing import List, Optional, Union
 
@@ -317,6 +318,7 @@ def limit(
     observed_CLs: np.ndarray,
     expected_CLs: np.ndarray,
     poi_values: np.ndarray,
+    cls_target: float,
     *,
     figure_path: Optional[pathlib.Path] = None,
     close_figure: bool = False,
@@ -327,6 +329,7 @@ def limit(
         observed_CLs (np.ndarray): observed CLs values
         expected_CLs (np.ndarray): expected CLs values, including 1 and 2 sigma bands
         poi_values (np.ndarray): parameter of interest values used in scan
+        cls_target (float): target CLs value to visualize as horizontal line
         figure_path (Optional[pathlib.Path], optional): path where figure should be
             saved, or None to not save it, defaults to None
         close_figure (bool, optional): whether to close each figure immediately after
@@ -366,14 +369,18 @@ def limit(
         zorder=0,  # draw beneath 1 sigma band
     )
 
-    # line through CLs = 0.05
+    # determine whether CLs value shown in percent is integer (float.is_integer() is not
+    # sufficient after calculation of 1-confidence_level in fit.limit)
+    cls_pct_is_integer = math.isclose(cls_target * 100, round(cls_target * 100))
+    cls_label = f"{cls_target:.{0 if cls_pct_is_integer else 2}%}"
+    # line through CLs = cls_target
     ax.hlines(
-        0.05,
+        cls_target,
         xmin=xmin,
         xmax=xmax,
         linestyle="dashdot",
         color="red",
-        label=r"CL$_S$ = 5%",
+        label="CL$_S$ = " + cls_label,  # 2 decimals unless they are both 0, then 0
         zorder=1,  # draw beneath observed / expected
     )
 

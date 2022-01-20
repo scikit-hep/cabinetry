@@ -354,6 +354,7 @@ def test_scan(mock_utils, mock_scan, mock_vis, tmp_path):
         np.asarray([0.05]),
         np.asarray([0.01, 0.02, 0.05, 0.07, 0.10]),
         np.asarray([3.0]),
+        0.90,
     ),
     autospec=True,
 )
@@ -376,6 +377,7 @@ def test_limit(mock_utils, mock_limit, mock_vis, tmp_path):
         np.asarray([0.05]),
         np.asarray([0.01, 0.02, 0.05, 0.07, 0.10]),
         np.asarray([3.0]),
+        0.90,
     )
 
     runner = CliRunner()
@@ -384,7 +386,9 @@ def test_limit(mock_utils, mock_limit, mock_vis, tmp_path):
     result = runner.invoke(cli.limit, [workspace_path])
     assert result.exit_code == 0
     assert mock_utils.call_args_list == [((workspace,), {"asimov": False})]
-    assert mock_limit.call_args_list == [(("model", "data"), {"tolerance": 0.01})]
+    assert mock_limit.call_args_list == [
+        (("model", "data"), {"tolerance": 0.01, "confidence_level": 0.95})
+    ]
     assert mock_vis.call_count == 1
     assert np.allclose(
         mock_vis.call_args[0][0].observed_limit, limit_results.observed_limit
@@ -399,16 +403,31 @@ def test_limit(mock_utils, mock_limit, mock_vis, tmp_path):
         mock_vis.call_args[0][0].expected_CLs, limit_results.expected_CLs
     )
     assert np.allclose(mock_vis.call_args[0][0].poi_values, limit_results.poi_values)
+    assert np.allclose(
+        mock_vis.call_args[0][0].confidence_level, limit_results.confidence_level
+    )
     assert mock_vis.call_args[1] == {"figure_folder": "figures"}
 
-    # Asimov, tolerance, custom folder
+    # Asimov, tolerance, confidence level, custom folder
     result = runner.invoke(
         cli.limit,
-        ["--asimov", "--tolerance", "0.1", "--figfolder", "folder", workspace_path],
+        [
+            "--asimov",
+            "--tolerance",
+            "0.1",
+            "--confidence_level",
+            "0.90",
+            "--figfolder",
+            "folder",
+            workspace_path,
+        ],
     )
     assert result.exit_code == 0
     assert mock_utils.call_args == ((workspace,), {"asimov": True})
-    assert mock_limit.call_args == (("model", "data"), {"tolerance": 0.1})
+    assert mock_limit.call_args == (
+        ("model", "data"),
+        {"tolerance": 0.1, "confidence_level": 0.90},
+    )
     assert mock_vis.call_args[1] == {"figure_folder": "folder"}
 
 

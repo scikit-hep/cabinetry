@@ -565,11 +565,13 @@ def limit(
     bracket: Optional[Union[List[float], Tuple[float, float]]] = None,
     tolerance: float = 0.01,
     maxiter: int = 100,
+    confidence_level: float = 0.95,
 ) -> LimitResults:
-    """Calculates observed and expected 95% confidence level upper parameter limits.
+    """Calculates observed and expected upper parameter limits.
 
     Limits are calculated for the parameter of interest (POI) defined in the model.
-    Brent's algorithm is used to automatically determine POI values to be tested.
+    Brent's algorithm is used to automatically determine POI values to be tested. The
+    desired confidence level can be configured, and defaults to 95%.
 
     Args:
         model (pyhf.pdf.Model): model to use in fits
@@ -577,12 +579,14 @@ def limit(
         bracket (Optional[Union[List[float], Tuple[float, float]]], optional): the two
             POI values used to start the observed limit determination, the limit must
             lie between these values and the values must not be the same, defaults to
-            None (then uses ``0.1`` as default lower value and the upper POI bound
+            None (then uses 0.1 as default lower value and the upper POI bound
             specified in the measurement as default upper value)
-        tolerance (float, optional): tolerance in POI value for convergence to CLs=0.05,
-            defaults to 0.01
+        tolerance (float, optional): tolerance in POI value for convergence to target
+            CLs value (1-``confidence_level``), defaults to 0.01
         maxiter (int, optional): maximum number of steps for limit finding, defaults to
             100
+        confidence_level (float, optional): confidence level for calculation, defaults
+            to 0.95 (95%)
 
     Raises:
         ValueError: if lower and upper bracket value are the same
@@ -592,7 +596,14 @@ def limit(
     """
     pyhf.set_backend(pyhf.tensorlib, pyhf.optimize.minuit_optimizer(verbose=1))
 
-    log.info(f"calculating upper limit for {model.config.poi_name}")
+    # show two decimals only if confidence level in percent is not an integer
+    cl_label = (
+        f"{confidence_level:.{0 if (confidence_level * 100).is_integer() else 2}%}"
+    )
+    log.info(
+        f"calculating {cl_label} confidence level upper limit for "
+        f"{model.config.poi_name}"
+    )
 
     # set lower POI bound to zero (for use with qmu_tilde)
     par_bounds = model.config.suggested_bounds()
@@ -613,32 +624,34 @@ def limit(
         poi: float,
         model: pyhf.pdf.Model,
         data: List[float],
+        cls_target: float,
         which_limit: int,
         limit_label: str,
     ) -> float:
-        """The root of this function is the POI value at the CLs=0.05 crossing.
+        """Root of this function is the POI value at the CLs=``cls_target`` crossing.
 
-        Returns 0.95 for POI values below 0. Makes use of an external cache to avoid
-        re-fitting with known POI values and to store all relevant values.
+        Returns 1-``cls_target`` for POI values below 0. Makes use of an external
+        cache to avoid re-fitting known POI values and to store all relevant values.
 
         Args:
             poi (float): value for parameter of interest
             model (pyhf.pdf.Model): model to use in fits
             data (List[float]): data (including auxdata) the model is fit to
+            cls_target (float): target CLs value to find by varying POI
             which_limit (int): which limit to run, 0: observed, 1: expected -2 sigma, 2:
                 expected -1 sigma, 3: expected, 4: expected +1 sigma, 5: expected +2
                 sigma
             limit_label (str): string to use when referring to the current limit
 
         Returns:
-            float: absolute value of difference to CLs=0.05
+            float: absolute value of difference to CLs=``cls_target``
         """
         if poi <= 0:
             # no fit needed for negative POI value, return a default value
             log.debug(
                 f"skipping fit for {model.config.poi_name} = {poi:.4f}, setting CLs = 1"
             )
-            return 0.95  # corresponds to distance of CLs = 1 to target CLs = 0.05
+            return 1 - cls_target  # distance of CLs = 1 to target CLs
         cache = cache_CLs.get(poi)
         if cache:
             observed, expected = cache  # use result from cache
@@ -660,10 +673,11 @@ def limit(
             f"{model.config.poi_name} = {poi:.4f}, {limit_label} CLs = "
             f"{current_CLs:.4f}{' (cached)' if cache else ''}"
         )
-        return current_CLs - 0.05
+        return current_CLs - cls_target
 
     # calculate all limits, one by one: observed, expected -2 sigma, expected -1 sigma,
     # expected, expected +1 sigma, expected +2 sigma
+    cls_target = 1 - confidence_level
     limit_labels = [
         "observed",
         "expected -2 sigma",
@@ -683,7 +697,7 @@ def limit(
             res = scipy.optimize.root_scalar(
                 _cls_minus_threshold,
                 bracket=bracket,
-                args=(model, data, i_limit, limit_label),
+                args=(model, data, cls_target, i_limit, limit_label),
                 method="brentq",
                 options={"xtol": tolerance, "maxiter": maxiter},
             )
@@ -691,7 +705,7 @@ def limit(
             # invalid starting bracket is most common issue
             log.error(
                 f"CLs values at {bracket[0]:.4f} and {bracket[1]:.4f} do not bracket "
-                "CLs=0.05, try a different starting bracket"
+                f"CLs={cls_target:.4f}, try a different starting bracket"
             )
             raise
 
@@ -714,22 +728,22 @@ def limit(
             # associated POI values
             poi_arr = np.fromiter(cache_CLs.keys(), dtype=float)
 
-            # left: CLs has to be > 0.05, mask out values where CLs <= 0.05
-            masked_CLs_left = np.where(exp_CLs_next <= 0.05, 1, exp_CLs_next)
+            # left: CLs has to be > cls_target, mask out values where CLs <= cls_target
+            masked_CLs_left = np.where(exp_CLs_next <= cls_target, 1, exp_CLs_next)
             if sum(masked_CLs_left != 1) == 0:
-                # all values are below 0.05, pick default lower bound
+                # all values are below cls_target, pick default lower bound
                 bracket_left = bracket_left_default
             else:
-                # find closest to CLs = 0.05 from above
+                # find closest to CLs = cls_target from above
                 bracket_left = poi_arr[np.argmin(masked_CLs_left)]
 
-            # right: CLs has to be < 0.05, mask out values where CLs >= 0.05
-            masked_CLs_right = np.where(exp_CLs_next >= 0.05, -1, exp_CLs_next)
+            # right: CLs has to be < cls_target, mask out values where CLs >= cls_target
+            masked_CLs_right = np.where(exp_CLs_next >= cls_target, -1, exp_CLs_next)
             if sum(masked_CLs_right != -1) == 0:
-                # all values are above 0.05, pick default upper bound
+                # all values are above cls_target, pick default upper bound
                 bracket_right = bracket_right_default
             else:
-                # find closest to CLs=0.05 from below
+                # find closest to CLs=cls_target from below
                 bracket_right = poi_arr[np.argmax(masked_CLs_right)]
 
             bracket = (bracket_left, bracket_right)
@@ -738,7 +752,7 @@ def limit(
     log.info(f"total of {steps_total} steps to calculate all limits")
     if not all_converged:
         log.error("one or more calculations did not converge, check log")
-    log.info("summary of upper limits:")
+    log.info(f"summary of {cl_label} confidence level upper limits:")
     for i_limit, limit_label in enumerate(limit_labels):
         log.info(f"{limit_label.ljust(17)}: {all_limits[i_limit]:.4f}")
 
@@ -755,6 +769,7 @@ def limit(
         observed_CLs_np,
         expected_CLs_np,
         poi_arr,
+        confidence_level,
     )
     return limit_results
 

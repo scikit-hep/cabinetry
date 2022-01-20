@@ -626,6 +626,7 @@ def limit(
         limit_results.observed_CLs,
         limit_results.expected_CLs,
         limit_results.poi_values,
+        1 - limit_results.confidence_level,
         figure_path=figure_path,
         close_figure=close_figure,
     )

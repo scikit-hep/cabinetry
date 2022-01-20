@@ -63,14 +63,21 @@ def test_LimitResults():
     observed_CLs = np.asarray([0.05])
     expected_CLs = np.asarray([0.01, 0.02, 0.05, 0.07, 0.10])
     poi_values = np.asarray([3.0])
+    confidence_level = 0.90
     limit_results = fit.LimitResults(
-        observed_limit, expected_limit, observed_CLs, expected_CLs, poi_values
+        observed_limit,
+        expected_limit,
+        observed_CLs,
+        expected_CLs,
+        poi_values,
+        confidence_level,
     )
     assert limit_results.observed_limit == observed_limit
     assert np.allclose(limit_results.expected_limit, expected_limit)
     assert np.allclose(limit_results.observed_CLs, observed_CLs)
     assert np.allclose(limit_results.expected_CLs, expected_CLs)
     assert np.allclose(limit_results.poi_values, poi_values)
+    assert np.allclose(limit_results.confidence_level, confidence_level)
 
 
 def test_SignificanceResults():
