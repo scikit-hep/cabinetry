@@ -579,10 +579,10 @@ def limit(
         bracket (Optional[Union[List[float], Tuple[float, float]]], optional): the two
             POI values used to start the observed limit determination, the limit must
             lie between these values and the values must not be the same, defaults to
-            None (then uses ``0.1`` as default lower value and the upper POI bound
+            None (then uses 0.1 as default lower value and the upper POI bound
             specified in the measurement as default upper value)
         tolerance (float, optional): tolerance in POI value for convergence to target
-            CLs value (``1-confidence_level``), defaults to 0.01
+            CLs value (1-``confidence_level``), defaults to 0.01
         maxiter (int, optional): maximum number of steps for limit finding, defaults to
             100
         confidence_level (float, optional): confidence level for calculation, defaults
@@ -630,7 +630,7 @@ def limit(
     ) -> float:
         """Root of this function is the POI value at the CLs=``cls_target`` crossing.
 
-        Returns ``1-cls_target`` for POI values below 0. Makes use of an external
+        Returns 1-``cls_target`` for POI values below 0. Makes use of an external
         cache to avoid re-fitting known POI values and to store all relevant values.
 
         Args:
