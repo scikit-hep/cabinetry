@@ -729,7 +729,7 @@ def limit(
             poi_arr = np.fromiter(cache_CLs.keys(), dtype=float)
 
             # left: CLs has to be > cls_target, mask out values where CLs <= cls_target
-            masked_CLs_left = np.where(exp_CLs_next <= (cls_target), 1, exp_CLs_next)
+            masked_CLs_left = np.where(exp_CLs_next <= cls_target, 1, exp_CLs_next)
             if sum(masked_CLs_left != 1) == 0:
                 # all values are below cls_target, pick default lower bound
                 bracket_left = bracket_left_default
