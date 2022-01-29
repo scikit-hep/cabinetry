@@ -285,24 +285,18 @@ def yield_stdev(
 
     # loop over parameters to sum up total variance
     # first do the diagonal of the correlation matrix
-    for i_par in range(model.config.npars):
-        symmetric_unc = (up_variations_ak[i_par] - down_variations_ak[i_par]) / 2
-        total_variance = total_variance + symmetric_unc**2
+    sym_uncs = (up_variations_ak - down_variations_ak) / 2
+    total_variance = np.sum(np.power(sym_uncs, 2), axis=0)
 
     # continue with off-diagonal contributions if there are any
     if np.count_nonzero(corr_mat - np.diagflat(np.ones_like(parameters))) > 0:
-        # loop over pairs of parameters
-        for i_par in range(model.config.npars):
-            for j_par in range(model.config.npars):
-                if j_par >= i_par:
-                    continue  # only loop over the half the matrix due to symmetry
-                corr = corr_mat[i_par, j_par]
-                # an approximate calculation could be done here by requiring
-                # e.g. abs(corr) > 1e-5 to continue
-                sym_unc_i = (up_variations_ak[i_par] - down_variations_ak[i_par]) / 2
-                sym_unc_j = (up_variations_ak[j_par] - down_variations_ak[j_par]) / 2
-                # factor of two below is there since loop is only over half the matrix
-                total_variance = total_variance + 2 * (corr * sym_unc_i * sym_unc_j)
+        # possible optimizations missing here now:
+        #   - skipping staterror-staterror combinations (orthogonal)
+        #   - taking advantage of correlation matrix symmetry
+        #   - (optional) skipping combinations with correlations below threshold
+        R = corr_mat[..., np.newaxis, np.newaxis] * sym_uncs[np.newaxis, ...]
+        L = sym_uncs[:, np.newaxis, ...] * R
+        total_variance = np.sum(ak.flatten(L, axis=1), axis=0)
 
     # convert to standard deviations per bin and per channel
     total_stdev_per_bin = np.sqrt(total_variance[:n_channels])
