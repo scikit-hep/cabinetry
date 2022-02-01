@@ -271,8 +271,7 @@ def test_histogram_reading(tmp_path, histogram_creator):
     # override config options to point to tmp_path
     cabinetry_config["General"]["HistogramFolder"] = str(tmp_path / "histograms")
     cabinetry_config["General"]["InputPath"] = (
-        f"{tmp_path / 'histograms.root'}:"
-        f"{{RegionPath}}/{{SamplePath}}/{{VariationPath}}"
+        f"{tmp_path / 'histograms.root'}:" "{RegionPath}/{SamplePath}/{VariationPath}"
     )
 
     cabinetry.templates.collect(cabinetry_config, method="uproot")

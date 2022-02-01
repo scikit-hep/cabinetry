@@ -18,46 +18,34 @@ def test__ntuple_paths(caplog):
     ]
 
     # general path with region and sample templates
-    assert (
-        builder._ntuple_paths(
-            "{RegionPath}/{SamplePath}",
-            {"RegionPath": "region"},
-            {"SamplePath": "sample.root"},
-            {},
-            None,
-        )
-        == [pathlib.Path("region/sample.root")]
-    )
+    assert builder._ntuple_paths(
+        "{RegionPath}/{SamplePath}",
+        {"RegionPath": "region"},
+        {"SamplePath": "sample.root"},
+        {},
+        None,
+    ) == [pathlib.Path("region/sample.root")]
 
     # SamplePath with list of two samples
-    assert (
-        builder._ntuple_paths(
-            "{RegionPath}/{SamplePath}",
-            {"RegionPath": "region"},
-            {"SamplePath": ["sample.root", "new.root"]},
-            {},
-            None,
-        )
-        == [pathlib.Path("region/sample.root"), pathlib.Path("region/new.root")]
-    )
+    assert builder._ntuple_paths(
+        "{RegionPath}/{SamplePath}",
+        {"RegionPath": "region"},
+        {"SamplePath": ["sample.root", "new.root"]},
+        {},
+        None,
+    ) == [pathlib.Path("region/sample.root"), pathlib.Path("region/new.root")]
 
     # systematic with override for RegionPath and SamplePath
-    assert (
-        builder._ntuple_paths(
-            "{RegionPath}/{SamplePath}",
-            {"RegionPath": "reg_1"},
-            {"SamplePath": "path.root"},
-            {
-                "Name": "variation",
-                "Up": {
-                    "SamplePath": ["variation.root", "new.root"],
-                    "RegionPath": "reg_2",
-                },
-            },
-            "Up",
-        )
-        == [pathlib.Path("reg_2/variation.root"), pathlib.Path("reg_2/new.root")]
-    )
+    assert builder._ntuple_paths(
+        "{RegionPath}/{SamplePath}",
+        {"RegionPath": "reg_1"},
+        {"SamplePath": "path.root"},
+        {
+            "Name": "variation",
+            "Up": {"SamplePath": ["variation.root", "new.root"], "RegionPath": "reg_2"},
+        },
+        "Up",
+    ) == [pathlib.Path("reg_2/variation.root"), pathlib.Path("reg_2/new.root")]
 
     # systematic without override
     assert builder._ntuple_paths(

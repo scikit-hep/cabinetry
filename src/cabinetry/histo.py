@@ -57,7 +57,7 @@ class Histogram(bh.Histogram, family=cabinetry):
         )
         yields = np.asarray(yields)
         stdev = np.asarray(stdev)
-        out[...] = np.stack([yields, stdev ** 2], axis=-1)
+        out[...] = np.stack([yields, stdev**2], axis=-1)
         return out
 
     @classmethod
@@ -162,7 +162,7 @@ class Histogram(bh.Histogram, family=cabinetry):
         Args:
             value (np.ndarray): the standard deviation
         """
-        self.view().variance = value ** 2  # type: ignore
+        self.view().variance = value**2  # type: ignore
 
     @property
     def bins(self) -> np.ndarray:

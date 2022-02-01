@@ -248,7 +248,7 @@ def yield_stdev(
     # first do the diagonal of the correlation matrix
     for i_par in range(model.config.npars):
         symmetric_unc = (up_variations_ak[i_par] - down_variations_ak[i_par]) / 2
-        total_variance = total_variance + symmetric_unc ** 2
+        total_variance = total_variance + symmetric_unc**2
 
     labels = model.config.par_names()
     # continue with off-diagonal contributions if there are any
