@@ -1,7 +1,20 @@
+import logging.config
+
 import boost_histogram as bh
 import numpy as np
 import pytest
 import uproot
+
+
+def pytest_sessionstart():
+    # suppress verbose DEBUG level output from matplotlib when tests fail
+    logging.config.dictConfig(
+        {
+            "loggers": {"matplotlib": {"level": "INFO"}},
+            "disable_existing_loggers": False,
+            "version": 1,
+        }
+    )
 
 
 class Utils:
