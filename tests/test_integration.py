@@ -173,7 +173,7 @@ def test_integration(tmp_path, ntuple_creator, caplog):
         [[11.898333, 7.283185, 7.414715, 7.687922]],
         rtol=1e-4,
     )
-    assert np.allclose(model_postfit.total_stdev_model_channels, [20.329523])
+    assert np.allclose(model_postfit.total_stdev_model_channels, [20.329756], atol=1e-4)
     _ = cabinetry.visualize.data_mc(model_postfit, data, close_figure=True)
 
     # nuisance parameter ranking
