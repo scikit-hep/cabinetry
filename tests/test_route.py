@@ -18,7 +18,7 @@ class ProcessorExamples:
             hist = bh.Histogram(bh.axis.Variable([0, 1]), storage=bh.storage.Weight())
             yields = np.asarray([2])
             stdev = np.asarray([0.1])
-            hist[...] = np.stack([yields, stdev ** 2], axis=-1)
+            hist[...] = np.stack([yields, stdev**2], axis=-1)
             return hist
 
         return example_template_builder

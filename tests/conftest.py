@@ -13,7 +13,7 @@ class Utils:
     @staticmethod
     def create_histogram(fname, histname, bins, yields, stdev):
         hist = bh.Histogram(bh.axis.Variable(bins), storage=bh.storage.Weight())
-        hist[...] = np.stack([yields, stdev ** 2], axis=-1)
+        hist[...] = np.stack([yields, stdev**2], axis=-1)
         with uproot.recreate(fname) as f:
             f[histname] = hist
 
