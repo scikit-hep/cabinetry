@@ -63,6 +63,12 @@ def test__fit_model_pyhf(mock_minos, example_spec, example_spec_multibin):
     assert np.allclose(fit_results.uncertainty, [0.0, 0.0, 0.20694409, 0.11792805])
     assert np.allclose(fit_results.best_twice_nll, 10.4531891)
 
+    # custom parameter bounds
+    model, data = model_utils.model_and_data(example_spec)
+    par_bounds = [(0.1, 2), (0, 5)]
+    fit_results = fit._fit_model_pyhf(model, data, par_bounds=par_bounds)
+    assert np.allclose(fit_results.bestfit, [1.1, 5.0])
+
     # including minos, one parameter is unknown
     model, data = model_utils.model_and_data(example_spec)
     fit_results = fit._fit_model_pyhf(model, data, minos=["Signal strength", "abc"])
@@ -114,6 +120,12 @@ def test__fit_model_custom(mock_minos, example_spec, example_spec_multibin):
     assert np.allclose(fit_results.uncertainty, [0.0, 0.0, 0.20694409, 0.11792805])
     assert np.allclose(fit_results.best_twice_nll, 10.45318909)
 
+    # custom parameter bounds
+    model, data = model_utils.model_and_data(example_spec)
+    par_bounds = [(0.1, 2), (0, 5)]
+    fit_results = fit._fit_model_custom(model, data, par_bounds=par_bounds)
+    assert np.allclose(fit_results.bestfit, [1.1, 5.0])
+
     # including minos
     model, data = model_utils.model_and_data(example_spec)
     fit_results = fit._fit_model_custom(model, data, minos=["Signal strength"])
@@ -149,27 +161,30 @@ def test__fit_model(mock_pyhf, mock_custom, example_spec):
     assert mock_pyhf.call_args[0][0].spec == model.spec
     assert mock_pyhf.call_args[0][1] == data
     assert mock_pyhf.call_args[1] == {
+        "minos": None,
         "init_pars": None,
         "fix_pars": None,
-        "minos": None,
+        "par_bounds": None,
     }
     assert np.allclose(fit_results.bestfit, [1.1])
 
-    # pyhf API, init/fixed pars, minos
+    # pyhf API, init/fixed pars, par bounds, minos
     fit_results = fit._fit_model(
         model,
         data,
+        minos=["Signal strength"],
         init_pars=[1.5, 2.0],
         fix_pars=[False, True],
-        minos=["Signal strength"],
+        par_bounds=[(0.1, 10.0), (0, 5)],
     )
     assert mock_pyhf.call_count == 2
     assert mock_pyhf.call_args[0][0].spec == model.spec
     assert mock_pyhf.call_args[0][1] == data
     assert mock_pyhf.call_args[1] == {
+        "minos": ["Signal strength"],
         "init_pars": [1.5, 2.0],
         "fix_pars": [False, True],
-        "minos": ["Signal strength"],
+        "par_bounds": [(0.1, 10.0), (0, 5)],
     }
     assert np.allclose(fit_results.bestfit, [1.1])
 
@@ -179,28 +194,31 @@ def test__fit_model(mock_pyhf, mock_custom, example_spec):
     assert mock_custom.call_args[0][0].spec == model.spec
     assert mock_custom.call_args[0][1] == data
     assert mock_custom.call_args[1] == {
+        "minos": None,
         "init_pars": None,
         "fix_pars": None,
-        "minos": None,
+        "par_bounds": None,
     }
     assert np.allclose(fit_results.bestfit, [1.2])
 
-    # direct iminuit, init/fixed pars, minos
+    # direct iminuit, init/fixed pars, par bounds, minos
     fit_results = fit._fit_model(
         model,
         data,
+        minos=["Signal strength"],
         init_pars=[1.5, 2.0],
         fix_pars=[False, True],
-        minos=["Signal strength"],
+        par_bounds=[(0.1, 10.0), (0, 5)],
         custom_fit=True,
     )
     assert mock_custom.call_count == 2
     assert mock_custom.call_args[0][0].spec == model.spec
     assert mock_custom.call_args[0][1] == data
     assert mock_custom.call_args[1] == {
+        "minos": ["Signal strength"],
         "init_pars": [1.5, 2.0],
         "fix_pars": [False, True],
-        "minos": ["Signal strength"],
+        "par_bounds": [(0.1, 10.0), (0, 5)],
     }
     assert np.allclose(fit_results.bestfit, [1.2])
 
@@ -287,18 +305,47 @@ def test_fit(mock_fit, mock_print, mock_gof):
     # fit through pyhf.infer API
     fit_results = fit.fit(model, data)
     assert mock_fit.call_args_list == [
-        ((model, data), {"minos": None, "custom_fit": False})
+        (
+            (model, data),
+            {
+                "minos": None,
+                "init_pars": None,
+                "fix_pars": None,
+                "par_bounds": None,
+                "custom_fit": False,
+            },
+        )
     ]
     mock_print.assert_called_once()
     assert mock_print.call_args[0][0].bestfit == [1.0]
     assert mock_print.call_args[0][0].uncertainty == [0.1]
     assert mock_print.call_args[0][0].labels == ["par"]
+    assert mock_gof.call_count == 0
     assert fit_results.bestfit == [1.0]
 
-    # custom fit
-    fit_results = fit.fit(model, data, custom_fit=True)
+    # custom fit, init/fix pars, par bounds
+    init_pars = [2.0]
+    fix_pars = [True]
+    par_bounds = [(0.0, 5.0)]
+    fit_results = fit.fit(
+        model,
+        data,
+        init_pars=init_pars,
+        fix_pars=fix_pars,
+        par_bounds=par_bounds,
+        custom_fit=True,
+    )
     assert mock_fit.call_count == 2
-    assert mock_fit.call_args == ((model, data), {"minos": None, "custom_fit": True})
+    assert mock_fit.call_args == (
+        (model, data),
+        {
+            "minos": None,
+            "init_pars": init_pars,
+            "fix_pars": fix_pars,
+            "par_bounds": par_bounds,
+            "custom_fit": True,
+        },
+    )
     assert mock_print.call_args[0][0].bestfit == [1.0]
     assert mock_print.call_args[0][0].uncertainty == [0.1]
     assert fit_results.bestfit == [1.0]
@@ -306,11 +353,23 @@ def test_fit(mock_fit, mock_print, mock_gof):
     # parameters for MINOS
     fit_results = fit.fit(model, data, minos=["abc"])
     assert mock_fit.call_count == 3
-    assert mock_fit.call_args[1] == {"minos": ["abc"], "custom_fit": False}
+    assert mock_fit.call_args[1] == {
+        "minos": ["abc"],
+        "init_pars": None,
+        "fix_pars": None,
+        "par_bounds": None,
+        "custom_fit": False,
+    }
     assert fit_results.bestfit == [1.0]
     fit_results = fit.fit(model, data, minos="abc", custom_fit=True)
     assert mock_fit.call_count == 4
-    assert mock_fit.call_args[1] == {"minos": ["abc"], "custom_fit": True}
+    assert mock_fit.call_args[1] == {
+        "minos": ["abc"],
+        "init_pars": None,
+        "fix_pars": None,
+        "par_bounds": None,
+        "custom_fit": True,
+    }
     assert fit_results.bestfit == [1.0]
 
     # goodness-of-fit test

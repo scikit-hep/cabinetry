@@ -41,26 +41,30 @@ def _fit_model_pyhf(
     model: pyhf.pdf.Model,
     data: List[float],
     *,
+    minos: Optional[Union[List[str], Tuple[str, ...]]] = None,
     init_pars: Optional[List[float]] = None,
     fix_pars: Optional[List[bool]] = None,
-    minos: Optional[Union[List[str], Tuple[str, ...]]] = None,
+    par_bounds: Optional[List[Tuple[float, float]]] = None,
 ) -> FitResults:
     """Uses the ``pyhf.infer`` API to perform a maximum likelihood fit.
 
     Parameters set to be fixed in the model are held constant. The ``init_pars``
-    argument allows to override the ``pyhf`` default initial parameter settings, and the
-    ``fix_pars`` argument overrides which parameters are held constant.
+    argument allows to override the ``pyhf`` default initial parameter settings, the
+    ``fix_pars`` argument overrides which parameters are held constant, ``par_bounds``
+    sets parameter bounds.
 
     Args:
         model (pyhf.pdf.Model): the model to use in the fit
         data (List[float]): the data to fit the model to
+        minos (Optional[Union[List[str], Tuple[str, ...]]], optional): runs the MINOS
+            algorithm for all parameters specified, defaults to None (does not run
+            MINOS)
         init_pars (Optional[List[float]], optional): list of initial parameter settings,
             defaults to None (use ``pyhf`` suggested inits)
         fix_pars (Optional[List[bool]], optional): list of booleans specifying which
             parameters are held constant, defaults to None (use ``pyhf`` suggestion)
-        minos (Optional[Union[List[str], Tuple[str, ...]]], optional): runs the MINOS
-            algorithm for all parameters specified, defaults to None (does not run
-            MINOS)
+        par_bounds (Optional[List[Tuple[float, float]]], optional): list of tuples with
+            parameter bounds for fit, defaults to None (use ``pyhf`` suggested bounds)
 
     Returns:
         FitResults: object storing relevant fit results
@@ -72,6 +76,7 @@ def _fit_model_pyhf(
         model,
         init_pars=init_pars,
         fixed_params=fix_pars,
+        par_bounds=par_bounds,
         return_uncertainties=True,
         return_correlations=True,
         return_fitted_val=True,
@@ -105,26 +110,30 @@ def _fit_model_custom(
     model: pyhf.pdf.Model,
     data: List[float],
     *,
+    minos: Optional[Union[List[str], Tuple[str, ...]]] = None,
     init_pars: Optional[List[float]] = None,
     fix_pars: Optional[List[bool]] = None,
-    minos: Optional[Union[List[str], Tuple[str, ...]]] = None,
+    par_bounds: Optional[List[Tuple[float, float]]] = None,
 ) -> FitResults:
     """Uses ``iminuit`` directly to perform a maximum likelihood fit.
 
     Parameters set to be fixed in the model are held constant. The ``init_pars``
-    argument allows to override the ``pyhf`` default initial parameter settings, and the
-    ``fix_pars`` argument overrides which parameters are held constant.
+    argument allows to override the ``pyhf`` default initial parameter settings, the
+    ``fix_pars`` argument overrides which parameters are held constant, ``par_bounds``
+    sets parameter bounds.
 
     Args:
         model (pyhf.pdf.Model): the model to use in the fit
         data (List[float]): the data to fit the model to
+        minos (Optional[Union[List[str], Tuple[str, ...]]], optional): runs the MINOS
+            algorithm for all parameters specified, defaults to None (does not run
+            MINOS)
         init_pars (Optional[List[float]], optional): list of initial parameter settings,
             defaults to None (use ``pyhf`` suggested inits)
         fix_pars (Optional[List[bool]], optional): list of booleans specifying which
             parameters are held constant, defaults to None (use ``pyhf`` suggestion)
-        minos (Optional[Union[List[str], Tuple[str, ...]]], optional): runs the MINOS
-            algorithm for all parameters specified, defaults to None (does not run
-            MINOS)
+        par_bounds (Optional[List[Tuple[float, float]]], optional): list of tuples with
+            parameter bounds for fit, defaults to None (use ``pyhf`` suggested bounds)
 
     Returns:
         FitResults: object storing relevant fit results
@@ -133,9 +142,10 @@ def _fit_model_custom(
 
     # use init_pars provided in function argument if they exist, else use default
     init_pars = init_pars or model.config.suggested_init()
-    par_bounds = model.config.suggested_bounds()
     # use fix_pars provided in function argument if they exist, else use default
     fix_pars = fix_pars or model.config.suggested_fixed()
+    # use par_bounds provided in function argument if they exist, else use default
+    par_bounds = par_bounds or model.config.suggested_bounds()
 
     labels = model.config.par_names()
 
@@ -160,8 +170,8 @@ def _fit_model_custom(
 
     m = iminuit.Minuit(twice_nll_func, init_pars, name=labels)
     m.errors = step_size
-    m.limits = par_bounds
     m.fixed = fix_pars
+    m.limits = par_bounds
     m.errordef = 1
     m.print_level = 1
 
@@ -194,27 +204,31 @@ def _fit_model(
     model: pyhf.pdf.Model,
     data: List[float],
     *,
+    minos: Optional[Union[List[str], Tuple[str, ...]]] = None,
     init_pars: Optional[List[float]] = None,
     fix_pars: Optional[List[bool]] = None,
-    minos: Optional[Union[List[str], Tuple[str, ...]]] = None,
+    par_bounds: Optional[List[Tuple[float, float]]] = None,
     custom_fit: bool = False,
 ) -> FitResults:
     """Interface for maximum likelihood fits through ``pyhf.infer`` API or ``iminuit``.
 
     Parameters set to be fixed in the model are held constant. The ``init_pars``
-    argument allows to override the ``pyhf`` default initial parameter settings, and the
-    ``fix_pars`` argument overrides which parameters are held constant.
+    argument allows to override the ``pyhf`` default initial parameter settings, the
+    ``fix_pars`` argument overrides which parameters are held constant, ``par_bounds``
+    sets parameter bounds.
 
     Args:
         model (pyhf.pdf.Model): the model to use in the fit
         data (List[float]): the data to fit the model to
+        minos (Optional[Union[List[str], Tuple[str, ...]]], optional): runs the MINOS
+            algorithm for all parameters specified, defaults to None (does not run
+            MINOS)
         init_pars (Optional[List[float]], optional): list of initial parameter settings,
             defaults to None (use ``pyhf`` suggested inits)
         fix_pars (Optional[List[bool]], optional): list of booleans specifying which
             parameters are held constant, defaults to None (use ``pyhf`` suggestion)
-        minos (Optional[Union[List[str], Tuple[str, ...]]], optional): runs the MINOS
-            algorithm for all parameters specified, defaults to None (does not run
-            MINOS)
+        par_bounds (Optional[List[Tuple[float, float]]], optional): list of tuples with
+            parameter bounds for fit, defaults to None (use ``pyhf`` suggested bounds)
         custom_fit (bool, optional): whether to use the ``pyhf.infer`` API or
             ``iminuit``, defaults to False (using ``pyhf.infer``)
 
@@ -224,12 +238,22 @@ def _fit_model(
     if not custom_fit:
         # use pyhf infer API
         fit_results = _fit_model_pyhf(
-            model, data, init_pars=init_pars, fix_pars=fix_pars, minos=minos
+            model,
+            data,
+            minos=minos,
+            init_pars=init_pars,
+            fix_pars=fix_pars,
+            par_bounds=par_bounds,
         )
     else:
         # use iminuit directly
         fit_results = _fit_model_custom(
-            model, data, init_pars=init_pars, fix_pars=fix_pars, minos=minos
+            model,
+            data,
+            minos=minos,
+            init_pars=init_pars,
+            fix_pars=fix_pars,
+            par_bounds=par_bounds,
         )
     log.debug(f"-2 log(L) = {fit_results.best_twice_nll:.6f} at best-fit point")
     return fit_results
@@ -342,6 +366,9 @@ def fit(
     *,
     minos: Optional[Union[str, List[str], Tuple[str, ...]]] = None,
     goodness_of_fit: bool = False,
+    init_pars: Optional[List[float]] = None,
+    fix_pars: Optional[List[bool]] = None,
+    par_bounds: Optional[List[Tuple[float, float]]] = None,
     custom_fit: bool = False,
 ) -> FitResults:
     """Performs a  maximum likelihood fit, reports and returns the results.
@@ -357,6 +384,12 @@ def fit(
             MINOS)
         goodness_of_fit (bool, optional): calculate goodness of fit with a saturated
             model (perfectly fits data with shapefactors in all bins), defaults to False
+        init_pars (Optional[List[float]], optional): list of initial parameter settings,
+            defaults to None (use ``pyhf`` suggested inits)
+        fix_pars (Optional[List[bool]], optional): list of booleans specifying which
+            parameters are held constant, defaults to None (use ``pyhf`` suggestion)
+        par_bounds (Optional[List[Tuple[float, float]]], optional): list of tuples with
+            parameter bounds for fit, defaults to None (use ``pyhf`` suggested bounds)
         custom_fit (bool, optional): whether to use the ``pyhf.infer`` API or
             ``iminuit``, defaults to False (using ``pyhf.infer``)
 
@@ -370,7 +403,15 @@ def fit(
         minos = [minos]
 
     # perform fit
-    fit_results = _fit_model(model, data, minos=minos, custom_fit=custom_fit)
+    fit_results = _fit_model(
+        model,
+        data,
+        minos=minos,
+        init_pars=init_pars,
+        fix_pars=fix_pars,
+        par_bounds=par_bounds,
+        custom_fit=custom_fit,
+    )
 
     print_results(fit_results)
 
