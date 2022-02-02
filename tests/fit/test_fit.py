@@ -625,9 +625,7 @@ def test_limit(example_spec_with_background, caplog):
                 {
                     "init_pars": [1.0, 0.9],
                     "fixed_params": [True, False],
-                    # par bounds has list instead of tuple, see
-                    # https://github.com/scikit-hep/pyhf/issues/1755
-                    "par_bounds": [(0.1, 10.0), [0, 5]],
+                    "par_bounds": [(0.1, 10.0), (0, 5)],
                     "test_stat": "qtilde",
                     "return_expected_set": True,
                 },
