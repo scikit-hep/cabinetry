@@ -607,6 +607,9 @@ def limit(
     tolerance: float = 0.01,
     maxiter: int = 100,
     confidence_level: float = 0.95,
+    init_pars: Optional[List[float]] = None,
+    fix_pars: Optional[List[bool]] = None,
+    par_bounds: Optional[List[Tuple[float, float]]] = None,
 ) -> LimitResults:
     """Calculates observed and expected upper parameter limits.
 
@@ -628,6 +631,12 @@ def limit(
             100
         confidence_level (float, optional): confidence level for calculation, defaults
             to 0.95 (95%)
+        init_pars (Optional[List[float]], optional): list of initial parameter settings,
+            defaults to None (use ``pyhf`` suggested inits)
+        fix_pars (Optional[List[bool]], optional): list of booleans specifying which
+            parameters are held constant, defaults to None (use ``pyhf`` suggestion)
+        par_bounds (Optional[List[Tuple[float, float]]], optional): list of tuples with
+            parameter bounds for fit, defaults to None (use ``pyhf`` suggested bounds)
 
     Raises:
         ValueError: if lower and upper bracket value are the same
@@ -646,8 +655,9 @@ def limit(
         f"{model.config.poi_name}"
     )
 
+    # use par_bounds provided in function argument if they exist, else use default
+    par_bounds = par_bounds or model.config.suggested_bounds()
     # set lower POI bound to zero (for use with qmu_tilde)
-    par_bounds = model.config.suggested_bounds()
     par_bounds[model.config.poi_index] = [0, par_bounds[model.config.poi_index][1]]
     log.debug("setting lower parameter bound for POI to 0")
 
@@ -702,9 +712,11 @@ def limit(
                 poi,
                 data,
                 model,
+                init_pars=init_pars,
+                fixed_params=fix_pars,
+                par_bounds=par_bounds,
                 test_stat="qtilde",
                 return_expected_set=True,
-                par_bounds=par_bounds,
             )
             observed = float(results[0])  # 1 value per scan point
             expected = np.asarray(results[1])  # 5 per point (with 1 and 2 sigma bands)

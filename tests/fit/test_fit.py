@@ -607,6 +607,33 @@ def test_limit(example_spec_with_background, caplog):
         fit.limit(model, data, bracket=(3.0, 3.0))
     caplog.clear()
 
+    # init/fixed pars, par bounds
+    with mock.patch("pyhf.infer.hypotest", return_value=None) as mock_test:
+        # mock return value will cause TypeError immediately after call
+        # could alternatively use mocker.spy from pytest-mock
+        with pytest.raises(TypeError):
+            fit.limit(
+                model,
+                data,
+                init_pars=[1.0, 0.9],
+                fix_pars=[True, False],
+                par_bounds=[(0.1, 10.0), (0, 5)],
+            )
+        assert mock_test.call_args_list == [
+            (
+                (0.1, data, model),
+                {
+                    "init_pars": [1.0, 0.9],
+                    "fixed_params": [True, False],
+                    # par bounds has list instead of tuple, see
+                    # https://github.com/scikit-hep/pyhf/issues/1755
+                    "par_bounds": [(0.1, 10.0), [0, 5]],
+                    "test_stat": "qtilde",
+                    "return_expected_set": True,
+                },
+            )
+        ]
+
 
 def test_significance(example_spec_with_background):
     # increase observed data for smaller observed p-value
