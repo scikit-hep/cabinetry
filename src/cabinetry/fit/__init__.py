@@ -815,7 +815,14 @@ def limit(
     return limit_results
 
 
-def significance(model: pyhf.pdf.Model, data: List[float]) -> SignificanceResults:
+def significance(
+    model: pyhf.pdf.Model,
+    data: List[float],
+    *,
+    init_pars: Optional[List[float]] = None,
+    fix_pars: Optional[List[bool]] = None,
+    par_bounds: Optional[List[Tuple[float, float]]] = None,
+) -> SignificanceResults:
     """Calculates the discovery significance of a positive signal.
 
     Observed and expected p-values and significances are both calculated and reported.
@@ -823,6 +830,12 @@ def significance(model: pyhf.pdf.Model, data: List[float]) -> SignificanceResult
     Args:
         model (pyhf.pdf.Model): model to use in fits
         data (List[float]): data (including auxdata) the model is fit to
+        init_pars (Optional[List[float]], optional): list of initial parameter settings,
+            defaults to None (use ``pyhf`` suggested inits)
+        fix_pars (Optional[List[bool]], optional): list of booleans specifying which
+            parameters are held constant, defaults to None (use ``pyhf`` suggestion)
+        par_bounds (Optional[List[Tuple[float, float]]], optional): list of tuples with
+            parameter bounds for fit, defaults to None (use ``pyhf`` suggested bounds)
 
     Returns:
         SignificanceResults: observed and expected p-values and significances
@@ -831,7 +844,14 @@ def significance(model: pyhf.pdf.Model, data: List[float]) -> SignificanceResult
 
     log.info("calculating discovery significance")
     obs_p_val, exp_p_val = pyhf.infer.hypotest(
-        0.0, data, model, test_stat="q0", return_expected=True
+        0.0,
+        data,
+        model,
+        init_pars=init_pars,
+        fixed_params=fix_pars,
+        par_bounds=par_bounds,
+        test_stat="q0",
+        return_expected=True,
     )
     obs_p_val = float(obs_p_val)
     exp_p_val = float(exp_p_val)

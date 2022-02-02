@@ -629,3 +629,26 @@ def test_significance(example_spec_with_background):
     assert np.allclose(significance_results.observed_significance, 2.04096523)
     assert np.allclose(significance_results.expected_p_value, 0.02062714)
     assert np.allclose(significance_results.expected_significance, 2.04096523)
+
+    # init/fixed pars, par bounds
+    model, data = model_utils.model_and_data(example_spec_with_background)
+    with mock.patch("pyhf.infer.hypotest", return_value=(0.0, 0.0)) as mock_test:
+        fit.significance(
+            model,
+            data,
+            init_pars=[1.0, 0.9],
+            fix_pars=[True, False],
+            par_bounds=[(0.1, 10.0), (0, 5)],
+        )
+    assert mock_test.call_args_list == [
+        (
+            (0.0, data, model),
+            {
+                "init_pars": [1.0, 0.9],
+                "fixed_params": [True, False],
+                "par_bounds": [(0.1, 10.0), (0, 5)],
+                "test_stat": "q0",
+                "return_expected": True,
+            },
+        )
+    ]
