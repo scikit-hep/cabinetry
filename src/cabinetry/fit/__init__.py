@@ -240,20 +240,20 @@ def _fit_model(
         fit_results = _fit_model_pyhf(
             model,
             data,
+            minos=minos,
             init_pars=init_pars,
             fix_pars=fix_pars,
             par_bounds=par_bounds,
-            minos=minos,
         )
     else:
         # use iminuit directly
         fit_results = _fit_model_custom(
             model,
             data,
+            minos=minos,
             init_pars=init_pars,
             fix_pars=fix_pars,
             par_bounds=par_bounds,
-            minos=minos,
         )
     log.debug(f"-2 log(L) = {fit_results.best_twice_nll:.6f} at best-fit point")
     return fit_results
@@ -406,10 +406,10 @@ def fit(
     fit_results = _fit_model(
         model,
         data,
+        minos=minos,
         init_pars=init_pars,
         fix_pars=fix_pars,
         par_bounds=par_bounds,
-        minos=minos,
         custom_fit=custom_fit,
     )
 
