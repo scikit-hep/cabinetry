@@ -657,9 +657,13 @@ def limit(
 
     # use par_bounds provided in function argument if they exist, else use default
     par_bounds = par_bounds or model.config.suggested_bounds()
-    # set lower POI bound to zero (for use with qmu_tilde)
-    par_bounds[model.config.poi_index] = (0.0, par_bounds[model.config.poi_index][1])
-    log.debug("setting lower parameter bound for POI to 0")
+    if par_bounds[model.config.poi_index][0] < 0:
+        # set lower POI bound to zero (for use with qmu_tilde)
+        par_bounds[model.config.poi_index] = (
+            0.0,
+            par_bounds[model.config.poi_index][1],
+        )
+        log.debug("setting lower parameter bound for POI to 0")
 
     # set default bracket to (0.1, upper POI bound in measurement) if needed
     bracket_left_default = 0.1
