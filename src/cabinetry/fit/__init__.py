@@ -140,11 +140,9 @@ def _fit_model_custom(
     """
     pyhf.set_backend(pyhf.tensorlib, pyhf.optimize.minuit_optimizer(verbose=1))
 
-    # use init_pars provided in function argument if they exist, else use default
+    # use parameter settings provided in function arguments if they exist, else defaults
     init_pars = init_pars or model.config.suggested_init()
-    # use fix_pars provided in function argument if they exist, else use default
     fix_pars = fix_pars or model.config.suggested_fixed()
-    # use par_bounds provided in function argument if they exist, else use default
     par_bounds = par_bounds or model.config.suggested_bounds()
 
     labels = model.config.par_names()
@@ -527,6 +525,9 @@ def scan(
     *,
     par_range: Optional[Tuple[float, float]] = None,
     n_steps: int = 11,
+    init_pars: Optional[List[float]] = None,
+    fix_pars: Optional[List[bool]] = None,
+    par_bounds: Optional[List[Tuple[float, float]]] = None,
     custom_fit: bool = False,
 ) -> ScanResults:
     """Performs a likelihood scan over the specified parameter.
@@ -543,6 +544,12 @@ def scan(
         par_range (Optional[Tuple[float, float]], optional): upper and lower bounds of
             parameter in scan, defaults to None (automatically determine bounds)
         n_steps (int, optional): number of steps in scan, defaults to 10
+        init_pars (Optional[List[float]], optional): list of initial parameter settings,
+            defaults to None (use ``pyhf`` suggested inits)
+        fix_pars (Optional[List[bool]], optional): list of booleans specifying which
+            parameters are held constant, defaults to None (use ``pyhf`` suggestion)
+        par_bounds (Optional[List[Tuple[float, float]]], optional): list of tuples with
+            parameter bounds for fit, defaults to None (use ``pyhf`` suggested bounds)
         custom_fit (bool, optional): whether to use the ``pyhf.infer`` API or
             ``iminuit``, defaults to False (using ``pyhf.infer``)
 
@@ -554,8 +561,6 @@ def scan(
         offset
     """
     labels = model.config.par_names()
-    init_pars = model.config.suggested_init()
-    fix_pars = model.config.suggested_fixed()
 
     # get index of parameter with name par_name
     par_index = model_utils._parameter_index(par_name, labels)
@@ -563,7 +568,14 @@ def scan(
         raise ValueError(f"parameter {par_name} not found in model")
 
     # run a fit with the parameter not held constant, to find the best-fit point
-    fit_results = _fit_model(model, data, custom_fit=custom_fit)
+    fit_results = _fit_model(
+        model,
+        data,
+        init_pars=init_pars,
+        fix_pars=fix_pars,
+        par_bounds=par_bounds,
+        custom_fit=custom_fit,
+    )
     nominal_twice_nll = fit_results.best_twice_nll
     par_mle = fit_results.bestfit[par_index]
     par_unc = fit_results.uncertainty[par_index]
@@ -574,6 +586,10 @@ def scan(
 
     scan_values = np.linspace(par_range[0], par_range[1], n_steps)
     delta_nlls = np.zeros_like(scan_values)  # holds results
+
+    # use parameter settings provided in function arguments if they exist, else defaults
+    init_pars = init_pars or model.config.suggested_init()
+    fix_pars = fix_pars or model.config.suggested_fixed()
 
     fix_pars[par_index] = True  # hold scan parameter constant in fits
 
@@ -590,6 +606,7 @@ def scan(
             data,
             init_pars=init_pars_scan,
             fix_pars=fix_pars,
+            par_bounds=par_bounds,
             custom_fit=custom_fit,
         )
         # subtract best-fit

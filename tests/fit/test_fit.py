@@ -513,21 +513,43 @@ def test_scan(mock_fit, example_spec):
     assert mock_fit.call_count == 12
     # unconstrained fit
     assert mock_fit.call_args_list[0][0] == ((model, data))
-    assert mock_fit.call_args_list[0][1] == {"custom_fit": False}
+    assert mock_fit.call_args_list[0][1] == {
+        "init_pars": None,
+        "fix_pars": None,
+        "par_bounds": None,
+        "custom_fit": False,
+    }
     # fits in scan
     for i, scan_val in enumerate(expected_scan_values):
         assert mock_fit.call_args_list[i + 1][0] == ((model, data))
-        assert mock_fit.call_args_list[i + 1][1]["init_pars"] == [1.1, scan_val]
-        assert mock_fit.call_args_list[i + 1][1]["fix_pars"] == [True, True]
-        assert mock_fit.call_args_list[i + 1][1]["custom_fit"] is False
+        assert mock_fit.call_args_list[i + 1][1] == {
+            "init_pars": [1.1, scan_val],
+            "fix_pars": [True, True],
+            "par_bounds": None,
+            "custom_fit": False,
+        }
 
-    # parameter range specified, custom fit
+    # parameter range specified, custom fit, init/fixed pars, par bounds
     scan_results = fit.scan(
-        model, data, par_name, par_range=(1.0, 1.5), n_steps=5, custom_fit=True
+        model,
+        data,
+        par_name,
+        par_range=(1.0, 1.5),
+        n_steps=5,
+        init_pars=[1.0, 1.0],
+        fix_pars=[False, False],
+        par_bounds=[(0.1, 10), (0, 5)],
+        custom_fit=True,
     )
     expected_custom_scan = np.linspace(1.0, 1.5, 5)
     assert np.allclose(scan_results.parameter_values, expected_custom_scan)
     assert mock_fit.call_args[1]["custom_fit"] is True
+    assert mock_fit.call_args[1] == {
+        "init_pars": [1.0, 1.5],  # last step of scan
+        "fix_pars": [False, True],
+        "par_bounds": [(0.1, 10), (0, 5)],
+        "custom_fit": True,
+    }
 
     # unknown parameter
     with pytest.raises(ValueError, match="parameter abc not found in model"):
