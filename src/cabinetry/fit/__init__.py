@@ -426,6 +426,9 @@ def ranking(
     data: List[float],
     *,
     fit_results: Optional[FitResults] = None,
+    init_pars: Optional[List[float]] = None,
+    fix_pars: Optional[List[bool]] = None,
+    par_bounds: Optional[List[Tuple[float, float]]] = None,
     custom_fit: bool = False,
 ) -> RankingResults:
     """Calculates the impact of nuisance parameters on the parameter of interest (POI).
@@ -440,6 +443,12 @@ def ranking(
         data (List[float]): data (including auxdata) the model is fit to
         fit_results (Optional[FitResults], optional): nominal fit results to use for
             ranking, if not specified will repeat nominal fit, defaults to None
+        init_pars (Optional[List[float]], optional): list of initial parameter settings,
+            defaults to None (use ``pyhf`` suggested inits)
+        fix_pars (Optional[List[bool]], optional): list of booleans specifying which
+            parameters are held constant, defaults to None (use ``pyhf`` suggestion)
+        par_bounds (Optional[List[Tuple[float, float]]], optional): list of tuples with
+            parameter bounds for fit, defaults to None (use ``pyhf`` suggested bounds)
         custom_fit (bool, optional): whether to use the ``pyhf.infer`` API or
             ``iminuit``, defaults to False (using ``pyhf.infer``)
 
@@ -447,15 +456,24 @@ def ranking(
         RankingResults: fit results for parameters, and pre- and post-fit impacts
     """
     if fit_results is None:
-        fit_results = _fit_model(model, data, custom_fit=custom_fit)
+        fit_results = _fit_model(
+            model,
+            data,
+            init_pars=init_pars,
+            fix_pars=fix_pars,
+            par_bounds=par_bounds,
+            custom_fit=custom_fit,
+        )
 
     labels = model.config.par_names()
     prefit_unc = model_utils.prefit_uncertainties(model)
     nominal_poi = fit_results.bestfit[model.config.poi_index]
 
-    # get default initial parameter settings / whether parameters are constant
-    init_pars_default = model.config.suggested_init()
-    fix_pars_default = model.config.suggested_fixed()
+    # need to get values for parameter settings, as they will be partially changed
+    # during the ranking (init/fix changes)
+    # use parameter settings provided in function arguments if they exist, else defaults
+    init_pars = init_pars or model.config.suggested_init()
+    fix_pars = fix_pars or model.config.suggested_fixed()
 
     all_impacts = []
     for i_par, label in enumerate(labels):
@@ -464,8 +482,8 @@ def ranking(
         log.info(f"calculating impact of {label} on {labels[model.config.poi_index]}")
 
         # hold current parameter constant
-        fix_pars = fix_pars_default.copy()
-        fix_pars[i_par] = True
+        fix_pars_ranking = fix_pars.copy()
+        fix_pars_ranking[i_par] = True
 
         parameter_impacts = []
         # calculate impacts: pre-fit up, pre-fit down, post-fit up, post-fit down
@@ -482,13 +500,14 @@ def ranking(
                 log.debug(f"impact of {label} is zero, skipping fit")
                 parameter_impacts.append(0.0)
             else:
-                init_pars = init_pars_default.copy()
-                init_pars[i_par] = np_val  # set value of current nuisance parameter
+                init_pars_ranking = init_pars.copy()
+                init_pars_ranking[i_par] = np_val  # value of current nuisance parameter
                 fit_results_ranking = _fit_model(
                     model,
                     data,
-                    init_pars=init_pars,
-                    fix_pars=fix_pars,
+                    init_pars=init_pars_ranking,
+                    fix_pars=fix_pars_ranking,
+                    par_bounds=par_bounds,
                     custom_fit=custom_fit,
                 )
                 poi_val = fit_results_ranking.bestfit[model.config.poi_index]
@@ -587,6 +606,8 @@ def scan(
     scan_values = np.linspace(par_range[0], par_range[1], n_steps)
     delta_nlls = np.zeros_like(scan_values)  # holds results
 
+    # need to get values for parameter settings, as they will be partially changed
+    # during the scan (init/fix changes)
     # use parameter settings provided in function arguments if they exist, else defaults
     init_pars = init_pars or model.config.suggested_init()
     fix_pars = fix_pars or model.config.suggested_fixed()

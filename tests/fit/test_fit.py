@@ -431,6 +431,7 @@ def test_ranking(mock_fit, example_spec):
             mock_fit.call_args_list[i][1]["init_pars"], expected_inits[i]
         )
         assert np.allclose(mock_fit.call_args_list[i][1]["fix_pars"], expected_fix)
+        assert mock_fit.call_args_list[i][1]["par_bounds"] is None
         assert mock_fit.call_args_list[i][1]["custom_fit"] is False
 
     # POI removed from fit results
@@ -457,19 +458,36 @@ def test_ranking(mock_fit, example_spec):
     assert np.allclose(ranking_results.postfit_up, [0.2])
     assert np.allclose(ranking_results.postfit_down, [-0.2])
 
-    # no reference results
-    ranking_results = fit.ranking(model, data, custom_fit=True)
+    # no reference results, init/fixed pars, par bounds
+    ranking_results = fit.ranking(
+        model,
+        data,
+        init_pars=[1.0, 1.5],
+        fix_pars=[False, False],
+        par_bounds=[(0.1, 10), (0, 5)],
+        custom_fit=True,
+    )
     assert mock_fit.call_count == 9
     # reference fit
-    assert mock_fit.call_args_list[-3] == ((model, data), {"custom_fit": True})
+    assert mock_fit.call_args_list[-3] == (
+        (model, data),
+        {
+            "init_pars": [1.0, 1.5],
+            "fix_pars": [False, False],
+            "par_bounds": [(0.1, 10), (0, 5)],
+            "custom_fit": True,
+        },
+    )
     # fits for impact
     assert mock_fit.call_args_list[-2][0] == (model, data)
-    assert np.allclose(mock_fit.call_args_list[-2][1]["init_pars"], [1.2, 1.0])
+    assert np.allclose(mock_fit.call_args_list[-2][1]["init_pars"], [1.2, 1.5])
     assert mock_fit.call_args_list[-2][1]["fix_pars"] == [True, False]
+    assert mock_fit.call_args_list[-2][1]["par_bounds"] == [(0.1, 10), (0, 5)]
     assert mock_fit.call_args_list[-2][1]["custom_fit"] is True
     assert mock_fit.call_args_list[-1][0] == (model, data)
-    assert np.allclose(mock_fit.call_args_list[-1][1]["init_pars"], [0.6, 1.0])
+    assert np.allclose(mock_fit.call_args_list[-1][1]["init_pars"], [0.6, 1.5])
     assert mock_fit.call_args_list[-1][1]["fix_pars"] == [True, False]
+    assert mock_fit.call_args_list[-1][1]["par_bounds"] == [(0.1, 10), (0, 5)]
     assert mock_fit.call_args_list[-1][1]["custom_fit"] is True
     # ranking results
     assert np.allclose(ranking_results.prefit_up, [0.0])
