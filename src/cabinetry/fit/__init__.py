@@ -140,11 +140,9 @@ def _fit_model_custom(
     """
     pyhf.set_backend(pyhf.tensorlib, pyhf.optimize.minuit_optimizer(verbose=1))
 
-    # use init_pars provided in function argument if they exist, else use default
+    # use parameter settings provided in function arguments if they exist, else defaults
     init_pars = init_pars or model.config.suggested_init()
-    # use fix_pars provided in function argument if they exist, else use default
     fix_pars = fix_pars or model.config.suggested_fixed()
-    # use par_bounds provided in function argument if they exist, else use default
     par_bounds = par_bounds or model.config.suggested_bounds()
 
     labels = model.config.par_names()
@@ -428,6 +426,9 @@ def ranking(
     data: List[float],
     *,
     fit_results: Optional[FitResults] = None,
+    init_pars: Optional[List[float]] = None,
+    fix_pars: Optional[List[bool]] = None,
+    par_bounds: Optional[List[Tuple[float, float]]] = None,
     custom_fit: bool = False,
 ) -> RankingResults:
     """Calculates the impact of nuisance parameters on the parameter of interest (POI).
@@ -442,6 +443,12 @@ def ranking(
         data (List[float]): data (including auxdata) the model is fit to
         fit_results (Optional[FitResults], optional): nominal fit results to use for
             ranking, if not specified will repeat nominal fit, defaults to None
+        init_pars (Optional[List[float]], optional): list of initial parameter settings,
+            defaults to None (use ``pyhf`` suggested inits)
+        fix_pars (Optional[List[bool]], optional): list of booleans specifying which
+            parameters are held constant, defaults to None (use ``pyhf`` suggestion)
+        par_bounds (Optional[List[Tuple[float, float]]], optional): list of tuples with
+            parameter bounds for fit, defaults to None (use ``pyhf`` suggested bounds)
         custom_fit (bool, optional): whether to use the ``pyhf.infer`` API or
             ``iminuit``, defaults to False (using ``pyhf.infer``)
 
@@ -449,15 +456,24 @@ def ranking(
         RankingResults: fit results for parameters, and pre- and post-fit impacts
     """
     if fit_results is None:
-        fit_results = _fit_model(model, data, custom_fit=custom_fit)
+        fit_results = _fit_model(
+            model,
+            data,
+            init_pars=init_pars,
+            fix_pars=fix_pars,
+            par_bounds=par_bounds,
+            custom_fit=custom_fit,
+        )
 
     labels = model.config.par_names()
     prefit_unc = model_utils.prefit_uncertainties(model)
     nominal_poi = fit_results.bestfit[model.config.poi_index]
 
-    # get default initial parameter settings / whether parameters are constant
-    init_pars_default = model.config.suggested_init()
-    fix_pars_default = model.config.suggested_fixed()
+    # need to get values for parameter settings, as they will be partially changed
+    # during the ranking (init/fix changes)
+    # use parameter settings provided in function arguments if they exist, else defaults
+    init_pars = init_pars or model.config.suggested_init()
+    fix_pars = fix_pars or model.config.suggested_fixed()
 
     all_impacts = []
     for i_par, label in enumerate(labels):
@@ -466,8 +482,8 @@ def ranking(
         log.info(f"calculating impact of {label} on {labels[model.config.poi_index]}")
 
         # hold current parameter constant
-        fix_pars = fix_pars_default.copy()
-        fix_pars[i_par] = True
+        fix_pars_ranking = fix_pars.copy()
+        fix_pars_ranking[i_par] = True
 
         parameter_impacts = []
         # calculate impacts: pre-fit up, pre-fit down, post-fit up, post-fit down
@@ -484,13 +500,14 @@ def ranking(
                 log.debug(f"impact of {label} is zero, skipping fit")
                 parameter_impacts.append(0.0)
             else:
-                init_pars = init_pars_default.copy()
-                init_pars[i_par] = np_val  # set value of current nuisance parameter
+                init_pars_ranking = init_pars.copy()
+                init_pars_ranking[i_par] = np_val  # value of current nuisance parameter
                 fit_results_ranking = _fit_model(
                     model,
                     data,
-                    init_pars=init_pars,
-                    fix_pars=fix_pars,
+                    init_pars=init_pars_ranking,
+                    fix_pars=fix_pars_ranking,
+                    par_bounds=par_bounds,
                     custom_fit=custom_fit,
                 )
                 poi_val = fit_results_ranking.bestfit[model.config.poi_index]
@@ -527,6 +544,9 @@ def scan(
     *,
     par_range: Optional[Tuple[float, float]] = None,
     n_steps: int = 11,
+    init_pars: Optional[List[float]] = None,
+    fix_pars: Optional[List[bool]] = None,
+    par_bounds: Optional[List[Tuple[float, float]]] = None,
     custom_fit: bool = False,
 ) -> ScanResults:
     """Performs a likelihood scan over the specified parameter.
@@ -543,6 +563,12 @@ def scan(
         par_range (Optional[Tuple[float, float]], optional): upper and lower bounds of
             parameter in scan, defaults to None (automatically determine bounds)
         n_steps (int, optional): number of steps in scan, defaults to 10
+        init_pars (Optional[List[float]], optional): list of initial parameter settings,
+            defaults to None (use ``pyhf`` suggested inits)
+        fix_pars (Optional[List[bool]], optional): list of booleans specifying which
+            parameters are held constant, defaults to None (use ``pyhf`` suggestion)
+        par_bounds (Optional[List[Tuple[float, float]]], optional): list of tuples with
+            parameter bounds for fit, defaults to None (use ``pyhf`` suggested bounds)
         custom_fit (bool, optional): whether to use the ``pyhf.infer`` API or
             ``iminuit``, defaults to False (using ``pyhf.infer``)
 
@@ -554,8 +580,6 @@ def scan(
         offset
     """
     labels = model.config.par_names()
-    init_pars = model.config.suggested_init()
-    fix_pars = model.config.suggested_fixed()
 
     # get index of parameter with name par_name
     par_index = model_utils._parameter_index(par_name, labels)
@@ -563,7 +587,14 @@ def scan(
         raise ValueError(f"parameter {par_name} not found in model")
 
     # run a fit with the parameter not held constant, to find the best-fit point
-    fit_results = _fit_model(model, data, custom_fit=custom_fit)
+    fit_results = _fit_model(
+        model,
+        data,
+        init_pars=init_pars,
+        fix_pars=fix_pars,
+        par_bounds=par_bounds,
+        custom_fit=custom_fit,
+    )
     nominal_twice_nll = fit_results.best_twice_nll
     par_mle = fit_results.bestfit[par_index]
     par_unc = fit_results.uncertainty[par_index]
@@ -574,6 +605,12 @@ def scan(
 
     scan_values = np.linspace(par_range[0], par_range[1], n_steps)
     delta_nlls = np.zeros_like(scan_values)  # holds results
+
+    # need to get values for parameter settings, as they will be partially changed
+    # during the scan (init/fix changes)
+    # use parameter settings provided in function arguments if they exist, else defaults
+    init_pars = init_pars or model.config.suggested_init()
+    fix_pars = fix_pars or model.config.suggested_fixed()
 
     fix_pars[par_index] = True  # hold scan parameter constant in fits
 
@@ -590,6 +627,7 @@ def scan(
             data,
             init_pars=init_pars_scan,
             fix_pars=fix_pars,
+            par_bounds=par_bounds,
             custom_fit=custom_fit,
         )
         # subtract best-fit
@@ -607,6 +645,9 @@ def limit(
     tolerance: float = 0.01,
     maxiter: int = 100,
     confidence_level: float = 0.95,
+    init_pars: Optional[List[float]] = None,
+    fix_pars: Optional[List[bool]] = None,
+    par_bounds: Optional[List[Tuple[float, float]]] = None,
 ) -> LimitResults:
     """Calculates observed and expected upper parameter limits.
 
@@ -628,6 +669,12 @@ def limit(
             100
         confidence_level (float, optional): confidence level for calculation, defaults
             to 0.95 (95%)
+        init_pars (Optional[List[float]], optional): list of initial parameter settings,
+            defaults to None (use ``pyhf`` suggested inits)
+        fix_pars (Optional[List[bool]], optional): list of booleans specifying which
+            parameters are held constant, defaults to None (use ``pyhf`` suggestion)
+        par_bounds (Optional[List[Tuple[float, float]]], optional): list of tuples with
+            parameter bounds for fit, defaults to None (use ``pyhf`` suggested bounds)
 
     Raises:
         ValueError: if lower and upper bracket value are the same
@@ -646,10 +693,15 @@ def limit(
         f"{model.config.poi_name}"
     )
 
-    # set lower POI bound to zero (for use with qmu_tilde)
-    par_bounds = model.config.suggested_bounds()
-    par_bounds[model.config.poi_index] = [0, par_bounds[model.config.poi_index][1]]
-    log.debug("setting lower parameter bound for POI to 0")
+    # use par_bounds provided in function argument if they exist, else use default
+    par_bounds = par_bounds or model.config.suggested_bounds()
+    if par_bounds[model.config.poi_index][0] < 0:
+        # set lower POI bound to zero (for use with qmu_tilde)
+        par_bounds[model.config.poi_index] = (
+            0.0,
+            par_bounds[model.config.poi_index][1],
+        )
+        log.debug("setting lower parameter bound for POI to 0")
 
     # set default bracket to (0.1, upper POI bound in measurement) if needed
     bracket_left_default = 0.1
@@ -702,9 +754,11 @@ def limit(
                 poi,
                 data,
                 model,
+                init_pars=init_pars,
+                fixed_params=fix_pars,
+                par_bounds=par_bounds,
                 test_stat="qtilde",
                 return_expected_set=True,
-                par_bounds=par_bounds,
             )
             observed = float(results[0])  # 1 value per scan point
             expected = np.asarray(results[1])  # 5 per point (with 1 and 2 sigma bands)
@@ -815,7 +869,14 @@ def limit(
     return limit_results
 
 
-def significance(model: pyhf.pdf.Model, data: List[float]) -> SignificanceResults:
+def significance(
+    model: pyhf.pdf.Model,
+    data: List[float],
+    *,
+    init_pars: Optional[List[float]] = None,
+    fix_pars: Optional[List[bool]] = None,
+    par_bounds: Optional[List[Tuple[float, float]]] = None,
+) -> SignificanceResults:
     """Calculates the discovery significance of a positive signal.
 
     Observed and expected p-values and significances are both calculated and reported.
@@ -823,6 +884,12 @@ def significance(model: pyhf.pdf.Model, data: List[float]) -> SignificanceResult
     Args:
         model (pyhf.pdf.Model): model to use in fits
         data (List[float]): data (including auxdata) the model is fit to
+        init_pars (Optional[List[float]], optional): list of initial parameter settings,
+            defaults to None (use ``pyhf`` suggested inits)
+        fix_pars (Optional[List[bool]], optional): list of booleans specifying which
+            parameters are held constant, defaults to None (use ``pyhf`` suggestion)
+        par_bounds (Optional[List[Tuple[float, float]]], optional): list of tuples with
+            parameter bounds for fit, defaults to None (use ``pyhf`` suggested bounds)
 
     Returns:
         SignificanceResults: observed and expected p-values and significances
@@ -831,7 +898,14 @@ def significance(model: pyhf.pdf.Model, data: List[float]) -> SignificanceResult
 
     log.info("calculating discovery significance")
     obs_p_val, exp_p_val = pyhf.infer.hypotest(
-        0.0, data, model, test_stat="q0", return_expected=True
+        0.0,
+        data,
+        model,
+        init_pars=init_pars,
+        fixed_params=fix_pars,
+        par_bounds=par_bounds,
+        test_stat="q0",
+        return_expected=True,
     )
     obs_p_val = float(obs_p_val)
     exp_p_val = float(exp_p_val)

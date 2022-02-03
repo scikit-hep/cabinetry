@@ -431,6 +431,7 @@ def test_ranking(mock_fit, example_spec):
             mock_fit.call_args_list[i][1]["init_pars"], expected_inits[i]
         )
         assert np.allclose(mock_fit.call_args_list[i][1]["fix_pars"], expected_fix)
+        assert mock_fit.call_args_list[i][1]["par_bounds"] is None
         assert mock_fit.call_args_list[i][1]["custom_fit"] is False
 
     # POI removed from fit results
@@ -457,19 +458,36 @@ def test_ranking(mock_fit, example_spec):
     assert np.allclose(ranking_results.postfit_up, [0.2])
     assert np.allclose(ranking_results.postfit_down, [-0.2])
 
-    # no reference results
-    ranking_results = fit.ranking(model, data, custom_fit=True)
+    # no reference results, init/fixed pars, par bounds
+    ranking_results = fit.ranking(
+        model,
+        data,
+        init_pars=[1.0, 1.5],
+        fix_pars=[False, False],
+        par_bounds=[(0.1, 10), (0, 5)],
+        custom_fit=True,
+    )
     assert mock_fit.call_count == 9
     # reference fit
-    assert mock_fit.call_args_list[-3] == ((model, data), {"custom_fit": True})
+    assert mock_fit.call_args_list[-3] == (
+        (model, data),
+        {
+            "init_pars": [1.0, 1.5],
+            "fix_pars": [False, False],
+            "par_bounds": [(0.1, 10), (0, 5)],
+            "custom_fit": True,
+        },
+    )
     # fits for impact
     assert mock_fit.call_args_list[-2][0] == (model, data)
-    assert np.allclose(mock_fit.call_args_list[-2][1]["init_pars"], [1.2, 1.0])
+    assert np.allclose(mock_fit.call_args_list[-2][1]["init_pars"], [1.2, 1.5])
     assert mock_fit.call_args_list[-2][1]["fix_pars"] == [True, False]
+    assert mock_fit.call_args_list[-2][1]["par_bounds"] == [(0.1, 10), (0, 5)]
     assert mock_fit.call_args_list[-2][1]["custom_fit"] is True
     assert mock_fit.call_args_list[-1][0] == (model, data)
-    assert np.allclose(mock_fit.call_args_list[-1][1]["init_pars"], [0.6, 1.0])
+    assert np.allclose(mock_fit.call_args_list[-1][1]["init_pars"], [0.6, 1.5])
     assert mock_fit.call_args_list[-1][1]["fix_pars"] == [True, False]
+    assert mock_fit.call_args_list[-1][1]["par_bounds"] == [(0.1, 10), (0, 5)]
     assert mock_fit.call_args_list[-1][1]["custom_fit"] is True
     # ranking results
     assert np.allclose(ranking_results.prefit_up, [0.0])
@@ -513,21 +531,43 @@ def test_scan(mock_fit, example_spec):
     assert mock_fit.call_count == 12
     # unconstrained fit
     assert mock_fit.call_args_list[0][0] == ((model, data))
-    assert mock_fit.call_args_list[0][1] == {"custom_fit": False}
+    assert mock_fit.call_args_list[0][1] == {
+        "init_pars": None,
+        "fix_pars": None,
+        "par_bounds": None,
+        "custom_fit": False,
+    }
     # fits in scan
     for i, scan_val in enumerate(expected_scan_values):
         assert mock_fit.call_args_list[i + 1][0] == ((model, data))
-        assert mock_fit.call_args_list[i + 1][1]["init_pars"] == [1.1, scan_val]
-        assert mock_fit.call_args_list[i + 1][1]["fix_pars"] == [True, True]
-        assert mock_fit.call_args_list[i + 1][1]["custom_fit"] is False
+        assert mock_fit.call_args_list[i + 1][1] == {
+            "init_pars": [1.1, scan_val],
+            "fix_pars": [True, True],
+            "par_bounds": None,
+            "custom_fit": False,
+        }
 
-    # parameter range specified, custom fit
+    # parameter range specified, custom fit, init/fixed pars, par bounds
     scan_results = fit.scan(
-        model, data, par_name, par_range=(1.0, 1.5), n_steps=5, custom_fit=True
+        model,
+        data,
+        par_name,
+        par_range=(1.0, 1.5),
+        n_steps=5,
+        init_pars=[1.0, 1.0],
+        fix_pars=[False, False],
+        par_bounds=[(0.1, 10), (0, 5)],
+        custom_fit=True,
     )
     expected_custom_scan = np.linspace(1.0, 1.5, 5)
     assert np.allclose(scan_results.parameter_values, expected_custom_scan)
     assert mock_fit.call_args[1]["custom_fit"] is True
+    assert mock_fit.call_args[1] == {
+        "init_pars": [1.0, 1.5],  # last step of scan
+        "fix_pars": [False, True],
+        "par_bounds": [(0.1, 10), (0, 5)],
+        "custom_fit": True,
+    }
 
     # unknown parameter
     with pytest.raises(ValueError, match="parameter abc not found in model"):
@@ -607,6 +647,35 @@ def test_limit(example_spec_with_background, caplog):
         fit.limit(model, data, bracket=(3.0, 3.0))
     caplog.clear()
 
+    # init/fixed pars, par bounds, lower POI bound below 0
+    with mock.patch("pyhf.infer.hypotest", return_value=None) as mock_test:
+        # mock return value will cause TypeError immediately after call
+        # could alternatively use mocker.spy from pytest-mock
+        with pytest.raises(TypeError):
+            fit.limit(
+                model,
+                data,
+                init_pars=[1.0, 0.9],
+                fix_pars=[True, False],
+                par_bounds=[(0.1, 10.0), (-1, 5)],
+            )
+        assert mock_test.call_args_list == [
+            (
+                (0.1, data, model),
+                {
+                    "init_pars": [1.0, 0.9],
+                    "fixed_params": [True, False],
+                    "par_bounds": [(0.1, 10.0), (0, 5)],
+                    "test_stat": "qtilde",
+                    "return_expected_set": True,
+                },
+            )
+        ]
+    assert "setting lower parameter bound for POI to 0" in [
+        rec.message for rec in caplog.records
+    ]
+    caplog.clear()
+
 
 def test_significance(example_spec_with_background):
     # increase observed data for smaller observed p-value
@@ -629,3 +698,26 @@ def test_significance(example_spec_with_background):
     assert np.allclose(significance_results.observed_significance, 2.04096523)
     assert np.allclose(significance_results.expected_p_value, 0.02062714)
     assert np.allclose(significance_results.expected_significance, 2.04096523)
+
+    # init/fixed pars, par bounds
+    model, data = model_utils.model_and_data(example_spec_with_background)
+    with mock.patch("pyhf.infer.hypotest", return_value=(0.0, 0.0)) as mock_test:
+        fit.significance(
+            model,
+            data,
+            init_pars=[1.0, 0.9],
+            fix_pars=[True, False],
+            par_bounds=[(0.1, 10.0), (0, 5)],
+        )
+    assert mock_test.call_args_list == [
+        (
+            (0.0, data, model),
+            {
+                "init_pars": [1.0, 0.9],
+                "fixed_params": [True, False],
+                "par_bounds": [(0.1, 10.0), (0, 5)],
+                "test_stat": "q0",
+                "return_expected": True,
+            },
+        )
+    ]
