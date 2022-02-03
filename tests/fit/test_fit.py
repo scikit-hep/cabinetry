@@ -607,7 +607,7 @@ def test_limit(example_spec_with_background, caplog):
         fit.limit(model, data, bracket=(3.0, 3.0))
     caplog.clear()
 
-    # init/fixed pars, par bounds
+    # init/fixed pars, par bounds, lower POI bound below 0
     with mock.patch("pyhf.infer.hypotest", return_value=None) as mock_test:
         # mock return value will cause TypeError immediately after call
         # could alternatively use mocker.spy from pytest-mock
@@ -617,7 +617,7 @@ def test_limit(example_spec_with_background, caplog):
                 data,
                 init_pars=[1.0, 0.9],
                 fix_pars=[True, False],
-                par_bounds=[(0.1, 10.0), (0, 5)],
+                par_bounds=[(0.1, 10.0), (-1, 5)],
             )
         assert mock_test.call_args_list == [
             (
@@ -631,6 +631,10 @@ def test_limit(example_spec_with_background, caplog):
                 },
             )
         ]
+    assert "setting lower parameter bound for POI to 0" in [
+        rec.message for rec in caplog.records
+    ]
+    caplog.clear()
 
 
 def test_significance(example_spec_with_background):
