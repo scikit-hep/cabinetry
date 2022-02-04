@@ -156,7 +156,7 @@ def prefit_uncertainties(model: pyhf.pdf.Model) -> np.ndarray:
     return np.asarray(pre_fit_unc)
 
 
-def _determining_values(
+def _hashable_model_key(
     model: pyhf.pdf.Model,
 ) -> Tuple[str, Tuple[Tuple[str, str], ...]]:
     """
@@ -201,7 +201,7 @@ def yield_stdev(
     # check whether results are already stored in cache
     cached_results = _YIELD_STDEV_CACHE.get(
         (
-            _determining_values(model),
+            _hashable_model_key(model),
             tuple(parameters),
             tuple(uncertainty),
             corr_mat.data.tobytes(),
@@ -308,7 +308,7 @@ def yield_stdev(
     _YIELD_STDEV_CACHE.update(
         {
             (
-                _determining_values(model),
+                _hashable_model_key(model),
                 tuple(parameters),
                 tuple(uncertainty),
                 corr_mat.data.tobytes(),
