@@ -163,10 +163,9 @@ def _determining_values(
     Compute a hashable representation of the values that uniquely identify a Model.
     """
     interpcodes = []
-    for mod_name in sorted(model.main_model.modifiers_appliers.keys()):
-        applier = model.main_model.modifiers_appliers[mod_name]
-        if hasattr(applier, "interpcode"):
-            interpcodes.append((mod_name, applier.interpcode))
+    for mod_type in sorted(model.config.modifier_settings.keys()):
+        code = model.config.modifier_settings[mod_type]["interpcode"]
+        interpcodes.append((mod_type, code))
     # sort since different orderings result in equivalent models,
     # but distinct strings
     spec_str = json.dumps(model.spec, sort_keys=True)
