@@ -180,7 +180,10 @@ def test_yield_stdev(example_spec, example_spec_multibin):
         assert np.allclose(total_stdev_chan[i_reg], expected_stdev_chan[i_reg])
     # also look up cache directly
     from_cache = model_utils._YIELD_STDEV_CACHE[
-        model, tuple(parameters), tuple(uncertainty), corr_mat.tobytes()
+        model_utils._determining_values(model),
+        tuple(parameters),
+        tuple(uncertainty),
+        corr_mat.tobytes(),
     ]
     for i_reg in range(2):
         assert np.allclose(from_cache[0][i_reg], expected_stdev_bin[i_reg])

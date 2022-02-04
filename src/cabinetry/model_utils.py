@@ -1,5 +1,6 @@
 """Provides utilities for pyhf models."""
 
+import json
 import logging
 from typing import Any, Dict, List, NamedTuple, Optional, Tuple, Union
 
@@ -155,6 +156,23 @@ def prefit_uncertainties(model: pyhf.pdf.Model) -> np.ndarray:
     return np.asarray(pre_fit_unc)
 
 
+def _determining_values(
+    model: pyhf.pdf.Model,
+) -> Tuple[str, Tuple[Tuple[str, str], ...]]:
+    """
+    Compute a hashable representation of the values that uniquely identify a Model.
+    """
+    interpcodes = []
+    for mod_name in sorted(model.main_model.modifiers_appliers.keys()):
+        applier = model.main_model.modifiers_appliers[mod_name]
+        if hasattr(applier, "interpcode"):
+            interpcodes.append((mod_name, applier.interpcode))
+    # sort since different orderings result in equivalent models,
+    # but distinct strings
+    spec_str = json.dumps(model.spec, sort_keys=True)
+    return (spec_str, tuple(interpcodes))
+
+
 def yield_stdev(
     model: pyhf.pdf.Model,
     parameters: np.ndarray,
@@ -183,7 +201,13 @@ def yield_stdev(
     """
     # check whether results are already stored in cache
     cached_results = _YIELD_STDEV_CACHE.get(
-        (model, tuple(parameters), tuple(uncertainty), corr_mat.data.tobytes()), None
+        (
+            _determining_values(model),
+            tuple(parameters),
+            tuple(uncertainty),
+            corr_mat.data.tobytes(),
+        ),
+        None,
     )
     if cached_results is not None:
         # return results from cache
@@ -284,7 +308,12 @@ def yield_stdev(
     # save to cache
     _YIELD_STDEV_CACHE.update(
         {
-            (model, tuple(parameters), tuple(uncertainty), corr_mat.data.tobytes()): (
+            (
+                _determining_values(model),
+                tuple(parameters),
+                tuple(uncertainty),
+                corr_mat.data.tobytes(),
+            ): (
                 total_stdev_per_bin,
                 total_stdev_per_channel,
             )
