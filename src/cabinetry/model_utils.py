@@ -167,6 +167,10 @@ def _hashable_model_key(
     The key returned by this function instead will hash to the same value for copies,
     but differ when the model represents a different likelihood.
 
+    Note: The key returned here considers only the spec and interpolation codes.
+    All other `Model` configuration options leave it unchanged
+    (e.g. `poi_name`, overriding parameter bounds, etc.).
+
     Args:
         model (pyhf.model.Model): model to generate a key for.
 
