@@ -1,5 +1,6 @@
 """Provides utilities for pyhf models."""
 
+import json
 import logging
 from typing import Any, Dict, List, NamedTuple, Optional, Tuple, Union
 
@@ -155,6 +156,38 @@ def prefit_uncertainties(model: pyhf.pdf.Model) -> np.ndarray:
     return np.asarray(pre_fit_unc)
 
 
+def _hashable_model_key(
+    model: pyhf.pdf.Model,
+) -> Tuple[str, Tuple[Tuple[str, str], ...]]:
+    """Compute a hashable representation of the values that uniquely identify a Model.
+
+    The `pyhf.model.Model` type is already hashable,
+    but it uses the `__hash__` inherited from `object`,
+    so a copy of a model has a distinct hash.
+    The key returned by this function instead will hash to the same value for copies,
+    but differ when the model represents a different likelihood.
+
+    Note: The key returned here considers only the spec and interpolation codes.
+    All other `Model` configuration options leave it unchanged
+    (e.g. `poi_name`, overriding parameter bounds, etc.).
+
+    Args:
+        model (pyhf.model.Model): model to generate a key for.
+
+    Returns:
+        Tuple[str, Tuple[Tuple[str, str], ...]]: a key that identifies the model
+        by its spec and interpcodes
+    """
+    interpcodes = []
+    for mod_type in sorted(model.config.modifier_settings.keys()):
+        code = model.config.modifier_settings[mod_type]["interpcode"]
+        interpcodes.append((mod_type, code))
+    # sort since different orderings result in equivalent models,
+    # but distinct strings
+    spec_str = json.dumps(model.spec, sort_keys=True)
+    return (spec_str, tuple(interpcodes))
+
+
 def yield_stdev(
     model: pyhf.pdf.Model,
     parameters: np.ndarray,
@@ -183,7 +216,13 @@ def yield_stdev(
     """
     # check whether results are already stored in cache
     cached_results = _YIELD_STDEV_CACHE.get(
-        (model, tuple(parameters), tuple(uncertainty), corr_mat.data.tobytes()), None
+        (
+            _hashable_model_key(model),
+            tuple(parameters),
+            tuple(uncertainty),
+            corr_mat.data.tobytes(),
+        ),
+        None,
     )
     if cached_results is not None:
         # return results from cache
@@ -284,7 +323,12 @@ def yield_stdev(
     # save to cache
     _YIELD_STDEV_CACHE.update(
         {
-            (model, tuple(parameters), tuple(uncertainty), corr_mat.data.tobytes()): (
+            (
+                _hashable_model_key(model),
+                tuple(parameters),
+                tuple(uncertainty),
+                corr_mat.data.tobytes(),
+            ): (
                 total_stdev_per_bin,
                 total_stdev_per_channel,
             )
