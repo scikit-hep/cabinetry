@@ -289,7 +289,6 @@ def yield_stdev(
         symmetric_unc = (up_variations_ak[i_par] - down_variations_ak[i_par]) / 2
         total_variance = total_variance + symmetric_unc**2
 
-    labels = model.config.par_names()
     # continue with off-diagonal contributions if there are any
     if np.count_nonzero(corr_mat - np.diagflat(np.ones_like(parameters))) > 0:
         # loop over pairs of parameters
@@ -300,11 +299,6 @@ def yield_stdev(
                 corr = corr_mat[i_par, j_par]
                 # an approximate calculation could be done here by requiring
                 # e.g. abs(corr) > 1e-5 to continue
-                if (
-                    labels[i_par][0:10] == "staterror_"
-                    and labels[j_par][0:10] == "staterror_"
-                ):
-                    continue  # two different staterrors are orthogonal, no contribution
                 sym_unc_i = (up_variations_ak[i_par] - down_variations_ak[i_par]) / 2
                 sym_unc_j = (up_variations_ak[j_par] - down_variations_ak[j_par]) / 2
                 # factor of two below is there since loop is only over half the matrix

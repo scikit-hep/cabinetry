@@ -166,7 +166,7 @@ def test_yield_stdev(example_spec, example_spec_multibin):
         model, parameters, uncertainty, corr_mat
     )
     expected_stdev_bin = [[8.056054, 1.670629], [2.775377]]
-    expected_stdev_chan = [9.585327, 2.775377]
+    expected_stdev_chan = [9.596340, 2.775377]
     for i_reg in range(2):
         assert np.allclose(total_stdev_bin[i_reg], expected_stdev_bin[i_reg])
         assert np.allclose(total_stdev_chan[i_reg], expected_stdev_chan[i_reg])
