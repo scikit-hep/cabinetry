@@ -274,31 +274,32 @@ def yield_stdev(
     up_variations_ak = ak.from_iter(up_variations)
     down_variations_ak = ak.from_iter(down_variations)
 
-    # total variance, indices are: channel, bin
-    n_channels = len(model.config.channels)
-    total_variance_list = [
-        np.zeros(model.config.channel_nbins[ch]) for ch in model.config.channels
-    ]  # list of arrays, each array has as many entries as there are bins
-    # append placeholders for total yield uncertainty per channel
-    total_variance_list += [np.asarray([0]) for _ in range(n_channels)]
-    total_variance = ak.from_iter(total_variance_list)
-
-    # loop over parameters to sum up total variance
-    # first do the diagonal of the correlation matrix
+    # calculate symmetric uncertainties for all components
     sym_uncs = (up_variations_ak - down_variations_ak) / 2
-    total_variance = np.sum(np.power(sym_uncs, 2), axis=0)
 
-    # continue with off-diagonal contributions if there are any
-    if np.count_nonzero(corr_mat - np.diagflat(np.ones_like(parameters))) > 0:
-        # possible optimizations missing here now:
-        #   - skipping staterror-staterror combinations (orthogonal)
+    # calculate total variance, indexed by channel and bin (per-channel numbers act like
+    # additional channels with one bin each)
+    if np.count_nonzero(corr_mat - np.diagflat(np.ones_like(parameters))) == 0:
+        # no off-diagonal contributions from correlation matrix (e.g. pre-fit)
+        total_variance = np.sum(np.power(sym_uncs, 2), axis=0)
+    else:
+        # full calculation including off-diagonal contributions
+        # with v as vector of variations (each element contains yields under variation)
+        # and M as correlation matrix, obtain variance via matrix multiplication:
+        # variance = v^T @ M @ v
+        # variance shape is same as element of v (yield uncertainties per bin & channel)
+
+        # possible optimizations that could be considered here:
+        #   - skipping staterror-staterror terms for per-bin calculation (orthogonal)
         #   - taking advantage of correlation matrix symmetry
         #   - (optional) skipping combinations with correlations below threshold
+
         R = corr_mat[..., np.newaxis, np.newaxis] * sym_uncs[np.newaxis, ...]
         L = sym_uncs[:, np.newaxis, ...] * R
         total_variance = np.sum(ak.flatten(L, axis=1), axis=0)
 
     # convert to standard deviations per bin and per channel
+    n_channels = len(model.config.channels)
     total_stdev_per_bin = np.sqrt(total_variance[:n_channels])
     total_stdev_per_channel = ak.flatten(np.sqrt(total_variance[n_channels:]))
     log.debug(f"total stdev is {total_stdev_per_bin}")
