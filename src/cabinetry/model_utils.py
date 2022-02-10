@@ -285,18 +285,24 @@ def yield_stdev(
     else:
         # full calculation including off-diagonal contributions
         # with v as vector of variations (each element contains yields under variation)
-        # and M as correlation matrix, obtain variance via matrix multiplication:
-        # variance = v^T @ M @ v
-        # variance shape is same as element of v (yield uncertainties per bin & channel)
+        # and M as correlation matrix, calculate variance as follows:
+        # variance = sum_i sum_j v[i] * M[i, j] * v[j]
+        # where the product between elements of v again is elementwise (multiplying bin
+        # yields), and the final variance shape is the same as element of v (yield
+        # uncertainties per bin and per channel)
 
         # possible optimizations that could be considered here:
         #   - skipping staterror-staterror terms for per-bin calculation (orthogonal)
         #   - taking advantage of correlation matrix symmetry
         #   - (optional) skipping combinations with correlations below threshold
 
-        R = corr_mat[..., np.newaxis, np.newaxis] * sym_uncs[np.newaxis, ...]
-        L = sym_uncs[:, np.newaxis, ...] * R
-        total_variance = np.sum(ak.flatten(L, axis=1), axis=0)
+        # calculate M[i, j] * v[j] first, indices: pars (i), pars (j), channel, bin
+        m_times_v = corr_mat[..., np.newaxis, np.newaxis] * sym_uncs[np.newaxis, ...]
+        # now multiply by v[i] as well, indices: pars(i), pars(j), channel, bin
+        v_times_m_times_v = sym_uncs[:, np.newaxis, ...] * m_times_v
+        # finally perform sums over i and j, remaining indices: channel, bin
+        # ak.flatten due to https://github.com/scikit-hep/awkward-1.0/issues/1283
+        total_variance = np.sum(ak.flatten(v_times_m_times_v, axis=1), axis=0)
 
     # convert to standard deviations per bin and per channel
     n_channels = len(model.config.channels)
