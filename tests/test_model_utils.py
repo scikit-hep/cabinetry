@@ -128,6 +128,26 @@ def test_prefit_uncertainties(
     assert np.allclose(unc, [0.0, 0.0, 0.0])
 
 
+def test__hashable_model_key(example_spec):
+    # key matches for two objects built from the same spec
+    model_1 = pyhf.Workspace(example_spec).model()
+    model_2 = pyhf.Workspace(example_spec).model()
+    assert model_utils._hashable_model_key(model_1) == model_utils._hashable_model_key(
+        model_2
+    )
+
+    # key does not match if model has different interpcode
+    model_new_interpcode = pyhf.Workspace(example_spec).model(
+        modifier_settings={
+            "normsys": {"interpcode": "code1"},
+            "histosys": {"interpcode": "code0"},
+        }
+    )
+    assert model_utils._hashable_model_key(model_1) != model_utils._hashable_model_key(
+        model_new_interpcode
+    )
+
+
 def test_yield_stdev(example_spec, example_spec_multibin):
     model = pyhf.Workspace(example_spec).model()
     parameters = np.asarray([1.05, 0.95])
