@@ -302,6 +302,10 @@ def yield_stdev(
         v_times_m_times_v = sym_uncs[:, np.newaxis, ...] * m_times_v
         # finally perform sums over i and j, remaining indices: channel, bin
         # ak.flatten due to https://github.com/scikit-hep/awkward-1.0/issues/1283
+        assert v_times_m_times_v.ndim == 4, (
+            "unexpected dimensionality of array, please report if you run into this: "
+            "https://github.com/scikit-hep/cabinetry/issues/326"
+        )
         total_variance = np.sum(ak.flatten(v_times_m_times_v, axis=1), axis=0)
 
     # convert to standard deviations per bin and per channel
