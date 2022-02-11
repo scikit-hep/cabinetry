@@ -274,37 +274,42 @@ def yield_stdev(
     up_variations_ak = ak.from_iter(up_variations)
     down_variations_ak = ak.from_iter(down_variations)
 
-    # total variance, indices are: channel, bin
-    n_channels = len(model.config.channels)
-    total_variance_list = [
-        np.zeros(model.config.channel_nbins[ch]) for ch in model.config.channels
-    ]  # list of arrays, each array has as many entries as there are bins
-    # append placeholders for total yield uncertainty per channel
-    total_variance_list += [np.asarray([0]) for _ in range(n_channels)]
-    total_variance = ak.from_iter(total_variance_list)
+    # calculate symmetric uncertainties for all components
+    sym_uncs = (up_variations_ak - down_variations_ak) / 2
 
-    # loop over parameters to sum up total variance
-    # first do the diagonal of the correlation matrix
-    for i_par in range(model.config.npars):
-        symmetric_unc = (up_variations_ak[i_par] - down_variations_ak[i_par]) / 2
-        total_variance = total_variance + symmetric_unc**2
+    # calculate total variance, indexed by channel and bin (per-channel numbers act like
+    # additional channels with one bin each)
+    if np.count_nonzero(corr_mat - np.diagflat(np.ones_like(parameters))) == 0:
+        # no off-diagonal contributions from correlation matrix (e.g. pre-fit)
+        total_variance = np.sum(np.power(sym_uncs, 2), axis=0)
+    else:
+        # full calculation including off-diagonal contributions
+        # with v as vector of variations (each element contains yields under variation)
+        # and M as correlation matrix, calculate variance as follows:
+        # variance = sum_i sum_j v[i] * M[i, j] * v[j]
+        # where the product between elements of v again is elementwise (multiplying bin
+        # yields), and the final variance shape is the same as element of v (yield
+        # uncertainties per bin and per channel)
 
-    # continue with off-diagonal contributions if there are any
-    if np.count_nonzero(corr_mat - np.diagflat(np.ones_like(parameters))) > 0:
-        # loop over pairs of parameters
-        for i_par in range(model.config.npars):
-            for j_par in range(model.config.npars):
-                if j_par >= i_par:
-                    continue  # only loop over the half the matrix due to symmetry
-                corr = corr_mat[i_par, j_par]
-                # an approximate calculation could be done here by requiring
-                # e.g. abs(corr) > 1e-5 to continue
-                sym_unc_i = (up_variations_ak[i_par] - down_variations_ak[i_par]) / 2
-                sym_unc_j = (up_variations_ak[j_par] - down_variations_ak[j_par]) / 2
-                # factor of two below is there since loop is only over half the matrix
-                total_variance = total_variance + 2 * (corr * sym_unc_i * sym_unc_j)
+        # possible optimizations that could be considered here:
+        #   - skipping staterror-staterror terms for per-bin calculation (orthogonal)
+        #   - taking advantage of correlation matrix symmetry
+        #   - (optional) skipping combinations with correlations below threshold
+
+        # calculate M[i, j] * v[j] first, indices: pars (i), pars (j), channel, bin
+        m_times_v = corr_mat[..., np.newaxis, np.newaxis] * sym_uncs[np.newaxis, ...]
+        # now multiply by v[i] as well, indices: pars(i), pars(j), channel, bin
+        v_times_m_times_v = sym_uncs[:, np.newaxis, ...] * m_times_v
+        # finally perform sums over i and j, remaining indices: channel, bin
+        # ak.flatten due to https://github.com/scikit-hep/awkward-1.0/issues/1283
+        assert v_times_m_times_v.ndim == 4, (
+            "unexpected dimensionality of array, please report if you run into this: "
+            "https://github.com/scikit-hep/cabinetry/issues/326"
+        )
+        total_variance = np.sum(ak.flatten(v_times_m_times_v, axis=1), axis=0)
 
     # convert to standard deviations per bin and per channel
+    n_channels = len(model.config.channels)
     total_stdev_per_bin = np.sqrt(total_variance[:n_channels])
     total_stdev_per_channel = ak.flatten(np.sqrt(total_variance[n_channels:]))
     log.debug(f"total stdev is {total_stdev_per_bin}")
