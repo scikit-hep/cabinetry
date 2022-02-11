@@ -129,7 +129,7 @@ def test_prefit_uncertainties(
 
 
 def test__hashable_model_key(example_spec):
-    # key matches for two objects built from the same spec
+    # key matches for two models built from the same spec
     model_1 = pyhf.Workspace(example_spec).model()
     model_2 = pyhf.Workspace(example_spec).model()
     assert model_utils._hashable_model_key(model_1) == model_utils._hashable_model_key(
