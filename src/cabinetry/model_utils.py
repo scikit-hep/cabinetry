@@ -159,20 +159,19 @@ def prefit_uncertainties(model: pyhf.pdf.Model) -> np.ndarray:
 def _hashable_model_key(
     model: pyhf.pdf.Model,
 ) -> Tuple[str, Tuple[Tuple[str, str], ...]]:
-    """Compute a hashable representation of the values that uniquely identify a Model.
+    """Compute a hashable representation of the values that uniquely identify a model.
 
-    The `pyhf.model.Model` type is already hashable,
-    but it uses the `__hash__` inherited from `object`,
-    so a copy of a model has a distinct hash.
-    The key returned by this function instead will hash to the same value for copies,
-    but differ when the model represents a different likelihood.
+    The ``pyhf.pdf.Model`` type is already hashable, but it uses the ``__hash__``
+    inherited from ``object``, so a copy of a model has a distinct hash. The key
+    returned by this function instead will hash to the same value for copies, but differ
+    when the model represents a different likelihood.
 
-    Note: The key returned here considers only the spec and interpolation codes.
-    All other `Model` configuration options leave it unchanged
-    (e.g. `poi_name`, overriding parameter bounds, etc.).
+    Note: The key returned here considers only the spec and interpolation codes. All
+    other model configuration options leave it unchanged (e.g. ``poi_name``, overriding
+    parameter bounds, etc.).
 
     Args:
-        model (pyhf.model.Model): model to generate a key for.
+        model (pyhf.model.Model): model to generate a key for
 
     Returns:
         Tuple[str, Tuple[Tuple[str, str], ...]]: a key that identifies the model
