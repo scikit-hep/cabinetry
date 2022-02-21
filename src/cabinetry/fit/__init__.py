@@ -45,6 +45,8 @@ def _fit_model_pyhf(
     init_pars: Optional[List[float]] = None,
     fix_pars: Optional[List[bool]] = None,
     par_bounds: Optional[List[Tuple[float, float]]] = None,
+    maxiter: Optional[int] = None,
+    tolerance: Optional[float] = None,
 ) -> FitResults:
     """Uses the ``pyhf.infer`` API to perform a maximum likelihood fit.
 
@@ -65,6 +67,11 @@ def _fit_model_pyhf(
             parameters are held constant, defaults to None (use ``pyhf`` suggestion)
         par_bounds (Optional[List[Tuple[float, float]]], optional): list of tuples with
             parameter bounds for fit, defaults to None (use ``pyhf`` suggested bounds)
+        maxiter (Optional[int], optional): allowed number of calls for minimization,
+            defaults to None (use ``pyhf`` default of 100,000)
+        tolerance (Optional[float]), optional): tolerance for convergence, for details
+            see ``iminuit.Minuit.tol`` (uses EDM < 0.002*tolerance), defaults to
+            None (use ``iminuit`` default of 0.1)
 
     Returns:
         FitResults: object storing relevant fit results
@@ -81,8 +88,10 @@ def _fit_model_pyhf(
         return_correlations=True,
         return_fitted_val=True,
         return_result_obj=True,
+        maxiter=maxiter,
+        tolerance=tolerance,
     )
-    log.info(f"MINUIT status:\n{result_obj.minuit.fmin}")
+    log.info(f"Migrad status:\n{result_obj.minuit.fmin}")
 
     bestfit = pyhf.tensorlib.to_numpy(result[:, 0])
     # set errors for fixed parameters to 0 (see iminuit#762)
@@ -117,6 +126,8 @@ def _fit_model_custom(
     init_pars: Optional[List[float]] = None,
     fix_pars: Optional[List[bool]] = None,
     par_bounds: Optional[List[Tuple[float, float]]] = None,
+    maxiter: Optional[int] = None,
+    tolerance: Optional[float] = None,
 ) -> FitResults:
     """Uses ``iminuit`` directly to perform a maximum likelihood fit.
 
@@ -137,6 +148,11 @@ def _fit_model_custom(
             parameters are held constant, defaults to None (use ``pyhf`` suggestion)
         par_bounds (Optional[List[Tuple[float, float]]], optional): list of tuples with
             parameter bounds for fit, defaults to None (use ``pyhf`` suggested bounds)
+        maxiter (Optional[int], optional): allowed number of calls for minimization,
+            defaults to None (use ``pyhf`` default of 100,000)
+        tolerance (Optional[float]), optional): tolerance for convergence, for details
+            see ``iminuit.Minuit.tol`` (uses EDM < 0.002*tolerance), defaults to
+            None (use ``iminuit`` default of 0.1)
 
     Returns:
         FitResults: object storing relevant fit results
@@ -170,12 +186,15 @@ def _fit_model_custom(
     m.limits = par_bounds
     m.errordef = 1
     m.print_level = 1
+    m.tol = tolerance or 0.1  # goal: EDM < 0.002*tol*errordef
+    maxiter = maxiter or 100_000
 
-    # decrease tolerance (goal: EDM < 0.002*tol*errordef), default tolerance is 0.1
-    m.tol /= 10
-    m.migrad()
-    m.hesse()
+    m.migrad(ncall=maxiter)
+    m.hesse()  # use default call limit (consistent with pyhf)
+
     log.info(f"MINUIT status:\n{m.fmin}")
+    if not m.valid:
+        raise ValueError("Minimization failed, minimum is invalid.")
 
     bestfit = np.asarray(m.values)
     # set errors for fixed parameters to 0 (see iminuit#762)
@@ -205,6 +224,8 @@ def _fit_model(
     init_pars: Optional[List[float]] = None,
     fix_pars: Optional[List[bool]] = None,
     par_bounds: Optional[List[Tuple[float, float]]] = None,
+    maxiter: Optional[int] = None,
+    tolerance: Optional[float] = None,
     custom_fit: bool = False,
 ) -> FitResults:
     """Interface for maximum likelihood fits through ``pyhf.infer`` API or ``iminuit``.
@@ -226,6 +247,11 @@ def _fit_model(
             parameters are held constant, defaults to None (use ``pyhf`` suggestion)
         par_bounds (Optional[List[Tuple[float, float]]], optional): list of tuples with
             parameter bounds for fit, defaults to None (use ``pyhf`` suggested bounds)
+        maxiter (Optional[int], optional): allowed number of calls for minimization,
+            defaults to None (use ``pyhf`` default of 100,000)
+        tolerance (Optional[float]), optional): tolerance for convergence, for details
+            see ``iminuit.Minuit.tol`` (uses EDM < 0.002*tolerance), defaults to
+            None (use ``iminuit`` default of 0.1)
         custom_fit (bool, optional): whether to use the ``pyhf.infer`` API or
             ``iminuit``, defaults to False (using ``pyhf.infer``)
 
@@ -241,6 +267,8 @@ def _fit_model(
             init_pars=init_pars,
             fix_pars=fix_pars,
             par_bounds=par_bounds,
+            maxiter=maxiter,
+            tolerance=tolerance,
         )
     else:
         # use iminuit directly
@@ -251,6 +279,8 @@ def _fit_model(
             init_pars=init_pars,
             fix_pars=fix_pars,
             par_bounds=par_bounds,
+            maxiter=maxiter,
+            tolerance=tolerance,
         )
     log.debug(f"-2 log(L) = {fit_results.best_twice_nll:.6f} at best-fit point")
     return fit_results
@@ -366,6 +396,8 @@ def fit(
     init_pars: Optional[List[float]] = None,
     fix_pars: Optional[List[bool]] = None,
     par_bounds: Optional[List[Tuple[float, float]]] = None,
+    maxiter: Optional[int] = None,
+    tolerance: Optional[float] = None,
     custom_fit: bool = False,
 ) -> FitResults:
     """Performs a  maximum likelihood fit, reports and returns the results.
@@ -387,6 +419,11 @@ def fit(
             parameters are held constant, defaults to None (use ``pyhf`` suggestion)
         par_bounds (Optional[List[Tuple[float, float]]], optional): list of tuples with
             parameter bounds for fit, defaults to None (use ``pyhf`` suggested bounds)
+        maxiter (Optional[int], optional): allowed number of calls for minimization,
+            defaults to None (use ``pyhf`` default of 100,000)
+        tolerance (Optional[float]), optional): tolerance for convergence, for details
+            see ``iminuit.Minuit.tol`` (uses EDM < 0.002*tolerance), defaults to
+            None (use ``iminuit`` default of 0.1)
         custom_fit (bool, optional): whether to use the ``pyhf.infer`` API or
             ``iminuit``, defaults to False (using ``pyhf.infer``)
 
@@ -408,6 +445,8 @@ def fit(
         fix_pars=fix_pars,
         par_bounds=par_bounds,
         custom_fit=custom_fit,
+        maxiter=maxiter,
+        tolerance=tolerance,
     )
 
     print_results(fit_results)
