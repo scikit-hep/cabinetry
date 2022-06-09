@@ -71,6 +71,7 @@ def pulls(
     uncertainty: np.ndarray,
     labels: Union[List[str], np.ndarray],
     *,
+    numeric: Optional[Union[List[bool], np.ndarray]] = None,
     figure_path: Optional[pathlib.Path] = None,
     close_figure: bool = False,
 ) -> mpl.figure.Figure:
@@ -90,13 +91,28 @@ def pulls(
         matplotlib.figure.Figure: the pull figure
     """
     num_pars = len(bestfit)
+    numeric = np.zeros(num_pars, dtype=bool) if numeric is None else numeric
     y_positions = np.arange(num_pars)[::-1]
-    fig, ax = plt.subplots(figsize=(6, 1 + num_pars / 4), dpi=100)
-    ax.errorbar(bestfit, y_positions, xerr=uncertainty, fmt="o", color="black")
 
-    ax.fill_between([-2, 2], -0.5, len(bestfit) - 0.5, color="yellow")
-    ax.fill_between([-1, 1], -0.5, len(bestfit) - 0.5, color="limegreen")
-    ax.vlines(0, -0.5, len(bestfit) - 0.5, linestyles="dotted", color="black")
+    fig, ax = plt.subplots(figsize=(6, 1 + num_pars / 4), dpi=100)
+    if num_pars > np.sum(numeric):  # Actual pulls
+        ax.errorbar(np.ma.masked_array(bestfit, mask=numeric), 
+                    np.ma.masked_array(y_positions, mask=numeric), 
+                    xerr=uncertainty, fmt="o", color="black")
+        mask = np.ones(2 * num_pars + 1).astype(bool)
+        if numeric is not None:
+            mask[1::2] = ~numeric[::-1]
+        x_dummy = np.linspace(-0.5, num_pars - 0.5, 2 * num_pars + 1)
+        ax.fill_betweenx(x_dummy, -2, 2, color="yellow", where=mask, linewidth=0)
+        ax.fill_betweenx(x_dummy, -1, 1, color="limegreen", where=mask, linewidth=0)
+        ax.plot(np.zeros(len(mask)),
+                np.ma.masked_array(x_dummy, mask=~mask),
+                linestyle="dotted",
+                color="black")
+    if np.sum(numeric) > 0:
+        for i, (show, par, unc) in enumerate(zip(numeric[::-1], bestfit, uncertainty)):
+            if show:
+                ax.text(0, i, f"{par:.2f} +- {unc:.2f}", ha='center', va='center')
 
     ax.set_xlim([-3, 3])
     ax.set_xlabel(r"$\left(\hat{\theta} - \theta_0\right) / \Delta \theta$")
