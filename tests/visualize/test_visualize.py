@@ -360,10 +360,11 @@ def test_correlation_matrix(mock_draw):
     corr_mat = np.asarray([[1.0, 0.2, 0.1], [0.2, 1.0, 0.1], [0.1, 0.1, 1.0]])
     corr_mat_pruned = np.asarray([[1.0, 0.2], [0.2, 1.0]])
     labels = ["a", "b", "c"]
+    types = [None, None, None]
     labels_pruned = ["a", "b"]
     folder_path = "tmp"
     figure_path = pathlib.Path(folder_path) / "correlation_matrix.pdf"
-    fit_results = fit.FitResults(np.empty(0), np.empty(0), labels, corr_mat, 1.0)
+    fit_results = fit.FitResults(np.empty(0), np.empty(0), labels, types, corr_mat, 1.0)
 
     # pruning with threshold
     fig = visualize.correlation_matrix(
@@ -382,7 +383,7 @@ def test_correlation_matrix(mock_draw):
     # close figure, do not save
     corr_mat_fixed = np.asarray([[1.0, 0.2, 0.0], [0.2, 1.0, 0.0], [0.0, 0.0, 0.0]])
     fit_results_fixed = fit.FitResults(
-        np.empty(0), np.empty(0), labels, corr_mat_fixed, 1.0
+        np.empty(0), np.empty(0), labels, types, corr_mat_fixed, 1.0
     )
     _ = visualize.correlation_matrix(
         fit_results_fixed,
@@ -407,9 +408,10 @@ def test_pulls(mock_draw):
     bestfit = np.asarray([0.8, 1.0, 1.05, 1.1])
     uncertainty = np.asarray([0.9, 1.0, 0.03, 0.7])
     labels = ["a", "b", "staterror_region[0]", "c"]
+    types = [None, None, "staterror", None]
     exclude = ["a"]
     folder_path = "tmp"
-    fit_results = fit.FitResults(bestfit, uncertainty, labels, np.empty(0), 1.0)
+    fit_results = fit.FitResults(bestfit, uncertainty, labels, types, np.empty(0), 1.0)
 
     filtered_bestfit = np.asarray([1.0, 1.1])
     filtered_uncertainty = np.asarray([1.0, 0.7])
@@ -429,6 +431,7 @@ def test_pulls(mock_draw):
             for i in range(len(filtered_labels))
         ]
     )
+    assert np.allclose(mock_draw.call_args[1].pop("numeric"), np.array([False, False]))
     assert mock_draw.call_args[1] == {"figure_path": figure_path, "close_figure": True}
 
     # filtering single parameter instead of list
@@ -462,6 +465,7 @@ def test_pulls(mock_draw):
             for i in range(len(labels_expected))
         ]
     )
+    assert np.allclose(mock_draw.call_args[1].pop("numeric"), np.array([False, False]))
     assert mock_draw.call_args[1] == {"figure_path": None, "close_figure": False}
 
 

@@ -91,7 +91,7 @@ def pulls(
         matplotlib.figure.Figure: the pull figure
     """
     num_pars = len(bestfit)
-    numeric = np.zeros(num_pars, dtype=bool) if numeric is None else numeric
+    numeric = np.zeros(num_pars, dtype=bool) if numeric is None else np.asarray(numeric)
     y_positions = np.arange(num_pars)[::-1]
 
     fig, ax = plt.subplots(figsize=(6, 1 + num_pars / 4), dpi=100)

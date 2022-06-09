@@ -8,7 +8,6 @@ import numpy as np
 import pyhf
 import scipy.optimize
 import scipy.stats
-import re
 
 from cabinetry import model_utils
 from cabinetry.fit.results_containers import (
@@ -87,10 +86,7 @@ def _fit_model_pyhf(
 
     bestfit = pyhf.tensorlib.to_numpy(result[:, 0])
     uncertainty = pyhf.tensorlib.to_numpy(result[:, 1])
-    labels = model.config.par_names()
-    _mod_dict = dict(model.config.modifiers)
-    _clean_labels = [re.sub(r"\[.*\]", "", label) for label in labels]
-    types = [_mod_dict[n] if n in _mod_dict else None for n in _clean_labels]
+    labels, types = model_utils._labels_modifiers(model)
     corr_mat = pyhf.tensorlib.to_numpy(corr_mat)
     best_twice_nll = float(best_twice_nll)  # convert 0-dim np.ndarray to float
 
@@ -150,7 +146,7 @@ def _fit_model_custom(
     fix_pars = fix_pars or model.config.suggested_fixed()
     par_bounds = par_bounds or model.config.suggested_bounds()
 
-    labels = model.config.par_names()
+    labels, types = model_utils._labels_modifiers(model)
 
     # set initial step size to 0 for fixed parameters
     # this will cause the associated parameter uncertainties to be 0 post-fit
@@ -195,6 +191,7 @@ def _fit_model_custom(
         bestfit,
         uncertainty,
         labels,
+        types,
         corr_mat,
         best_twice_nll,
         minos_uncertainty=minos_results,
