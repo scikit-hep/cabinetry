@@ -110,7 +110,7 @@ def pulls(
                 linestyle="dotted",
                 color="black")
     if np.sum(numeric) > 0:
-        for i, (show, par, unc) in enumerate(zip(numeric[::-1], bestfit, uncertainty)):
+        for i, (show, par, unc) in enumerate(zip(numeric[::-1], bestfit[::-1], uncertainty[::-1])):
             if show:
                 ax.text(0, i, f"{par:.2f} +- {unc:.2f}", ha='center', va='center')
 
