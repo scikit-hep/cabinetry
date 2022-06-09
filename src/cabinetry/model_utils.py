@@ -2,6 +2,7 @@
 
 import json
 import logging
+import re
 from typing import Any, Dict, List, NamedTuple, Optional, Tuple, Union
 
 import awkward as ak
@@ -516,6 +517,17 @@ def _filter_channels(
     return filtered_channels
 
 
+def _labels_modifiers(
+    model: pyhf.pdf.Model,
+) -> Tuple[List[str], List[Optional[str]]]:
+    """ """
+    labels = model.config.par_names()
+    _mod_dict = dict(model.config.modifiers)
+    _clean_labels = [re.sub(r"\[.*\]", "", label) for label in labels]
+    types = [_mod_dict[n] if n in _mod_dict else None for n in _clean_labels]
+    return labels, types
+
+
 def match_fit_results(model: pyhf.pdf.Model, fit_results: FitResults) -> FitResults:
     """Matches results from a fit to a model by adding or removing parameters as needed.
 
@@ -543,7 +555,7 @@ def match_fit_results(model: pyhf.pdf.Model, fit_results: FitResults) -> FitResu
 
     bestfit = asimov_parameters(model)  # Asimov parameter values for target model
     uncertainty = prefit_uncertainties(model)  # pre-fit uncertainties for target model
-    labels = model.config.par_names()  # labels for target model
+    labels, types = _labels_modifiers(model)
 
     # indices of parameters in current fit results, or None if they are missing
     indices_for_corr: List[Optional[int]] = [None] * len(labels)
@@ -577,6 +589,7 @@ def match_fit_results(model: pyhf.pdf.Model, fit_results: FitResults) -> FitResu
         np.asarray(bestfit),
         np.asarray(uncertainty),
         labels,
+        types,
         corr_mat,
         fit_results.best_twice_nll,
         fit_results.goodness_of_fit,

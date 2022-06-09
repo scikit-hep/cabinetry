@@ -95,7 +95,12 @@ def test_workspace(mock_validate, mock_build, cli_helpers, tmp_path):
 @mock.patch(
     "cabinetry.fit.fit",
     return_value=fit.FitResults(
-        np.asarray([1.0]), np.asarray([0.1]), ["label"], np.asarray([[1.0]]), 1.0
+        np.asarray([1.0]),
+        np.asarray([0.1]),
+        ["label"],
+        ["type"],
+        np.asarray([[1.0]]),
+        1.0,
     ),
     autospec=True,
 )
@@ -109,8 +114,9 @@ def test_fit(mock_utils, mock_fit, mock_pulls, mock_corrmat, tmp_path):
     bestfit = np.asarray([1.0])
     uncertainty = np.asarray([0.1])
     labels = ["label"]
+    types = ["type"]
     corr_mat = np.asarray([[1.0]])
-    fit_results = fit.FitResults(bestfit, uncertainty, labels, corr_mat, 1.0)
+    fit_results = fit.FitResults(bestfit, uncertainty, labels, types, corr_mat, 1.0)
 
     workspace_path = str(tmp_path / "workspace.json")
 
@@ -204,7 +210,12 @@ def test_fit(mock_utils, mock_fit, mock_pulls, mock_corrmat, tmp_path):
 @mock.patch(
     "cabinetry.fit.fit",
     return_value=fit.FitResults(
-        np.asarray([1.0]), np.asarray([0.1]), ["label"], np.asarray([[1.0]]), 1.0
+        np.asarray([1.0]),
+        np.asarray([0.1]),
+        ["label"],
+        ["type"],
+        np.asarray([[1.0]]),
+        1.0,
     ),
     autospec=True,
 )
@@ -218,8 +229,9 @@ def test_ranking(mock_utils, mock_fit, mock_rank, mock_vis, tmp_path):
     bestfit = np.asarray([1.0])
     uncertainty = np.asarray([0.1])
     labels = ["label"]
+    types = ["type"]
     corr_mat = np.asarray([[1.0]])
-    fit_results = fit.FitResults(bestfit, uncertainty, labels, corr_mat, 1.0)
+    fit_results = fit.FitResults(bestfit, uncertainty, labels, types, corr_mat, 1.0)
 
     workspace_path = str(tmp_path / "workspace.json")
 
@@ -467,7 +479,12 @@ def test_significance(mock_utils, mock_sig, tmp_path):
 @mock.patch(
     "cabinetry.fit.fit",
     return_value=fit.FitResults(
-        np.asarray([1.0]), np.asarray([0.1]), ["label"], np.asarray([[1.0]]), 1.0
+        np.asarray([1.0]),
+        np.asarray([0.1]),
+        ["label"],
+        ["type"],
+        np.asarray([[1.0]]),
+        1.0,
     ),
     autospec=True,
 )
@@ -508,7 +525,12 @@ def test_data_mc(
     config_path = str(tmp_path / "config.yml")
     cli_helpers.write_config(config_path, config)
     fit_results = fit.FitResults(
-        np.asarray([1.0]), np.asarray([0.1]), ["label"], np.asarray([[1.0]]), 1.0
+        np.asarray([1.0]),
+        np.asarray([0.1]),
+        ["label"],
+        ["type"],
+        np.asarray([[1.0]]),
+        1.0,
     )
 
     result = runner.invoke(

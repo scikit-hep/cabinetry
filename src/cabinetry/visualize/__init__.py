@@ -1,9 +1,9 @@
 """High-level entry point for visualizing fit models and inference results."""
 
+import fnmatch
 import glob
 import logging
 import pathlib
-import fnmatch
 from typing import Any, Dict, List, Optional, Tuple, Union
 
 import matplotlib as mpl
@@ -442,7 +442,7 @@ def pulls(
     *,
     figure_folder: Union[str, pathlib.Path] = "figures",
     exclude: Optional[Union[str, List[str], Tuple[str, ...]]] = None,
-    exclude_by_type: Optional[Union[str, List[str]]] = ["staterror"],
+    exclude_by_type: Optional[List[str]] = None,
     close_figure: bool = True,
     save_figure: bool = True,
 ) -> mpl.figure.Figure:
@@ -489,6 +489,8 @@ def pulls(
     )
 
     # exclude by type
+    if exclude_by_type is None:
+        exclude_by_type = ["staterror"]
     exclude_set.update(
         [
             label
