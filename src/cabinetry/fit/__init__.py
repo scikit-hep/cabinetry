@@ -89,7 +89,7 @@ def _fit_model_pyhf(
     uncertainty = pyhf.tensorlib.to_numpy(result[:, 1])
     labels = model.config.par_names()
     _mod_dict = dict(model.config.modifiers)
-    _clean_labels = [re.sub(r'\[.*\]', '', label) for label in labels]
+    _clean_labels = [re.sub(r"\[.*\]", "", label) for label in labels]
     types = [_mod_dict[n] if n in _mod_dict else None for n in _clean_labels]
     corr_mat = pyhf.tensorlib.to_numpy(corr_mat)
     best_twice_nll = float(best_twice_nll)  # convert 0-dim np.ndarray to float

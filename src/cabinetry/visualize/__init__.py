@@ -442,7 +442,7 @@ def pulls(
     *,
     figure_folder: Union[str, pathlib.Path] = "figures",
     exclude: Optional[Union[str, List[str], Tuple[str, ...]]] = None,
-    exclude_by_type: Optional[Union[str, List[str]]] = ['staterror'],
+    exclude_by_type: Optional[Union[str, List[str]]] = ["staterror"],
     close_figure: bool = True,
     save_figure: bool = True,
 ) -> mpl.figure.Figure:
@@ -457,7 +457,7 @@ def pulls(
             or parameters to exclude from plot, defaults to None (nothing excluded),
             compatible with unix wildcards
         exclude_by_type (Optional[Union[str, List[str], Tuple[str, ...]]], optional):
-            exclude parameters of the given type, defaults ``['staterror']`` filtering 
+            exclude parameters of the given type, defaults ``['staterror']`` filtering
             out mc_stat uncertainties which are centered on 1
         close_figure (bool, optional): whether to close figure, defaults to True
         save_figure (bool, optional): whether to save figure, defaults to True
@@ -468,7 +468,9 @@ def pulls(
     # path is None if figure should not be saved
     figure_path = pathlib.Path(figure_folder) / "pulls.pdf" if save_figure else None
     labels_np = np.asarray(fit_results.labels)
-    numeric = np.array([True if ty in ['normfactor'] else False for ty in fit_results.types])
+    numeric = np.array(
+        [True if ty in ["normfactor"] else False for ty in fit_results.types]
+    )
 
     if exclude is None:
         exclude_set = set()
@@ -487,7 +489,13 @@ def pulls(
     )
 
     # exclude by type
-    exclude_set.update([label for label, kind in zip(labels_np, fit_results.types) if kind in exclude_by_type])
+    exclude_set.update(
+        [
+            label
+            for label, kind in zip(labels_np, fit_results.types)
+            if kind in exclude_by_type
+        ]
+    )
 
     # filter out user-specified parameters
     mask = [True if label not in exclude_set else False for label in labels_np]
