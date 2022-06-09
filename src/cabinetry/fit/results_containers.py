@@ -13,7 +13,7 @@ class FitResults(NamedTuple):
         uncertainty (np.ndarray): uncertainties of best-fit parameter results, evaluated
             with Hessian
         labels (List[str]): parameter labels
-        types (List[str]): parameter types
+        types (List[Optional[str]]): parameter types
         corr_mat (np.ndarray): parameter correlation matrix
         best_twice_nll (float): -2 log(likelihood) at best-fit point
         goodess_of_fit (float, optional): goodness-of-fit p-value, defaults to -1
