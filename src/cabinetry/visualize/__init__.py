@@ -3,6 +3,7 @@
 import glob
 import logging
 import pathlib
+import fnmatch
 from typing import Any, Dict, List, Optional, Tuple, Union
 
 import matplotlib as mpl
@@ -453,7 +454,11 @@ def pulls(
         figure_folder (Union[str, pathlib.Path], optional): path to the folder to save
             figures in, defaults to "figures"
         exclude (Optional[Union[str, List[str], Tuple[str, ...]]], optional): parameter
-            or parameters to exclude from plot, defaults to None (nothing excluded)
+            or parameters to exclude from plot, defaults to None (nothing excluded),
+            compatible with unix wildcards
+        exclude_by_type (Optional[Union[str, List[str], Tuple[str, ...]]], optional):
+            exclude parameters of the given type, defaults ``['staterror']`` filtering 
+            out mc_stat uncertainties which are centered on 1
         close_figure (bool, optional): whether to close figure, defaults to True
         save_figure (bool, optional): whether to save figure, defaults to True
 
@@ -468,7 +473,7 @@ def pulls(
     if exclude is None:
         exclude_set = set()
     elif isinstance(exclude, str):
-        exclude_set = {exclude}
+        exclude_set = set(fnmatch.filter(fit_results.labels, exclude))
     else:
         exclude_set = set(exclude)
 
@@ -481,7 +486,7 @@ def pulls(
         ]
     )
 
-    # exclude staterror parameters from pull plot (they are centered at 1)
+    # exclude by type
     exclude_set.update([label for label, kind in zip(labels_np, fit_results.types) if kind in exclude_by_type])
 
     # filter out user-specified parameters
