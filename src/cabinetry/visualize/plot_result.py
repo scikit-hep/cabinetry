@@ -81,6 +81,8 @@ def pulls(
         bestfit (np.ndarray): best-fit parameter results
         uncertainty (np.ndarray): parameter uncertainties
         labels (Union[List[str], np.ndarray]): parameter names
+        numeric Optional[Union[List[bool], np.ndarray]]: which parameters are numeric,
+            and should only be shown directly
         figure_path (Optional[pathlib.Path], optional): path where figure should be
             saved, or None to not save it, defaults to None
         close_figure (bool, optional): whether to close each figure immediately after
@@ -94,7 +96,7 @@ def pulls(
     numeric = np.zeros(num_pars, dtype=bool) if numeric is None else np.asarray(numeric)
     y_positions = np.arange(num_pars)[::-1]
 
-    fig, ax = plt.subplots(figsize=(6, 1 + num_pars / 4), dpi=100)
+    fig, ax = plt.subplots()
     if num_pars > np.sum(numeric):  # Actual pulls
         ax.errorbar(
             np.ma.masked_array(bestfit, mask=numeric),
@@ -120,7 +122,7 @@ def pulls(
             zip(numeric[::-1], bestfit[::-1], uncertainty[::-1])
         ):
             if show:
-                ax.text(0, i, f"{par:.2f} +- {unc:.2f}", ha="center", va="center")
+                ax.text(0, i, rf"{par:.2f} $\pm$ {unc:.2f}", ha="center", va="center")
 
     ax.set_xlim([-3, 3])
     ax.set_xlabel(r"$\left(\hat{\theta} - \theta_0\right) / \Delta \theta$")
