@@ -441,6 +441,7 @@ def pulls(
     *,
     figure_folder: Union[str, pathlib.Path] = "figures",
     exclude: Optional[Union[str, List[str], Tuple[str, ...]]] = None,
+    exclude_by_type: Optional[Union[str, List[str]]] = ['staterror'],
     close_figure: bool = True,
     save_figure: bool = True,
 ) -> mpl.figure.Figure:
@@ -462,6 +463,7 @@ def pulls(
     # path is None if figure should not be saved
     figure_path = pathlib.Path(figure_folder) / "pulls.pdf" if save_figure else None
     labels_np = np.asarray(fit_results.labels)
+    numeric = np.array([True if ty in ['normfactor'] else False for ty in fit_results.types])
 
     if exclude is None:
         exclude_set = set()
@@ -480,18 +482,20 @@ def pulls(
     )
 
     # exclude staterror parameters from pull plot (they are centered at 1)
-    exclude_set.update([label for label in labels_np if label[0:10] == "staterror_"])
+    exclude_set.update([label for label, kind in zip(labels_np, fit_results.types) if kind in exclude_by_type])
 
     # filter out user-specified parameters
     mask = [True if label not in exclude_set else False for label in labels_np]
     bestfit = fit_results.bestfit[mask]
     uncertainty = fit_results.uncertainty[mask]
     labels_np = labels_np[mask]
+    numeric = numeric[mask]
 
     fig = plot_result.pulls(
         bestfit,
         uncertainty,
         labels_np,
+        numeric=numeric,
         figure_path=figure_path,
         close_figure=close_figure,
     )
