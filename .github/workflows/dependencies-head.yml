@@ -13,7 +13,7 @@ jobs:
     strategy:
       matrix:
         os: [ubuntu-latest]
-        python-version: [3.9]
+        python-version: ['3.9']
 
     steps:
     - uses: actions/checkout@v3
@@ -38,7 +38,7 @@ jobs:
     strategy:
       matrix:
         os: [ubuntu-latest]
-        python-version: [3.9]
+        python-version: ['3.9']
 
     steps:
     - uses: actions/checkout@v3
@@ -63,7 +63,7 @@ jobs:
     strategy:
       matrix:
         os: [ubuntu-latest]
-        python-version: [3.9]
+        python-version: ['3.9']
 
     steps:
     - uses: actions/checkout@v3
@@ -88,7 +88,7 @@ jobs:
     strategy:
       matrix:
         os: [ubuntu-latest]
-        python-version: [3.9]
+        python-version: ['3.9']
 
     steps:
     - uses: actions/checkout@v3
@@ -114,7 +114,7 @@ jobs:
     strategy:
       matrix:
         os: [ubuntu-latest]
-        python-version: [3.9]
+        python-version: ['3.9']
 
     steps:
     - uses: actions/checkout@v3
