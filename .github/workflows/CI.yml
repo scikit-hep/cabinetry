@@ -51,7 +51,7 @@ jobs:
         python example.py
     - name: Install pyhf backends
       run: |
-        python -m pip install pyhf[backends]@git+https://github.com/scikit-hep/pyhf.git@v0.7.0rc1  # temporary fix
+        python -m pip install .[pyhf_backends]  # install pyhf backends
     - name: Test with pytest and generate coverage report
       if: matrix.python-version == '3.7'
       run: |
