@@ -1,6 +1,5 @@
 """High-level entry point for visualizing fit models and inference results."""
 
-import fnmatch
 import glob
 import logging
 import pathlib
@@ -16,6 +15,7 @@ from cabinetry import model_utils
 from cabinetry.templates import builder
 from cabinetry.visualize import plot_model
 from cabinetry.visualize import plot_result
+from cabinetry.visualize.utils import _exclude_matching
 
 
 log = logging.getLogger(__name__)
@@ -387,6 +387,8 @@ def correlation_matrix(
     *,
     figure_folder: Union[str, pathlib.Path] = "figures",
     pruning_threshold: float = 0.0,
+    exclude: Optional[Union[str, List[str], Tuple[str, ...]]] = None,
+    exclude_by_type: Optional[List[str]] = None,
     close_figure: bool = True,
     save_figure: bool = True,
 ) -> mpl.figure.Figure:
@@ -399,6 +401,12 @@ def correlation_matrix(
             figures in, defaults to "figures"
         pruning_threshold (float, optional): minimum correlation for a parameter to
             have with any other parameters to not get pruned, defaults to 0.0
+        exclude (Optional[Union[str, List[str], Tuple[str, ...]]], optional): parameter
+            or parameters to exclude from plot, defaults to None (nothing excluded),
+            compatible with unix wildcards
+        exclude_by_type (Optional[Union[str, List[str], Tuple[str, ...]]], optional):
+            exclude parameters of the given type, defaults ``['staterror']`` filtering
+            out mc_stat uncertainties which are centered on 1
         close_figure (bool, optional): whether to close figure, defaults to True
         save_figure (bool, optional): whether to save figure, defaults to True
 
@@ -423,7 +431,14 @@ def correlation_matrix(
     fixed_parameter = np.all(np.equal(fit_results.corr_mat, 0.0), axis=0)
     # get indices of rows/columns where everything is below threshold, or the parameter
     # is fixed
-    delete_indices = np.where(np.logical_or(all_below_threshold, fixed_parameter))
+    exclude_set = _exclude_matching(
+        fit_results, exclude=exclude, exclude_by_type=exclude_by_type
+    )
+    exclude_indices = np.array(
+        [1 if lab in exclude_set else 0 for lab in fit_results.labels]
+    ).astype(bool)
+    #
+    delete_indices = np.where(all_below_threshold | fixed_parameter | exclude_indices)
     # delete rows and columns where all correlations are below threshold / parameter is
     # fixed
     corr_mat = np.delete(
@@ -472,13 +487,9 @@ def pulls(
         [True if ty in ["normfactor"] else False for ty in fit_results.types]
     )
 
-    if exclude is None:
-        exclude_set = set()
-    elif isinstance(exclude, str):
-        exclude_set = set(fnmatch.filter(fit_results.labels, exclude))
-    else:
-        exclude_set = set(exclude)
-
+    exclude_set = _exclude_matching(
+        fit_results, exclude=exclude, exclude_by_type=exclude_by_type
+    )
     # exclude fixed parameters from pull plot
     exclude_set.update(
         [
@@ -488,19 +499,8 @@ def pulls(
         ]
     )
 
-    # exclude by type
-    if exclude_by_type is None:
-        exclude_by_type = ["staterror"]
-    exclude_set.update(
-        [
-            label
-            for label, kind in zip(labels_np, fit_results.types)
-            if kind in exclude_by_type
-        ]
-    )
-
     # filter out user-specified parameters
-    mask = [True if label not in exclude_set else False for label in labels_np]
+    mask = [label not in exclude_set for label in labels_np]
     bestfit = fit_results.bestfit[mask]
     uncertainty = fit_results.uncertainty[mask]
     labels_np = labels_np[mask]

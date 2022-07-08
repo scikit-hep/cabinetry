@@ -1,11 +1,14 @@
 """Provides visualization utilities."""
 
+import fnmatch
 import logging
 import pathlib
-from typing import Optional
+from typing import List, Optional, Set, Tuple, Union
 
 import matplotlib as mpl
 import matplotlib.pyplot as plt
+
+from cabinetry import fit
 
 
 log = logging.getLogger(__name__)
@@ -46,3 +49,34 @@ def _log_figure_path(path: Optional[pathlib.Path]) -> Optional[pathlib.Path]:
     if path is not None:
         return path.with_name(path.stem + "_log" + path.suffix)
     return None
+
+
+def _exclude_matching(
+    fit_results: fit.FitResults,
+    *,
+    exclude: Optional[Union[str, List[str], Tuple[str, ...]]] = None,
+    exclude_by_type: Optional[List[str]] = None,
+) -> Set[str]:
+
+    labels = fit_results.labels
+    types = fit_results.types
+
+    if exclude is None:
+        exclude_set = set()
+    elif isinstance(exclude, str):
+        exclude_set = set(fnmatch.filter(labels, exclude))
+    elif isinstance(exclude, (list, tuple)):
+        exclude_set = set().union(
+            *[set(fnmatch.filter(labels, match_str)) for match_str in exclude]
+        )
+    else:
+        raise TypeError("exclude must be a string, list, or tuple")
+
+    # exclude by type
+    if exclude_by_type is None:
+        exclude_by_type = ["staterror"]
+
+    exclude_set.update(
+        [label for label, kind in zip(labels, types) if kind in exclude_by_type]
+    )
+    return exclude_set
