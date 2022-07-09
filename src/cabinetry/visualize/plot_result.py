@@ -96,7 +96,7 @@ def pulls(
     numeric = np.zeros(num_pars, dtype=bool) if numeric is None else np.asarray(numeric)
     y_positions = np.arange(num_pars)[::-1]
 
-    fig, ax = plt.subplots()
+    fig, ax = plt.subplots(figsize=(6, 1 + num_pars / 4))
     if num_pars > np.sum(numeric):  # Actual pulls
         ax.errorbar(
             np.ma.masked_array(bestfit, mask=numeric),
@@ -129,6 +129,10 @@ def pulls(
     ax.set_ylim([-0.5, num_pars - 0.5])
     ax.set_yticks(y_positions)
     ax.set_yticklabels(labels)
+    ax.xaxis.set_minor_locator(mpl.ticker.AutoMinorLocator())  # minor ticks
+    ax.tick_params(axis="both", which="major", pad=8)
+    ax.tick_params(direction="in", top=True, right=True, which="both")
+    fig.set_tight_layout(True)
 
     utils._save_and_close(fig, figure_path, close_figure)
     return fig
