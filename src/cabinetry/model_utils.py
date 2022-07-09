@@ -2,7 +2,6 @@
 
 import json
 import logging
-import re
 from typing import Any, Dict, List, NamedTuple, Optional, Tuple, Union
 
 import awkward as ak
@@ -522,10 +521,16 @@ def _labels_modifiers(
 ) -> Tuple[List[str], List[Optional[str]]]:
     """ """
     labels = model.config.par_names()
-    _mod_dict = dict(model.config.modifiers)
-    _clean_labels = [re.sub(r"\[.*\]", "", label) for label in labels]
-    types = [_mod_dict[n] if n in _mod_dict else None for n in _clean_labels]
-    return labels, types
+    types = []
+    for parameter in model.config.par_order:
+        types += [
+            [
+                mod_type
+                for par_name, mod_type in model.config.modifiers
+                if par_name == parameter
+            ]
+        ] * model.config.param_set(parameter).n_parameters
+    return labels, sum(types, [])  # flatten types
 
 
 def match_fit_results(model: pyhf.pdf.Model, fit_results: FitResults) -> FitResults:
