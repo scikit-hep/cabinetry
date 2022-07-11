@@ -265,6 +265,7 @@ def test_prediction(
         np.asarray([1.01, 1.1]),
         np.asarray([0.03, 0.1]),
         ["staterror_Signal-Region[0]", "Signal strength"],
+        [["staterror"], ["normfactor"]],
         np.asarray([[1.0, 0.2], [0.2, 1.0]]),
         0.0,
     )
@@ -298,6 +299,7 @@ def test_prediction(
         np.asarray([1.01, 1.1]),
         np.asarray([0.03, 0.1]),
         ["a", "b"],
+        [["staterror"], ["normfactor"]],
         np.asarray([[1.0, 0.2], [0.2, 1.0]]),
         0.0,
     )
@@ -394,6 +396,7 @@ def test_match_fit_results(mock_pars, mock_uncs):
         np.asarray([1.0, 2.0, 3.0]),
         np.asarray([0.1, 0.2, 0.3]),
         ["par_a", "par_b", "par_c"],
+        [[], [], []],
         np.asarray([[1.0, 0.2, 0.5], [0.2, 1.0, 0.1], [0.5, 0.1, 1.0]]),
         5.0,
         0.1,

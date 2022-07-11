@@ -9,9 +9,12 @@ def test_FitResults():
     bestfit = np.asarray([1.0])
     uncertainty = np.asarray([0.1])
     labels = ["par_a"]
+    types = [[]]
     corr_mat = np.asarray([[1.0]])
     best_twice_nll = 2.0
-    fit_results = fit.FitResults(bestfit, uncertainty, labels, corr_mat, best_twice_nll)
+    fit_results = fit.FitResults(
+        bestfit, uncertainty, labels, types, corr_mat, best_twice_nll
+    )
     assert np.allclose(fit_results.bestfit, bestfit)
     assert np.allclose(fit_results.uncertainty, uncertainty)
     assert fit_results.labels == labels
@@ -30,7 +33,13 @@ def test_RankingResults():
     postfit_up = np.asarray([0.2])
     postfit_down = np.asarray([-0.2])
     ranking_results = fit.RankingResults(
-        bestfit, uncertainty, labels, prefit_up, prefit_down, postfit_up, postfit_down
+        bestfit,
+        uncertainty,
+        labels,
+        prefit_up,
+        prefit_down,
+        postfit_up,
+        postfit_down,
     )
     assert np.allclose(ranking_results.bestfit, bestfit)
     assert np.allclose(ranking_results.uncertainty, uncertainty)
@@ -100,7 +109,8 @@ def test_print_results(caplog):
     bestfit = np.asarray([1.0, 2.0])
     uncertainty = np.asarray([0.1, 0.3])
     labels = ["param_A", "param_B"]
-    fit_results = fit.FitResults(bestfit, uncertainty, labels, np.empty(0), 0.0)
+    types = [[], []]
+    fit_results = fit.FitResults(bestfit, uncertainty, labels, types, np.empty(0), 0.0)
 
     fit.print_results(fit_results)
     assert "param_A =  1.0000 +/- 0.1000" in [rec.message for rec in caplog.records]
