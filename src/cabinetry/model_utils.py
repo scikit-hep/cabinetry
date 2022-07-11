@@ -528,7 +528,7 @@ def _labels_modifiers(
                 mod_type
                 for par_name, mod_type in model.config.modifiers
                 if par_name == parameter
-            ]
+            ][:1]
         ] * model.config.param_set(parameter).n_parameters
     return labels, sum(types, [])  # flatten types
 
