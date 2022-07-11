@@ -360,7 +360,7 @@ def test_correlation_matrix(mock_draw):
     corr_mat = np.asarray([[1.0, 0.2, 0.1], [0.2, 1.0, 0.1], [0.1, 0.1, 1.0]])
     corr_mat_pruned = np.asarray([[1.0, 0.2], [0.2, 1.0]])
     labels = ["a", "b", "c"]
-    types = [None, None, None]
+    types = [[], [], []]
     labels_pruned = ["a", "b"]
     folder_path = "tmp"
     figure_path = pathlib.Path(folder_path) / "correlation_matrix.pdf"
@@ -408,7 +408,7 @@ def test_pulls(mock_draw):
     bestfit = np.asarray([0.8, 1.0, 1.05, 1.1])
     uncertainty = np.asarray([0.9, 1.0, 0.03, 0.7])
     labels = ["a", "b", "staterror_region[0]", "c"]
-    types = [None, None, "staterror", None]
+    types = [[], [], ["staterror"], []]
     exclude = ["a"]
     folder_path = "tmp"
     fit_results = fit.FitResults(bestfit, uncertainty, labels, types, np.empty(0), 1.0)

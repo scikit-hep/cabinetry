@@ -483,9 +483,7 @@ def pulls(
     # path is None if figure should not be saved
     figure_path = pathlib.Path(figure_folder) / "pulls.pdf" if save_figure else None
     labels_np = np.asarray(fit_results.labels)
-    numeric = np.array(
-        [True if ty in ["normfactor"] else False for ty in fit_results.types]
-    )
+    numeric = np.array([bool(set(ty) & {"normfactor"}) for ty in fit_results.types])
 
     exclude_set = _exclude_matching(
         fit_results, exclude=exclude, exclude_by_type=exclude_by_type

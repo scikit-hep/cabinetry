@@ -77,6 +77,10 @@ def _exclude_matching(
         exclude_by_type = ["staterror"]
 
     exclude_set.update(
-        [label for label, kind in zip(labels, types) if kind in exclude_by_type]
+        [
+            label
+            for label, kinds in zip(labels, types)
+            if bool(set(kinds) & set(exclude_by_type))
+        ]
     )
     return exclude_set

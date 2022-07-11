@@ -98,7 +98,7 @@ def test_workspace(mock_validate, mock_build, cli_helpers, tmp_path):
         np.asarray([1.0]),
         np.asarray([0.1]),
         ["label"],
-        ["type"],
+        [["type"]],
         np.asarray([[1.0]]),
         1.0,
     ),
@@ -114,7 +114,7 @@ def test_fit(mock_utils, mock_fit, mock_pulls, mock_corrmat, tmp_path):
     bestfit = np.asarray([1.0])
     uncertainty = np.asarray([0.1])
     labels = ["label"]
-    types = ["type"]
+    types = [["type"]]
     corr_mat = np.asarray([[1.0]])
     fit_results = fit.FitResults(bestfit, uncertainty, labels, types, corr_mat, 1.0)
 
@@ -213,7 +213,7 @@ def test_fit(mock_utils, mock_fit, mock_pulls, mock_corrmat, tmp_path):
         np.asarray([1.0]),
         np.asarray([0.1]),
         ["label"],
-        ["type"],
+        [["type"]],
         np.asarray([[1.0]]),
         1.0,
     ),
@@ -229,7 +229,7 @@ def test_ranking(mock_utils, mock_fit, mock_rank, mock_vis, tmp_path):
     bestfit = np.asarray([1.0])
     uncertainty = np.asarray([0.1])
     labels = ["label"]
-    types = ["type"]
+    types = [["type"]]
     corr_mat = np.asarray([[1.0]])
     fit_results = fit.FitResults(bestfit, uncertainty, labels, types, corr_mat, 1.0)
 
@@ -482,7 +482,7 @@ def test_significance(mock_utils, mock_sig, tmp_path):
         np.asarray([1.0]),
         np.asarray([0.1]),
         ["label"],
-        ["type"],
+        [["type"]],
         np.asarray([[1.0]]),
         1.0,
     ),
@@ -528,7 +528,7 @@ def test_data_mc(
         np.asarray([1.0]),
         np.asarray([0.1]),
         ["label"],
-        ["type"],
+        [["type"]],
         np.asarray([[1.0]]),
         1.0,
     )

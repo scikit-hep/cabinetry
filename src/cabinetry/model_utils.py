@@ -518,7 +518,7 @@ def _filter_channels(
 
 def _labels_modifiers(
     model: pyhf.pdf.Model,
-) -> Tuple[List[str], List[Optional[str]]]:
+) -> Tuple[List[str], List[List[str]]]:
     """ """
     labels = model.config.par_names()
     types = []
@@ -528,9 +528,9 @@ def _labels_modifiers(
                 mod_type
                 for par_name, mod_type in model.config.modifiers
                 if par_name == parameter
-            ][:1]
+            ]
         ] * model.config.param_set(parameter).n_parameters
-    return labels, sum(types, [])  # flatten types
+    return labels, types  # flatten types
 
 
 def match_fit_results(model: pyhf.pdf.Model, fit_results: FitResults) -> FitResults:

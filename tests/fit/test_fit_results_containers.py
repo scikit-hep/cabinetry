@@ -9,7 +9,7 @@ def test_FitResults():
     bestfit = np.asarray([1.0])
     uncertainty = np.asarray([0.1])
     labels = ["par_a"]
-    types = [None]
+    types = [[]]
     corr_mat = np.asarray([[1.0]])
     best_twice_nll = 2.0
     fit_results = fit.FitResults(
@@ -109,7 +109,7 @@ def test_print_results(caplog):
     bestfit = np.asarray([1.0, 2.0])
     uncertainty = np.asarray([0.1, 0.3])
     labels = ["param_A", "param_B"]
-    types = [None, None]
+    types = [[], []]
     fit_results = fit.FitResults(bestfit, uncertainty, labels, types, np.empty(0), 0.0)
 
     fit.print_results(fit_results)

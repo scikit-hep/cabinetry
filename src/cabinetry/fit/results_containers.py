@@ -1,6 +1,6 @@
 """Provides containers for inference results."""
 
-from typing import Dict, List, NamedTuple, Optional, Tuple
+from typing import Dict, List, NamedTuple, Tuple
 
 import numpy as np
 
@@ -24,7 +24,7 @@ class FitResults(NamedTuple):
     bestfit: np.ndarray
     uncertainty: np.ndarray
     labels: List[str]
-    types: List[Optional[str]]
+    types: List[List[str]]
     corr_mat: np.ndarray
     best_twice_nll: float
     goodness_of_fit: float = -1

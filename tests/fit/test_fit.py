@@ -16,7 +16,7 @@ def test_print_results(caplog):
     bestfit = np.asarray([1.0, 2.0])
     uncertainty = np.asarray([0.1, 0.3])
     labels = ["param_A", "param_B"]
-    types = ["normsys", "shapesys"]
+    types = [["normsys"], ["shapesys"]]
     fit_results = fit.FitResults(bestfit, uncertainty, labels, types, np.empty(0), 0.0)
 
     fit.print_results(fit_results)
@@ -144,13 +144,13 @@ def test__fit_model_custom(mock_minos, example_spec, example_spec_multibin):
 @mock.patch(
     "cabinetry.fit._fit_model_custom",
     return_value=fit.FitResults(
-        np.asarray([1.2]), np.asarray([0.2]), ["par"], ["normsys"], np.empty(0), 2.0
+        np.asarray([1.2]), np.asarray([0.2]), ["par"], [["normsys"]], np.empty(0), 2.0
     ),
 )
 @mock.patch(
     "cabinetry.fit._fit_model_pyhf",
     return_value=fit.FitResults(
-        np.asarray([1.1]), np.asarray([0.2]), ["par"], ["normsys"], np.empty(0), 2.0
+        np.asarray([1.1]), np.asarray([0.2]), ["par"], [["normsys"]], np.empty(0), 2.0
     ),
 )
 def test__fit_model(mock_pyhf, mock_custom, example_spec):
@@ -296,7 +296,7 @@ def test__goodness_of_fit(
 @mock.patch(
     "cabinetry.fit._fit_model",
     return_value=fit.FitResults(
-        np.asarray([1.0]), np.asarray([0.1]), ["par"], ["normsys"], np.empty(0), 2.0
+        np.asarray([1.0]), np.asarray([0.1]), ["par"], [["normsys"]], np.empty(0), 2.0
     ),
 )
 def test_fit(mock_fit, mock_print, mock_gof):
@@ -386,7 +386,7 @@ def test_fit(mock_fit, mock_print, mock_gof):
             np.asarray([0.9, 1.3]),
             np.asarray([0.1, 0.1]),
             ["a", "b"],
-            ["normsys", "normsys"],
+            [["normsys"], ["normsys"]],
             np.empty(0),
             0.0,
         ),
@@ -394,7 +394,7 @@ def test_fit(mock_fit, mock_print, mock_gof):
             np.asarray([0.9, 0.7]),
             np.asarray([0.1, 0.1]),
             ["a", "b"],
-            ["normsys", "normsys"],
+            [["normsys"], ["normsys"]],
             np.empty(0),
             0.0,
         ),
@@ -402,7 +402,7 @@ def test_fit(mock_fit, mock_print, mock_gof):
             np.asarray([0.9, 1.2]),
             np.asarray([0.1, 0.1]),
             ["a", "b"],
-            ["normsys", "normsys"],
+            [["normsys"], ["normsys"]],
             np.empty(0),
             0.0,
         ),
@@ -410,7 +410,7 @@ def test_fit(mock_fit, mock_print, mock_gof):
             np.asarray([0.9, 0.8]),
             np.asarray([0.1, 0.1]),
             ["a", "b"],
-            ["normsys", "normsys"],
+            [["normsys"], ["normsys"]],
             np.empty(0),
             0.0,
         ),
@@ -419,7 +419,7 @@ def test_fit(mock_fit, mock_print, mock_gof):
             np.asarray([0.9, 1.2]),
             np.asarray([0.1, 0.1]),
             ["a", "b"],
-            ["normsys", "normsys"],
+            [["normsys"], ["normsys"]],
             np.empty(0),
             0.0,
         ),
@@ -427,7 +427,7 @@ def test_fit(mock_fit, mock_print, mock_gof):
             np.asarray([0.9, 0.8]),
             np.asarray([0.1, 0.1]),
             ["a", "b"],
-            ["normsys", "normsys"],
+            [["normsys"], ["normsys"]],
             np.empty(0),
             0.0,
         ),
@@ -436,7 +436,7 @@ def test_fit(mock_fit, mock_print, mock_gof):
             np.asarray([0.9, 1.0]),
             np.asarray([0.3, 0.3]),
             ["a", "b"],
-            ["normsys", "normsys"],
+            [["normsys"], ["normsys"]],
             np.empty(0),
             0.0,
         ),
@@ -444,7 +444,7 @@ def test_fit(mock_fit, mock_print, mock_gof):
             np.asarray([0.9, 1.3]),
             np.asarray([0.1, 0.1]),
             ["a", "b"],
-            ["normsys", "normsys"],
+            [["normsys"], ["normsys"]],
             np.empty(0),
             0.0,
         ),
@@ -452,7 +452,7 @@ def test_fit(mock_fit, mock_print, mock_gof):
             np.asarray([0.9, 0.7]),
             np.asarray([0.1, 0.1]),
             ["a", "b"],
-            ["normsys", "normsys"],
+            [["normsys"], ["normsys"]],
             np.empty(0),
             0.0,
         ),
@@ -463,7 +463,7 @@ def test_ranking(mock_fit, example_spec):
     bestfit = np.asarray([0.9, 1.0])
     uncertainty = np.asarray([0.02, 0.1])
     labels = ["staterror", "mu"]
-    types = ["staterror", "normfactor"]
+    types = [["staterror"], ["normfactor"]]
     fit_results = fit.FitResults(bestfit, uncertainty, labels, types, np.empty(0), 0.0)
     model, data = model_utils.model_and_data(example_spec)
     ranking_results = fit.ranking(model, data, fit_results=fit_results)
