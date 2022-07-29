@@ -150,10 +150,6 @@ def _fit_model_custom(
 
     labels = model.config.par_names()
 
-    # set initial step size to 0 for fixed parameters
-    # this will cause the associated parameter uncertainties to be 0 post-fit
-    step_size = [0.1 if not fix_pars[i_par] else 0.0 for i_par in range(len(init_pars))]
-
     def twice_nll_func(pars: np.ndarray) -> Any:
         """The objective for minimization: twice the negative log-likelihood.
 
@@ -170,7 +166,6 @@ def _fit_model_custom(
         return twice_nll[0]
 
     m = iminuit.Minuit(twice_nll_func, init_pars, name=labels)
-    m.errors = step_size
     m.fixed = fix_pars
     m.limits = par_bounds
     m.errordef = 1
