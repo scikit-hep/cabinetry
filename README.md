@@ -4,7 +4,6 @@
 [![Documentation Status](https://readthedocs.org/projects/cabinetry/badge/?version=latest)](https://cabinetry.readthedocs.io/en/latest/?badge=latest)
 [![Codecov](https://codecov.io/gh/scikit-hep/cabinetry/branch/master/graph/badge.svg)](https://codecov.io/gh/scikit-hep/cabinetry)
 [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
-
 [![PyPI version](https://badge.fury.io/py/cabinetry.svg)](https://badge.fury.io/py/cabinetry)
 [![Conda version](https://img.shields.io/conda/vn/conda-forge/cabinetry.svg)](https://github.com/conda-forge/cabinetry-feedstock)
 [![Python version](https://img.shields.io/pypi/pyversions/cabinetry.svg)](https://pypi.org/project/cabinetry/)
