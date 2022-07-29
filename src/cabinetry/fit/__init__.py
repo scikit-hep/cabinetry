@@ -85,7 +85,10 @@ def _fit_model_pyhf(
     log.info(f"MINUIT status:\n{result_obj.minuit.fmin}")
 
     bestfit = pyhf.tensorlib.to_numpy(result[:, 0])
-    uncertainty = pyhf.tensorlib.to_numpy(result[:, 1])
+    # set errors for fixed parameters to 0 (see iminuit#762)
+    uncertainty = np.where(
+        result_obj.minuit.fixed, 0.0, pyhf.tensorlib.to_numpy(result[:, 1])
+    )
     labels = model.config.par_names()
     corr_mat = pyhf.tensorlib.to_numpy(corr_mat)
     best_twice_nll = float(best_twice_nll)  # convert 0-dim np.ndarray to float
@@ -180,7 +183,8 @@ def _fit_model_custom(
     log.info(f"MINUIT status:\n{m.fmin}")
 
     bestfit = np.asarray(m.values)
-    uncertainty = np.asarray(m.errors)
+    # set errors for fixed parameters to 0 (see iminuit#762)
+    uncertainty = np.where(m.fixed, 0.0, m.errors)
     corr_mat = m.covariance.correlation()  # iminuit.util.Matrix, subclass of np.ndarray
     best_twice_nll = m.fval
 
