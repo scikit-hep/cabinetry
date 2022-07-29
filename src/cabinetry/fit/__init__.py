@@ -85,7 +85,10 @@ def _fit_model_pyhf(
     log.info(f"MINUIT status:\n{result_obj.minuit.fmin}")
 
     bestfit = pyhf.tensorlib.to_numpy(result[:, 0])
-    uncertainty = pyhf.tensorlib.to_numpy(result[:, 1])
+    # set errors for fixed parameters to 0 (see iminuit#762)
+    uncertainty = np.where(
+        result_obj.minuit.fixed, 0.0, pyhf.tensorlib.to_numpy(result[:, 1])
+    )
     labels = model.config.par_names()
     corr_mat = pyhf.tensorlib.to_numpy(corr_mat)
     best_twice_nll = float(best_twice_nll)  # convert 0-dim np.ndarray to float
@@ -147,10 +150,6 @@ def _fit_model_custom(
 
     labels = model.config.par_names()
 
-    # set initial step size to 0 for fixed parameters
-    # this will cause the associated parameter uncertainties to be 0 post-fit
-    step_size = [0.1 if not fix_pars[i_par] else 0.0 for i_par in range(len(init_pars))]
-
     def twice_nll_func(pars: np.ndarray) -> Any:
         """The objective for minimization: twice the negative log-likelihood.
 
@@ -167,7 +166,6 @@ def _fit_model_custom(
         return twice_nll[0]
 
     m = iminuit.Minuit(twice_nll_func, init_pars, name=labels)
-    m.errors = step_size
     m.fixed = fix_pars
     m.limits = par_bounds
     m.errordef = 1
@@ -180,7 +178,8 @@ def _fit_model_custom(
     log.info(f"MINUIT status:\n{m.fmin}")
 
     bestfit = np.asarray(m.values)
-    uncertainty = np.asarray(m.errors)
+    # set errors for fixed parameters to 0 (see iminuit#762)
+    uncertainty = np.where(m.fixed, 0.0, m.errors)
     corr_mat = m.covariance.correlation()  # iminuit.util.Matrix, subclass of np.ndarray
     best_twice_nll = m.fval
 
