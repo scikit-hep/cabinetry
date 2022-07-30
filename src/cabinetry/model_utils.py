@@ -447,7 +447,9 @@ def _parameter_index(
     return par_index
 
 
-def _poi_index(model: pyhf.pdf.Model, *, poi: Optional[str] = None) -> Optional[int]:
+def _poi_index(
+    model: pyhf.pdf.Model, *, poi_name: Optional[str] = None
+) -> Optional[int]:
     """Returns the index of the POI specified in the argument or the model default.
 
     If a string is given as argument, this takes priority. Otherwise the POI from the
@@ -456,7 +458,7 @@ def _poi_index(model: pyhf.pdf.Model, *, poi: Optional[str] = None) -> Optional[
 
     Args:
         model (pyhf.pdf.Model): model for which to find the POI index
-        poi (Optional[str], optional): name of the POI, defaults to None
+        poi_name (Optional[str], optional): name of the POI, defaults to None
 
     Raises:
         ValueError: if the specified POI name cannot be found in the model
@@ -464,11 +466,11 @@ def _poi_index(model: pyhf.pdf.Model, *, poi: Optional[str] = None) -> Optional[
     Returns:
         Optional[int]: POI index, or None if no POI could be found
     """
-    if poi is not None:
+    if poi_name is not None:
         # use POI given by kwarg if specified
-        poi_index = _parameter_index(poi, model.config.par_names())
+        poi_index = _parameter_index(poi_name, model.config.par_names())
         if poi_index is None:
-            raise ValueError(f"parameter {poi} not found in model")
+            raise ValueError(f"parameter {poi_name} not found in model")
     elif model.config.poi_index is not None:
         # use POI specified in model
         poi_index = model.config.poi_index

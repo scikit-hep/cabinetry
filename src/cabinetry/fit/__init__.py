@@ -425,7 +425,7 @@ def ranking(
     data: List[float],
     *,
     fit_results: Optional[FitResults] = None,
-    poi: Optional[str] = None,
+    poi_name: Optional[str] = None,
     init_pars: Optional[List[float]] = None,
     fix_pars: Optional[List[bool]] = None,
     par_bounds: Optional[List[Tuple[float, float]]] = None,
@@ -443,7 +443,7 @@ def ranking(
         data (List[float]): data (including auxdata) the model is fit to
         fit_results (Optional[FitResults], optional): nominal fit results to use for
             ranking, if not specified will repeat nominal fit, defaults to None
-        poi (Optional[str], optional): impact is calculated with respect to this
+        poi_name (Optional[str], optional): impact is calculated with respect to this
             parameter, defaults to None (use POI specified in workspace)
         init_pars (Optional[List[float]], optional): list of initial parameter settings,
             defaults to None (use ``pyhf`` suggested inits)
@@ -453,6 +453,9 @@ def ranking(
             parameter bounds for fit, defaults to None (use ``pyhf`` suggested bounds)
         custom_fit (bool, optional): whether to use the ``pyhf.infer`` API or
             ``iminuit``, defaults to False (using ``pyhf.infer``)
+
+    Raises:
+        ValueError: if no POI is found
 
     Returns:
         RankingResults: fit results for parameters, and pre- and post-fit impacts
@@ -471,7 +474,7 @@ def ranking(
     prefit_unc = model_utils.prefit_uncertainties(model)
 
     # use POI given by kwarg, fall back to POI specified in model
-    poi_index = model_utils._poi_index(model, poi=poi)
+    poi_index = model_utils._poi_index(model, poi_name=poi_name)
     if poi_index is None:
         raise ValueError("no POI specified, cannot calculate ranking")
 
@@ -653,6 +656,7 @@ def limit(
     tolerance: float = 0.01,
     maxiter: int = 100,
     confidence_level: float = 0.95,
+    poi_name: Optional[str] = None,
     init_pars: Optional[List[float]] = None,
     fix_pars: Optional[List[bool]] = None,
     par_bounds: Optional[List[Tuple[float, float]]] = None,
@@ -661,7 +665,9 @@ def limit(
 
     Limits are calculated for the parameter of interest (POI) defined in the model.
     Brent's algorithm is used to automatically determine POI values to be tested. The
-    desired confidence level can be configured, and defaults to 95%.
+    desired confidence level can be configured, and defaults to 95%. In order to support
+    setting the POI directly without model recompilation, this temporarily changes the
+    POI index and name in the model configuration.
 
     Args:
         model (pyhf.pdf.Model): model to use in fits
@@ -677,6 +683,8 @@ def limit(
             100
         confidence_level (float, optional): confidence level for calculation, defaults
             to 0.95 (95%)
+        poi_name (Optional[str], optional): limit is calculated for this parameter,
+            defaults to None (use POI specified in workspace)
         init_pars (Optional[List[float]], optional): list of initial parameter settings,
             defaults to None (use ``pyhf`` suggested inits)
         fix_pars (Optional[List[bool]], optional): list of booleans specifying which
@@ -685,12 +693,26 @@ def limit(
             parameter bounds for fit, defaults to None (use ``pyhf`` suggested bounds)
 
     Raises:
+        ValueError: if no POI is found
         ValueError: if lower and upper bracket value are the same
+        ValueError: if starting brackets do not enclose the limit
 
     Returns:
         LimitResults: observed and expected limits, CLs values, and scanned points
     """
     pyhf.set_backend(pyhf.tensorlib, pyhf.optimize.minuit_optimizer(verbose=1))
+
+    # use POI given by kwarg, fall back to POI specified in model
+    poi_index = model_utils._poi_index(model, poi_name=poi_name)
+    if poi_index is None:
+        raise ValueError("no POI specified, cannot calculate limit")
+
+    # set POI index / name in model config to desired value, hypotest will pick this up
+    # save original values to reset model later
+    original_model_poi_index = model.config.poi_index
+    original_model_poi_name = model.config.poi_name
+    model.config.poi_index = poi_index
+    model.config.poi_name = model.config.par_names()[poi_index]
 
     # show two decimals only if confidence level in percent is not an integer
     cl_label = (
@@ -717,12 +739,15 @@ def limit(
     if bracket is None:
         bracket = (bracket_left_default, bracket_right_default)
     elif bracket[0] == bracket[1]:
+        # set POI index / name in model back to their original values
+        model.config.poi_index = original_model_poi_index
+        model.config.poi_name = original_model_poi_name
         raise ValueError(f"the two bracket values must not be the same: {bracket}")
 
     cache_CLs: Dict[float, tuple] = {}  # cache storing all relevant results
 
     def _cls_minus_threshold(
-        poi: float,
+        poi_val: float,
         model: pyhf.pdf.Model,
         data: List[float],
         cls_target: float,
@@ -735,7 +760,7 @@ def limit(
         cache to avoid re-fitting known POI values and to store all relevant values.
 
         Args:
-            poi (float): value for parameter of interest
+            poi_val (float): value for parameter of interest
             model (pyhf.pdf.Model): model to use in fits
             data (List[float]): data (including auxdata) the model is fit to
             cls_target (float): target CLs value to find by varying POI
@@ -747,19 +772,20 @@ def limit(
         Returns:
             float: absolute value of difference to CLs=``cls_target``
         """
-        if poi <= 0:
+        if poi_val <= 0:
             # no fit needed for negative POI value, return a default value
             log.debug(
-                f"skipping fit for {model.config.poi_name} = {poi:.4f}, setting CLs = 1"
+                f"skipping fit for {model.config.poi_name} = {poi_val:.4f}, setting "
+                "CLs = 1"
             )
             return 1 - cls_target  # distance of CLs = 1 to target CLs
-        cache = cache_CLs.get(poi)
+        cache = cache_CLs.get(poi_val)
         if cache:
             observed, expected = cache  # use result from cache
         else:
             # calculate CLs
             results = pyhf.infer.hypotest(
-                poi,
+                poi_val,
                 data,
                 model,
                 init_pars=init_pars,
@@ -770,10 +796,10 @@ def limit(
             )
             observed = float(results[0])  # 1 value per scan point
             expected = np.asarray(results[1])  # 5 per point (with 1 and 2 sigma bands)
-            cache_CLs.update({poi: (observed, expected)})
+            cache_CLs.update({poi_val: (observed, expected)})
         current_CLs = np.hstack((observed, expected))[which_limit]
         log.debug(
-            f"{model.config.poi_name} = {poi:.4f}, {limit_label} CLs = "
+            f"{model.config.poi_name} = {poi_val:.4f}, {limit_label} CLs = "
             f"{current_CLs:.4f}{' (cached)' if cache else ''}"
         )
         return current_CLs - cls_target
@@ -810,6 +836,9 @@ def limit(
                 f"CLs values at {bracket[0]:.4f} and {bracket[1]:.4f} do not bracket "
                 f"CLs={cls_target:.4f}, try a different starting bracket"
             )
+            # set POI index / name in model back to their original values
+            model.config.poi_index = original_model_poi_index
+            model.config.poi_name = original_model_poi_name
             raise
 
         if not res.converged:
@@ -850,6 +879,10 @@ def limit(
                 bracket_right = poi_arr[np.argmax(masked_CLs_right)]
 
             bracket = (bracket_left, bracket_right)
+
+    # set POI index / name in model back to their original values
+    model.config.poi_index = original_model_poi_index
+    model.config.poi_name = original_model_poi_name
 
     # report all results
     log.info(f"total of {steps_total} steps to calculate all limits")
