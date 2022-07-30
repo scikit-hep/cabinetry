@@ -416,7 +416,7 @@ def test_ranking(mock_fit, example_spec):
     example_spec["measurements"][0]["config"]["parameters"][0]["fixed"] = False
     bestfit = np.asarray([1.0, 0.9])
     uncertainty = np.asarray([0.1, 0.02])
-    labels = ["mu", "staterror"]
+    labels = ["Signal strength", "staterror"]
     fit_results = fit.FitResults(bestfit, uncertainty, labels, np.empty(0), 0.0)
     model, data = model_utils.model_and_data(example_spec)
     ranking_results = fit.ranking(model, data, fit_results=fit_results)
@@ -445,10 +445,13 @@ def test_ranking(mock_fit, example_spec):
     assert np.allclose(ranking_results.postfit_up, [0.2])
     assert np.allclose(ranking_results.postfit_down, [-0.2])
 
-    # fixed parameter in ranking, custom fit
+    # fixed parameter in ranking, custom fit, POI via kwarg
     example_spec["measurements"][0]["config"]["parameters"][0]["fixed"] = True
+    example_spec["measurements"][0]["config"]["poi"] = ""
     model, data = model_utils.model_and_data(example_spec)
-    ranking_results = fit.ranking(model, data, fit_results=fit_results, custom_fit=True)
+    ranking_results = fit.ranking(
+        model, data, fit_results=fit_results, poi="Signal strength", custom_fit=True
+    )
     # expect two calls in this ranking (and had 4 before, so 6 total): pre-fit
     # uncertainty is 0 since parameter is fixed, mock post-fit uncertainty is not 0
     assert mock_fit.call_count == 6
@@ -462,6 +465,7 @@ def test_ranking(mock_fit, example_spec):
     ranking_results = fit.ranking(
         model,
         data,
+        poi="Signal strength",
         init_pars=[1.5, 1.0],
         fix_pars=[False, False],
         par_bounds=[(0, 5), (0.1, 10)],
@@ -494,6 +498,14 @@ def test_ranking(mock_fit, example_spec):
     assert np.allclose(ranking_results.prefit_down, [0.0])
     assert np.allclose(ranking_results.postfit_up, [0.3])
     assert np.allclose(ranking_results.postfit_down, [-0.3])
+
+    # unknown custom POI
+    with pytest.raises(ValueError, match="parameter abc not found in model"):
+        fit.ranking(model, data, fit_results=fit_results, poi="abc")
+
+    # no POI specified anywhere
+    with pytest.raises(ValueError, match="no POI specified, cannot calculate impacts"):
+        fit.ranking(model, data, fit_results=fit_results)
 
 
 @mock.patch(

@@ -425,6 +425,7 @@ def ranking(
     data: List[float],
     *,
     fit_results: Optional[FitResults] = None,
+    poi: Optional[str] = None,
     init_pars: Optional[List[float]] = None,
     fix_pars: Optional[List[bool]] = None,
     par_bounds: Optional[List[Tuple[float, float]]] = None,
@@ -442,6 +443,8 @@ def ranking(
         data (List[float]): data (including auxdata) the model is fit to
         fit_results (Optional[FitResults], optional): nominal fit results to use for
             ranking, if not specified will repeat nominal fit, defaults to None
+        poi (Optional[str], optional): impact is calculated with respect to this
+            parameter, defaults to None (use POI specified in workspace)
         init_pars (Optional[List[float]], optional): list of initial parameter settings,
             defaults to None (use ``pyhf`` suggested inits)
         fix_pars (Optional[List[bool]], optional): list of booleans specifying which
@@ -466,7 +469,19 @@ def ranking(
 
     labels = model.config.par_names()
     prefit_unc = model_utils.prefit_uncertainties(model)
-    nominal_poi = fit_results.bestfit[model.config.poi_index]
+
+    if poi is not None:
+        # use POI given by kwarg if specified
+        poi_index = model_utils._parameter_index(poi, labels)
+        if poi_index == -1:
+            raise ValueError(f"parameter {poi} not found in model")
+    elif model.config.poi_index is not None:
+        # use POI specified in model
+        poi_index = model.config.poi_index
+    else:
+        raise ValueError("no POI specified, cannot calculate impacts")
+
+    nominal_poi = fit_results.bestfit[poi_index]
 
     # need to get values for parameter settings, as they will be partially changed
     # during the ranking (init/fix changes)
@@ -476,9 +491,9 @@ def ranking(
 
     all_impacts = []
     for i_par, label in enumerate(labels):
-        if label == model.config.poi_name:
+        if i_par == poi_index:
             continue  # do not calculate impact of POI on itself
-        log.info(f"calculating impact of {label} on {labels[model.config.poi_index]}")
+        log.info(f"calculating impact of {label} on {labels[poi_index]}")
 
         # hold current parameter constant
         fix_pars_ranking = fix_pars.copy()
@@ -509,7 +524,7 @@ def ranking(
                     par_bounds=par_bounds,
                     custom_fit=custom_fit,
                 )
-                poi_val = fit_results_ranking.bestfit[model.config.poi_index]
+                poi_val = fit_results_ranking.bestfit[poi_index]
                 parameter_impact = poi_val - nominal_poi
                 log.debug(
                     f"POI is {poi_val:.6f}, difference to nominal is "
@@ -526,9 +541,9 @@ def ranking(
 
     # remove parameter of interest from bestfit / uncertainty / labels
     # such that their entries match the entries of the impacts
-    bestfit = np.delete(fit_results.bestfit, model.config.poi_index)
-    uncertainty = np.delete(fit_results.uncertainty, model.config.poi_index)
-    labels = np.delete(fit_results.labels, model.config.poi_index).tolist()
+    bestfit = np.delete(fit_results.bestfit, poi_index)
+    uncertainty = np.delete(fit_results.uncertainty, poi_index)
+    labels = np.delete(fit_results.labels, poi_index).tolist()
 
     ranking_results = RankingResults(
         bestfit, uncertainty, labels, prefit_up, prefit_down, postfit_up, postfit_down
