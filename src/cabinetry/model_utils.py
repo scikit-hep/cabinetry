@@ -143,7 +143,7 @@ def prefit_uncertainties(model: pyhf.pdf.Model) -> np.ndarray:
         # obtain pre-fit uncertainty for constrained, non-fixed parameters
         if (
             model.config.param_set(parameter).constrained
-            and not model.config.param_set(parameter).suggested_fixed
+            and not model.config.param_set(parameter).suggested_fixed_as_bool
         ):
             pre_fit_unc += model.config.param_set(parameter).width()
         else:
@@ -418,7 +418,7 @@ def unconstrained_parameter_count(model: pyhf.pdf.Model) -> int:
     for parname in model.config.par_order:
         if (
             not model.config.param_set(parname).constrained
-            and not model.config.param_set(parname).suggested_fixed
+            and not model.config.param_set(parname).suggested_fixed_as_bool
         ):
             n_pars += model.config.param_set(parname).n_parameters
     return n_pars

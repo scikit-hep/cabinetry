@@ -31,43 +31,43 @@ def test_print_results(caplog):
 def test__fit_model_pyhf(mock_minos, example_spec, example_spec_multibin):
     model, data = model_utils.model_and_data(example_spec)
     fit_results = fit._fit_model_pyhf(model, data)
-    assert np.allclose(fit_results.bestfit, [1.1, 8.33624084])
-    assert np.allclose(fit_results.uncertainty, [0.0, 0.38182003])
-    assert fit_results.labels == ["staterror_Signal-Region[0]", "Signal strength"]
+    assert np.allclose(fit_results.bestfit, [8.33624084, 1.1])
+    assert np.allclose(fit_results.uncertainty, [0.38182003, 0.0])
+    assert fit_results.labels == ["Signal strength", "staterror_Signal-Region[0]"]
     assert np.allclose(fit_results.best_twice_nll, 7.82495235)
-    assert np.allclose(fit_results.corr_mat, [[0.0, 0.0], [0.0, 1.0]])
+    assert np.allclose(fit_results.corr_mat, [[1.0, 0.0], [0.0, 0.0]])
 
     # Asimov fit, with fixed gamma (fixed not to Asimov MLE)
     model, data = model_utils.model_and_data(example_spec, asimov=True)
     fit_results = fit._fit_model_pyhf(model, data)
     # the gamma factor is multiplicative and fixed to 1.1, so the
     # signal strength needs to be 1/1.1 to compensate
-    assert np.allclose(fit_results.bestfit, [1.1, 0.90917877])
-    assert np.allclose(fit_results.uncertainty, [0.0, 0.12628017])
-    assert fit_results.labels == ["staterror_Signal-Region[0]", "Signal strength"]
+    assert np.allclose(fit_results.bestfit, [0.90917877, 1.1])
+    assert np.allclose(fit_results.uncertainty, [0.12628017, 0.0])
+    assert fit_results.labels == ["Signal strength", "staterror_Signal-Region[0]"]
     assert np.allclose(fit_results.best_twice_nll, 5.61189476)
-    assert np.allclose(fit_results.corr_mat, [[0.0, 0.0], [0.0, 1.0]])
+    assert np.allclose(fit_results.corr_mat, [[1.0, 0.0], [0.0, 0.0]])
 
     # parameters held constant via keyword argument
     model, data = model_utils.model_and_data(example_spec_multibin)
     init_pars = model.config.suggested_init()
-    init_pars[0] = 0.9
-    init_pars[1] = 1.1
+    init_pars[1] = 0.9
+    init_pars[2] = 1.1
     fix_pars = model.config.suggested_fixed()
-    fix_pars[0] = True
     fix_pars[1] = True
+    fix_pars[2] = True
     fit_results = fit._fit_model_pyhf(
         model, data, init_pars=init_pars, fix_pars=fix_pars
     )
-    assert np.allclose(fit_results.bestfit, [0.9, 1.1, 1.48041923, 0.97511112])
-    assert np.allclose(fit_results.uncertainty, [0.0, 0.0, 0.20694409, 0.11792805])
+    assert np.allclose(fit_results.bestfit, [1.48041923, 0.9, 1.1, 0.97511112])
+    assert np.allclose(fit_results.uncertainty, [0.20694409, 0.0, 0.0, 0.11792805])
     assert np.allclose(fit_results.best_twice_nll, 10.4531891)
 
     # custom parameter bounds
     model, data = model_utils.model_and_data(example_spec)
-    par_bounds = [(0.1, 2), (0, 5)]
+    par_bounds = [(0, 5), (0.1, 2)]
     fit_results = fit._fit_model_pyhf(model, data, par_bounds=par_bounds)
-    assert np.allclose(fit_results.bestfit, [1.1, 5.0])
+    assert np.allclose(fit_results.bestfit, [5.0, 1.1])
 
     # including minos, one parameter is unknown
     model, data = model_utils.model_and_data(example_spec)
@@ -77,8 +77,8 @@ def test__fit_model_pyhf(mock_minos, example_spec, example_spec_multibin):
     # first argument to minos call is the Minuit instance
     assert mock_minos.call_args[0][1] == ["Signal strength", "abc"]
     assert mock_minos.call_args[0][2] == [
-        "staterror_Signal-Region[0]",
         "Signal strength",
+        "staterror_Signal-Region[0]",
     ]
     assert mock_minos.call_args[1] == {}
 
@@ -88,43 +88,43 @@ def test__fit_model_pyhf(mock_minos, example_spec, example_spec_multibin):
 def test__fit_model_custom(mock_minos, example_spec, example_spec_multibin):
     model, data = model_utils.model_and_data(example_spec)
     fit_results = fit._fit_model_custom(model, data)
-    assert np.allclose(fit_results.bestfit, [1.1, 8.33625071])
-    assert np.allclose(fit_results.uncertainty, [0.0, 0.38182151])
-    assert fit_results.labels == ["staterror_Signal-Region[0]", "Signal strength"]
+    assert np.allclose(fit_results.bestfit, [8.33625071, 1.1])
+    assert np.allclose(fit_results.uncertainty, [0.38182151, 0.0])
+    assert fit_results.labels == ["Signal strength", "staterror_Signal-Region[0]"]
     assert np.allclose(fit_results.best_twice_nll, 7.82495235)
-    assert np.allclose(fit_results.corr_mat, [[0.0, 0.0], [0.0, 1.0]])
+    assert np.allclose(fit_results.corr_mat, [[1.0, 0.0], [0.0, 0.0]])
 
     # Asimov fit, with fixed gamma (fixed not to Asimov MLE)
     model, data = model_utils.model_and_data(example_spec, asimov=True)
     fit_results = fit._fit_model_custom(model, data)
     # the gamma factor is multiplicative and fixed to 1.1, so the
     # signal strength needs to be 1/1.1 to compensate
-    assert np.allclose(fit_results.bestfit, [1.1, 0.90917877])
-    assert np.allclose(fit_results.uncertainty, [0.0, 0.12628023])
-    assert fit_results.labels == ["staterror_Signal-Region[0]", "Signal strength"]
+    assert np.allclose(fit_results.bestfit, [0.90917877, 1.1])
+    assert np.allclose(fit_results.uncertainty, [0.12628023, 0.0])
+    assert fit_results.labels == ["Signal strength", "staterror_Signal-Region[0]"]
     assert np.allclose(fit_results.best_twice_nll, 5.61189476)
-    assert np.allclose(fit_results.corr_mat, [[0.0, 0.0], [0.0, 1.0]])
+    assert np.allclose(fit_results.corr_mat, [[1.0, 0.0], [0.0, 0.0]])
 
     # parameters held constant via keyword argument
     model, data = model_utils.model_and_data(example_spec_multibin)
     init_pars = model.config.suggested_init()
-    init_pars[0] = 0.9
-    init_pars[1] = 1.1
+    init_pars[1] = 0.9
+    init_pars[2] = 1.1
     fix_pars = model.config.suggested_fixed()
-    fix_pars[0] = True
     fix_pars[1] = True
+    fix_pars[2] = True
     fit_results = fit._fit_model_custom(
         model, data, init_pars=init_pars, fix_pars=fix_pars
     )
-    assert np.allclose(fit_results.bestfit, [0.9, 1.1, 1.48041923, 0.97511112])
-    assert np.allclose(fit_results.uncertainty, [0.0, 0.0, 0.20694409, 0.11792805])
+    assert np.allclose(fit_results.bestfit, [1.48041923, 0.9, 1.1, 0.97511112])
+    assert np.allclose(fit_results.uncertainty, [0.20694409, 0.0, 0.0, 0.11792805])
     assert np.allclose(fit_results.best_twice_nll, 10.45318909)
 
     # custom parameter bounds
     model, data = model_utils.model_and_data(example_spec)
-    par_bounds = [(0.1, 2), (0, 5)]
+    par_bounds = [(0, 5), (0.1, 2)]
     fit_results = fit._fit_model_custom(model, data, par_bounds=par_bounds)
-    assert np.allclose(fit_results.bestfit, [1.1, 5.0])
+    assert np.allclose(fit_results.bestfit, [5.0, 1.1])
 
     # including minos
     model, data = model_utils.model_and_data(example_spec)
@@ -134,8 +134,8 @@ def test__fit_model_custom(mock_minos, example_spec, example_spec_multibin):
     # first argument to minos call is the Minuit instance
     assert mock_minos.call_args[0][1] == ["Signal strength"]
     assert mock_minos.call_args[0][2] == [
-        "staterror_Signal-Region[0]",
         "Signal strength",
+        "staterror_Signal-Region[0]",
     ]
     assert mock_minos.call_args[1] == {}
 
@@ -175,7 +175,7 @@ def test__fit_model(mock_pyhf, mock_custom, example_spec):
         minos=["Signal strength"],
         init_pars=[1.5, 2.0],
         fix_pars=[False, True],
-        par_bounds=[(0.1, 10.0), (0, 5)],
+        par_bounds=[(0, 5), (0.1, 10.0)],
     )
     assert mock_pyhf.call_count == 2
     assert mock_pyhf.call_args[0][0].spec == model.spec
@@ -184,7 +184,7 @@ def test__fit_model(mock_pyhf, mock_custom, example_spec):
         "minos": ["Signal strength"],
         "init_pars": [1.5, 2.0],
         "fix_pars": [False, True],
-        "par_bounds": [(0.1, 10.0), (0, 5)],
+        "par_bounds": [(0, 5), (0.1, 10.0)],
     }
     assert np.allclose(fit_results.bestfit, [1.1])
 
@@ -208,7 +208,7 @@ def test__fit_model(mock_pyhf, mock_custom, example_spec):
         minos=["Signal strength"],
         init_pars=[1.5, 2.0],
         fix_pars=[False, True],
-        par_bounds=[(0.1, 10.0), (0, 5)],
+        par_bounds=[(0, 5), (0.1, 10.0)],
         custom_fit=True,
     )
     assert mock_custom.call_count == 2
@@ -218,7 +218,7 @@ def test__fit_model(mock_pyhf, mock_custom, example_spec):
         "minos": ["Signal strength"],
         "init_pars": [1.5, 2.0],
         "fix_pars": [False, True],
-        "par_bounds": [(0.1, 10.0), (0, 5)],
+        "par_bounds": [(0, 5), (0.1, 10.0)],
     }
     assert np.allclose(fit_results.bestfit, [1.2])
 
@@ -382,48 +382,48 @@ def test_fit(mock_fit, mock_print, mock_gof):
     "cabinetry.fit._fit_model",
     side_effect=[
         fit.FitResults(
-            np.asarray([0.9, 1.3]), np.asarray([0.1, 0.1]), ["a", "b"], np.empty(0), 0.0
+            np.asarray([1.3, 0.9]), np.asarray([0.1, 0.1]), ["a", "b"], np.empty(0), 0.0
         ),
         fit.FitResults(
-            np.asarray([0.9, 0.7]), np.asarray([0.1, 0.1]), ["a", "b"], np.empty(0), 0.0
+            np.asarray([0.7, 0.9]), np.asarray([0.1, 0.1]), ["a", "b"], np.empty(0), 0.0
         ),
         fit.FitResults(
-            np.asarray([0.9, 1.2]), np.asarray([0.1, 0.1]), ["a", "b"], np.empty(0), 0.0
+            np.asarray([1.2, 0.9]), np.asarray([0.1, 0.1]), ["a", "b"], np.empty(0), 0.0
         ),
         fit.FitResults(
-            np.asarray([0.9, 0.8]), np.asarray([0.1, 0.1]), ["a", "b"], np.empty(0), 0.0
+            np.asarray([0.8, 0.9]), np.asarray([0.1, 0.1]), ["a", "b"], np.empty(0), 0.0
         ),
         # for second ranking call with fixed parameter
         fit.FitResults(
-            np.asarray([0.9, 1.2]), np.asarray([0.1, 0.1]), ["a", "b"], np.empty(0), 0.0
+            np.asarray([1.2, 0.9]), np.asarray([0.1, 0.1]), ["a", "b"], np.empty(0), 0.0
         ),
         fit.FitResults(
-            np.asarray([0.9, 0.8]), np.asarray([0.1, 0.1]), ["a", "b"], np.empty(0), 0.0
+            np.asarray([0.8, 0.9]), np.asarray([0.1, 0.1]), ["a", "b"], np.empty(0), 0.0
         ),
         # for third ranking call without reference results
         fit.FitResults(
-            np.asarray([0.9, 1.0]), np.asarray([0.3, 0.3]), ["a", "b"], np.empty(0), 0.0
+            np.asarray([1.0, 0.9]), np.asarray([0.3, 0.3]), ["a", "b"], np.empty(0), 0.0
         ),
         fit.FitResults(
-            np.asarray([0.9, 1.3]), np.asarray([0.1, 0.1]), ["a", "b"], np.empty(0), 0.0
+            np.asarray([1.3, 0.9]), np.asarray([0.1, 0.1]), ["a", "b"], np.empty(0), 0.0
         ),
         fit.FitResults(
-            np.asarray([0.9, 0.7]), np.asarray([0.1, 0.1]), ["a", "b"], np.empty(0), 0.0
+            np.asarray([0.7, 0.9]), np.asarray([0.1, 0.1]), ["a", "b"], np.empty(0), 0.0
         ),
     ],
 )
 def test_ranking(mock_fit, example_spec):
     example_spec["measurements"][0]["config"]["parameters"][0]["fixed"] = False
-    bestfit = np.asarray([0.9, 1.0])
-    uncertainty = np.asarray([0.02, 0.1])
-    labels = ["staterror", "mu"]
+    bestfit = np.asarray([1.0, 0.9])
+    uncertainty = np.asarray([0.1, 0.02])
+    labels = ["mu", "staterror"]
     fit_results = fit.FitResults(bestfit, uncertainty, labels, np.empty(0), 0.0)
     model, data = model_utils.model_and_data(example_spec)
     ranking_results = fit.ranking(model, data, fit_results=fit_results)
 
     # correct call to fit
-    expected_fix = [True, False]
-    expected_inits = [[0.95019305, 1.0], [0.84980695, 1.0], [0.92, 1.0], [0.88, 1.0]]
+    expected_fix = [False, True]
+    expected_inits = [[1.0, 0.95019305], [1.0, 0.84980695], [1.0, 0.92], [1.0, 0.88]]
     assert mock_fit.call_count == 4
     for i in range(4):
         assert mock_fit.call_args_list[i][0] == (model, data)
@@ -462,9 +462,9 @@ def test_ranking(mock_fit, example_spec):
     ranking_results = fit.ranking(
         model,
         data,
-        init_pars=[1.0, 1.5],
+        init_pars=[1.5, 1.0],
         fix_pars=[False, False],
-        par_bounds=[(0.1, 10), (0, 5)],
+        par_bounds=[(0, 5), (0.1, 10)],
         custom_fit=True,
     )
     assert mock_fit.call_count == 9
@@ -472,22 +472,22 @@ def test_ranking(mock_fit, example_spec):
     assert mock_fit.call_args_list[-3] == (
         (model, data),
         {
-            "init_pars": [1.0, 1.5],
+            "init_pars": [1.5, 1.0],
             "fix_pars": [False, False],
-            "par_bounds": [(0.1, 10), (0, 5)],
+            "par_bounds": [(0, 5), (0.1, 10)],
             "custom_fit": True,
         },
     )
     # fits for impact
     assert mock_fit.call_args_list[-2][0] == (model, data)
-    assert np.allclose(mock_fit.call_args_list[-2][1]["init_pars"], [1.2, 1.5])
-    assert mock_fit.call_args_list[-2][1]["fix_pars"] == [True, False]
-    assert mock_fit.call_args_list[-2][1]["par_bounds"] == [(0.1, 10), (0, 5)]
+    assert np.allclose(mock_fit.call_args_list[-2][1]["init_pars"], [1.5, 1.2])
+    assert mock_fit.call_args_list[-2][1]["fix_pars"] == [False, True]
+    assert mock_fit.call_args_list[-2][1]["par_bounds"] == [(0, 5), (0.1, 10)]
     assert mock_fit.call_args_list[-2][1]["custom_fit"] is True
     assert mock_fit.call_args_list[-1][0] == (model, data)
-    assert np.allclose(mock_fit.call_args_list[-1][1]["init_pars"], [0.6, 1.5])
-    assert mock_fit.call_args_list[-1][1]["fix_pars"] == [True, False]
-    assert mock_fit.call_args_list[-1][1]["par_bounds"] == [(0.1, 10), (0, 5)]
+    assert np.allclose(mock_fit.call_args_list[-1][1]["init_pars"], [1.5, 0.6])
+    assert mock_fit.call_args_list[-1][1]["fix_pars"] == [False, True]
+    assert mock_fit.call_args_list[-1][1]["par_bounds"] == [(0, 5), (0.1, 10)]
     assert mock_fit.call_args_list[-1][1]["custom_fit"] is True
     # ranking results
     assert np.allclose(ranking_results.prefit_up, [0.0])
@@ -500,7 +500,7 @@ def test_ranking(mock_fit, example_spec):
     "cabinetry.fit._fit_model",
     side_effect=[
         fit.FitResults(
-            np.asarray([0.9, 1.3]), np.asarray([0.1, 0.1]), [], np.empty(0), 8.0
+            np.asarray([1.3, 0.9]), np.asarray([0.1, 0.1]), [], np.empty(0), 8.0
         )
     ]  # nominal fit
     + [
@@ -509,7 +509,7 @@ def test_ranking(mock_fit, example_spec):
     ]  # fits in scan
     + [
         fit.FitResults(
-            np.asarray([0.9, 1.3]), np.asarray([0.1, 0.1]), [], np.empty(0), 2.0
+            np.asarray([1.3, 0.9]), np.asarray([0.1, 0.1]), [], np.empty(0), 2.0
         )
     ]
     * 6,  # fits for custom parameter range
@@ -541,7 +541,7 @@ def test_scan(mock_fit, example_spec):
     for i, scan_val in enumerate(expected_scan_values):
         assert mock_fit.call_args_list[i + 1][0] == ((model, data))
         assert mock_fit.call_args_list[i + 1][1] == {
-            "init_pars": [1.1, scan_val],
+            "init_pars": [scan_val, 1.1],
             "fix_pars": [True, True],
             "par_bounds": None,
             "custom_fit": False,
@@ -556,16 +556,16 @@ def test_scan(mock_fit, example_spec):
         n_steps=5,
         init_pars=[1.0, 1.0],
         fix_pars=[False, False],
-        par_bounds=[(0.1, 10), (0, 5)],
+        par_bounds=[(0, 5), (0.1, 10)],
         custom_fit=True,
     )
     expected_custom_scan = np.linspace(1.0, 1.5, 5)
     assert np.allclose(scan_results.parameter_values, expected_custom_scan)
     assert mock_fit.call_args[1]["custom_fit"] is True
     assert mock_fit.call_args[1] == {
-        "init_pars": [1.0, 1.5],  # last step of scan
-        "fix_pars": [False, True],
-        "par_bounds": [(0.1, 10), (0, 5)],
+        "init_pars": [1.5, 1.0],  # last step of scan
+        "fix_pars": [True, False],
+        "par_bounds": [(0, 5), (0.1, 10)],
         "custom_fit": True,
     }
 
@@ -655,17 +655,17 @@ def test_limit(example_spec_with_background, caplog):
             fit.limit(
                 model,
                 data,
-                init_pars=[1.0, 0.9],
-                fix_pars=[True, False],
-                par_bounds=[(0.1, 10.0), (-1, 5)],
+                init_pars=[0.9, 1.0],
+                fix_pars=[False, True],
+                par_bounds=[(-1, 5), (0.1, 10.0)],
             )
         assert mock_test.call_args_list == [
             (
                 (0.1, data, model),
                 {
-                    "init_pars": [1.0, 0.9],
-                    "fixed_params": [True, False],
-                    "par_bounds": [(0.1, 10.0), (0, 5)],
+                    "init_pars": [0.9, 1.0],
+                    "fixed_params": [False, True],
+                    "par_bounds": [(0, 5), (0.1, 10.0)],
                     "test_stat": "qtilde",
                     "return_expected_set": True,
                 },
@@ -705,17 +705,17 @@ def test_significance(example_spec_with_background):
         fit.significance(
             model,
             data,
-            init_pars=[1.0, 0.9],
-            fix_pars=[True, False],
-            par_bounds=[(0.1, 10.0), (0, 5)],
+            init_pars=[0.9, 1.0],
+            fix_pars=[False, True],
+            par_bounds=[(0, 5), (0.1, 10.0)],
         )
     assert mock_test.call_args_list == [
         (
             (0.0, data, model),
             {
-                "init_pars": [1.0, 0.9],
-                "fixed_params": [True, False],
-                "par_bounds": [(0.1, 10.0), (0, 5)],
+                "init_pars": [0.9, 1.0],
+                "fixed_params": [False, True],
+                "par_bounds": [(0, 5), (0.1, 10.0)],
                 "test_stat": "q0",
                 "return_expected": True,
             },
