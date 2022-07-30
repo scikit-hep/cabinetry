@@ -3,7 +3,6 @@
 import pathlib
 from typing import List, Optional
 
-import awkward as ak
 import boost_histogram as bh
 import numpy as np
 import uproot
@@ -60,8 +59,8 @@ def with_uproot(
         obs_list = []
         weight_list = []
         for arr in array_generator:
-            obs_list.append(ak.to_numpy(arr[variable]))
-            weight_list.append(ak.to_numpy(arr[weight]))
+            obs_list.append(arr[variable].to_numpy())
+            weight_list.append(arr[weight].to_numpy())
         observables = np.concatenate(obs_list)
         weights = np.concatenate(weight_list)
 
@@ -72,7 +71,7 @@ def with_uproot(
         )
         obs_list = []
         for arr in array_generator:
-            obs_list.append(ak.to_numpy(arr[variable]))
+            obs_list.append(arr[variable].to_numpy())
         observables = np.concatenate(obs_list)
         weights = np.ones_like(observables) * float(weight)
 
