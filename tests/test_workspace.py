@@ -315,9 +315,9 @@ def test_WorkspaceBuilder_channels(mock_contains, mock_histogram):
     assert mock_histogram.call_count == 1
 
 
-def test_WorkspaceBuilder_get_measurement():
+def test_WorkspaceBuilder_measurements():
     example_config = {
-        "General": {"Measurement": "fit", "POI": "mu", "HistogramFolder": "path"},
+        "General": {"Measurement": "fit", "HistogramFolder": "path"},
         "NormFactors": [
             {"Name": "NF", "Nominal": 1.0, "Bounds": [0.0, 5.0], "Fixed": False}
         ],
@@ -326,7 +326,7 @@ def test_WorkspaceBuilder_get_measurement():
         {
             "name": "fit",
             "config": {
-                "poi": "mu",
+                "poi": "",
                 "parameters": [{"name": "NF", "inits": [1.0], "bounds": [[0.0, 5.0]]}],
             },
         }
@@ -334,7 +334,7 @@ def test_WorkspaceBuilder_get_measurement():
     ws_builder = workspace.WorkspaceBuilder(example_config)
     assert ws_builder.measurements() == expected_measurement
 
-    # no norm factor settings
+    # no norm factor settings, POI specified
     example_config_no_NF_settings = {
         "General": {"Measurement": "fit", "POI": "mu", "HistogramFolder": "path"},
         "NormFactors": [{"Name": "NF"}],
@@ -372,7 +372,6 @@ def test_WorkspaceBuilder_get_measurement():
         example_config_const_sys = {
             "General": {
                 "Measurement": "fit",
-                "POI": "mu",
                 "Fixed": [{"Name": "par_A", "Value": 1.2}],
                 "HistogramFolder": "path",
             },
@@ -382,7 +381,7 @@ def test_WorkspaceBuilder_get_measurement():
             {
                 "name": "fit",
                 "config": {
-                    "poi": "mu",
+                    "poi": "",
                     "parameters": [{"name": "par_A", "fixed": True, "inits": [1.2]}],
                 },
             }
@@ -397,11 +396,11 @@ def test_WorkspaceBuilder_get_measurement():
         return_value=None,
     ) as mock_find_const:
         example_config_sys = {
-            "General": {"Measurement": "fit", "POI": "mu", "HistogramFolder": "path"},
+            "General": {"Measurement": "fit", "HistogramFolder": "path"},
             "Systematics": [{"Name": "par_A"}],
         }
         expected_measurement_sys = [
-            {"name": "fit", "config": {"poi": "mu", "parameters": []}}
+            {"name": "fit", "config": {"poi": "", "parameters": []}}
         ]
         ws_builder = workspace.WorkspaceBuilder(example_config_sys)
         assert ws_builder.measurements() == expected_measurement_sys

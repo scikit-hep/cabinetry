@@ -62,14 +62,14 @@
             "$$target": "#/definitions/general",
             "description": "general settings",
             "type": "object",
-            "required": ["Measurement", "POI", "InputPath", "HistogramFolder"],
+            "required": ["Measurement", "InputPath", "HistogramFolder"],
             "properties": {
                 "Measurement": {
                     "description": "name of measurement",
                     "type": "string"
                 },
                 "POI": {
-                    "description": "name of parameter of interest",
+                    "description": "name of parameter of interest, defaults to empty string",
                     "type": "string"
                 },
                 "InputPath": {

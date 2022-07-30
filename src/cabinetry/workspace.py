@@ -358,7 +358,8 @@ class WorkspaceBuilder:
 
         parameters = {"parameters": parameters_list}
         config_dict.update(parameters)
-        config_dict.update({"poi": self.config["General"]["POI"]})
+        # POI defaults to "" (interpreted as "no POI" by pyhf) if not specified
+        config_dict.update({"poi": self.config["General"].get("POI", "")})
         measurement.update({"config": config_dict})
         measurements.append(measurement)
         return measurements

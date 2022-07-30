@@ -18,7 +18,6 @@ def test_validate():
     config_valid = {
         "General": {
             "Measurement": "",
-            "POI": "",
             "HistogramFolder": "",
             "InputPath": "",
         },
@@ -32,7 +31,6 @@ def test_validate():
     config_multiple_data_samples = {
         "General": {
             "Measurement": "",
-            "POI": "",
             "HistogramFolder": "",
             "InputPath": "",
         },
