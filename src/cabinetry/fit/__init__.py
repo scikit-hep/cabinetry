@@ -473,7 +473,7 @@ def ranking(
     # use POI given by kwarg, fall back to POI specified in model
     poi_index = model_utils._poi_index(model, poi=poi)
     if poi_index is None:
-        raise ValueError("no POI specified, cannot calculate impacts")
+        raise ValueError("no POI specified, cannot calculate ranking")
 
     nominal_poi = fit_results.bestfit[poi_index]
 
