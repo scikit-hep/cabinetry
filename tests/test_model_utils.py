@@ -4,6 +4,7 @@ from unittest import mock
 
 import numpy as np
 import pyhf
+import pytest
 
 from cabinetry import model_utils
 from cabinetry.fit.results_containers import FitResults
@@ -334,6 +335,29 @@ def test__parameter_index(caplog):
 
     assert model_utils._parameter_index("x", labels) is None
     assert "parameter x not found in model" in [rec.message for rec in caplog.records]
+    caplog.clear()
+
+
+def test__poi_index(example_spec, caplog):
+    caplog.set_level(logging.DEBUG)
+    model = pyhf.Workspace(example_spec).model()
+
+    # POI given by name
+    assert model_utils._poi_index(model, "staterror_Signal-Region[0]") == 1
+
+    # parameter not found in model
+    with pytest.raises(ValueError, match="parameter x not found in model"):
+        model_utils._poi_index(model, "x")
+
+    # POI specified in model config
+    assert model_utils._poi_index(model) == 0
+    caplog.clear()
+
+    # no POI
+    example_spec["measurements"][0]["config"]["poi"] = ""
+    model = pyhf.Workspace(example_spec).model()
+    assert model_utils._poi_index(model) is None
+    assert "could not find POI for model" in [rec.message for rec in caplog.records]
     caplog.clear()
 
 

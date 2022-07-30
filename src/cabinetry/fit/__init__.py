@@ -470,15 +470,9 @@ def ranking(
     labels = model.config.par_names()
     prefit_unc = model_utils.prefit_uncertainties(model)
 
-    if poi is not None:
-        # use POI given by kwarg if specified
-        poi_index = model_utils._parameter_index(poi, labels)
-        if poi_index == -1:
-            raise ValueError(f"parameter {poi} not found in model")
-    elif model.config.poi_index is not None:
-        # use POI specified in model
-        poi_index = model.config.poi_index
-    else:
+    # use POI given by kwarg, fall back to POI specified in model
+    poi_index = model_utils._poi_index(model, poi=poi)
+    if poi_index is None:
         raise ValueError("no POI specified, cannot calculate impacts")
 
     nominal_poi = fit_results.bestfit[poi_index]
