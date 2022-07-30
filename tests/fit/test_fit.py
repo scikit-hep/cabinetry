@@ -416,7 +416,7 @@ def test_ranking(mock_fit, example_spec):
     example_spec["measurements"][0]["config"]["parameters"][0]["fixed"] = False
     bestfit = np.asarray([1.0, 0.9])
     uncertainty = np.asarray([0.1, 0.02])
-    labels = ["mu", "staterror"]
+    labels = ["Signal strength", "staterror"]
     fit_results = fit.FitResults(bestfit, uncertainty, labels, np.empty(0), 0.0)
     model, data = model_utils.model_and_data(example_spec)
     ranking_results = fit.ranking(model, data, fit_results=fit_results)
@@ -445,10 +445,17 @@ def test_ranking(mock_fit, example_spec):
     assert np.allclose(ranking_results.postfit_up, [0.2])
     assert np.allclose(ranking_results.postfit_down, [-0.2])
 
-    # fixed parameter in ranking, custom fit
+    # fixed parameter in ranking, custom fit, POI via kwarg
     example_spec["measurements"][0]["config"]["parameters"][0]["fixed"] = True
+    example_spec["measurements"][0]["config"]["poi"] = ""
     model, data = model_utils.model_and_data(example_spec)
-    ranking_results = fit.ranking(model, data, fit_results=fit_results, custom_fit=True)
+    ranking_results = fit.ranking(
+        model,
+        data,
+        fit_results=fit_results,
+        poi_name="Signal strength",
+        custom_fit=True,
+    )
     # expect two calls in this ranking (and had 4 before, so 6 total): pre-fit
     # uncertainty is 0 since parameter is fixed, mock post-fit uncertainty is not 0
     assert mock_fit.call_count == 6
@@ -462,6 +469,7 @@ def test_ranking(mock_fit, example_spec):
     ranking_results = fit.ranking(
         model,
         data,
+        poi_name="Signal strength",
         init_pars=[1.5, 1.0],
         fix_pars=[False, False],
         par_bounds=[(0, 5), (0.1, 10)],
@@ -494,6 +502,10 @@ def test_ranking(mock_fit, example_spec):
     assert np.allclose(ranking_results.prefit_down, [0.0])
     assert np.allclose(ranking_results.postfit_up, [0.3])
     assert np.allclose(ranking_results.postfit_down, [-0.3])
+
+    # no POI specified anywhere
+    with pytest.raises(ValueError, match="no POI specified, cannot calculate ranking"):
+        fit.ranking(model, data, fit_results=fit_results)
 
 
 @mock.patch(
@@ -621,21 +633,32 @@ def test_limit(example_spec_with_background, caplog):
     ]
     caplog.clear()
 
-    # Asimov dataset with nominal signal strength of 0
+    # Asimov dataset with nominal signal strength of 0, POI via kwarg
     example_spec_with_background["measurements"][0]["config"]["parameters"][0][
         "inits"
     ] = [0.0]
+    example_spec_with_background["measurements"][0]["config"]["poi"] = ""
     model, data = model_utils.model_and_data(example_spec_with_background, asimov=True)
-    limit_results = fit.limit(model, data)
+    assert model.config.poi_index is None  # no POI set before calculation
+    assert model.config.poi_name is None
+    limit_results = fit.limit(model, data, poi_name="Signal strength")
     assert np.allclose(limit_results.observed_limit, 0.586, rtol=2e-2)
     assert np.allclose(limit_results.expected_limit, expected_limit, rtol=2e-2)
+    assert model.config.poi_index is None  # model config is preserved
+    assert model.config.poi_name is None
     caplog.clear()
 
     # bracket does not contain root, custom confidence level
     with pytest.raises(
         ValueError, match=re.escape("f(a) and f(b) must have different signs")
     ):
-        fit.limit(model, data, bracket=(1.0, 2.0), confidence_level=0.9)
+        fit.limit(
+            model,
+            data,
+            bracket=(1.0, 2.0),
+            confidence_level=0.9,
+            poi_name="Signal strength",
+        )
     assert (
         "CLs values at 1.0000 and 2.0000 do not bracket CLs=0.1000, try a different "
         "starting bracket" in [rec.message for rec in caplog.records]
@@ -644,7 +667,7 @@ def test_limit(example_spec_with_background, caplog):
 
     # bracket with identical values
     with pytest.raises(ValueError, match="the two bracket values must not be the same"):
-        fit.limit(model, data, bracket=(3.0, 3.0))
+        fit.limit(model, data, bracket=(3.0, 3.0), poi_name="Signal strength")
     caplog.clear()
 
     # init/fixed pars, par bounds, lower POI bound below 0
@@ -655,6 +678,7 @@ def test_limit(example_spec_with_background, caplog):
             fit.limit(
                 model,
                 data,
+                poi_name="Signal strength",
                 init_pars=[0.9, 1.0],
                 fix_pars=[False, True],
                 par_bounds=[(-1, 5), (0.1, 10.0)],
@@ -675,6 +699,13 @@ def test_limit(example_spec_with_background, caplog):
         rec.message for rec in caplog.records
     ]
     caplog.clear()
+
+    # new model, error raised in previous step caused changes in poi_index / poi_name
+    model, data = model_utils.model_and_data(example_spec_with_background)
+
+    # no POI specified anywhere
+    with pytest.raises(ValueError, match="no POI specified, cannot calculate limit"):
+        fit.limit(model, data)
 
 
 def test_significance(example_spec_with_background):

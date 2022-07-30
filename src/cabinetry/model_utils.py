@@ -424,12 +424,14 @@ def unconstrained_parameter_count(model: pyhf.pdf.Model) -> int:
     return n_pars
 
 
-def _parameter_index(par_name: str, labels: Union[List[str], Tuple[str, ...]]) -> int:
+def _parameter_index(
+    par_name: str, labels: Union[List[str], Tuple[str, ...]]
+) -> Optional[int]:
     """Returns the position of a parameter with a given name in the list of parameters.
 
     Useful together with ``pyhf.pdf._ModelConfig.par_names`` to find the position of a
     parameter when the name is known. If the parameter is not found, logs an error and
-    returns a default value of -1.
+    returns a default value of None.
 
     Args:
         par_name (str): name of parameter to find in list
@@ -437,12 +439,46 @@ def _parameter_index(par_name: str, labels: Union[List[str], Tuple[str, ...]]) -
             names in the model
 
     Returns:
-        int: index of parameter
+        Optional[int]: index of parameter, or None if parameter was not found
     """
-    par_index = next((i for i, label in enumerate(labels) if label == par_name), -1)
-    if par_index == -1:
+    par_index = next((i for i, label in enumerate(labels) if label == par_name), None)
+    if par_index is None:
         log.error(f"parameter {par_name} not found in model")
     return par_index
+
+
+def _poi_index(
+    model: pyhf.pdf.Model, *, poi_name: Optional[str] = None
+) -> Optional[int]:
+    """Returns the index of the POI specified in the argument or the model default.
+
+    If a string is given as argument, this takes priority. Otherwise the POI from the
+    model is used. If no POI is specified there either, logs an error and returns a
+    default value of None.
+
+    Args:
+        model (pyhf.pdf.Model): model for which to find the POI index
+        poi_name (Optional[str], optional): name of the POI, defaults to None
+
+    Raises:
+        ValueError: if the specified POI name cannot be found in the model
+
+    Returns:
+        Optional[int]: POI index, or None if no POI could be found
+    """
+    if poi_name is not None:
+        # use POI given by kwarg if specified
+        poi_index = _parameter_index(poi_name, model.config.par_names())
+        if poi_index is None:
+            raise ValueError(f"parameter {poi_name} not found in model")
+    elif model.config.poi_index is not None:
+        # use POI specified in model
+        poi_index = model.config.poi_index
+    else:
+        log.error("could not find POI for model")
+        poi_index = None
+
+    return poi_index
 
 
 def _strip_auxdata(model: pyhf.pdf.Model, data: List[float]) -> List[float]:

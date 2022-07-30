@@ -108,7 +108,7 @@ def test_data_mc(tmp_path, caplog):
     histo_dict_list[1]["yields"] = np.asarray([0, 5])
     caplog.clear()
     with mock.patch("cabinetry.visualize.utils._save_and_close") as mock_close_safe:
-        with pytest.warns(None) as warn_record:
+        with pytest.warns() as warn_record:
             fig = fig = plot_model.data_mc(
                 histo_dict_list,
                 total_model_unc_log,
