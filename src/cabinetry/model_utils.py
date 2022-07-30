@@ -424,12 +424,14 @@ def unconstrained_parameter_count(model: pyhf.pdf.Model) -> int:
     return n_pars
 
 
-def _parameter_index(par_name: str, labels: Union[List[str], Tuple[str, ...]]) -> int:
+def _parameter_index(
+    par_name: str, labels: Union[List[str], Tuple[str, ...]]
+) -> Optional[int]:
     """Returns the position of a parameter with a given name in the list of parameters.
 
     Useful together with ``pyhf.pdf._ModelConfig.par_names`` to find the position of a
     parameter when the name is known. If the parameter is not found, logs an error and
-    returns a default value of -1.
+    returns a default value of None.
 
     Args:
         par_name (str): name of parameter to find in list
@@ -437,10 +439,10 @@ def _parameter_index(par_name: str, labels: Union[List[str], Tuple[str, ...]]) -
             names in the model
 
     Returns:
-        int: index of parameter
+        Optional[int]: index of parameter, or None if parameter was not found
     """
-    par_index = next((i for i, label in enumerate(labels) if label == par_name), -1)
-    if par_index == -1:
+    par_index = next((i for i, label in enumerate(labels) if label == par_name), None)
+    if par_index is None:
         log.error(f"parameter {par_name} not found in model")
     return par_index
 

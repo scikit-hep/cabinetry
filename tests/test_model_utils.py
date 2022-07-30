@@ -332,7 +332,7 @@ def test__parameter_index(caplog):
     assert model_utils._parameter_index(par_name, tuple(labels)) == 1
     caplog.clear()
 
-    assert model_utils._parameter_index("x", labels) == -1
+    assert model_utils._parameter_index("x", labels) is None
     assert "parameter x not found in model" in [rec.message for rec in caplog.records]
     caplog.clear()
 

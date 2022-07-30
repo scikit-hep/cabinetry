@@ -597,7 +597,7 @@ def scan(
 
     # get index of parameter with name par_name
     par_index = model_utils._parameter_index(par_name, labels)
-    if par_index == -1:
+    if par_index is None:
         raise ValueError(f"parameter {par_name} not found in model")
 
     # run a fit with the parameter not held constant, to find the best-fit point
