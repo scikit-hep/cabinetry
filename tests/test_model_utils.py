@@ -343,11 +343,11 @@ def test__poi_index(example_spec, caplog):
     model = pyhf.Workspace(example_spec).model()
 
     # POI given by name
-    assert model_utils._poi_index(model, "staterror_Signal-Region[0]") == 1
+    assert model_utils._poi_index(model, poi="staterror_Signal-Region[0]") == 1
 
     # parameter not found in model
     with pytest.raises(ValueError, match="parameter x not found in model"):
-        model_utils._poi_index(model, "x")
+        model_utils._poi_index(model, poi="x")
 
     # POI specified in model config
     assert model_utils._poi_index(model) == 0
