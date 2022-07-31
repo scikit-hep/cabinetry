@@ -9,6 +9,7 @@ from typing import Any, List, Optional, Tuple
 import click
 import yaml
 
+from cabinetry import __version__
 from cabinetry import configuration as cabinetry_configuration
 from cabinetry import fit as cabinetry_fit
 from cabinetry import model_utils as cabinetry_model_utils
@@ -33,6 +34,7 @@ def _set_logging() -> None:
     logging.getLogger("pyhf").setLevel(logging.WARNING)
 
 
+@click.version_option(version=__version__)
 @click.group(cls=OrderedGroup)
 def cabinetry() -> None:
     """Entrypoint to the cabinetry CLI."""
