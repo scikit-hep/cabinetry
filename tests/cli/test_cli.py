@@ -7,6 +7,7 @@ import numpy as np
 import pytest
 import yaml
 
+from cabinetry import __version__
 from cabinetry import cli
 from cabinetry import fit
 
@@ -28,6 +29,10 @@ def test_cabinetry():
     result = runner.invoke(cli.cabinetry, ["--help"])
     assert result.exit_code == 0
     assert "Entrypoint to the cabinetry CLI." in result.output
+
+    result = runner.invoke(cli.cabinetry, ["--version"])
+    assert result.exit_code == 0
+    assert f"cabinetry, version {__version__}" in result.output
 
 
 # using autospec to catch changes in public API
