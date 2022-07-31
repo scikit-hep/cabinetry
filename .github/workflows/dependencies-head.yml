@@ -76,7 +76,7 @@ jobs:
         python -m pip install --upgrade pip setuptools wheel
         python -m pip install --ignore-installed --upgrade -q --no-cache-dir -e .[test]
         python -m pip uninstall --yes uproot
-        python -m pip install --upgrade --no-cache-dir git+https://github.com/scikit-hep/uproot4.git
+        python -m pip install --upgrade --no-cache-dir git+https://github.com/scikit-hep/uproot5.git
         python -m pip list
     - name: Test with pytest
       run: |
