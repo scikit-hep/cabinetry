@@ -214,6 +214,7 @@ def yields(
     per_channel: bool = False,
     table_folder: Union[str, pathlib.Path] = "tables",
     table_format: str = "simple",
+    save_tables: bool = True,
 ) -> Dict[str, List[Dict[str, Any]]]:
     """Generates yield tables, showing model prediction and data.
 
@@ -231,11 +232,12 @@ def yields(
             to True
         per_channel (bool, optional): whether to show a table with yields per channel,
             defaults to False
-        table_folder (Union[str, pathlib.Path]): path to the folder to save tables in,
-            defaults to "tables"
-        table_format (str): format in which to save the table, can be any of the formats
-            supported by ``tabulate`` (e.g. html, latex, plain, simple, tsv), defaults
-            to "simple"
+        table_folder (Union[str, pathlib.Path], optional): path to the folder to save
+            tables in, defaults to "tables"
+        table_format (str, optional): format in which to save the table, can be any of
+            the formats ``tabulate`` supports (e.g. html, latex, plain, simple, tsv),
+            defaults to "simple"
+        save_tables (bool, optional): whether to save tables, defaults to True
 
     Returns:
         Dict[str, List[Dict[str, Any]]]: dictionary with yield tables for use with the
@@ -288,8 +290,9 @@ def yields(
         table_dict.update({"yields_per_channel": per_channel_table})
 
     # save tables to file
-    _save_tables(
-        table_dict, pathlib.Path(table_folder), model_prediction.label, table_format
-    )
+    if save_tables:
+        _save_tables(
+            table_dict, pathlib.Path(table_folder), model_prediction.label, table_format
+        )
 
     return table_dict

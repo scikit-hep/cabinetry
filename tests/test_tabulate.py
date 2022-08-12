@@ -188,6 +188,7 @@ def test__yields_per_channel(
     ]
 
 
+@mock.patch("cabinetry.tabulate._save_tables")
 @mock.patch(
     "cabinetry.tabulate._yields_per_channel",
     return_value=[{"yields_per_channel": None}],
@@ -197,7 +198,9 @@ def test__yields_per_channel(
 )
 @mock.patch("cabinetry.model_utils._filter_channels", side_effect=[["SR"], [], ["SR"]])
 @mock.patch("cabinetry.model_utils._data_per_channel", return_value=[[12.0]])
-def test_yields(mock_data, mock_filter, mock_bin, mock_channel, example_spec, caplog):
+def test_yields(
+    mock_data, mock_filter, mock_bin, mock_channel, mock_save, example_spec, caplog
+):
     # the return values of the functions producing the actual tables are hardcoded above
     # to be able to check that they are correctly propagated to the output
     caplog.set_level(logging.DEBUG)
@@ -212,6 +215,7 @@ def test_yields(mock_data, mock_filter, mock_bin, mock_channel, example_spec, ca
         ((model, [[[10.0]]], [[0.3]], [[12.0]], ["SR"], "pred"), {})
     ]
     assert mock_channel.call_count == 0
+    assert mock_save.call_count == 1
     assert table_dict == {"yields_per_bin": [{"yields_per_bin": None}]}
 
     # no table to produce (does not call _filter_channels)
@@ -229,10 +233,13 @@ def test_yields(mock_data, mock_filter, mock_bin, mock_channel, example_spec, ca
     assert mock_channel.call_count == 0
     assert table_dict == {}
 
-    # yields per channel, not per bin
-    table_dict = tabulate.yields(model_pred, data, per_bin=False, per_channel=True)
+    # yields per channel, not per bin, do not save tables
+    table_dict = tabulate.yields(
+        model_pred, data, per_bin=False, per_channel=True, save_tables=False
+    )
     assert mock_bin.call_count == 1  # one call from before
     assert mock_channel.call_args_list == [
         ((model, [[10.0]], [0.3], [12.0], ["SR"], "pred"), {})
     ]
     assert table_dict == {"yields_per_channel": [{"yields_per_channel": None}]}
+    assert mock_save.call_count == 1  # one call from before, no new call
