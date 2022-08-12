@@ -1,6 +1,7 @@
 """Creates yield tables."""
 
 import logging
+import pathlib
 from typing import Any, Dict, List, Optional, Union
 
 import awkward as ak
@@ -34,6 +35,52 @@ def _header_name(channel_name: str, i_bin: int, *, unique: bool = True) -> str:
     else:
         header_name = f"\nbin {i_bin+1}"
     return header_name
+
+
+def _save_tables(
+    table_dict: Dict[str, List[Dict[str, Any]]],
+    table_folder: pathlib.Path,
+    table_format: str,
+) -> None:
+    """Saves yield tables in a specific format in a given folder.
+
+    New lines are removed from table fields to prevent unwanted interactions with some
+    table formats.
+
+    Args:
+        table_dict (Dict[str, List[Dict[str, Any]]]): dictionary with tables to save
+        table_folder (pathlib.Path): path to the folder to save tables in
+        table_format (str): format in which to save the table
+    """
+    if table_format in ["plain", "simple", "tsv"]:
+        save_suffix = "txt"
+    elif table_format == "latex":
+        save_suffix = "tex"
+    else:
+        save_suffix = table_format
+
+    table_folder.mkdir(parents=True, exist_ok=True)
+
+    for table_type in table_dict.keys():
+        table_path = table_folder / f"{table_type}.{save_suffix}"
+
+        if table_type == "yields_per_bin" and table_format in ["html", "latex", "tsv"]:
+            # replace newlines in table headers for formats that do not support them
+            # (newlines exist between channel name and bin number)
+            for i_sample, sample in enumerate(table_dict[table_type]):
+                table_dict[table_type][i_sample] = {
+                    bin_name.replace("\n", ", "): sample_yield
+                    for bin_name, sample_yield in sample.items()
+                }
+
+        table_str = (
+            tabulate.tabulate(
+                table_dict[table_type], headers="keys", tablefmt=table_format
+            )
+            + "\n"  # tabulate does not add a newline at the end
+        )
+        log.debug(f"saving table as {table_path}")
+        table_path.write_text(table_str)
 
 
 def _yields_per_bin(
@@ -164,6 +211,8 @@ def yields(
     channels: Optional[Union[str, List[str]]] = None,
     per_bin: bool = True,
     per_channel: bool = False,
+    table_folder: Union[str, pathlib.Path] = "tables",
+    table_format: str = "simple",
 ) -> Dict[str, List[Dict[str, Any]]]:
     """Generates yield tables, showing model prediction and data.
 
@@ -181,6 +230,11 @@ def yields(
             to True
         per_channel (bool, optional): whether to show a table with yields per channel,
             defaults to False
+        table_folder (Union[str, pathlib.Path]): path to the folder to save tables in,
+            defaults to "tables"
+        table_format (str): format in which to save the table, can be any of the formats
+            supported by ``tabulate`` (e.g. html, latex, plain, simple, tsv), defaults
+            to "simple"
 
     Returns:
         Dict[str, List[Dict[str, Any]]]: dictionary with yield tables for use with the
@@ -231,5 +285,8 @@ def yields(
             model_prediction.label,
         )
         table_dict.update({"yields_per_channel": per_channel_table})
+
+    # save tables to file
+    _save_tables(table_dict, pathlib.Path(table_folder), table_format)
 
     return table_dict
