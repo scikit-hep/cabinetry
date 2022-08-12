@@ -25,6 +25,7 @@ build
 *.npy
 *.npz
 *.json
+tables/
 
 # sphinx
 docs/_build
