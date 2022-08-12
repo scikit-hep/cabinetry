@@ -234,7 +234,7 @@ def yields(
             defaults to False
         table_folder (Union[str, pathlib.Path], optional): path to the folder to save
             tables in, defaults to "tables"
-        table_format (str, optional): format in which to save the table, can be any of
+        table_format (str, optional): format in which to save the tables, can be any of
             the formats ``tabulate`` supports (e.g. html, latex, plain, simple, tsv),
             defaults to "simple"
         save_tables (bool, optional): whether to save tables, defaults to True
