@@ -121,40 +121,51 @@ def test__yields_per_channel(
     ]
 
 
-@mock.patch("cabinetry.tabulate._yields_per_channel")
-@mock.patch("cabinetry.tabulate._yields_per_bin")
+@mock.patch(
+    "cabinetry.tabulate._yields_per_channel",
+    return_value=[{"yields_per_channel": None}],
+)
+@mock.patch(
+    "cabinetry.tabulate._yields_per_bin", return_value=[{"yields_per_bin": None}]
+)
 @mock.patch("cabinetry.model_utils._filter_channels", side_effect=[["SR"], [], ["SR"]])
 @mock.patch("cabinetry.model_utils._data_per_channel", return_value=[[12.0]])
 def test_yields(mock_data, mock_filter, mock_bin, mock_channel, example_spec, caplog):
+    # the return values of the functions producing the actual tables are hardcoded above
+    # to be able to check that they are correctly propagated to the output
     caplog.set_level(logging.DEBUG)
     model = pyhf.Workspace(example_spec).model()
     model_pred = model_utils.ModelPrediction(model, [[[10.0]]], [[0.3]], [0.3], "pred")
     data = [12.0, 1.0]  # with auxdata to strip via mock
 
-    tabulate.yields(model_pred, data)
+    table_dict = tabulate.yields(model_pred, data)
     assert mock_data.call_args_list == [((model, data), {})]
     assert mock_filter.call_args_list == [((model, None), {})]
     assert mock_bin.call_args_list == [
         ((model, [[[10.0]]], [[0.3]], [[12.0]], ["SR"], "pred"), {})
     ]
     assert mock_channel.call_count == 0
+    assert table_dict == {"yields_per_bin": [{"yields_per_bin": None}]}
 
     # no table to produce (does not call _filter_channels)
-    tabulate.yields(model_pred, data, per_bin=False, per_channel=False)
+    table_dict = tabulate.yields(model_pred, data, per_bin=False, per_channel=False)
     assert "requested neither yields per bin nor per channel, no table produced" in [
         rec.message for rec in caplog.records
     ]
+    assert table_dict == {}
     caplog.clear()
 
     # no channels to include
-    tabulate.yields(model_pred, data, channels="abc")
+    table_dict = tabulate.yields(model_pred, data, channels="abc")
     assert mock_filter.call_args == ((model, "abc"), {})
     assert mock_bin.call_count == 1  # one call from before, no new call
     assert mock_channel.call_count == 0
+    assert table_dict == {}
 
     # yields per channel, not per bin
-    tabulate.yields(model_pred, data, per_bin=False, per_channel=True)
+    table_dict = tabulate.yields(model_pred, data, per_bin=False, per_channel=True)
     assert mock_bin.call_count == 1  # one call from before
     assert mock_channel.call_args_list == [
         ((model, [[10.0]], [0.3], [12.0], ["SR"], "pred"), {})
     ]
+    assert table_dict == {"yields_per_channel": [{"yields_per_channel": None}]}
