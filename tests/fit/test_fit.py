@@ -144,6 +144,7 @@ def test__fit_model_custom(mock_minos, example_spec, example_spec_multibin):
     # propagation of max iterations and tolerance
     model, data = model_utils.model_and_data(example_spec)
     mock_minuit_instance = mock.MagicMock()
+    mock_minuit_instance.errors = [0.1, 0.1]  # needed as it will be accessed
     with mock.patch("iminuit.Minuit", return_value=mock_minuit_instance):
         # mocked minuit instance used to check correct propagation of settings
         fit._fit_model_custom(model, data)
