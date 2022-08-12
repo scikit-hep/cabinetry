@@ -45,8 +45,7 @@ def _save_tables(
 ) -> None:
     """Saves yield tables in a specific format in a given folder.
 
-    New lines are removed from table fields to prevent unwanted interactions with some
-    table formats.
+    Newlines are removed from table headers for table formats that do not support them.
 
     Args:
         table_dict (Dict[str, List[Dict[str, Any]]]): dictionary with tables to save
