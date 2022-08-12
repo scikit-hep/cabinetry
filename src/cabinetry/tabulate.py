@@ -50,8 +50,8 @@ def _save_tables(
     Args:
         table_dict (Dict[str, List[Dict[str, Any]]]): dictionary with tables to save
         table_folder (pathlib.Path): path to the folder to save tables in
-        table_label (str): label for table to include in filename
-        table_format (str): format in which to save the table
+        table_label (str): label for tables to include in filenames
+        table_format (str): format in which to save the tables
     """
     if table_format in ["plain", "simple", "tsv"]:
         save_suffix = "txt"
