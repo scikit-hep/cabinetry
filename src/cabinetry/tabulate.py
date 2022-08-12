@@ -40,6 +40,7 @@ def _header_name(channel_name: str, i_bin: int, *, unique: bool = True) -> str:
 def _save_tables(
     table_dict: Dict[str, List[Dict[str, Any]]],
     table_folder: pathlib.Path,
+    table_label: str,
     table_format: str,
 ) -> None:
     """Saves yield tables in a specific format in a given folder.
@@ -50,6 +51,7 @@ def _save_tables(
     Args:
         table_dict (Dict[str, List[Dict[str, Any]]]): dictionary with tables to save
         table_folder (pathlib.Path): path to the folder to save tables in
+        table_label (str): label for table to include in filename
         table_format (str): format in which to save the table
     """
     if table_format in ["plain", "simple", "tsv"]:
@@ -62,7 +64,7 @@ def _save_tables(
     table_folder.mkdir(parents=True, exist_ok=True)
 
     for table_type in table_dict.keys():
-        table_path = table_folder / f"{table_type}.{save_suffix}"
+        table_path = table_folder / f"{table_type}_{table_label}.{save_suffix}"
 
         if table_type == "yields_per_bin" and table_format in ["html", "latex", "tsv"]:
             # replace newlines in table headers for formats that do not support them
@@ -287,6 +289,8 @@ def yields(
         table_dict.update({"yields_per_channel": per_channel_table})
 
     # save tables to file
-    _save_tables(table_dict, pathlib.Path(table_folder), table_format)
+    _save_tables(
+        table_dict, pathlib.Path(table_folder), model_prediction.label, table_format
+    )
 
     return table_dict
