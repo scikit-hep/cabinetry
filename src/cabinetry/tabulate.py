@@ -164,7 +164,7 @@ def yields(
     channels: Optional[Union[str, List[str]]] = None,
     per_bin: bool = True,
     per_channel: bool = False,
-) -> None:
+) -> Dict[str, List[Dict[str, Any]]]:
     """Generates yield tables, showing model prediction and data.
 
     Channels can be filtered via the optional ``channels`` argument. Either yields per
@@ -181,12 +181,18 @@ def yields(
             to True
         per_channel (bool, optional): whether to show a table with yields per channel,
             defaults to False
+
+    Returns:
+        Dict[str, List[Dict[str, Any]]]: dictionary with yield tables for use with the
+        ``tabulate`` package
     """
+    table_dict: Dict[str, List[Dict[str, Any]]] = {}
+
     if not (per_bin or per_channel):
         log.warning(
             "requested neither yields per bin nor per channel, no table produced"
         )
-        return
+        return table_dict
 
     # strip off auxdata (if needed) and obtain data indexed by channel (and bin)
     data_yields = model_utils._data_per_channel(model_prediction.model, data)
@@ -196,11 +202,11 @@ def yields(
 
     if filtered_channels == []:
         # nothing to include in tables, warning already raised via _filter_channels
-        return None
+        return table_dict
 
     if per_bin:
         # yield table with yields per bin
-        _yields_per_bin(
+        per_bin_table = _yields_per_bin(
             model_prediction.model,
             model_prediction.model_yields,
             model_prediction.total_stdev_model_bins,
@@ -208,6 +214,7 @@ def yields(
             filtered_channels,
             model_prediction.label,
         )
+        table_dict.update({"yields_per_bin": per_bin_table})
 
     if per_channel:
         # yields per channel
@@ -215,7 +222,7 @@ def yields(
             ak.from_iter(model_prediction.model_yields), axis=-1
         ).tolist()
         data_per_channel = [sum(d) for d in data_yields]
-        _yields_per_channel(
+        per_channel_table = _yields_per_channel(
             model_prediction.model,
             model_yields_per_channel,
             model_prediction.total_stdev_model_channels,
@@ -223,3 +230,6 @@ def yields(
             filtered_channels,
             model_prediction.label,
         )
+        table_dict.update({"yields_per_channel": per_channel_table})
+
+    return table_dict
