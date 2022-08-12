@@ -72,6 +72,73 @@ def test__yields_per_bin(example_spec_multibin, example_spec_with_background, ca
     ]
 
 
+def test__save_tables(tmp_path):
+    table_dict = {
+        "yields_per_bin": [
+            {
+                "sample": "Background",
+                "Signal_region\nbin 1": "111.00",
+                "Signal_region\nbin 2": "116.00",
+            },
+            {
+                "sample": "Signal",
+                "Signal_region\nbin 1": "1.00",
+                "Signal_region\nbin 2": "5.00",
+            },
+            {
+                "sample": "total",
+                "Signal_region\nbin 1": "112.00 ± 10.00",
+                "Signal_region\nbin 2": "121.00 ± 11.00",
+            },
+            {
+                "sample": "data",
+                "Signal_region\nbin 1": "112.00",
+                "Signal_region\nbin 2": "123.00",
+            },
+        ],
+        "yields_per_channel": [
+            {"sample": "Background", "Signal_region": "227.00"},
+            {"sample": "Signal", "Signal_region": "6.00"},
+            {"sample": "total", "Signal_region": "233.00 ± 17.00"},
+            {"sample": "data", "Signal_region": "235.00"},
+        ],
+    }
+
+    tabulate._save_tables(table_dict, tmp_path, "abc", "simple")
+    fname_bin = tmp_path / "yields_per_bin_abc.txt"
+    fname_channel = tmp_path / "yields_per_channel_abc.txt"
+    assert fname_bin.is_file()  # bin table saved
+    assert fname_channel.is_file()  # channel table saved
+    assert fname_bin.read_text() == (
+        "sample      Signal_region    Signal_region\n"
+        "            bin 1            bin 2\n"
+        "----------  ---------------  ---------------\n"
+        "Background  111.00           116.00\n"
+        "Signal      1.00             5.00\n"
+        "total       112.00 ± 10.00   121.00 ± 11.00\n"
+        "data        112.00           123.00\n"
+    )
+    assert fname_channel.read_text() == (
+        "sample      Signal_region\n"
+        "----------  ---------------\n"
+        "Background  227.00\n"
+        "Signal      6.00\n"
+        "total       233.00 ± 17.00\n"
+        "data        235.00\n"
+    )
+
+    # suffix for latex, modification of newlines in header
+    tabulate._save_tables(table_dict, tmp_path, "abc", "latex")
+    fname_bin = tmp_path / "yields_per_bin_abc.tex"
+    assert fname_bin.is_file()
+    assert fname_bin.read_text().split("&")[1] == " Signal\\_region, bin 1   "
+
+    # unchanged suffix for other formats
+    tabulate._save_tables(table_dict, tmp_path, "abc", "html")
+    fname_bin = tmp_path / "yields_per_bin_abc.html"
+    assert fname_bin.is_file()
+
+
 def test__yields_per_channel(
     example_spec_multibin, example_spec_with_background, caplog
 ):
