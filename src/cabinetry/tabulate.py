@@ -289,8 +289,8 @@ def yields(
         )
         table_dict.update({"yields_per_channel": per_channel_table})
 
-    # save tables to file
     if save_tables:
+        # save tables to file
         _save_tables(
             table_dict, pathlib.Path(table_folder), model_prediction.label, table_format
         )
