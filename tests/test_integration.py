@@ -183,12 +183,12 @@ def test_integration(tmp_path, ntuple_creator, caplog):
     assert np.allclose(
         ranking_results.prefit_up,
         [
-            -1.67766172,
-            -1.51712811,
+            -1.67617185,
+            -1.51531885,
             -0.14964691,
-            -0.10787925,
+            -0.11067885,
             0.14350015,
-            -0.11328328,
+            -0.11311905,
             -0.05573699,
         ],
     )
@@ -196,37 +196,37 @@ def test_integration(tmp_path, ntuple_creator, caplog):
         ranking_results.prefit_down,
         [
             1.41570164,
-            1.15025176,
-            0.17084682,
-            0.10910502,
-            -0.15092356,
-            0.1162032,
-            0.05864963,
+            1.15001063,
+            0.16388633,
+            0.10921275,
+            -0.15331233,
+            0.11492629,
+            0.05864962,
         ],
     )
     assert np.allclose(
         ranking_results.postfit_up,
         [
-            -1.10138138,
-            -0.89692663,
-            -0.14842105,
-            -0.10503361,
-            0.13866138,
-            -0.10801323,
-            -0.05485056,
+            -1.10235942,
+            -0.89697066,
+            -0.14842092,
+            -0.10774037,
+            0.13866107,
+            -0.10800505,
+            -0.0548506,
         ],
         atol=1e-4,
     )
     assert np.allclose(
         ranking_results.postfit_down,
         [
-            0.84367903,
-            0.76574073,
-            0.1693045,
-            0.10604551,
-            -0.14654595,
-            0.11081914,
-            0.05779502,
+            0.84366301,
+            0.76572728,
+            0.16236075,
+            0.10604544,
+            -0.14383307,
+            0.10888311,
+            0.05779505,
         ],
         atol=1e-4,
     )
@@ -242,7 +242,7 @@ def test_integration(tmp_path, ntuple_creator, caplog):
     )
     # lower edge of scan is beyond normalization factor bounds specified in workspace
     assert np.allclose(
-        scan_results.delta_nlls, [0.27153966, 0.0, 0.29018620], atol=5e-5
+        scan_results.delta_nlls, [0.27163227, 0.0, 0.29018620], atol=5e-5
     )
 
     # upper limit, this calculation is slow
