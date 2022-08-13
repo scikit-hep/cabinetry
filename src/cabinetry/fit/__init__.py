@@ -210,8 +210,8 @@ def _fit_model_custom(
         # pick strategy like pyhf: 0 if backend provides autodiff gradients, otherwise 1
         m.strategy = 0 if pyhf.tensorlib.default_do_grad else 1
 
-    m.tol = tolerance or 0.1  # goal: EDM < 0.002*tol*errordef
     maxiter = maxiter or 100_000
+    m.tol = tolerance or 0.1  # goal: EDM < 0.002*tol*errordef
 
     m.migrad(ncall=maxiter)
     m.hesse()  # use default call limit (consistent with pyhf)
