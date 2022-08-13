@@ -10,6 +10,7 @@ import scipy.optimize
 import scipy.stats
 
 from cabinetry import model_utils
+from cabinetry._typing import Literal
 from cabinetry.fit.results_containers import (
     FitResults,
     LimitResults,
@@ -45,6 +46,7 @@ def _fit_model_pyhf(
     init_pars: Optional[List[float]] = None,
     fix_pars: Optional[List[bool]] = None,
     par_bounds: Optional[List[Tuple[float, float]]] = None,
+    strategy: Optional[Literal[0, 1, 2]] = None,
     maxiter: Optional[int] = None,
     tolerance: Optional[float] = None,
 ) -> FitResults:
@@ -67,6 +69,9 @@ def _fit_model_pyhf(
             parameters are held constant, defaults to None (use ``pyhf`` suggestion)
         par_bounds (Optional[List[Tuple[float, float]]], optional): list of tuples with
             parameter bounds for fit, defaults to None (use ``pyhf`` suggested bounds)
+        strategy (Optional[Literal[0, 1, 2]], optional): minimization strategy used by
+            Minuit, can be 0/1/2, defaults to None (then uses ``pyhf`` default behavior
+            of strategy 0 with user-provided gradients and 1 otherwise)
         maxiter (Optional[int], optional): allowed number of calls for minimization,
             defaults to None (use ``pyhf`` default of 100,000)
         tolerance (Optional[float]), optional): tolerance for convergence, for details
@@ -77,6 +82,10 @@ def _fit_model_pyhf(
         FitResults: object storing relevant fit results
     """
     pyhf.set_backend(pyhf.tensorlib, pyhf.optimize.minuit_optimizer(verbose=1))
+
+    # strategy=None is currently not supported in pyhf
+    # https://github.com/scikit-hep/pyhf/issues/1785
+    strategy_kwarg = {"strategy": strategy} if strategy is not None else {}
 
     result, corr_mat, best_twice_nll, result_obj = pyhf.infer.mle.fit(
         data,
@@ -90,6 +99,7 @@ def _fit_model_pyhf(
         return_result_obj=True,
         maxiter=maxiter,
         tolerance=tolerance,
+        **strategy_kwarg,
     )
     log.info(f"Migrad status:\n{result_obj.minuit.fmin}")
 
@@ -126,6 +136,7 @@ def _fit_model_custom(
     init_pars: Optional[List[float]] = None,
     fix_pars: Optional[List[bool]] = None,
     par_bounds: Optional[List[Tuple[float, float]]] = None,
+    strategy: Optional[Literal[0, 1, 2]] = None,
     maxiter: Optional[int] = None,
     tolerance: Optional[float] = None,
 ) -> FitResults:
@@ -148,6 +159,9 @@ def _fit_model_custom(
             parameters are held constant, defaults to None (use ``pyhf`` suggestion)
         par_bounds (Optional[List[Tuple[float, float]]], optional): list of tuples with
             parameter bounds for fit, defaults to None (use ``pyhf`` suggested bounds)
+        strategy (Optional[Literal[0, 1, 2]], optional): minimization strategy used by
+            Minuit, can be 0/1/2, defaults to None (then uses ``pyhf`` default behavior
+            of strategy 0 with user-provided gradients and 1 otherwise)
         maxiter (Optional[int], optional): allowed number of calls for minimization,
             defaults to None (use ``pyhf`` default of 100,000)
         tolerance (Optional[float]), optional): tolerance for convergence, for details
@@ -189,6 +203,13 @@ def _fit_model_custom(
     m.limits = par_bounds
     m.errordef = 1
     m.print_level = 1
+
+    if strategy is not None:
+        m.strategy = strategy
+    else:
+        # pick strategy like pyhf: 0 if backend provides autodiff gradients, otherwise 1
+        m.strategy = 0 if pyhf.tensorlib.default_do_grad else 1
+
     m.tol = tolerance or 0.1  # goal: EDM < 0.002*tol*errordef
     maxiter = maxiter or 100_000
 
@@ -227,6 +248,7 @@ def _fit_model(
     init_pars: Optional[List[float]] = None,
     fix_pars: Optional[List[bool]] = None,
     par_bounds: Optional[List[Tuple[float, float]]] = None,
+    strategy: Optional[Literal[0, 1, 2]] = None,
     maxiter: Optional[int] = None,
     tolerance: Optional[float] = None,
     custom_fit: bool = False,
@@ -250,6 +272,9 @@ def _fit_model(
             parameters are held constant, defaults to None (use ``pyhf`` suggestion)
         par_bounds (Optional[List[Tuple[float, float]]], optional): list of tuples with
             parameter bounds for fit, defaults to None (use ``pyhf`` suggested bounds)
+        strategy (Optional[Literal[0, 1, 2]], optional): minimization strategy used by
+            Minuit, can be 0/1/2, defaults to None (then uses ``pyhf`` default behavior
+            of strategy 0 with user-provided gradients and 1 otherwise)
         maxiter (Optional[int], optional): allowed number of calls for minimization,
             defaults to None (use ``pyhf`` default of 100,000)
         tolerance (Optional[float]), optional): tolerance for convergence, for details
@@ -270,6 +295,7 @@ def _fit_model(
             init_pars=init_pars,
             fix_pars=fix_pars,
             par_bounds=par_bounds,
+            strategy=strategy,
             maxiter=maxiter,
             tolerance=tolerance,
         )
@@ -282,6 +308,7 @@ def _fit_model(
             init_pars=init_pars,
             fix_pars=fix_pars,
             par_bounds=par_bounds,
+            strategy=strategy,
             maxiter=maxiter,
             tolerance=tolerance,
         )
@@ -399,6 +426,7 @@ def fit(
     init_pars: Optional[List[float]] = None,
     fix_pars: Optional[List[bool]] = None,
     par_bounds: Optional[List[Tuple[float, float]]] = None,
+    strategy: Optional[Literal[0, 1, 2]] = None,
     maxiter: Optional[int] = None,
     tolerance: Optional[float] = None,
     custom_fit: bool = False,
@@ -422,6 +450,9 @@ def fit(
             parameters are held constant, defaults to None (use ``pyhf`` suggestion)
         par_bounds (Optional[List[Tuple[float, float]]], optional): list of tuples with
             parameter bounds for fit, defaults to None (use ``pyhf`` suggested bounds)
+        strategy (Optional[Literal[0, 1, 2]], optional): minimization strategy used by
+            Minuit, can be 0/1/2, defaults to None (then uses ``pyhf`` default behavior
+            of strategy 0 with user-provided gradients and 1 otherwise)
         maxiter (Optional[int], optional): allowed number of calls for minimization,
             defaults to None (use ``pyhf`` default of 100,000)
         tolerance (Optional[float]), optional): tolerance for convergence, for details
@@ -447,9 +478,10 @@ def fit(
         init_pars=init_pars,
         fix_pars=fix_pars,
         par_bounds=par_bounds,
-        custom_fit=custom_fit,
+        strategy=strategy,
         maxiter=maxiter,
         tolerance=tolerance,
+        custom_fit=custom_fit,
     )
 
     print_results(fit_results)
