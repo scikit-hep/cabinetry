@@ -209,7 +209,7 @@ def test__fit_model(mock_pyhf, mock_custom, example_spec):
     }
     assert np.allclose(fit_results.bestfit, [1.1])
 
-    # pyhf API, init/fixed pars, par bounds, minos, maxiter/tolerance
+    # pyhf API, init/fixed pars, par bounds, minos, strategy/maxiter/tolerance
     fit_results = fit._fit_model(
         model,
         data,
@@ -217,6 +217,7 @@ def test__fit_model(mock_pyhf, mock_custom, example_spec):
         init_pars=[1.5, 2.0],
         fix_pars=[False, True],
         par_bounds=[(0, 5), (0.1, 10.0)],
+        strategy=2,
         maxiter=100,
         tolerance=0.01,
     )
@@ -228,7 +229,7 @@ def test__fit_model(mock_pyhf, mock_custom, example_spec):
         "init_pars": [1.5, 2.0],
         "fix_pars": [False, True],
         "par_bounds": [(0, 5), (0.1, 10.0)],
-        "strategy": None,
+        "strategy": 2,
         "maxiter": 100,
         "tolerance": 0.01,
     }
