@@ -69,6 +69,24 @@ def test__fit_model_pyhf(mock_minos, example_spec, example_spec_multibin):
     fit_results = fit._fit_model_pyhf(model, data, par_bounds=par_bounds)
     assert np.allclose(fit_results.bestfit, [5.0, 1.1])
 
+    # propagation of strategy, max iterations, tolerance
+    model, data = model_utils.model_and_data(example_spec)
+    with mock.patch("pyhf.infer.mle.fit") as mock_fit:
+        # mock return value will cause ValueError immediately after call
+        # could alternatively use mocker.spy from pytest-mock
+        with pytest.raises(ValueError):
+            fit._fit_model_pyhf(model, data)
+        # strategy kwarg not used in call, so not propagated to pyhf
+        assert "strategy" not in mock_fit.call_args[1].keys()
+        assert mock_fit.call_args[1]["maxiter"] is None
+        assert mock_fit.call_args[1]["tolerance"] is None
+
+        with pytest.raises(ValueError):
+            fit._fit_model_pyhf(model, data, strategy=2, maxiter=100, tolerance=0.01)
+        assert mock_fit.call_args[1]["strategy"] == 2
+        assert mock_fit.call_args[1]["maxiter"] == 100
+        assert mock_fit.call_args[1]["tolerance"] == 0.01
+
     # including minos, one parameter is unknown
     model, data = model_utils.model_and_data(example_spec)
     fit_results = fit._fit_model_pyhf(model, data, minos=["Signal strength", "abc"])
@@ -126,6 +144,26 @@ def test__fit_model_custom(mock_minos, example_spec, example_spec_multibin):
     fit_results = fit._fit_model_custom(model, data, par_bounds=par_bounds)
     assert np.allclose(fit_results.bestfit, [5.0, 1.1])
 
+    # propagation of strategy, max iterations, tolerance
+    model, data = model_utils.model_and_data(example_spec)
+    mock_minuit_instance = mock.MagicMock()
+    mock_minuit_instance.errors = [0.1, 0.1]  # needed as it will be accessed
+    with mock.patch("iminuit.Minuit", return_value=mock_minuit_instance):
+        # mocked minuit instance used to check correct propagation of settings
+        fit._fit_model_custom(model, data)
+        assert mock_minuit_instance.strategy == 1  # default for numpy backend
+        assert mock_minuit_instance.migrad.call_args == ((), {"ncall": 100_000})
+        assert mock_minuit_instance.tol == 0.1
+
+        fit._fit_model_custom(model, data, strategy=2, maxiter=100, tolerance=0.01)
+        assert mock_minuit_instance.strategy == 2
+        assert mock_minuit_instance.migrad.call_args == ((), {"ncall": 100})
+        assert mock_minuit_instance.tol == 0.01
+
+    # failed fit (simulated via limited number of iterations)
+    with pytest.raises(ValueError, match="Minimization failed, minimum is invalid."):
+        fit._fit_model_custom(model, data, maxiter=10)
+
     # including minos
     model, data = model_utils.model_and_data(example_spec)
     fit_results = fit._fit_model_custom(model, data, minos=["Signal strength"])
@@ -165,10 +203,13 @@ def test__fit_model(mock_pyhf, mock_custom, example_spec):
         "init_pars": None,
         "fix_pars": None,
         "par_bounds": None,
+        "strategy": None,
+        "maxiter": None,
+        "tolerance": None,
     }
     assert np.allclose(fit_results.bestfit, [1.1])
 
-    # pyhf API, init/fixed pars, par bounds, minos
+    # pyhf API, init/fixed pars, par bounds, minos, strategy/maxiter/tolerance
     fit_results = fit._fit_model(
         model,
         data,
@@ -176,6 +217,9 @@ def test__fit_model(mock_pyhf, mock_custom, example_spec):
         init_pars=[1.5, 2.0],
         fix_pars=[False, True],
         par_bounds=[(0, 5), (0.1, 10.0)],
+        strategy=2,
+        maxiter=100,
+        tolerance=0.01,
     )
     assert mock_pyhf.call_count == 2
     assert mock_pyhf.call_args[0][0].spec == model.spec
@@ -185,6 +229,9 @@ def test__fit_model(mock_pyhf, mock_custom, example_spec):
         "init_pars": [1.5, 2.0],
         "fix_pars": [False, True],
         "par_bounds": [(0, 5), (0.1, 10.0)],
+        "strategy": 2,
+        "maxiter": 100,
+        "tolerance": 0.01,
     }
     assert np.allclose(fit_results.bestfit, [1.1])
 
@@ -198,10 +245,13 @@ def test__fit_model(mock_pyhf, mock_custom, example_spec):
         "init_pars": None,
         "fix_pars": None,
         "par_bounds": None,
+        "strategy": None,
+        "maxiter": None,
+        "tolerance": None,
     }
     assert np.allclose(fit_results.bestfit, [1.2])
 
-    # direct iminuit, init/fixed pars, par bounds, minos
+    # direct iminuit, init/fixed pars, par bounds, minos, strategy/maxiter/tolerance
     fit_results = fit._fit_model(
         model,
         data,
@@ -209,6 +259,9 @@ def test__fit_model(mock_pyhf, mock_custom, example_spec):
         init_pars=[1.5, 2.0],
         fix_pars=[False, True],
         par_bounds=[(0, 5), (0.1, 10.0)],
+        strategy=2,
+        maxiter=100,
+        tolerance=0.01,
         custom_fit=True,
     )
     assert mock_custom.call_count == 2
@@ -219,6 +272,9 @@ def test__fit_model(mock_pyhf, mock_custom, example_spec):
         "init_pars": [1.5, 2.0],
         "fix_pars": [False, True],
         "par_bounds": [(0, 5), (0.1, 10.0)],
+        "strategy": 2,
+        "maxiter": 100,
+        "tolerance": 0.01,
     }
     assert np.allclose(fit_results.bestfit, [1.2])
 
@@ -312,6 +368,9 @@ def test_fit(mock_fit, mock_print, mock_gof):
                 "init_pars": None,
                 "fix_pars": None,
                 "par_bounds": None,
+                "strategy": None,
+                "maxiter": None,
+                "tolerance": None,
                 "custom_fit": False,
             },
         )
@@ -323,7 +382,7 @@ def test_fit(mock_fit, mock_print, mock_gof):
     assert mock_gof.call_count == 0
     assert fit_results.bestfit == [1.0]
 
-    # custom fit, init/fix pars, par bounds
+    # custom fit, init/fix pars, par bounds, strategy/maxiter/tolerance
     init_pars = [2.0]
     fix_pars = [True]
     par_bounds = [(0.0, 5.0)]
@@ -333,6 +392,9 @@ def test_fit(mock_fit, mock_print, mock_gof):
         init_pars=init_pars,
         fix_pars=fix_pars,
         par_bounds=par_bounds,
+        strategy=2,
+        maxiter=100,
+        tolerance=0.01,
         custom_fit=True,
     )
     assert mock_fit.call_count == 2
@@ -343,6 +405,9 @@ def test_fit(mock_fit, mock_print, mock_gof):
             "init_pars": init_pars,
             "fix_pars": fix_pars,
             "par_bounds": par_bounds,
+            "strategy": 2,
+            "maxiter": 100,
+            "tolerance": 0.01,
             "custom_fit": True,
         },
     )
@@ -358,6 +423,9 @@ def test_fit(mock_fit, mock_print, mock_gof):
         "init_pars": None,
         "fix_pars": None,
         "par_bounds": None,
+        "strategy": None,
+        "maxiter": None,
+        "tolerance": None,
         "custom_fit": False,
     }
     assert fit_results.bestfit == [1.0]
@@ -368,6 +436,9 @@ def test_fit(mock_fit, mock_print, mock_gof):
         "init_pars": None,
         "fix_pars": None,
         "par_bounds": None,
+        "strategy": None,
+        "maxiter": None,
+        "tolerance": None,
         "custom_fit": True,
     }
     assert fit_results.bestfit == [1.0]

@@ -10,6 +10,7 @@ import scipy.optimize
 import scipy.stats
 
 from cabinetry import model_utils
+from cabinetry._typing import Literal
 from cabinetry.fit.results_containers import (
     FitResults,
     LimitResults,
@@ -45,6 +46,9 @@ def _fit_model_pyhf(
     init_pars: Optional[List[float]] = None,
     fix_pars: Optional[List[bool]] = None,
     par_bounds: Optional[List[Tuple[float, float]]] = None,
+    strategy: Optional[Literal[0, 1, 2]] = None,
+    maxiter: Optional[int] = None,
+    tolerance: Optional[float] = None,
 ) -> FitResults:
     """Uses the ``pyhf.infer`` API to perform a maximum likelihood fit.
 
@@ -65,11 +69,23 @@ def _fit_model_pyhf(
             parameters are held constant, defaults to None (use ``pyhf`` suggestion)
         par_bounds (Optional[List[Tuple[float, float]]], optional): list of tuples with
             parameter bounds for fit, defaults to None (use ``pyhf`` suggested bounds)
+        strategy (Optional[Literal[0, 1, 2]], optional): minimization strategy used by
+            Minuit, can be 0/1/2, defaults to None (then uses ``pyhf`` default behavior
+            of strategy 0 with user-provided gradients and 1 otherwise)
+        maxiter (Optional[int], optional): allowed number of calls for minimization,
+            defaults to None (use ``pyhf`` default of 100,000)
+        tolerance (Optional[float]), optional): tolerance for convergence, for details
+            see ``iminuit.Minuit.tol`` (uses EDM < 0.002*tolerance), defaults to
+            None (use ``iminuit`` default of 0.1)
 
     Returns:
         FitResults: object storing relevant fit results
     """
     pyhf.set_backend(pyhf.tensorlib, pyhf.optimize.minuit_optimizer(verbose=1))
+
+    # strategy=None is currently not supported in pyhf
+    # https://github.com/scikit-hep/pyhf/issues/1785
+    strategy_kwarg = {"strategy": strategy} if strategy is not None else {}
 
     result, corr_mat, best_twice_nll, result_obj = pyhf.infer.mle.fit(
         data,
@@ -81,8 +97,11 @@ def _fit_model_pyhf(
         return_correlations=True,
         return_fitted_val=True,
         return_result_obj=True,
+        maxiter=maxiter,
+        tolerance=tolerance,
+        **strategy_kwarg,
     )
-    log.info(f"MINUIT status:\n{result_obj.minuit.fmin}")
+    log.info(f"Migrad status:\n{result_obj.minuit.fmin}")
 
     bestfit = pyhf.tensorlib.to_numpy(result[:, 0])
     # set errors for fixed parameters to 0 (see iminuit#762)
@@ -117,6 +136,9 @@ def _fit_model_custom(
     init_pars: Optional[List[float]] = None,
     fix_pars: Optional[List[bool]] = None,
     par_bounds: Optional[List[Tuple[float, float]]] = None,
+    strategy: Optional[Literal[0, 1, 2]] = None,
+    maxiter: Optional[int] = None,
+    tolerance: Optional[float] = None,
 ) -> FitResults:
     """Uses ``iminuit`` directly to perform a maximum likelihood fit.
 
@@ -137,6 +159,17 @@ def _fit_model_custom(
             parameters are held constant, defaults to None (use ``pyhf`` suggestion)
         par_bounds (Optional[List[Tuple[float, float]]], optional): list of tuples with
             parameter bounds for fit, defaults to None (use ``pyhf`` suggested bounds)
+        strategy (Optional[Literal[0, 1, 2]], optional): minimization strategy used by
+            Minuit, can be 0/1/2, defaults to None (then uses ``pyhf`` default behavior
+            of strategy 0 with user-provided gradients and 1 otherwise)
+        maxiter (Optional[int], optional): allowed number of calls for minimization,
+            defaults to None (use ``pyhf`` default of 100,000)
+        tolerance (Optional[float]), optional): tolerance for convergence, for details
+            see ``iminuit.Minuit.tol`` (uses EDM < 0.002*tolerance), defaults to
+            None (use ``iminuit`` default of 0.1)
+
+    Raises:
+        ValueError: if minimization fails
 
     Returns:
         FitResults: object storing relevant fit results
@@ -171,11 +204,21 @@ def _fit_model_custom(
     m.errordef = 1
     m.print_level = 1
 
-    # decrease tolerance (goal: EDM < 0.002*tol*errordef), default tolerance is 0.1
-    m.tol /= 10
-    m.migrad()
-    m.hesse()
+    if strategy is not None:
+        m.strategy = strategy
+    else:
+        # pick strategy like pyhf: 0 if backend provides autodiff gradients, otherwise 1
+        m.strategy = 0 if pyhf.tensorlib.default_do_grad else 1
+
+    maxiter = maxiter or 100_000
+    m.tol = tolerance or 0.1  # goal: EDM < 0.002*tol*errordef
+
+    m.migrad(ncall=maxiter)
+    m.hesse()  # use default call limit (consistent with pyhf)
+
     log.info(f"MINUIT status:\n{m.fmin}")
+    if not m.valid:
+        raise ValueError("Minimization failed, minimum is invalid.")
 
     bestfit = np.asarray(m.values)
     # set errors for fixed parameters to 0 (see iminuit#762)
@@ -205,6 +248,9 @@ def _fit_model(
     init_pars: Optional[List[float]] = None,
     fix_pars: Optional[List[bool]] = None,
     par_bounds: Optional[List[Tuple[float, float]]] = None,
+    strategy: Optional[Literal[0, 1, 2]] = None,
+    maxiter: Optional[int] = None,
+    tolerance: Optional[float] = None,
     custom_fit: bool = False,
 ) -> FitResults:
     """Interface for maximum likelihood fits through ``pyhf.infer`` API or ``iminuit``.
@@ -226,6 +272,14 @@ def _fit_model(
             parameters are held constant, defaults to None (use ``pyhf`` suggestion)
         par_bounds (Optional[List[Tuple[float, float]]], optional): list of tuples with
             parameter bounds for fit, defaults to None (use ``pyhf`` suggested bounds)
+        strategy (Optional[Literal[0, 1, 2]], optional): minimization strategy used by
+            Minuit, can be 0/1/2, defaults to None (then uses ``pyhf`` default behavior
+            of strategy 0 with user-provided gradients and 1 otherwise)
+        maxiter (Optional[int], optional): allowed number of calls for minimization,
+            defaults to None (use ``pyhf`` default of 100,000)
+        tolerance (Optional[float]), optional): tolerance for convergence, for details
+            see ``iminuit.Minuit.tol`` (uses EDM < 0.002*tolerance), defaults to
+            None (use ``iminuit`` default of 0.1)
         custom_fit (bool, optional): whether to use the ``pyhf.infer`` API or
             ``iminuit``, defaults to False (using ``pyhf.infer``)
 
@@ -241,6 +295,9 @@ def _fit_model(
             init_pars=init_pars,
             fix_pars=fix_pars,
             par_bounds=par_bounds,
+            strategy=strategy,
+            maxiter=maxiter,
+            tolerance=tolerance,
         )
     else:
         # use iminuit directly
@@ -251,6 +308,9 @@ def _fit_model(
             init_pars=init_pars,
             fix_pars=fix_pars,
             par_bounds=par_bounds,
+            strategy=strategy,
+            maxiter=maxiter,
+            tolerance=tolerance,
         )
     log.debug(f"-2 log(L) = {fit_results.best_twice_nll:.6f} at best-fit point")
     return fit_results
@@ -366,6 +426,9 @@ def fit(
     init_pars: Optional[List[float]] = None,
     fix_pars: Optional[List[bool]] = None,
     par_bounds: Optional[List[Tuple[float, float]]] = None,
+    strategy: Optional[Literal[0, 1, 2]] = None,
+    maxiter: Optional[int] = None,
+    tolerance: Optional[float] = None,
     custom_fit: bool = False,
 ) -> FitResults:
     """Performs a  maximum likelihood fit, reports and returns the results.
@@ -387,6 +450,14 @@ def fit(
             parameters are held constant, defaults to None (use ``pyhf`` suggestion)
         par_bounds (Optional[List[Tuple[float, float]]], optional): list of tuples with
             parameter bounds for fit, defaults to None (use ``pyhf`` suggested bounds)
+        strategy (Optional[Literal[0, 1, 2]], optional): minimization strategy used by
+            Minuit, can be 0/1/2, defaults to None (then uses ``pyhf`` default behavior
+            of strategy 0 with user-provided gradients and 1 otherwise)
+        maxiter (Optional[int], optional): allowed number of calls for minimization,
+            defaults to None (use ``pyhf`` default of 100,000)
+        tolerance (Optional[float]), optional): tolerance for convergence, for details
+            see ``iminuit.Minuit.tol`` (uses EDM < 0.002*tolerance), defaults to
+            None (use ``iminuit`` default of 0.1)
         custom_fit (bool, optional): whether to use the ``pyhf.infer`` API or
             ``iminuit``, defaults to False (using ``pyhf.infer``)
 
@@ -407,6 +478,9 @@ def fit(
         init_pars=init_pars,
         fix_pars=fix_pars,
         par_bounds=par_bounds,
+        strategy=strategy,
+        maxiter=maxiter,
+        tolerance=tolerance,
         custom_fit=custom_fit,
     )
 
@@ -768,6 +842,9 @@ def limit(
                 expected -1 sigma, 3: expected, 4: expected +1 sigma, 5: expected +2
                 sigma
             limit_label (str): string to use when referring to the current limit
+
+        Raises:
+            ValueError: if root finding fails (usually due to starting bracket choice)
 
         Returns:
             float: absolute value of difference to CLs=``cls_target``
