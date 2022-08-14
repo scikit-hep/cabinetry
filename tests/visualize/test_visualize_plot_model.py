@@ -198,13 +198,13 @@ def test_templates(tmp_path):
 def test_modifier_grid(tmp_path):
     fname = tmp_path / "fig.png"
     grid_list = [
-        np.asarray([[5, 5, 4, 8, 2, 1, 3, 8], [7, 7, 4, 8, 8, 8, 3, 0]]),
-        np.asarray([[5, 5, 8, 4, 2, 1, 3, 8], [6, 6, 8, 4, 8, 8, 3, 0]]),
+        np.asarray([[5, 4, 8, 2, 1, 3, 8], [7, 4, 8, 8, 8, 3, 0]]),
+        np.asarray([[5, 8, 4, 2, 1, 3, 8], [6, 8, 4, 8, 8, 3, 0]]),
     ]
     axis_labels = [
         ["SR", "CR"],
         ["Background", "Signal"],
-        ["a", "b", "c", "d", "e", "f", "g", "mu"],
+        ["a", "b", "c", "d", "e", "f", "mu"],
     ]
     category_map = {
         0: "normfactor",
