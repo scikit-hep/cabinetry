@@ -227,9 +227,9 @@ def test_modifier_grid(tmp_path):
         is None
     )
 
-    # saving the return figure again seems to slightly change formatting, so not doing
-    # that here in the test (as opposed to the tests above), instead do not save the
-    # figure automatically and only manually save it in the next test to compare
+    # saving the return figure again seems to slightly change formatting, so instead of
+    # doing that here in the test (like in the tests above), do not save the figure
+    # automatically and only manually save it in the next test to compare
 
     # do not save figure, but close it and save returned figure manually
     with mock.patch("cabinetry.visualize.utils._save_and_close") as mock_close_safe:
