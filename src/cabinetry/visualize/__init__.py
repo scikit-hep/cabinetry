@@ -1,6 +1,5 @@
 """High-level entry point for visualizing fit models and inference results."""
 
-from collections import defaultdict
 import glob
 import logging
 import pathlib
@@ -656,13 +655,7 @@ def modifier_grid(
         save_figure (bool, optional): whether to save figure, defaults to True
     """
     # collect modifier types affecting each (channel, sample, parameter) combination
-    modifier_dict = defaultdict(list)
-    for channel in model.spec["channels"]:
-        for sample in channel["samples"]:
-            for modifier in sample["modifiers"]:
-                modifier_dict[
-                    (channel["name"], sample["name"], modifier["name"])
-                ].append(modifier["type"])
+    modifier_map = model_utils._modifier_map(model)
 
     # build 2d grids: one grid per channel or one grid per sample
     if split_by_sample:
@@ -707,7 +700,7 @@ def modifier_grid(
                 chan, sam = grid_label, axis_label  # one grid per channel
 
             for k_par, par in enumerate(axis_labels[2]):
-                modifiers = modifier_dict[(chan, sam, par)]
+                modifiers = modifier_map[(chan, sam, par)]
                 # assign integer value to field depending on modifiers found
                 if modifiers == []:
                     value = category_to_int_map["none"]

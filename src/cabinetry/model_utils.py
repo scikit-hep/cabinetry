@@ -1,8 +1,9 @@
 """Provides utilities for pyhf models."""
 
+from collections import defaultdict
 import json
 import logging
-from typing import Any, Dict, List, NamedTuple, Optional, Tuple, Union
+from typing import Any, DefaultDict, Dict, List, NamedTuple, Optional, Tuple, Union
 
 import awkward as ak
 import numpy as np
@@ -618,3 +619,25 @@ def match_fit_results(model: pyhf.pdf.Model, fit_results: FitResults) -> FitResu
         fit_results.goodness_of_fit,
     )
     return fit_results_matched
+
+
+def _modifier_map(
+    model: pyhf.pdf.Model,
+) -> DefaultDict[Tuple[str, str, str], List[str]]:
+    """Creates a map for modifier lists per (channel, sample, parameter).
+
+    Args:
+        model (pyhf.pdf.Model): model for which to create the map
+
+    Returns:
+        Dict[Tuple[str, str, str], List[str]]: map to extract modifier lists for each
+        (channel, sample, parameter).
+    """
+    modifier_map = defaultdict(list)
+    for channel in model.spec["channels"]:
+        for sample in channel["samples"]:
+            for modifier in sample["modifiers"]:
+                modifier_map[
+                    (channel["name"], sample["name"], modifier["name"])
+                ].append(modifier["type"])
+    return modifier_map
