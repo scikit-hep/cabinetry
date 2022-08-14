@@ -24,7 +24,7 @@ def _save_and_close(
     """
     if path is not None:
         path.parent.mkdir(parents=True, exist_ok=True)
-        log.debug(f"saving figure as {path}")
+        log.info(f"saving figure as {path}")
         fig.savefig(path)
     if close_figure:
         plt.close(fig)
