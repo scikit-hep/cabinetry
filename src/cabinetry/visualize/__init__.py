@@ -639,7 +639,7 @@ def modifier_grid(
     model: pyhf.pdf.Model,
     *,
     figure_folder: Union[str, pathlib.Path] = "figures",
-    split_by_channel: bool = True,
+    split_by_sample: bool = False,
     close_figure: bool = True,
     save_figure: bool = True,
 ) -> mpl.figure.Figure:
@@ -649,9 +649,9 @@ def modifier_grid(
         model (pyhf.pdf.Model): model to visualize
         figure_folder (Union[str, pathlib.Path], optional): path to the folder to save
             figures in, defaults to "figures"
-        split_by_channel (bool, optional): whether to use (sample, parameter) grids
-            for each channel, defaults to True (False uses (channel, parameter) grids
-            for each sample)
+        split_by_sample (bool, optional): whether to use (channel, parameter) grids
+            for each sample, defaults to False (if enabled, uses (sample, parameter)
+            grids for each channel)
         close_figure (bool, optional): whether to close figure, defaults to True
         save_figure (bool, optional): whether to save figure, defaults to True
     """
@@ -665,18 +665,18 @@ def modifier_grid(
                 ].append(modifier["type"])
 
     # build 2d grids: one grid per channel or one grid per sample
-    if split_by_channel:
-        # one (sample, parameter) grid per channel
-        axis_labels = [
-            model.config.channels,
-            model.config.samples,
-            model.config.par_order,
-        ]
-    else:
+    if split_by_sample:
         # one (channel, parameter) grid per sample
         axis_labels = [
             model.config.samples,
             model.config.channels,
+            model.config.par_order,
+        ]
+    else:
+        # one (sample, parameter) grid per channel
+        axis_labels = [
+            model.config.channels,
+            model.config.samples,
             model.config.par_order,
         ]
 
@@ -701,10 +701,10 @@ def modifier_grid(
     for i_grid, grid_label in enumerate(axis_labels[0]):
         for j_axis, axis_label in enumerate(axis_labels[1]):
             # extract channel and sample names depending on grid formatting
-            if split_by_channel:
-                chan, sam = grid_label, axis_label  # one grid per channel
-            else:
+            if split_by_sample:
                 chan, sam = axis_label, grid_label  # one grid per sample
+            else:
+                chan, sam = grid_label, axis_label  # one grid per channel
 
             for k_par, par in enumerate(axis_labels[2]):
                 modifiers = modifier_dict[(chan, sam, par)]

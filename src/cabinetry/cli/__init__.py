@@ -327,6 +327,40 @@ def data_mc(
         config=cabinetry_config,
         figure_folder=figfolder,
         close_figure=True,
+        save_figure=True,
+    )
+
+
+@click.command()
+@click.argument("ws_spec", type=click.File("r"))
+@click.option(
+    "--split_by_sample",
+    is_flag=True,
+    help="split grids by sample (default: split by channel)",
+)
+@click.option(
+    "--figfolder",
+    default="figures",
+    help='folder to save figures to (default: "figures")',
+)
+def modifier_grid(
+    ws_spec: io.TextIOWrapper,
+    split_by_sample: bool,
+    figfolder: str,
+) -> None:
+    """Visualizes modifier structure of a model.
+
+    WS_SPEC: path to workspace
+    """
+    _set_logging()
+    ws = json.load(ws_spec)
+    model, _ = cabinetry_model_utils.model_and_data(ws)
+    cabinetry_visualize.modifier_grid(
+        model,
+        figure_folder=figfolder,
+        split_by_sample=split_by_sample,
+        close_figure=True,
+        save_figure=True,
     )
 
 
@@ -339,3 +373,4 @@ cabinetry.add_command(scan)
 cabinetry.add_command(limit)
 cabinetry.add_command(significance)
 cabinetry.add_command(data_mc)
+cabinetry.add_command(modifier_grid)
