@@ -504,7 +504,12 @@ def test_data_mc(
     assert mock_vis.call_args_list == [
         (
             ("mock_model_pred", "data"),
-            {"config": None, "figure_folder": "figures", "close_figure": True},
+            {
+                "config": None,
+                "figure_folder": "figures",
+                "close_figure": True,
+                "save_figure": True,
+            },
         )
     ]
 
@@ -527,5 +532,60 @@ def test_data_mc(
     assert mock_pred.call_args == (("model",), {"fit_results": fit_results})
     assert mock_vis.call_args == (
         ("mock_model_pred", "data"),
-        {"config": config, "figure_folder": "folder", "close_figure": True},
+        {
+            "config": config,
+            "figure_folder": "folder",
+            "close_figure": True,
+            "save_figure": True,
+        },
+    )
+
+
+@mock.patch("cabinetry.visualize.modifier_grid", autospec=True)
+@mock.patch(
+    "cabinetry.model_utils.model_and_data",
+    return_value=("model", "data"),
+    autospec=True,
+)
+def test_modifier_grid(mock_utils, mock_vis, cli_helpers, tmp_path):
+    workspace = {"workspace": "mock"}
+    workspace_path = str(tmp_path / "workspace.json")
+
+    # need to save workspace to file since click looks for it
+    with open(workspace_path, "w") as f:
+        f.write('{"workspace": "mock"}')
+
+    runner = CliRunner()
+
+    # default
+    result = runner.invoke(cli.modifier_grid, [workspace_path])
+    assert result.exit_code == 0
+    assert mock_utils.call_args_list == [((workspace,), {})]
+    assert mock_vis.call_args_list == [
+        (
+            ("model",),
+            {
+                "figure_folder": "figures",
+                "split_by_sample": False,
+                "close_figure": True,
+                "save_figure": True,
+            },
+        )
+    ]
+
+    # split by sample, custom figure folder
+    result = runner.invoke(
+        cli.modifier_grid,
+        [workspace_path, "--split_by_sample", "--figfolder", "folder"],
+    )
+    assert result.exit_code == 0
+    assert mock_utils.call_args == ((workspace,), {})
+    assert mock_vis.call_args == (
+        ("model",),
+        {
+            "figure_folder": "folder",
+            "split_by_sample": True,
+            "close_figure": True,
+            "save_figure": True,
+        },
     )

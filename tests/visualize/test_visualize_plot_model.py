@@ -46,11 +46,10 @@ def test_data_mc(tmp_path, caplog):
     )
 
     # compare figure returned by function
-    fname_ret = tmp_path / "fig_from_return.png"
-    fig.savefig(fname_ret)
+    fname = tmp_path / "fig_from_return.png"
+    fig.savefig(fname)
     assert (
-        compare_images("tests/visualize/reference/data_mc.png", str(fname_ret), 0)
-        is None
+        compare_images("tests/visualize/reference/data_mc.png", str(fname), 0) is None
     )
 
     histo_dict_list_log = copy.deepcopy(histo_dict_list)
@@ -192,5 +191,58 @@ def test_templates(tmp_path):
             close_figure=True,
         )
         assert mock_close_safe.call_args_list == [((fig, None, True), {})]
+
+    plt.close("all")
+
+
+def test_modifier_grid(tmp_path):
+    fname = tmp_path / "fig.png"
+    grid_list = [
+        np.asarray([[5, 4, 8, 2, 1, 3, 8], [7, 4, 8, 8, 8, 3, 0]]),
+        np.asarray([[5, 8, 4, 2, 1, 3, 8], [6, 8, 4, 8, 8, 3, 0]]),
+    ]
+    axis_labels = [
+        ["SR", "CR"],
+        ["Background", "Signal"],
+        ["a", "b", "c", "d", "e", "f", "mu"],
+    ]
+    category_map = {
+        0: "normfactor",
+        1: "shapefactor",
+        2: "shapesys",
+        3: "lumi",
+        4: "staterror",
+        5: "normsys + histosys",
+        6: "histosys",
+        7: "normsys",
+        8: "none",
+    }
+
+    fig = plot_model.modifier_grid(
+        grid_list, axis_labels, category_map, figure_path=fname
+    )
+    # non-zero tolerance as layout changes very slightly in CI
+    assert (
+        compare_images("tests/visualize/reference/modifier_grid.png", str(fname), 15)
+        is None
+    )
+
+    # saving the return figure again seems to slightly change formatting, so instead of
+    # doing that here in the test (like in the tests above), do not save the figure
+    # automatically and only manually save it in the next test to compare
+
+    # do not save figure, but close it and save returned figure manually
+    with mock.patch("cabinetry.visualize.utils._save_and_close") as mock_close_safe:
+        fig = plot_model.modifier_grid(
+            grid_list, axis_labels, category_map, close_figure=True
+        )
+        assert mock_close_safe.call_args_list == [((fig, None, True), {})]
+
+    fname = tmp_path / "fig_from_return.png"
+    fig.savefig(fname)
+    assert (
+        compare_images("tests/visualize/reference/modifier_grid.png", str(fname), 15)
+        is None
+    )
 
     plt.close("all")

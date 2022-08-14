@@ -80,7 +80,7 @@ def _save_tables(
             )
             + "\n"  # tabulate does not add a newline at the end
         )
-        log.debug(f"saving table as {table_path}")
+        log.info(f"saving table as {table_path}")
         table_path.write_text(table_str)
 
 

@@ -400,3 +400,74 @@ def templates(
 
     utils._save_and_close(fig, figure_path, close_figure)
     return fig
+
+
+def modifier_grid(
+    grid_list: List[np.ndarray],
+    axis_labels: List[List[str]],
+    category_map: Dict[int, str],
+    figure_path: Optional[pathlib.Path] = None,
+    close_figure: bool = False,
+) -> mpl.figure.Figure:
+    """Draws a grid of modifiers per channel, sample and parameter.
+
+    Args:
+        grid_list (List[np.ndarray]): list of 2d grids with modifier information
+        axis_labels (List[List[str]]): list with axis labels for the three axes in order
+            (first axis is grid label, second and third are axes per grid)
+        category_map (Dict[int, str]): translation of integer values in grid to labels
+        figure_path (Optional[pathlib.Path], optional): path where figure should be
+            saved, or None to not save it, defaults to None
+        close_figure (bool, optional): whether to close each figure immediately after
+            saving it, defaults to False (enable when producing many figures to avoid
+            memory issues, prevents rendering in notebooks)
+
+    """
+    # colors for categories from Okabe & Ito: https://jfly.uni-koeln.de/color/#pallet,
+    # see also https://doi.org/10.1038/nmeth.1618
+    cmap = mpl.colors.ListedColormap(
+        [
+            (1, 1, 1),  # white,
+            (86 / 255, 180 / 255, 233 / 255),  # sky blue
+            (240 / 255, 228 / 255, 66 / 255),  # yellow
+            (0, 158 / 255, 115 / 255),  # blueish green
+            (230 / 255, 159 / 255, 0),  # orange
+            (85 / 255, 85 / 255, 85 / 255),  # dark gray
+            (204 / 255, 121 / 255, 167 / 255),  # reddish purple
+            (0, 114 / 255, 178 / 255),  # blue
+            (213 / 255, 94 / 255, 0),  # vermilion
+        ]
+    ).reversed()
+    norm = mpl.colors.BoundaryNorm(np.arange(-0.5, 9.5), cmap.N)
+
+    # rough heuristics for figure size
+    fig_width = 3 + len(axis_labels[2]) / 3.8
+    fig_height = 3 + (len(axis_labels[0]) * len(axis_labels[1])) / 3.2
+    fig, ax = plt.subplots(
+        len(axis_labels[0]),
+        sharex=True,
+        constrained_layout=True,
+        figsize=(fig_width, fig_height),
+        squeeze=False,  # always return array of axes (even with a single subplot)
+    )
+    ax = ax.flatten()  # turn into 1d array
+
+    for i_grid, grid_label in enumerate(axis_labels[0]):
+        im = ax[i_grid].imshow(grid_list[i_grid], cmap=cmap, norm=norm)
+        ax[i_grid].set_title(grid_label)
+        ax[i_grid].set_xticks(np.arange(len(axis_labels[2])))  # sample or channel
+        ax[i_grid].set_yticks(np.arange(len(axis_labels[1])))  # parameter
+        ax[i_grid].set_xticklabels(axis_labels[2])
+        ax[i_grid].set_yticklabels(axis_labels[1])
+        for tick in ax[i_grid].get_xticklabels():
+            tick.set_rotation(45)
+            tick.set_horizontalalignment("right")
+
+    # construct colobar with category labels
+    formatter = plt.FuncFormatter(lambda val, _: category_map[val])
+    _ = fig.colorbar(
+        im, ax=ax.ravel().tolist(), ticks=np.arange(len(category_map)), format=formatter
+    )
+
+    utils._save_and_close(fig, figure_path, close_figure)
+    return fig

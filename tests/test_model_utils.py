@@ -232,7 +232,7 @@ def test_yield_stdev(example_spec, example_spec_multibin):
     ],
 )
 def test_prediction(
-    mock_asimov, mock_unc, mock_stdev, caplog, example_spec_multibin, example_spec
+    mock_asimov, mock_unc, mock_stdev, example_spec_multibin, example_spec, caplog
 ):
     caplog.set_level(logging.DEBUG)
     model = pyhf.Workspace(example_spec_multibin).model()
@@ -458,3 +458,14 @@ def test_match_fit_results(mock_pars, mock_uncs):
     )
     assert matched_fit_res.best_twice_nll == 5.0
     assert matched_fit_res.goodness_of_fit == 0.1
+
+
+def test_modifier_map(example_spec):
+    model = pyhf.Workspace(example_spec).model()
+
+    modifier_map = model_utils._modifier_map(model)
+    assert modifier_map == {
+        ("Signal Region", "Signal", "staterror_Signal-Region"): ["staterror"],
+        ("Signal Region", "Signal", "Signal strength"): ["normfactor"],
+    }
+    assert modifier_map[("a", "b", "c")] == []
