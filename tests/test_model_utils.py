@@ -232,7 +232,7 @@ def test_yield_stdev(example_spec, example_spec_multibin):
     ],
 )
 def test_prediction(
-    mock_asimov, mock_unc, mock_stdev, caplog, example_spec_multibin, example_spec
+    mock_asimov, mock_unc, mock_stdev, example_spec_multibin, example_spec, caplog
 ):
     caplog.set_level(logging.DEBUG)
     model = pyhf.Workspace(example_spec_multibin).model()
