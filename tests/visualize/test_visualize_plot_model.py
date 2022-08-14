@@ -221,8 +221,9 @@ def test_modifier_grid(tmp_path):
     fig = plot_model.modifier_grid(
         grid_list, axis_labels, category_map, figure_path=fname
     )
+    # non-zero tolerance as layout changes very slightly in CI
     assert (
-        compare_images("tests/visualize/reference/modifier_grid.png", str(fname), 0)
+        compare_images("tests/visualize/reference/modifier_grid.png", str(fname), 15)
         is None
     )
 
@@ -240,7 +241,7 @@ def test_modifier_grid(tmp_path):
     fname = tmp_path / "fig_from_return.png"
     fig.savefig(fname)
     assert (
-        compare_images("tests/visualize/reference/modifier_grid.png", str(fname), 0)
+        compare_images("tests/visualize/reference/modifier_grid.png", str(fname), 15)
         is None
     )
 
