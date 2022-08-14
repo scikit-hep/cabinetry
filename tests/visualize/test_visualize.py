@@ -1,5 +1,6 @@
-from collections import namedtuple
+from collections import defaultdict, namedtuple
 import copy
+import logging
 import pathlib
 from unittest import mock
 
@@ -587,3 +588,92 @@ def test_limit(mock_draw):
         limit_results, figure_folder=folder_path, close_figure=False, save_figure=False
     )
     assert mock_draw.call_args[1] == {"figure_path": None, "close_figure": False}
+
+
+@mock.patch(
+    "cabinetry.visualize.plot_model.modifier_grid",
+    return_value=matplotlib.figure.Figure(),
+)
+@mock.patch(
+    "cabinetry.model_utils._modifier_map",
+    return_value=defaultdict(
+        list,
+        {("Signal Region", "Signal", "Signal strength"): ["normfactor"]},
+    ),
+)
+def test_modifier_grid(mock_map, mock_draw, example_spec, caplog):
+    caplog.set_level(logging.DEBUG)
+    folder_path = "tmp"
+    figure_path = pathlib.Path(folder_path) / "modifier_grid.pdf"
+
+    model = pyhf.Workspace(example_spec).model()
+    # model contains a staterror, but remove that from the map via mocked _modifier_map
+    # return to capture the effect of fields in the grid without modifiers
+
+    fig = visualize.modifier_grid(model, figure_folder=folder_path)
+    assert isinstance(fig, matplotlib.figure.Figure)
+
+    assert mock_map.call_count == 1
+    assert mock_map.call_args[0][0].spec == model.spec
+    assert mock_map.call_args[1] == {}
+
+    assert mock_draw.call_count == 1
+    assert np.allclose(mock_draw.call_args[0][0], [np.asarray([[0.0, 8.0]])])
+    assert mock_draw.call_args[0][1] == [
+        ["Signal Region"],
+        ["Signal"],
+        ["Signal strength", "staterror_Signal-Region"],
+    ]
+    assert mock_draw.call_args[0][2] == {
+        0: "normfactor",
+        1: "shapefactor",
+        2: "shapesys",
+        3: "lumi",
+        4: "staterror",
+        5: "normsys + histosys",
+        6: "histosys",
+        7: "normsys",
+        8: "none",
+    }
+    assert mock_draw.call_args[1] == {"figure_path": figure_path, "close_figure": True}
+
+    # do not close figure, do not save figure, split by sample
+    _ = visualize.modifier_grid(
+        model,
+        figure_folder=folder_path,
+        split_by_sample=True,
+        close_figure=False,
+        save_figure=False,
+    )
+    assert np.allclose(mock_draw.call_args[0][0], [np.asarray([[0.0, 8.0]])])
+    assert mock_draw.call_args[1] == {"figure_path": None, "close_figure": False}
+    assert mock_draw.call_args[0][1] == [
+        ["Signal"],
+        ["Signal Region"],
+        ["Signal strength", "staterror_Signal-Region"],
+    ]  # order changed due to split_by_sample
+    caplog.clear()
+
+    # unknown modifier combination: patch modifier map to return normfactor+staterror
+    model = mock.MagicMock()
+    model.config.channels = ["Signal Region"]
+    model.config.samples = ["Signal"]
+    model.config.par_order = ["Signal strength"]
+    with mock.patch(
+        "cabinetry.model_utils._modifier_map",
+        return_value=defaultdict(
+            list,
+            {
+                ("Signal Region", "Signal", "Signal strength"): [
+                    "normfactor",
+                    "staterror",
+                ]
+            },
+        ),
+    ):
+        with pytest.raises(KeyError, match=r"staterror \+ normfactor"):
+            _ = visualize.modifier_grid(model)
+
+    assert "modifiers for Signal Region, Signal, Signal strength not supported" not in [
+        rec.message for rec in caplog.records
+    ]
