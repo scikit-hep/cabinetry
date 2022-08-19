@@ -144,7 +144,7 @@ class Histogram(bh.Histogram, family=cabinetry):
         Args:
             value (np.ndarray): yields to set
         """
-        self.view().value = value  # type: ignore
+        self.view().value = value  # type: ignore[union-attr]
 
     @property
     def stdev(self) -> np.ndarray:
@@ -153,7 +153,7 @@ class Histogram(bh.Histogram, family=cabinetry):
         Returns:
             np.ndarray: stat. uncertainty per bin
         """
-        return np.sqrt(self.variances())  # type: ignore
+        return np.sqrt(self.variances())  # type: ignore[arg-type]
 
     @stdev.setter
     def stdev(self, value: np.ndarray) -> None:
@@ -162,7 +162,7 @@ class Histogram(bh.Histogram, family=cabinetry):
         Args:
             value (np.ndarray): the standard deviation
         """
-        self.view().variance = value**2  # type: ignore
+        self.view().variance = value**2  # type: ignore[misc,union-attr]
 
     @property
     def bins(self) -> np.ndarray:
