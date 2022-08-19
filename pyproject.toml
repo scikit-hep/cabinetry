@@ -18,6 +18,7 @@ files = "src/cabinetry"
 pretty = true
 show_error_context = true
 show_error_codes = true
+enable_error_code = ["ignore-without-code", "redundant-expr", "truthy-bool"]
 # strict = true
 disallow_untyped_calls = true
 disallow_untyped_defs = true
