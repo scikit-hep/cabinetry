@@ -5,7 +5,8 @@ import json
 import logging
 from typing import Any, DefaultDict, Dict, List, NamedTuple, Optional, Tuple, Union
 
-import awkward as ak
+import awkward._v2 as ak
+# import awkward as ak
 import numpy as np
 import pyhf
 
@@ -248,26 +249,32 @@ def yield_stdev(
 
         # total model distribution with this parameter varied up
         up_comb = pyhf.tensorlib.to_numpy(
-            model.expected_data(up_pars, include_auxdata=False)
+            model.main_model.expected_data(up_pars, return_by_sample=True)
         )
+        # need to add the total as well as a dummy sample (last "sample")
+        # indices: (sample, bin)
+        up_comb = np.vstack((up_comb, np.sum(up_comb, axis=0)))
         # turn into list of channels
+        # indices: (channel, sample, bin)
         up_yields = [
-            up_comb[model.config.channel_slices[ch]] for ch in model.config.channels
+            up_comb[:, model.config.channel_slices[ch]] for ch in model.config.channels
         ]
         # append list of yields summed per channel
-        up_yields += [np.asarray([sum(chan_yields)]) for chan_yields in up_yields]
+        up_yields += [np.asarray([np.sum(chan_yields, axis=-1)]) for chan_yields in up_yields]
         up_variations.append(up_yields)
 
         # total model distribution with this parameter varied down
         down_comb = pyhf.tensorlib.to_numpy(
-            model.expected_data(down_pars, include_auxdata=False)
+            model.main_model.expected_data(down_pars, return_by_sample=True)
         )
+        # add total
+        down_comb = np.vstack((down_comb, np.sum(down_comb, axis=0)))
         # turn into list of channels
         down_yields = [
-            down_comb[model.config.channel_slices[ch]] for ch in model.config.channels
+            down_comb[:, model.config.channel_slices[ch]] for ch in model.config.channels
         ]
         # append list of yields summed per channel
-        down_yields += [np.asarray([sum(chan_yields)]) for chan_yields in down_yields]
+        down_yields += [np.asarray([np.sum(chan_yields, axis=-1)]) for chan_yields in down_yields]
         down_variations.append(down_yields)
 
     # convert to awkward arrays for further processing
@@ -275,13 +282,17 @@ def yield_stdev(
     down_variations_ak = ak.from_iter(down_variations)
 
     # calculate symmetric uncertainties for all components
+    # indices:
+    #  - variation
+    #  - channel, last entry is channel sum
+    #  - samples, last entry is sample sum
     sym_uncs = (up_variations_ak - down_variations_ak) / 2
 
     # calculate total variance, indexed by channel and bin (per-channel numbers act like
     # additional channels with one bin each)
     if np.count_nonzero(corr_mat - np.diagflat(np.ones_like(parameters))) == 0:
         # no off-diagonal contributions from correlation matrix (e.g. pre-fit)
-        total_variance = np.sum(np.power(sym_uncs, 2), axis=0)
+        total_variance = ak.sum(np.power(sym_uncs, 2), axis=0)
     else:
         # full calculation including off-diagonal contributions
         # with v as vector of variations (each element contains yields under variation)
@@ -302,18 +313,28 @@ def yield_stdev(
         v_times_m_times_v = sym_uncs[:, np.newaxis, ...] * m_times_v
         # finally perform sums over i and j, remaining indices: channel, bin
         # ak.flatten due to https://github.com/scikit-hep/awkward-1.0/issues/1283
-        assert v_times_m_times_v.ndim == 4, (
-            "unexpected dimensionality of array, please report if you run into this: "
-            "https://github.com/scikit-hep/cabinetry/issues/326"
-        )
-        total_variance = np.sum(ak.flatten(v_times_m_times_v, axis=1), axis=0)
+        # assert v_times_m_times_v.ndim == 4, (
+        #     "unexpected dimensionality of array, please report if you run into this: "
+        #     "https://github.com/scikit-hep/cabinetry/issues/326"
+        # )
+        total_variance = ak.sum(ak.flatten(v_times_m_times_v, axis=1), axis=0)
 
     # convert to standard deviations per bin and per channel
     n_channels = len(model.config.channels)
+    # indices: (channel, sample, bin)
     total_stdev_per_bin = np.sqrt(total_variance[:n_channels])
+    # indices: (channel, sample)
     total_stdev_per_channel = ak.flatten(np.sqrt(total_variance[n_channels:]))
     log.debug(f"total stdev is {total_stdev_per_bin}")
     log.debug(f"total stdev per channel is {total_stdev_per_channel}")
+
+    for i, channel in enumerate(model.config.channels):
+        print(f"channel: {channel}")
+        for j, sample in enumerate(model.config.samples):
+            print(f"sample: {sample:15s}, uncs per bin: {total_stdev_per_bin[i, j]}, "
+            f"uncs per channel: {total_stdev_per_channel[i,j]:.3f}")
+        print(f"total: uncs per bin: {total_stdev_per_bin[i, -1]}, "
+        f"uncs per channel: {total_stdev_per_channel[i,-1]:.3f}")
 
     # convert to lists
     total_stdev_per_bin = ak.to_list(total_stdev_per_bin)
