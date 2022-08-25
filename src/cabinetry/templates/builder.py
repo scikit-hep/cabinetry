@@ -317,7 +317,17 @@ class _Builder:
                 weight=weight,
                 selection_filter=selection_filter,
             )
+        elif self.method == "coffea":
+            from cabinetry.contrib import coffea_wrapper
 
+            histogram = coffea_wrapper.build_single_histogram(
+                ntuple_paths,
+                pos_in_file,
+                variable,
+                bins,
+                weight=weight,
+                selection_filter=selection_filter,
+            )
         else:
             raise NotImplementedError(f"unknown backend {self.method}")
 

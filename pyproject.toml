@@ -42,5 +42,6 @@ module = [
     "iminuit",
     "jsonschema",
     "scipy.*",
+    "coffea.*"
 ]
 ignore_missing_imports = true
