@@ -189,7 +189,7 @@ def _yields_per_channel(
             sample_dict.update(
                 {
                     channel_name: f"{model_yields[i_chan][i_sam]:.2f} "
-                    f"\u00B1 {total_stdev_model[i_chan][i_sam]:.3f}"
+                    f"\u00B1 {total_stdev_model[i_chan][i_sam]:.2f}"
                 }
             )
         table.append(sample_dict)
