@@ -87,7 +87,7 @@ def _save_tables(
 def _yields_per_bin(
     model: pyhf.pdf.Model,
     model_yields: List[List[List[float]]],
-    total_stdev_model: List[List[float]],
+    total_stdev_model: List[List[List[float]]],
     data: List[List[float]],
     channels: List[str],
     label: str,
@@ -97,8 +97,8 @@ def _yields_per_bin(
     Args:
         model (pyhf.pdf.Model): the model which the table corresponds to
         model_yields (List[List[List[float]]]): yields per channel, sample, and bin
-        total_stdev_model (List[List[float]]): total model standard deviation per
-            channel and bin
+        total_stdev_model (List[List[List[float]]]): total model standard deviation per
+            channel, sample and bin
         data (List[List[float]]): data yield per channel and bin
         channels (List[str]): names of channels to use
         label (str): label for model prediction to include in log
@@ -121,7 +121,8 @@ def _yields_per_bin(
                     {
                         _header_name(
                             channel_name, i_bin
-                        ): f"{model_yields[i_chan][i_sam][i_bin]:.2f}"
+                        ): f"{model_yields[i_chan][i_sam][i_bin]:.2f} "
+                        f"\u00B1 {total_stdev_model[i_chan][i_sam][i_bin]:.2f}"
                     }
                 )
         table.append(sample_dict)
@@ -140,7 +141,7 @@ def _yields_per_bin(
                 {
                     header_name: (
                         f"{total_model[i_bin]:.2f} "
-                        f"\u00B1 {total_stdev_model[i_chan][i_bin]:.2f}"
+                        f"\u00B1 {total_stdev_model[i_chan][-1][i_bin]:.2f}"
                     )
                 }
             )
@@ -157,7 +158,7 @@ def _yields_per_bin(
 def _yields_per_channel(
     model: pyhf.pdf.Model,
     model_yields: List[List[float]],
-    total_stdev_model: List[float],
+    total_stdev_model: List[List[float]],
     data: List[float],
     channels: List[str],
     label: str,
@@ -167,7 +168,8 @@ def _yields_per_channel(
     Args:
         model (pyhf.pdf.Model): the model which the table corresponds to
         model_yields (List[List[float]]): yields per channel and sample
-        total_stdev_model (List[float]): total model standard deviation per channel
+        total_stdev_model (List[List[float]]): total model standard deviation per
+            channel and sample
         data (List[float]): data yield per channel
         channels (List[str]): names of channels to use
         label (str): label for model prediction to include in log
@@ -184,7 +186,12 @@ def _yields_per_channel(
     for i_sam, sample_name in enumerate(model.config.samples):
         sample_dict = {"sample": sample_name}  # one dict per sample
         for i_chan, channel_name in zip(channel_indices, channels):
-            sample_dict.update({channel_name: f"{model_yields[i_chan][i_sam]:.2f}"})
+            sample_dict.update(
+                {
+                    channel_name: f"{model_yields[i_chan][i_sam]:.2f} "
+                    f"\u00B1 {total_stdev_model[i_chan][i_sam]:.3f}"
+                }
+            )
         table.append(sample_dict)
 
     # dicts for total model prediction and data
@@ -193,7 +200,10 @@ def _yields_per_channel(
     for i_chan, channel_name in zip(channel_indices, channels):
         total_model = np.sum(model_yields[i_chan], axis=0)  # sum over samples
         total_dict.update(
-            {channel_name: f"{total_model:.2f} \u00B1 {total_stdev_model[i_chan]:.2f}"}
+            {
+                channel_name: f"{total_model:.2f} "
+                f"\u00B1 {total_stdev_model[i_chan][-1]:.2f}"
+            }
         )
         data_dict.update({channel_name: f"{data[i_chan]:.2f}"})
     table += [total_dict, data_dict]

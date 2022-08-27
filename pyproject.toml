@@ -37,6 +37,7 @@ python_version = "3.7"
 module = [
     "uproot",
     "awkward",
+    "awkward._v2",
     "pyhf",
     "matplotlib.*",
     "iminuit",
