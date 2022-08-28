@@ -345,19 +345,6 @@ def yield_stdev(
     log.debug(f"total stdev is {total_stdev_per_bin[:, -1, :]}")
     log.debug(f"total stdev per channel is {total_stdev_per_channel[:, -1]}")
 
-    # temporary output for debugging purposes
-    for i, channel in enumerate(model.config.channels):
-        print(f"channel: {channel}")
-        for j, sample in enumerate(model.config.samples):
-            print(
-                f"sample: {sample:15s}, uncs per bin: {total_stdev_per_bin[i, j]}, "
-                f"uncs per channel: {total_stdev_per_channel[i,j]:.3f}"
-            )
-        print(
-            f"total: uncs per bin: {total_stdev_per_bin[i, -1]}, "
-            f"uncs per channel: {total_stdev_per_channel[i,-1]:.3f}"
-        )
-
     # convert to lists
     total_stdev_per_bin = ak.to_list(total_stdev_per_bin)
     total_stdev_per_channel = ak.to_list(total_stdev_per_channel)
