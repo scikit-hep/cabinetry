@@ -279,7 +279,7 @@ def yield_stdev(
         # indices: variation, channel, sample, bin
         up_variations.append(up_yields)
 
-        # total model distribution with this parameter varied down
+        # model distribution per sample with this parameter varied down
         down_comb = pyhf.tensorlib.to_numpy(
             model.main_model.expected_data(down_pars, return_by_sample=True)
         )
