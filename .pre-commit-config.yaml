@@ -39,7 +39,7 @@ repos:
         # configuration duplicated in setup.cfg
         args: ["--match=(?!setup|example).*\\.py'", "--match-dir='^(?!(tests|utils|docs)).*'", "--convention=google"]
 -   repo: https://github.com/codespell-project/codespell
-    rev: v2.1.0
+    rev: v2.2.1
     hooks:
     -   id: codespell
         args: ["-L", "hist", "src", "tests", "utils", "docs/*rst"]
