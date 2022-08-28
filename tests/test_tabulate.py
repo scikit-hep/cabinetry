@@ -210,7 +210,7 @@ def test_yields(
     caplog.set_level(logging.DEBUG)
     model = pyhf.Workspace(example_spec).model()
     model_pred = model_utils.ModelPrediction(
-        model, [[[10.0]]], [[[0.3]]], [[0.3]], "pred"
+        model, [[[10.0]]], [[[0.3], [0.3]]], [[0.3, 0.3]], "pred"
     )
     data = [12.0, 1.0]  # with auxdata to strip via mock
 
@@ -218,7 +218,7 @@ def test_yields(
     assert mock_data.call_args_list == [((model, data), {})]
     assert mock_filter.call_args_list == [((model, None), {})]
     assert mock_bin.call_args_list == [
-        ((model, [[[10.0]]], [[[0.3]]], [[12.0]], ["SR"], "pred"), {})
+        ((model, [[[10.0]]], [[[0.3], [0.3]]], [[12.0]], ["SR"], "pred"), {})
     ]
     assert mock_channel.call_count == 0
     assert mock_save.call_count == 1
@@ -245,7 +245,7 @@ def test_yields(
     )
     assert mock_bin.call_count == 1  # one call from before
     assert mock_channel.call_args_list == [
-        ((model, [[10.0]], [[0.3]], [12.0], ["SR"], "pred"), {})
+        ((model, [[10.0]], [[0.3, 0.3]], [12.0], ["SR"], "pred"), {})
     ]
     assert table_dict == {"yields_per_channel": [{"yields_per_channel": None}]}
     assert mock_save.call_count == 1  # one call from before, no new call
