@@ -286,7 +286,7 @@ class WorkspaceBuilder:
                 modifiers = []
 
                 # gammas
-                if sample.get("DisableStaterror", False):
+                if not sample.get("DisableStaterror", False):
                     # staterror modifiers are added unless DisableStaterror is True
                     gammas = {}
                     gammas.update(
