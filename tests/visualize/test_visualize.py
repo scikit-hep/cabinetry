@@ -149,7 +149,7 @@ def test_data_mc(mock_data, mock_filter, mock_dict, mock_bins, mock_draw, exampl
     figure_folder = "tmp"
     model = pyhf.Workspace(example_spec).model()
     model_pred = model_utils.ModelPrediction(
-        model, [[[10.0]]], [[0.3]], [0.3], "pre-fit"
+        model, [[[10.0]]], [[[0.3], [0.3]]], [[0.3, 0.3]], "pre-fit"
     )
     data = [12.0, 1.0]
 
@@ -198,7 +198,7 @@ def test_data_mc(mock_data, mock_filter, mock_dict, mock_bins, mock_draw, exampl
     # do not save figure, histogram input mode: no binning or variable specified (via
     # side effect)
     model_pred = model_utils.ModelPrediction(
-        model, [[[11.0]]], [[0.2]], [0.2], "post-fit"
+        model, [[[11.0]]], [[[0.2], [0.2]]], [[0.2, 0.2]], "post-fit"
     )
     _ = visualize.data_mc(
         model_pred,

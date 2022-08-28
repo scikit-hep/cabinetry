@@ -235,7 +235,7 @@ def data_mc(
 
         fig = plot_model.data_mc(
             histogram_dict_list,
-            np.asarray(model_prediction.total_stdev_model_bins[i_chan]),
+            np.asarray(model_prediction.total_stdev_model_bins[i_chan][-1]),
             bin_edges,
             figure_path=figure_path,
             log_scale=log_scale,

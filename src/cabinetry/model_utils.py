@@ -5,7 +5,12 @@ import json
 import logging
 from typing import Any, DefaultDict, Dict, List, NamedTuple, Optional, Tuple, Union
 
-import awkward as ak
+try:
+    # use awkward v2
+    import awkward._v2 as ak
+except ModuleNotFoundError:  # pragma: no cover
+    # fallback if the _v2 submodule disappears after the full v2 release
+    import awkward as ak  # pragma: no cover
 import numpy as np
 import pyhf
 
@@ -16,7 +21,7 @@ log = logging.getLogger(__name__)
 
 
 # cache holding results from yield uncertainty calculations
-_YIELD_STDEV_CACHE: Dict[Any, Tuple[List[List[float]], List[float]]] = {}
+_YIELD_STDEV_CACHE: Dict[Any, Tuple[List[List[List[float]]], List[List[float]]]] = {}
 
 
 class ModelPrediction(NamedTuple):
@@ -26,17 +31,18 @@ class ModelPrediction(NamedTuple):
         model (pyhf.pdf.Model): model to which prediction corresponds to
         model_yields (List[List[List[float]]]): yields per sample, channel and bin,
             indices: channel, sample, bin
-        total_stdev_model_bins (List[List[float]]): total yield uncertainty per channel
-            and per bin, indices: channel, bin
-        total_stdev_model_channels (List[float]): total yield uncertainty per channel,
-            index: channel
+        total_stdev_model_bins (List[List[List[float]]]): total yield uncertainty per
+            channel, sample and bin, indices: channel, sample, bin (last sample: sum
+            over samples)
+        total_stdev_model_channels (List[List[float]]): total yield uncertainty per
+            channel and sample, indices: channel, sample (last sample: sum over samples)
         label (str): label for the prediction, e.g. "pre-fit" or "post-fit"
     """
 
     model: pyhf.pdf.Model
     model_yields: List[List[List[float]]]
-    total_stdev_model_bins: List[List[float]]
-    total_stdev_model_channels: List[float]
+    total_stdev_model_bins: List[List[List[float]]]
+    total_stdev_model_channels: List[List[float]]
     label: str
 
 
@@ -193,14 +199,15 @@ def yield_stdev(
     parameters: np.ndarray,
     uncertainty: np.ndarray,
     corr_mat: np.ndarray,
-) -> Tuple[List[List[float]], List[float]]:
-    """Calculates symmetrized yield standard deviation of a model, per bin and channel.
+) -> Tuple[List[List[List[float]]], List[List[float]]]:
+    """Calculates symmetrized model yield standard deviation per channel / sample / bin.
 
-    Returns both the uncertainties per bin (in a list of channels), and the uncertainty
-    of the total yield per channel (again, for a list of channels). To calculate the
-    uncertainties for the total yield, the function internally treats the sum of yields
-    per channel like another channel with one bin. The results of this function are
-    cached to speed up subsequent calls with the same arguments.
+    Returns both the uncertainties per bin (in a list of channels and samples), and the
+    uncertainty of the total yield per channel (again, for a list of channels and
+    samples). To calculate the uncertainties for the total yield per channel, the
+    function internally treats the sum of yields per channel like another channel with
+    one bin. Similarly, the sum over samples is treated as another sample. The results
+    of this function are cached to speed up subsequent calls with the same arguments.
 
     Args:
         model (pyhf.pdf.Model): the model for which to calculate the standard deviations
@@ -210,9 +217,13 @@ def yield_stdev(
         corr_mat (np.ndarray): correlation matrix
 
     Returns:
-        Tuple[List[List[float]], List[float]]:
-            - list of channels, each channel is a list of standard deviations per bin
-            - list of standard deviations per channel
+        Tuple[List[List[List[float]]], List[List[float]]]:
+            - list of channels, each channel is a list of samples, and each sample a
+              list of standard deviations per bin (the last sample corresponds to a sum
+              over all samples)
+            - list of standard deviations per channel, each channel is a list containing
+              the standard deviations per sample (the last sample corresponds to a sum
+              over all samples)
     """
     # check whether results are already stored in cache
     cached_results = _YIELD_STDEV_CACHE.get(
@@ -230,10 +241,12 @@ def yield_stdev(
 
     # the lists up_variations and down_variations will contain the model distributions
     # with all parameters varied individually within uncertainties
-    # indices: variation, channel, bin
+    # indices: variation, channel, sample, bin
     # following the channels contained in the model, there are additional entries with
     # yields summed per channel (internally treated like additional channels) to get the
     # per-channel uncertainties
+    # in the same way, the total model prediction is following the list of individual
+    # samples (and then treated like an additional sample)
     up_variations = []
     down_variations = []
 
@@ -246,28 +259,42 @@ def yield_stdev(
         down_pars = parameters.copy().astype(float)
         down_pars[i_par] -= uncertainty[i_par]
 
-        # total model distribution with this parameter varied up
+        # model distribution per sample with this parameter varied up
         up_comb = pyhf.tensorlib.to_numpy(
-            model.expected_data(up_pars, include_auxdata=False)
+            model.main_model.expected_data(up_pars, return_by_sample=True)
         )
-        # turn into list of channels
+        # attach another entry with the total model prediction (sum over all samples)
+        # indices: sample, bin
+        up_comb = np.vstack((up_comb, np.sum(up_comb, axis=0)))
+        # turn into list of channels (keep all samples, select correct bins per channel)
+        # indices: channel, sample, bin
         up_yields = [
-            up_comb[model.config.channel_slices[ch]] for ch in model.config.channels
+            up_comb[:, model.config.channel_slices[ch]] for ch in model.config.channels
         ]
         # append list of yields summed per channel
-        up_yields += [np.asarray([sum(chan_yields)]) for chan_yields in up_yields]
+        up_yields += [
+            np.asarray(np.sum(chan_yields, axis=-1, keepdims=True))
+            for chan_yields in up_yields
+        ]
+        # indices: variation, channel, sample, bin
         up_variations.append(up_yields)
 
-        # total model distribution with this parameter varied down
+        # model distribution per sample with this parameter varied down
         down_comb = pyhf.tensorlib.to_numpy(
-            model.expected_data(down_pars, include_auxdata=False)
+            model.main_model.expected_data(down_pars, return_by_sample=True)
         )
+        # add total prediction (sum over samples)
+        down_comb = np.vstack((down_comb, np.sum(down_comb, axis=0)))
         # turn into list of channels
         down_yields = [
-            down_comb[model.config.channel_slices[ch]] for ch in model.config.channels
+            down_comb[:, model.config.channel_slices[ch]]
+            for ch in model.config.channels
         ]
         # append list of yields summed per channel
-        down_yields += [np.asarray([sum(chan_yields)]) for chan_yields in down_yields]
+        down_yields += [
+            np.asarray(np.sum(chan_yields, axis=-1, keepdims=True))
+            for chan_yields in down_yields
+        ]
         down_variations.append(down_yields)
 
     # convert to awkward arrays for further processing
@@ -275,13 +302,14 @@ def yield_stdev(
     down_variations_ak = ak.from_iter(down_variations)
 
     # calculate symmetric uncertainties for all components
+    # indices: variation, channel (last entries sums), sample (last entry sum), bin
     sym_uncs = (up_variations_ak - down_variations_ak) / 2
 
-    # calculate total variance, indexed by channel and bin (per-channel numbers act like
-    # additional channels with one bin each)
+    # calculate total variance, indexed by channel, sample, bin (per-channel numbers act
+    # like additional channels with one bin each)
     if np.count_nonzero(corr_mat - np.diagflat(np.ones_like(parameters))) == 0:
         # no off-diagonal contributions from correlation matrix (e.g. pre-fit)
-        total_variance = np.sum(np.power(sym_uncs, 2), axis=0)
+        total_variance = ak.sum(np.power(sym_uncs, 2), axis=0)
     else:
         # full calculation including off-diagonal contributions
         # with v as vector of variations (each element contains yields under variation)
@@ -289,31 +317,33 @@ def yield_stdev(
         # variance = sum_i sum_j v[i] * M[i, j] * v[j]
         # where the product between elements of v again is elementwise (multiplying bin
         # yields), and the final variance shape is the same as element of v (yield
-        # uncertainties per bin and per channel)
+        # uncertainties per bin, sample, channel)
 
         # possible optimizations that could be considered here:
         #   - skipping staterror-staterror terms for per-bin calculation (orthogonal)
         #   - taking advantage of correlation matrix symmetry
         #   - (optional) skipping combinations with correlations below threshold
 
-        # calculate M[i, j] * v[j] first, indices: pars (i), pars (j), channel, bin
-        m_times_v = corr_mat[..., np.newaxis, np.newaxis] * sym_uncs[np.newaxis, ...]
-        # now multiply by v[i] as well, indices: pars(i), pars(j), channel, bin
-        v_times_m_times_v = sym_uncs[:, np.newaxis, ...] * m_times_v
-        # finally perform sums over i and j, remaining indices: channel, bin
-        # ak.flatten due to https://github.com/scikit-hep/awkward-1.0/issues/1283
-        assert v_times_m_times_v.ndim == 4, (
-            "unexpected dimensionality of array, please report if you run into this: "
-            "https://github.com/scikit-hep/cabinetry/issues/326"
+        # calculate M[i, j] * v[j] first
+        # indices: pars (i), pars (j), channel, sample, bin
+        m_times_v = (
+            corr_mat[..., np.newaxis, np.newaxis, np.newaxis]
+            * sym_uncs[np.newaxis, ...]
         )
-        total_variance = np.sum(ak.flatten(v_times_m_times_v, axis=1), axis=0)
+        # now multiply by v[i] as well, indices: pars(i), pars(j), channel, sample, bin
+        v_times_m_times_v = sym_uncs[:, np.newaxis, ...] * m_times_v
+        # finally perform sums over i and j, remaining indices: channel, sample, bin
+        total_variance = ak.sum(ak.sum(v_times_m_times_v, axis=1), axis=0)
 
     # convert to standard deviations per bin and per channel
     n_channels = len(model.config.channels)
+    # indices: (channel, sample, bin)
     total_stdev_per_bin = np.sqrt(total_variance[:n_channels])
-    total_stdev_per_channel = ak.flatten(np.sqrt(total_variance[n_channels:]))
-    log.debug(f"total stdev is {total_stdev_per_bin}")
-    log.debug(f"total stdev per channel is {total_stdev_per_channel}")
+    # indices: (channel, sample)
+    total_stdev_per_channel = ak.sum(np.sqrt(total_variance[n_channels:]), axis=-1)
+    # log total stdev per bin / channel (-1 index for sample sum)
+    log.debug(f"total stdev is {total_stdev_per_bin[:, -1, :]}")
+    log.debug(f"total stdev per channel is {total_stdev_per_channel[:, -1]}")
 
     # convert to lists
     total_stdev_per_bin = ak.to_list(total_stdev_per_bin)
