@@ -541,7 +541,7 @@ def test_ranking(mock_fit, example_spec):
     assert np.allclose(ranking_results.postfit_up, [0.2])
     assert np.allclose(ranking_results.postfit_down, [-0.2])
 
-    # no reference results, init/fixed pars, par bounds
+    # no reference results, init/fixed pars, par bounds, strategy/maxiter/tolerance
     ranking_results = fit.ranking(
         model,
         data,
@@ -549,6 +549,9 @@ def test_ranking(mock_fit, example_spec):
         init_pars=[1.5, 1.0],
         fix_pars=[False, False],
         par_bounds=[(0, 5), (0.1, 10)],
+        strategy=2,
+        maxiter=100,
+        tolerance=0.01,
         custom_fit=True,
     )
     assert mock_fit.call_count == 9
@@ -559,19 +562,28 @@ def test_ranking(mock_fit, example_spec):
             "init_pars": [1.5, 1.0],
             "fix_pars": [False, False],
             "par_bounds": [(0, 5), (0.1, 10)],
+            "strategy": 2,
+            "maxiter": 100,
+            "tolerance": 0.01,
             "custom_fit": True,
         },
     )
-    # fits for impact
+    # fits for impact (comparing each option separately since init_pars needs allclose)
     assert mock_fit.call_args_list[-2][0] == (model, data)
     assert np.allclose(mock_fit.call_args_list[-2][1]["init_pars"], [1.5, 1.2])
     assert mock_fit.call_args_list[-2][1]["fix_pars"] == [False, True]
     assert mock_fit.call_args_list[-2][1]["par_bounds"] == [(0, 5), (0.1, 10)]
+    assert mock_fit.call_args_list[-2][1]["strategy"] == 2
+    assert mock_fit.call_args_list[-2][1]["maxiter"] == 100
+    assert mock_fit.call_args_list[-2][1]["tolerance"] == 0.01
     assert mock_fit.call_args_list[-2][1]["custom_fit"] is True
     assert mock_fit.call_args_list[-1][0] == (model, data)
     assert np.allclose(mock_fit.call_args_list[-1][1]["init_pars"], [1.5, 0.6])
     assert mock_fit.call_args_list[-1][1]["fix_pars"] == [False, True]
     assert mock_fit.call_args_list[-1][1]["par_bounds"] == [(0, 5), (0.1, 10)]
+    assert mock_fit.call_args_list[-1][1]["strategy"] == 2
+    assert mock_fit.call_args_list[-1][1]["maxiter"] == 100
+    assert mock_fit.call_args_list[-1][1]["tolerance"] == 0.01
     assert mock_fit.call_args_list[-1][1]["custom_fit"] is True
     # ranking results
     assert np.allclose(ranking_results.prefit_up, [0.0])
