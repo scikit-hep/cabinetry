@@ -8,9 +8,9 @@ from typing import Any, DefaultDict, Dict, List, NamedTuple, Optional, Tuple, Un
 try:
     # use awkward v2
     import awkward._v2 as ak
-except ModuleNotFoundError:
+except ModuleNotFoundError:  # pragma: no cover
     # fallback if the _v2 submodule disappears after the full v2 release
-    import awkward as ak
+    import awkward as ak  # pragma: no cover
 import numpy as np
 import pyhf
 
