@@ -13,8 +13,8 @@ from cabinetry.fit.results_containers import FitResults
 def test_ModelPrediction(example_spec):
     model = pyhf.Workspace(example_spec).model()
     model_yields = [[[10.0]]]
-    total_stdev_model_bins = [[2.0]]
-    total_stdev_model_channels = [2.0]
+    total_stdev_model_bins = [[[2.0], [2.0]]]
+    total_stdev_model_channels = [[2.0, 2.0]]
     label = "abc"
     model_prediction = model_utils.ModelPrediction(
         model, model_yields, total_stdev_model_bins, total_stdev_model_channels, label
@@ -158,8 +158,8 @@ def test_yield_stdev(example_spec, example_spec_multibin):
     total_stdev_bin, total_stdev_chan = model_utils.yield_stdev(
         model, parameters, uncertainty, corr_mat
     )
-    assert np.allclose(total_stdev_bin, [[8.03150606]])
-    assert np.allclose(total_stdev_chan, [8.03150606])
+    assert np.allclose(total_stdev_bin, [[[8.03150606], [8.03150606]]])
+    assert np.allclose(total_stdev_chan, [[8.03150606, 8.03150606]])
 
     # pre-fit
     parameters = np.asarray([1.0, 1.0])
@@ -168,8 +168,8 @@ def test_yield_stdev(example_spec, example_spec_multibin):
     total_stdev_bin, total_stdev_chan = model_utils.yield_stdev(
         model, parameters, uncertainty, diag_corr_mat
     )
-    assert np.allclose(total_stdev_bin, [[2.56754823]])  # the staterror
-    assert np.allclose(total_stdev_chan, [2.56754823])
+    assert np.allclose(total_stdev_bin, [[[2.56754823], [2.56754823]]])  # the staterror
+    assert np.allclose(total_stdev_chan, [[2.56754823, 2.56754823]])
 
     # multiple channels, bins, staterrors
     model = pyhf.Workspace(example_spec_multibin).model()
@@ -186,9 +186,12 @@ def test_yield_stdev(example_spec, example_spec_multibin):
     total_stdev_bin, total_stdev_chan = model_utils.yield_stdev(
         model, parameters, uncertainty, corr_mat
     )
-    expected_stdev_bin = [[8.056054, 1.670629], [2.775377]]
-    expected_stdev_chan = [9.596340, 2.775377]
-    for i_reg in range(2):
+    expected_stdev_bin = [
+        [[8.056054, 1.670629], [8.056054, 1.670629]],
+        [[2.775377], [2.775377]],
+    ]
+    expected_stdev_chan = [[9.596340, 9.596340], [2.775377, 2.775377]]
+    for i_reg in range(2):  # two channels
         assert np.allclose(total_stdev_bin[i_reg], expected_stdev_bin[i_reg])
         assert np.allclose(total_stdev_chan[i_reg], expected_stdev_chan[i_reg])
 
@@ -214,9 +217,12 @@ def test_yield_stdev(example_spec, example_spec_multibin):
 @mock.patch(
     "cabinetry.model_utils.yield_stdev",
     side_effect=[
-        ([[5.0, 2.0], [1.0]], [5.38516481, 1.0]),
-        ([[0.3]], [0.3]),
-        ([[0.3]], [0.3]),
+        (
+            [[[5.0, 2.0], [5.0, 2.0]], [[1.0], [1.0]]],
+            [[5.38516481, 5.38516481], [1.0, 1.0]],
+        ),
+        ([[[0.3], [0.3]]], [[0.3, 0.3]]),
+        ([[[0.3], [0.3]]], [[0.3, 0.3]]),
     ],
 )
 @mock.patch(
@@ -242,8 +248,13 @@ def test_prediction(
     assert model_pred.model == model
     # yields from pyhf expected_data call, per-bin / per-channel uncertainty from mock
     assert model_pred.model_yields == [[[25.0, 5.0]], [[8.0]]]
-    assert model_pred.total_stdev_model_bins == [[5.0, 2.0], [1.0]]
-    assert np.allclose(model_pred.total_stdev_model_channels, [5.38516481, 1.0])
+    assert model_pred.total_stdev_model_bins == [
+        [[5.0, 2.0], [5.0, 2.0]],
+        [[1.0], [1.0]],
+    ]
+    assert np.allclose(
+        model_pred.total_stdev_model_channels, [[5.38516481, 5.38516481], [1.0, 1.0]]
+    )
     assert model_pred.label == "pre-fit"
 
     # Asimov parameter calculation and pre-fit uncertainties
@@ -272,8 +283,8 @@ def test_prediction(
     model_pred = model_utils.prediction(model, fit_results=fit_results)
     assert model_pred.model == model
     assert np.allclose(model_pred.model_yields, [[[57.54980000]]])  # new par value
-    assert model_pred.total_stdev_model_bins == [[0.3]]  # from mock
-    assert model_pred.total_stdev_model_channels == [0.3]  # from mock
+    assert model_pred.total_stdev_model_bins == [[[0.3], [0.3]]]  # from mock
+    assert model_pred.total_stdev_model_channels == [[0.3, 0.3]]  # from mock
     assert model_pred.label == "post-fit"
     assert "parameter names in fit results and model do not match" not in [
         rec.message for rec in caplog.records

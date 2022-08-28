@@ -162,18 +162,36 @@ def test_integration(tmp_path, ntuple_creator, caplog):
     model_prefit = cabinetry.model_utils.prediction(model)
     assert np.allclose(
         model_prefit.total_stdev_model_bins,
-        [[69.040789, 58.343328, 38.219599, 45.296964]],
+        [
+            [
+                [69.040789, 58.329118, 37.973787, 45.137157],  # background
+                [0.0, 0.100772, 1.487773, 1.620867],  # signal
+                [69.040789, 58.343328, 38.219599, 45.296964],  # sum over samples
+            ]
+        ],
     )
-    assert np.allclose(model_prefit.total_stdev_model_channels, [136.791978])
+    assert np.allclose(
+        model_prefit.total_stdev_model_channels, [[136.368732, 2.851565, 136.791978]]
+    )
     _ = cabinetry.visualize.data_mc(model_prefit, data, close_figure=True)
 
     model_postfit = cabinetry.model_utils.prediction(model, fit_results=fit_results)
     assert np.allclose(
         model_postfit.total_stdev_model_bins,
-        [[11.898333, 7.283185, 7.414715, 7.687922]],
+        [
+            [
+                [11.898551, 7.513216, 21.002006, 24.284847],  # background
+                [0.0, 1.467646, 22.137293, 22.269200],  # signal
+                [11.898551, 7.283171, 7.414715, 7.687966],  # sum over samples
+            ]
+        ],
         rtol=1e-4,
     )
-    assert np.allclose(model_postfit.total_stdev_model_channels, [20.439750], atol=5e-4)
+    assert np.allclose(
+        model_postfit.total_stdev_model_channels,
+        [[41.043814, 45.814417, 20.439575]],
+        atol=5e-4,
+    )
     _ = cabinetry.visualize.data_mc(model_postfit, data, close_figure=True)
 
     # nuisance parameter ranking
