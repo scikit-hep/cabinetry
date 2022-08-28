@@ -198,8 +198,8 @@
                     "description": "if it is a data sample",
                     "type": "boolean"
                 },
-                "AddStaterror": {
-                    "description": "whether to automatically include a staterror modifier for this sample, defaults to True",
+                "DisableStaterror": {
+                    "description": "whether to disable the automatic inclusion of staterror modifiers for this sample, defaults to False",
                     "type": "boolean"
                 },
                 "Regions": {

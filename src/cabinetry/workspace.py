@@ -286,8 +286,8 @@ class WorkspaceBuilder:
                 modifiers = []
 
                 # gammas
-                if sample.get("AddStaterror", True):
-                    # staterror modifiers added by default, controlled via AddStaterror
+                if sample.get("DisableStaterror", False):
+                    # staterror modifiers are added unless DisableStaterror is True
                     gammas = {}
                     gammas.update(
                         {"name": "staterror_" + region["Name"].replace(" ", "-")}
