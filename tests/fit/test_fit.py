@@ -635,6 +635,9 @@ def test_scan(mock_fit, example_spec):
         "init_pars": None,
         "fix_pars": None,
         "par_bounds": None,
+        "strategy": None,
+        "maxiter": None,
+        "tolerance": None,
         "custom_fit": False,
     }
     # fits in scan
@@ -644,10 +647,14 @@ def test_scan(mock_fit, example_spec):
             "init_pars": [scan_val, 1.1],
             "fix_pars": [True, True],
             "par_bounds": None,
+            "strategy": None,
+            "maxiter": None,
+            "tolerance": None,
             "custom_fit": False,
         }
 
-    # parameter range specified, custom fit, init/fixed pars, par bounds
+    # parameter range specified, custom fit, init/fixed pars, par bounds,
+    # strategy/maxiter/tolerance
     scan_results = fit.scan(
         model,
         data,
@@ -657,6 +664,9 @@ def test_scan(mock_fit, example_spec):
         init_pars=[1.0, 1.0],
         fix_pars=[False, False],
         par_bounds=[(0, 5), (0.1, 10)],
+        strategy=2,
+        maxiter=100,
+        tolerance=0.01,
         custom_fit=True,
     )
     expected_custom_scan = np.linspace(1.0, 1.5, 5)
@@ -666,6 +676,9 @@ def test_scan(mock_fit, example_spec):
         "init_pars": [1.5, 1.0],  # last step of scan
         "fix_pars": [True, False],
         "par_bounds": [(0, 5), (0.1, 10)],
+        "strategy": 2,
+        "maxiter": 100,
+        "tolerance": 0.01,
         "custom_fit": True,
     }
 
