@@ -159,9 +159,9 @@ def test_integration(tmp_path, ntuple_creator, caplog):
     caplog.clear()
 
     # pre- and post-fit yield uncertainties
-    model_prefit = cabinetry.model_utils.prediction(model)
+    prediction_prefit = cabinetry.model_utils.prediction(model)
     assert np.allclose(
-        model_prefit.total_stdev_model_bins,
+        prediction_prefit.total_stdev_model_bins,
         [
             [
                 [69.040789, 58.329118, 37.973787, 45.137157],  # background
@@ -171,13 +171,16 @@ def test_integration(tmp_path, ntuple_creator, caplog):
         ],
     )
     assert np.allclose(
-        model_prefit.total_stdev_model_channels, [[136.368732, 2.851565, 136.791978]]
+        prediction_prefit.total_stdev_model_channels,
+        [[136.368732, 2.851565, 136.791978]],
     )
-    _ = cabinetry.visualize.data_mc(model_prefit, data, close_figure=True)
+    _ = cabinetry.visualize.data_mc(prediction_prefit, data, close_figure=True)
 
-    model_postfit = cabinetry.model_utils.prediction(model, fit_results=fit_results)
+    prediction_postfit = cabinetry.model_utils.prediction(
+        model, fit_results=fit_results
+    )
     assert np.allclose(
-        model_postfit.total_stdev_model_bins,
+        prediction_postfit.total_stdev_model_bins,
         [
             [
                 [11.898551, 7.513216, 21.002006, 24.284847],  # background
@@ -188,11 +191,11 @@ def test_integration(tmp_path, ntuple_creator, caplog):
         rtol=1e-4,
     )
     assert np.allclose(
-        model_postfit.total_stdev_model_channels,
+        prediction_postfit.total_stdev_model_channels,
         [[41.043814, 45.814417, 20.439575]],
         atol=2e-3,
     )
-    _ = cabinetry.visualize.data_mc(model_postfit, data, close_figure=True)
+    _ = cabinetry.visualize.data_mc(prediction_postfit, data, close_figure=True)
 
     # nuisance parameter ranking
     ranking_results = cabinetry.fit.ranking(

@@ -40,12 +40,14 @@ if __name__ == "__main__":
     cabinetry.visualize.correlation_matrix(fit_results)
 
     # obtain pre- and post-fit model predictions
-    model_prefit = cabinetry.model_utils.prediction(model)
-    model_postfit = cabinetry.model_utils.prediction(model, fit_results=fit_results)
+    prediction_prefit = cabinetry.model_utils.prediction(model)
+    prediction_postfit = cabinetry.model_utils.prediction(
+        model, fit_results=fit_results
+    )
 
     # show post-fit yield table
-    cabinetry.tabulate.yields(model_postfit, data)
+    cabinetry.tabulate.yields(prediction_postfit, data)
 
     # visualize pre- and post-fit distributions
-    cabinetry.visualize.data_mc(model_prefit, data, config=config)
-    cabinetry.visualize.data_mc(model_postfit, data, config=config)
+    cabinetry.visualize.data_mc(prediction_prefit, data, config=config)
+    cabinetry.visualize.data_mc(prediction_postfit, data, config=config)
