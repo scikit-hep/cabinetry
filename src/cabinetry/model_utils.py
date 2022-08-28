@@ -302,11 +302,11 @@ def yield_stdev(
     down_variations_ak = ak.from_iter(down_variations)
 
     # calculate symmetric uncertainties for all components
-    # indices: variation, channel (last entry sum), sample (last entry sum), bin
+    # indices: variation, channel (last entries sums), sample (last entry sum), bin
     sym_uncs = (up_variations_ak - down_variations_ak) / 2
 
     # calculate total variance, indexed by channel, sample, bin (per-channel numbers act
-    # like additional one-bin channel)
+    # like additional channels with one bin each)
     if np.count_nonzero(corr_mat - np.diagflat(np.ones_like(parameters))) == 0:
         # no off-diagonal contributions from correlation matrix (e.g. pre-fit)
         total_variance = ak.sum(np.power(sym_uncs, 2), axis=0)
