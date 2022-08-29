@@ -724,7 +724,7 @@ def test_limit(example_spec_with_background, caplog):
     caplog.clear()
 
     # access negative POI values with lower bracket below zero
-    limit_results = fit.limit(model, data, bracket=(-1, 5), tolerance=0.05)
+    limit_results = fit.limit(model, data, bracket=(-1, 5), poi_tolerance=0.05)
     assert "skipping fit for Signal strength = -1.0000, setting CLs = 1" in [
         rec.message for rec in caplog.records
     ]
@@ -733,7 +733,7 @@ def test_limit(example_spec_with_background, caplog):
     caplog.clear()
 
     # convergence issues due to number of iterations
-    fit.limit(model, data, bracket=(0.1, 1), maxiter=1)
+    fit.limit(model, data, bracket=(0.1, 1), maxsteps=1)
     assert "one or more calculations did not converge, check log" in [
         rec.message for rec in caplog.records
     ]

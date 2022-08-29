@@ -763,8 +763,8 @@ def limit(
     data: List[float],
     *,
     bracket: Optional[Union[List[float], Tuple[float, float]]] = None,
-    tolerance: float = 0.01,
-    maxiter: int = 100,
+    poi_tolerance: float = 0.01,
+    maxsteps: int = 100,
     confidence_level: float = 0.95,
     poi_name: Optional[str] = None,
     init_pars: Optional[List[float]] = None,
@@ -787,9 +787,9 @@ def limit(
             lie between these values and the values must not be the same, defaults to
             None (then uses 0.1 as default lower value and the upper POI bound
             specified in the measurement as default upper value)
-        tolerance (float, optional): tolerance in POI value for convergence to target
-            CLs value (1-``confidence_level``), defaults to 0.01
-        maxiter (int, optional): maximum number of steps for limit finding, defaults to
+        poi_tolerance (float, optional): tolerance in POI value for convergence to
+            target CLs value (1-``confidence_level``), defaults to 0.01
+        maxsteps (int, optional): maximum number of steps for limit finding, defaults to
             100
         confidence_level (float, optional): confidence level for calculation, defaults
             to 0.95 (95%)
@@ -942,7 +942,7 @@ def limit(
                 bracket=bracket,
                 args=(model, data, cls_target, i_limit, limit_label),
                 method="brentq",
-                options={"xtol": tolerance, "maxiter": maxiter},
+                options={"xtol": poi_tolerance, "maxiter": maxsteps},
             )
         except ValueError:
             # invalid starting bracket is most common issue
