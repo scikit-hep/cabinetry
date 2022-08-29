@@ -286,11 +286,15 @@ class WorkspaceBuilder:
                 modifiers = []
 
                 # gammas
-                gammas = {}
-                gammas.update({"name": "staterror_" + region["Name"].replace(" ", "-")})
-                gammas.update({"type": "staterror"})
-                gammas.update({"data": sample_hist.stdev.tolist()})
-                modifiers.append(gammas)
+                if not sample.get("DisableStaterror", False):
+                    # staterror modifiers are added unless DisableStaterror is True
+                    gammas = {}
+                    gammas.update(
+                        {"name": "staterror_" + region["Name"].replace(" ", "-")}
+                    )
+                    gammas.update({"type": "staterror"})
+                    gammas.update({"data": sample_hist.stdev.tolist()})
+                    modifiers.append(gammas)
 
                 # modifiers can have region and sample dependence, which is checked
                 # check if normfactors affect sample in region, add modifiers as needed

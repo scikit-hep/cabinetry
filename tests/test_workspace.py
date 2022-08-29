@@ -256,7 +256,9 @@ def test_WorkspaceBuilder_sys_modifiers(mock_norm, mock_norm_shape):
     "cabinetry.workspace.histo.Histogram.from_config",
     return_value=histo.Histogram.from_arrays([0, 1, 2], [1.0, 2.0], [0.1, 0.1]),
 )
-@mock.patch("cabinetry.configuration.region_contains_sample", side_effect=[True, False])
+@mock.patch(
+    "cabinetry.configuration.region_contains_sample", side_effect=[True, False, True]
+)
 def test_WorkspaceBuilder_channels(mock_contains, mock_histogram):
     # should mock normfactor_modifiers / sys_modifiers
     example_config = {
@@ -313,6 +315,17 @@ def test_WorkspaceBuilder_channels(mock_contains, mock_histogram):
     )
     # no calls to read histogram content
     assert mock_histogram.call_count == 1
+
+    # staterror creation disabled
+    example_config = {
+        "General": {"HistogramFolder": "path"},
+        "Regions": [{"Name": "region_1"}],
+        "Samples": [{"Name": "signal", "DisableStaterror": True}],
+        "NormFactors": [],
+    }
+    ws_builder = workspace.WorkspaceBuilder(example_config)
+    channels = ws_builder.channels()
+    assert channels[0]["samples"][0]["modifiers"] == []
 
 
 def test_WorkspaceBuilder_measurements():

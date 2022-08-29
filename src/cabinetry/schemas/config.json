@@ -198,6 +198,10 @@
                     "description": "if it is a data sample",
                     "type": "boolean"
                 },
+                "DisableStaterror": {
+                    "description": "whether to disable the automatic inclusion of staterror modifiers for this sample, defaults to False",
+                    "type": "boolean"
+                },
                 "Regions": {
                     "description": "region(s) that contain the sample, defaults to all regions",
                     "$ref": "#/definitions/regions_setting"
