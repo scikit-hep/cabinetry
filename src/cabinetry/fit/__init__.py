@@ -81,6 +81,7 @@ def _fit_model_pyhf(
     Returns:
         FitResults: object storing relevant fit results
     """
+    _, initial_optimizer = pyhf.get_backend()  # store initial optimizer settings
     pyhf.set_backend(pyhf.tensorlib, pyhf.optimize.minuit_optimizer(verbose=1))
 
     # strategy=None is currently not supported in pyhf
@@ -124,7 +125,7 @@ def _fit_model_pyhf(
         best_twice_nll,
         minos_uncertainty=minos_results,
     )
-
+    pyhf.set_backend(pyhf.tensorlib, initial_optimizer)  # restore optimizer settings
     return fit_results
 
 
@@ -174,6 +175,7 @@ def _fit_model_custom(
     Returns:
         FitResults: object storing relevant fit results
     """
+    _, initial_optimizer = pyhf.get_backend()  # store initial optimizer settings
     pyhf.set_backend(pyhf.tensorlib, pyhf.optimize.minuit_optimizer(verbose=1))
 
     # use parameter settings provided in function arguments if they exist, else defaults
@@ -236,7 +238,7 @@ def _fit_model_custom(
         best_twice_nll,
         minos_uncertainty=minos_results,
     )
-
+    pyhf.set_backend(pyhf.tensorlib, initial_optimizer)  # restore optimizer settings
     return fit_results
 
 
@@ -774,6 +776,7 @@ def limit(
     Returns:
         LimitResults: observed and expected limits, CLs values, and scanned points
     """
+    _, initial_optimizer = pyhf.get_backend()  # store initial optimizer settings
     pyhf.set_backend(pyhf.tensorlib, pyhf.optimize.minuit_optimizer(verbose=1))
 
     # use POI given by kwarg, fall back to POI specified in model
@@ -984,6 +987,7 @@ def limit(
         poi_arr,
         confidence_level,
     )
+    pyhf.set_backend(pyhf.tensorlib, initial_optimizer)  # restore optimizer settings
     return limit_results
 
 
@@ -1012,6 +1016,7 @@ def significance(
     Returns:
         SignificanceResults: observed and expected p-values and significances
     """
+    _, initial_optimizer = pyhf.get_backend()  # store initial optimizer settings
     pyhf.set_backend(pyhf.tensorlib, pyhf.optimize.minuit_optimizer(verbose=1))
 
     log.info("calculating discovery significance")
@@ -1044,4 +1049,5 @@ def significance(
     significance_results = SignificanceResults(
         obs_p_val, obs_significance, exp_p_val, exp_significance
     )
+    pyhf.set_backend(pyhf.tensorlib, initial_optimizer)  # restore optimizer settings
     return significance_results

@@ -193,7 +193,7 @@ def test_integration(tmp_path, ntuple_creator, caplog):
     assert np.allclose(
         prediction_postfit.total_stdev_model_channels,
         [[41.043814, 45.814417, 20.439575]],
-        atol=2e-3,
+        atol=5e-3,
     )
     _ = cabinetry.visualize.data_mc(prediction_postfit, data, close_figure=True)
 
