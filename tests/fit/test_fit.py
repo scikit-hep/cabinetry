@@ -4,6 +4,7 @@ from unittest import mock
 
 import iminuit
 import numpy as np
+import pyhf
 import pytest
 
 from cabinetry import fit
@@ -29,6 +30,7 @@ def test_print_results(caplog):
 @pytest.mark.filterwarnings("ignore::RuntimeWarning")
 @mock.patch("cabinetry.fit._run_minos", return_value={"Signal strength": (-0.1, 0.2)})
 def test__fit_model_pyhf(mock_minos, example_spec, example_spec_multibin):
+    pyhf.set_backend("numpy", "scipy")
     model, data = model_utils.model_and_data(example_spec)
     fit_results = fit._fit_model_pyhf(model, data)
     assert np.allclose(fit_results.bestfit, [8.33624084, 1.1])
@@ -36,6 +38,7 @@ def test__fit_model_pyhf(mock_minos, example_spec, example_spec_multibin):
     assert fit_results.labels == ["Signal strength", "staterror_Signal-Region[0]"]
     assert np.allclose(fit_results.best_twice_nll, 7.82495235)
     assert np.allclose(fit_results.corr_mat, [[1.0, 0.0], [0.0, 0.0]])
+    assert pyhf.get_backend()[1].name == "scipy"  # optimizer was reset
 
     # Asimov fit, with fixed gamma (fixed not to Asimov MLE)
     model, data = model_utils.model_and_data(example_spec, asimov=True)
@@ -104,6 +107,7 @@ def test__fit_model_pyhf(mock_minos, example_spec, example_spec_multibin):
 @pytest.mark.filterwarnings("ignore::RuntimeWarning")
 @mock.patch("cabinetry.fit._run_minos", return_value={"Signal strength": (-0.1, 0.2)})
 def test__fit_model_custom(mock_minos, example_spec, example_spec_multibin):
+    pyhf.set_backend("numpy", "scipy")
     model, data = model_utils.model_and_data(example_spec)
     fit_results = fit._fit_model_custom(model, data)
     assert np.allclose(fit_results.bestfit, [8.33625071, 1.1])
@@ -111,6 +115,7 @@ def test__fit_model_custom(mock_minos, example_spec, example_spec_multibin):
     assert fit_results.labels == ["Signal strength", "staterror_Signal-Region[0]"]
     assert np.allclose(fit_results.best_twice_nll, 7.82495235)
     assert np.allclose(fit_results.corr_mat, [[1.0, 0.0], [0.0, 0.0]])
+    assert pyhf.get_backend()[1].name == "scipy"  # optimizer was reset
 
     # Asimov fit, with fixed gamma (fixed not to Asimov MLE)
     model, data = model_utils.model_and_data(example_spec, asimov=True)
@@ -659,6 +664,7 @@ def test_scan(mock_fit, example_spec):
 
 def test_limit(example_spec_with_background, caplog):
     caplog.set_level(logging.DEBUG)
+    pyhf.set_backend("numpy", "scipy")
 
     # expected values for results
     observed_limit = 0.749
@@ -686,6 +692,7 @@ def test_limit(example_spec_with_background, caplog):
     assert limit_results.confidence_level == 0.95
     # verify that POI values are sorted
     assert np.allclose(limit_results.poi_values, sorted(limit_results.poi_values))
+    assert pyhf.get_backend()[1].name == "scipy"  # optimizer was reset
     caplog.clear()
 
     # access negative POI values with lower bracket below zero
@@ -780,6 +787,7 @@ def test_limit(example_spec_with_background, caplog):
 
 
 def test_significance(example_spec_with_background):
+    pyhf.set_backend("numpy", "scipy")
     # increase observed data for smaller observed p-value
     example_spec_with_background["observations"][0]["data"] = [196]
 
@@ -789,6 +797,7 @@ def test_significance(example_spec_with_background):
     assert np.allclose(significance_results.observed_significance, 3.15402672)
     assert np.allclose(significance_results.expected_p_value, 0.00033333)
     assert np.allclose(significance_results.expected_significance, 3.40293444)
+    assert pyhf.get_backend()[1].name == "scipy"  # optimizer was reset
 
     # reduce signal for larger expected p-value
     example_spec_with_background["channels"][0]["samples"][0]["data"] = [30]
