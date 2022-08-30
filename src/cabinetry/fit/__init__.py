@@ -505,6 +505,9 @@ def ranking(
     init_pars: Optional[List[float]] = None,
     fix_pars: Optional[List[bool]] = None,
     par_bounds: Optional[List[Tuple[float, float]]] = None,
+    strategy: Optional[Literal[0, 1, 2]] = None,
+    maxiter: Optional[int] = None,
+    tolerance: Optional[float] = None,
     custom_fit: bool = False,
 ) -> RankingResults:
     """Calculates the impact of nuisance parameters on the parameter of interest (POI).
@@ -527,6 +530,14 @@ def ranking(
             parameters are held constant, defaults to None (use ``pyhf`` suggestion)
         par_bounds (Optional[List[Tuple[float, float]]], optional): list of tuples with
             parameter bounds for fit, defaults to None (use ``pyhf`` suggested bounds)
+        strategy (Optional[Literal[0, 1, 2]], optional): minimization strategy used by
+            Minuit, can be 0/1/2, defaults to None (then uses ``pyhf`` default behavior
+            of strategy 0 with user-provided gradients and 1 otherwise)
+        maxiter (Optional[int], optional): allowed number of calls for minimization,
+            defaults to None (use ``pyhf`` default of 100,000)
+        tolerance (Optional[float]), optional): tolerance for convergence, for details
+            see ``iminuit.Minuit.tol`` (uses EDM < 0.002*tolerance), defaults to
+            None (use ``iminuit`` default of 0.1)
         custom_fit (bool, optional): whether to use the ``pyhf.infer`` API or
             ``iminuit``, defaults to False (using ``pyhf.infer``)
 
@@ -543,6 +554,9 @@ def ranking(
             init_pars=init_pars,
             fix_pars=fix_pars,
             par_bounds=par_bounds,
+            strategy=strategy,
+            maxiter=maxiter,
+            tolerance=tolerance,
             custom_fit=custom_fit,
         )
 
@@ -595,6 +609,9 @@ def ranking(
                     init_pars=init_pars_ranking,
                     fix_pars=fix_pars_ranking,
                     par_bounds=par_bounds,
+                    strategy=strategy,
+                    maxiter=maxiter,
+                    tolerance=tolerance,
                     custom_fit=custom_fit,
                 )
                 poi_val = fit_results_ranking.bestfit[poi_index]
@@ -634,6 +651,9 @@ def scan(
     init_pars: Optional[List[float]] = None,
     fix_pars: Optional[List[bool]] = None,
     par_bounds: Optional[List[Tuple[float, float]]] = None,
+    strategy: Optional[Literal[0, 1, 2]] = None,
+    maxiter: Optional[int] = None,
+    tolerance: Optional[float] = None,
     custom_fit: bool = False,
 ) -> ScanResults:
     """Performs a likelihood scan over the specified parameter.
@@ -656,6 +676,14 @@ def scan(
             parameters are held constant, defaults to None (use ``pyhf`` suggestion)
         par_bounds (Optional[List[Tuple[float, float]]], optional): list of tuples with
             parameter bounds for fit, defaults to None (use ``pyhf`` suggested bounds)
+        strategy (Optional[Literal[0, 1, 2]], optional): minimization strategy used by
+            Minuit, can be 0/1/2, defaults to None (then uses ``pyhf`` default behavior
+            of strategy 0 with user-provided gradients and 1 otherwise)
+        maxiter (Optional[int], optional): allowed number of calls for minimization,
+            defaults to None (use ``pyhf`` default of 100,000)
+        tolerance (Optional[float]), optional): tolerance for convergence, for details
+            see ``iminuit.Minuit.tol`` (uses EDM < 0.002*tolerance), defaults to
+            None (use ``iminuit`` default of 0.1)
         custom_fit (bool, optional): whether to use the ``pyhf.infer`` API or
             ``iminuit``, defaults to False (using ``pyhf.infer``)
 
@@ -680,6 +708,9 @@ def scan(
         init_pars=init_pars,
         fix_pars=fix_pars,
         par_bounds=par_bounds,
+        strategy=strategy,
+        maxiter=maxiter,
+        tolerance=tolerance,
         custom_fit=custom_fit,
     )
     nominal_twice_nll = fit_results.best_twice_nll
@@ -715,6 +746,9 @@ def scan(
             init_pars=init_pars_scan,
             fix_pars=fix_pars,
             par_bounds=par_bounds,
+            strategy=strategy,
+            maxiter=maxiter,
+            tolerance=tolerance,
             custom_fit=custom_fit,
         )
         # subtract best-fit
@@ -729,13 +763,16 @@ def limit(
     data: List[float],
     *,
     bracket: Optional[Union[List[float], Tuple[float, float]]] = None,
-    tolerance: float = 0.01,
-    maxiter: int = 100,
+    poi_tolerance: float = 0.01,
+    maxsteps: int = 100,
     confidence_level: float = 0.95,
     poi_name: Optional[str] = None,
     init_pars: Optional[List[float]] = None,
     fix_pars: Optional[List[bool]] = None,
     par_bounds: Optional[List[Tuple[float, float]]] = None,
+    strategy: Optional[Literal[0, 1, 2]] = None,
+    maxiter: Optional[int] = None,
+    tolerance: Optional[float] = None,
 ) -> LimitResults:
     """Calculates observed and expected upper parameter limits.
 
@@ -753,9 +790,9 @@ def limit(
             lie between these values and the values must not be the same, defaults to
             None (then uses 0.1 as default lower value and the upper POI bound
             specified in the measurement as default upper value)
-        tolerance (float, optional): tolerance in POI value for convergence to target
-            CLs value (1-``confidence_level``), defaults to 0.01
-        maxiter (int, optional): maximum number of steps for limit finding, defaults to
+        poi_tolerance (float, optional): tolerance in POI value for convergence to
+            target CLs value (1-``confidence_level``), defaults to 0.01
+        maxsteps (int, optional): maximum number of steps for limit finding, defaults to
             100
         confidence_level (float, optional): confidence level for calculation, defaults
             to 0.95 (95%)
@@ -767,6 +804,14 @@ def limit(
             parameters are held constant, defaults to None (use ``pyhf`` suggestion)
         par_bounds (Optional[List[Tuple[float, float]]], optional): list of tuples with
             parameter bounds for fit, defaults to None (use ``pyhf`` suggested bounds)
+        strategy (Optional[Literal[0, 1, 2]], optional): minimization strategy used by
+            Minuit, can be 0/1/2, defaults to None (then uses ``pyhf`` default behavior
+            of strategy 0 with user-provided gradients and 1 otherwise)
+        maxiter (Optional[int], optional): allowed number of calls for minimization,
+            defaults to None (use ``pyhf`` default of 100,000)
+        tolerance (Optional[float]), optional): tolerance for convergence, for details
+            see ``iminuit.Minuit.tol`` (uses EDM < 0.002*tolerance), defaults to
+            None (use ``iminuit`` default of 0.1)
 
     Raises:
         ValueError: if no POI is found
@@ -777,7 +822,12 @@ def limit(
         LimitResults: observed and expected limits, CLs values, and scanned points
     """
     _, initial_optimizer = pyhf.get_backend()  # store initial optimizer settings
-    pyhf.set_backend(pyhf.tensorlib, pyhf.optimize.minuit_optimizer(verbose=1))
+    pyhf.set_backend(
+        pyhf.tensorlib,
+        pyhf.optimize.minuit_optimizer(
+            verbose=1, strategy=strategy, maxiter=maxiter, tolerance=tolerance
+        ),
+    )
 
     # use POI given by kwarg, fall back to POI specified in model
     poi_index = model_utils._poi_index(model, poi_name=poi_name)
@@ -908,7 +958,7 @@ def limit(
                 bracket=bracket,
                 args=(model, data, cls_target, i_limit, limit_label),
                 method="brentq",
-                options={"xtol": tolerance, "maxiter": maxiter},
+                options={"xtol": poi_tolerance, "maxiter": maxsteps},
             )
         except ValueError:
             # invalid starting bracket is most common issue
@@ -998,6 +1048,9 @@ def significance(
     init_pars: Optional[List[float]] = None,
     fix_pars: Optional[List[bool]] = None,
     par_bounds: Optional[List[Tuple[float, float]]] = None,
+    strategy: Optional[Literal[0, 1, 2]] = None,
+    maxiter: Optional[int] = None,
+    tolerance: Optional[float] = None,
 ) -> SignificanceResults:
     """Calculates the discovery significance of a positive signal.
 
@@ -1012,12 +1065,25 @@ def significance(
             parameters are held constant, defaults to None (use ``pyhf`` suggestion)
         par_bounds (Optional[List[Tuple[float, float]]], optional): list of tuples with
             parameter bounds for fit, defaults to None (use ``pyhf`` suggested bounds)
+        strategy (Optional[Literal[0, 1, 2]], optional): minimization strategy used by
+            Minuit, can be 0/1/2, defaults to None (then uses ``pyhf`` default behavior
+            of strategy 0 with user-provided gradients and 1 otherwise)
+        maxiter (Optional[int], optional): allowed number of calls for minimization,
+            defaults to None (use ``pyhf`` default of 100,000)
+        tolerance (Optional[float]), optional): tolerance for convergence, for details
+            see ``iminuit.Minuit.tol`` (uses EDM < 0.002*tolerance), defaults to
+            None (use ``iminuit`` default of 0.1)
 
     Returns:
         SignificanceResults: observed and expected p-values and significances
     """
     _, initial_optimizer = pyhf.get_backend()  # store initial optimizer settings
-    pyhf.set_backend(pyhf.tensorlib, pyhf.optimize.minuit_optimizer(verbose=1))
+    pyhf.set_backend(
+        pyhf.tensorlib,
+        pyhf.optimize.minuit_optimizer(
+            verbose=1, strategy=strategy, maxiter=maxiter, tolerance=tolerance
+        ),
+    )
 
     log.info("calculating discovery significance")
     obs_p_val, exp_p_val = pyhf.infer.hypotest(
