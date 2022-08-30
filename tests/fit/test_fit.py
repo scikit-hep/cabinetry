@@ -822,7 +822,7 @@ def test_limit(example_spec_with_background, caplog):
     with mock.patch("pyhf.set_backend") as mock_backend:
         fit.limit(model, data)
     assert mock_backend.call_count == 2
-    # setting to numpy
+    # setting to minuit
     assert mock_backend.call_args_list[0][0][1].name == "minuit"
     assert mock_backend.call_args_list[0][0][1].verbose == 1
     assert mock_backend.call_args_list[0][0][1].strategy is None
@@ -836,7 +836,7 @@ def test_limit(example_spec_with_background, caplog):
     with mock.patch("pyhf.set_backend") as mock_backend:
         fit.limit(model, data, strategy=2, maxiter=100, tolerance=0.01)
     assert mock_backend.call_count == 2
-    # setting to numpy
+    # setting to minuit
     assert mock_backend.call_args_list[0][0][1].name == "minuit"
     assert mock_backend.call_args_list[0][0][1].verbose == 1
     assert mock_backend.call_args_list[0][0][1].strategy == 2
@@ -898,7 +898,7 @@ def test_significance(example_spec_with_background):
     with mock.patch("pyhf.set_backend") as mock_backend:
         fit.significance(model, data)
     assert mock_backend.call_count == 2
-    # setting to numpy
+    # setting to minuit
     assert mock_backend.call_args_list[0][0][1].name == "minuit"
     assert mock_backend.call_args_list[0][0][1].verbose == 1
     assert mock_backend.call_args_list[0][0][1].strategy is None
@@ -912,7 +912,7 @@ def test_significance(example_spec_with_background):
     with mock.patch("pyhf.set_backend") as mock_backend:
         fit.significance(model, data, strategy=2, maxiter=100, tolerance=0.01)
     assert mock_backend.call_count == 2
-    # setting to numpy
+    # setting to minuit
     assert mock_backend.call_args_list[0][0][1].name == "minuit"
     assert mock_backend.call_args_list[0][0][1].verbose == 1
     assert mock_backend.call_args_list[0][0][1].strategy == 2
