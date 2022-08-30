@@ -770,6 +770,9 @@ def limit(
     init_pars: Optional[List[float]] = None,
     fix_pars: Optional[List[bool]] = None,
     par_bounds: Optional[List[Tuple[float, float]]] = None,
+    strategy: Optional[Literal[0, 1, 2]] = None,
+    maxiter: Optional[int] = None,
+    tolerance: Optional[float] = None,
 ) -> LimitResults:
     """Calculates observed and expected upper parameter limits.
 
@@ -801,6 +804,14 @@ def limit(
             parameters are held constant, defaults to None (use ``pyhf`` suggestion)
         par_bounds (Optional[List[Tuple[float, float]]], optional): list of tuples with
             parameter bounds for fit, defaults to None (use ``pyhf`` suggested bounds)
+        strategy (Optional[Literal[0, 1, 2]], optional): minimization strategy used by
+            Minuit, can be 0/1/2, defaults to None (then uses ``pyhf`` default behavior
+            of strategy 0 with user-provided gradients and 1 otherwise)
+        maxiter (Optional[int], optional): allowed number of calls for minimization,
+            defaults to None (use ``pyhf`` default of 100,000)
+        tolerance (Optional[float]), optional): tolerance for convergence, for details
+            see ``iminuit.Minuit.tol`` (uses EDM < 0.002*tolerance), defaults to
+            None (use ``iminuit`` default of 0.1)
 
     Raises:
         ValueError: if no POI is found
@@ -811,7 +822,12 @@ def limit(
         LimitResults: observed and expected limits, CLs values, and scanned points
     """
     _, initial_optimizer = pyhf.get_backend()  # store initial optimizer settings
-    pyhf.set_backend(pyhf.tensorlib, pyhf.optimize.minuit_optimizer(verbose=1))
+    pyhf.set_backend(
+        pyhf.tensorlib,
+        pyhf.optimize.minuit_optimizer(
+            verbose=1, strategy=strategy, maxiter=maxiter, tolerance=tolerance
+        ),
+    )
 
     # use POI given by kwarg, fall back to POI specified in model
     poi_index = model_utils._poi_index(model, poi_name=poi_name)

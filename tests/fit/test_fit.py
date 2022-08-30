@@ -813,6 +813,39 @@ def test_limit(example_spec_with_background, caplog):
     with pytest.raises(ValueError, match="no POI specified, cannot calculate limit"):
         fit.limit(model, data)
 
+    # add POI back to model and reset backend for testing optimizer customization
+    example_spec_with_background["measurements"][0]["config"]["poi"] = "Signal strength"
+    model, data = model_utils.model_and_data(example_spec_with_background)
+    pyhf.set_backend("numpy", "scipy")
+
+    # default strategy/maxiter/tolerance
+    with mock.patch("pyhf.set_backend") as mock_backend:
+        fit.limit(model, data)
+    assert mock_backend.call_count == 2
+    # setting to numpy
+    assert mock_backend.call_args_list[0][0][1].name == "minuit"
+    assert mock_backend.call_args_list[0][0][1].verbose == 1
+    assert mock_backend.call_args_list[0][0][1].strategy is None
+    assert mock_backend.call_args_list[0][0][1].maxiter is None
+    assert mock_backend.call_args_list[0][0][1].tolerance is None
+    assert mock_backend.call_args_list[0][1] == {}
+    # resetting back to scipy
+    assert mock_backend.call_args_list[1][0][1].name == "scipy"
+
+    # custom strategy/maxiter/tolerance
+    with mock.patch("pyhf.set_backend") as mock_backend:
+        fit.limit(model, data, strategy=2, maxiter=100, tolerance=0.01)
+    assert mock_backend.call_count == 2
+    # setting to numpy
+    assert mock_backend.call_args_list[0][0][1].name == "minuit"
+    assert mock_backend.call_args_list[0][0][1].verbose == 1
+    assert mock_backend.call_args_list[0][0][1].strategy == 2
+    assert mock_backend.call_args_list[0][0][1].maxiter == 100
+    assert mock_backend.call_args_list[0][0][1].tolerance == 0.01
+    assert mock_backend.call_args_list[0][1] == {}
+    # resetting back to scipy
+    assert mock_backend.call_args_list[1][0][1].name == "scipy"
+
 
 def test_significance(example_spec_with_background):
     pyhf.set_backend("numpy", "scipy")
@@ -864,6 +897,7 @@ def test_significance(example_spec_with_background):
     # default strategy/maxiter/tolerance
     with mock.patch("pyhf.set_backend") as mock_backend:
         fit.significance(model, data)
+    assert mock_backend.call_count == 2
     # setting to numpy
     assert mock_backend.call_args_list[0][0][1].name == "minuit"
     assert mock_backend.call_args_list[0][0][1].verbose == 1
@@ -877,6 +911,7 @@ def test_significance(example_spec_with_background):
     # custom strategy/maxiter/tolerance
     with mock.patch("pyhf.set_backend") as mock_backend:
         fit.significance(model, data, strategy=2, maxiter=100, tolerance=0.01)
+    assert mock_backend.call_count == 2
     # setting to numpy
     assert mock_backend.call_args_list[0][0][1].name == "minuit"
     assert mock_backend.call_args_list[0][0][1].verbose == 1
