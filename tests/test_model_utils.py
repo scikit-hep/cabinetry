@@ -45,8 +45,7 @@ def test_model_and_data(example_spec):
 
 
 def test_asimov_data(example_spec):
-    ws = pyhf.Workspace(example_spec)
-    model = ws.model()
+    model = pyhf.Workspace(example_spec).model()
     assert model_utils.asimov_data(model) == [51.8, 1]
 
     # without auxdata
@@ -56,9 +55,45 @@ def test_asimov_data(example_spec):
     example_spec["measurements"][0]["config"]["parameters"].append(
         {"name": "Signal strength", "inits": [2.0]}
     )
-    ws = pyhf.Workspace(example_spec)
-    model = ws.model()
+    model = pyhf.Workspace(example_spec).model()
     assert model_utils.asimov_data(model, include_auxdata=False) == [103.6]
+
+    # post-fit Asimov
+    fit_results = FitResults(
+        np.asarray([3.0, 1.0]),
+        np.asarray([0.1, 0.01]),
+        ["Signal strength", "staterror_Signal-Region[0]"],
+        np.asarray([[1.0, 0.1], [0.1, 1.0]]),
+        0.0,
+    )
+    assert np.allclose(
+        model_utils.asimov_data(model, fit_results=fit_results), [155.4, 1.0]
+    )
+
+    # post-fit Asimov, custom POI value (name from model config)
+    assert np.allclose(
+        model_utils.asimov_data(model, fit_results=fit_results, poi_value=1.5),
+        [77.7, 1.0],
+    )
+
+    # pre-fit Asimov, custom POI name + value
+    assert np.allclose(
+        model_utils.asimov_data(
+            model,
+            poi_name="staterror_Signal-Region[0]",
+            poi_value=1.1,
+        ),
+        [113.96, 1.1],  # 2*51.8*1.1
+    )
+
+    # post-fit Asimov, no POI in model and no poi_name either
+    example_spec["measurements"][0]["config"]["poi"] = ""
+    model = pyhf.Workspace(example_spec).model()
+    with pytest.raises(
+        ValueError,
+        match="no POI specified in model, use the poi_name argument to set POI name",
+    ):
+        model_utils.asimov_data(model, poi_value=1.0)
 
 
 def test_asimov_parameters(example_spec, example_spec_shapefactor, example_spec_lumi):
