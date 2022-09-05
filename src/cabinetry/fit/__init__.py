@@ -780,7 +780,7 @@ def limit(
     Brent's algorithm is used to automatically determine POI values to be tested. The
     desired confidence level can be configured, and defaults to 95%. In order to support
     setting the POI directly without model recompilation, this temporarily changes the
-    POI name in the model configuration.
+    POI in the model configuration.
 
     Args:
         model (pyhf.pdf.Model): model to use in fits
