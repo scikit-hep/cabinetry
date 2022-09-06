@@ -76,24 +76,56 @@ def model_and_data(
     return model, data
 
 
-def asimov_data(model: pyhf.Model, *, include_auxdata: bool = True) -> List[float]:
+def asimov_data(
+    model: pyhf.Model,
+    *,
+    fit_results: Optional[FitResults] = None,
+    poi_name: Optional[str] = None,
+    poi_value: Optional[float] = None,
+    include_auxdata: bool = True,
+) -> List[float]:
     """Returns the Asimov dataset (optionally with auxdata) for a model.
 
     Initial parameter settings for normalization factors in the workspace are treated as
     the default settings for that parameter. Fitting the Asimov dataset will recover
     these initial settings as the maximum likelihood estimate for normalization factors.
-    Initial settings for other modifiers are ignored.
+    Initial settings for other modifiers are ignored. If the fit_results keyword
+    argument is used, the Asimov dataset is built to recover the fit results given when
+    fitted again.
 
     Args:
         model (pyhf.Model): the model from which to construct the dataset
+        fit_results (Optional[FitResults], optional): parameter configuration to use
+            when building the Asimov dataset (using the best-fit result), defaults to
+            None (then a pre-fit Asimov dataset is built)
+        poi_name (Optional[str], optional): name of parameter to set to a custom value
+            via poi_value, defaults to None (use POI specified in workspace)
+        poi_value (Optional[float], optional): custom value to set POI specified via
+            poi_name to, defaults to None (no custom value set)
         include_auxdata (bool, optional): whether to also return auxdata, defaults to
             True
 
     Returns:
         List[float]: the Asimov dataset
     """
+    if fit_results is None:
+        # pre-fit Asimov by default
+        parameters = asimov_parameters(model)
+    else:
+        # Asimov data for given fit result (copy to not modify original fit_results)
+        parameters = fit_results.bestfit.copy()
+
+    if poi_value is not None:
+        # set POI to custom value, using parameter specified in model or given in kwarg
+        poi_index = _poi_index(model, poi_name=poi_name)
+        if poi_index is None:
+            raise ValueError(
+                "no POI specified in model, use the poi_name argument to set POI name"
+            )
+        parameters[poi_index] = poi_value
+
     asimov_data = pyhf.tensorlib.tolist(
-        model.expected_data(asimov_parameters(model), include_auxdata=include_auxdata)
+        model.expected_data(parameters, include_auxdata=include_auxdata)
     )
     return asimov_data
 
