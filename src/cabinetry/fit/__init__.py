@@ -1040,6 +1040,7 @@ def significance(
     model: pyhf.pdf.Model,
     data: List[float],
     *,
+    poi_name: Optional[str] = None,
     init_pars: Optional[List[float]] = None,
     fix_pars: Optional[List[bool]] = None,
     par_bounds: Optional[List[Tuple[float, float]]] = None,
@@ -1054,6 +1055,8 @@ def significance(
     Args:
         model (pyhf.pdf.Model): model to use in fits
         data (List[float]): data (including auxdata) the model is fit to
+        poi_name (Optional[str], optional): significance is calculated for this
+            parameter, defaults to None (use POI specified in workspace)
         init_pars (Optional[List[float]], optional): list of initial parameter settings,
             defaults to None (use ``pyhf`` suggested inits)
         fix_pars (Optional[List[bool]], optional): list of booleans specifying which
@@ -1080,7 +1083,17 @@ def significance(
         ),
     )
 
-    log.info("calculating discovery significance")
+    # use POI given by kwarg, fall back to POI specified in model
+    poi_index = model_utils._poi_index(model, poi_name=poi_name)
+    if poi_index is None:
+        raise ValueError("no POI specified, cannot calculate significance")
+
+    # set POI name in model config to desired value, hypotest will pick this up
+    # save original value to reset model later
+    original_model_poi_name = model.config.poi_name
+    model.config.set_poi(model.config.par_names()[poi_index])
+
+    log.info(f"calculating discovery significance for {model.config.poi_name}")
     obs_p_val, exp_p_val = pyhf.infer.hypotest(
         0.0,
         data,
@@ -1095,6 +1108,9 @@ def significance(
     exp_p_val = float(exp_p_val)
     obs_significance = scipy.stats.norm.isf(obs_p_val, 0, 1)
     exp_significance = scipy.stats.norm.isf(exp_p_val, 0, 1)
+
+    # set POI in model back to original values
+    model.config.set_poi(original_model_poi_name)
 
     if obs_p_val >= 1e-3:
         log.info(f"observed p-value: {obs_p_val:.3%}")

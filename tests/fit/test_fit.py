@@ -863,13 +863,18 @@ def test_significance(example_spec_with_background):
     # reduce signal for larger expected p-value
     example_spec_with_background["channels"][0]["samples"][0]["data"] = [30]
 
-    # Asimov dataset, observed = expected
+    # Asimov dataset, observed = expected, POI removed from measurement config
+    example_spec_with_background["measurements"][0]["config"]["poi"] = ""
     model, data = model_utils.model_and_data(example_spec_with_background, asimov=True)
-    significance_results = fit.significance(model, data)
+    assert model.config.poi_index is None  # no POI set before calculation
+    assert model.config.poi_name is None
+    significance_results = fit.significance(model, data, poi_name="Signal strength")
     assert np.allclose(significance_results.observed_p_value, 0.02062714)
     assert np.allclose(significance_results.observed_significance, 2.04096523)
     assert np.allclose(significance_results.expected_p_value, 0.02062714)
     assert np.allclose(significance_results.expected_significance, 2.04096523)
+    assert model.config.poi_index is None  # model config is preserved
+    assert model.config.poi_name is None
 
     # init/fixed pars, par bounds
     model, data = model_utils.model_and_data(example_spec_with_background)
@@ -877,6 +882,7 @@ def test_significance(example_spec_with_background):
         fit.significance(
             model,
             data,
+            poi_name="Signal strength",
             init_pars=[0.9, 1.0],
             fix_pars=[False, True],
             par_bounds=[(0, 5), (0.1, 10.0)],
@@ -893,6 +899,17 @@ def test_significance(example_spec_with_background):
             },
         )
     ]
+
+    # no POI specified anywhere
+    with pytest.raises(
+        ValueError, match="no POI specified, cannot calculate significance"
+    ):
+        fit.significance(model, data)
+
+    # add POI back to model and reset backend for testing optimizer customization
+    example_spec_with_background["measurements"][0]["config"]["poi"] = "Signal strength"
+    model, data = model_utils.model_and_data(example_spec_with_background)
+    pyhf.set_backend("numpy", "scipy")
 
     # default strategy/maxiter/tolerance
     with mock.patch("pyhf.set_backend") as mock_backend:
