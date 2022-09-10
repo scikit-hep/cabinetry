@@ -780,7 +780,7 @@ def limit(
     Brent's algorithm is used to automatically determine POI values to be tested. The
     desired confidence level can be configured, and defaults to 95%. In order to support
     setting the POI directly without model recompilation, this temporarily changes the
-    POI index and name in the model configuration.
+    POI in the model configuration.
 
     Args:
         model (pyhf.pdf.Model): model to use in fits
@@ -834,12 +834,10 @@ def limit(
     if poi_index is None:
         raise ValueError("no POI specified, cannot calculate limit")
 
-    # set POI index / name in model config to desired value, hypotest will pick this up
-    # save original values to reset model later
-    original_model_poi_index = model.config.poi_index
+    # set POI name in model config to desired value, hypotest will pick this up
+    # save original value to reset model later
     original_model_poi_name = model.config.poi_name
-    model.config.poi_index = poi_index
-    model.config.poi_name = model.config.par_names()[poi_index]
+    model.config.set_poi(model.config.par_names()[poi_index])
 
     # show two decimals only if confidence level in percent is not an integer
     cl_label = (
@@ -866,9 +864,8 @@ def limit(
     if bracket is None:
         bracket = (bracket_left_default, bracket_right_default)
     elif bracket[0] == bracket[1]:
-        # set POI index / name in model back to their original values
-        model.config.poi_index = original_model_poi_index
-        model.config.poi_name = original_model_poi_name
+        # set POI in model back to original value
+        model.config.set_poi(original_model_poi_name)
         raise ValueError(f"the two bracket values must not be the same: {bracket}")
 
     cache_CLs: Dict[float, tuple] = {}  # cache storing all relevant results
@@ -966,9 +963,8 @@ def limit(
                 f"CLs values at {bracket[0]:.4f} and {bracket[1]:.4f} do not bracket "
                 f"CLs={cls_target:.4f}, try a different starting bracket"
             )
-            # set POI index / name in model back to their original values
-            model.config.poi_index = original_model_poi_index
-            model.config.poi_name = original_model_poi_name
+            # set POI in model back to original value
+            model.config.set_poi(original_model_poi_name)
             raise
 
         if not res.converged:
@@ -1010,9 +1006,8 @@ def limit(
 
             bracket = (bracket_left, bracket_right)
 
-    # set POI index / name in model back to their original values
-    model.config.poi_index = original_model_poi_index
-    model.config.poi_name = original_model_poi_name
+    # set POI in model back to original values
+    model.config.set_poi(original_model_poi_name)
 
     # report all results
     log.info(f"total of {steps_total} steps to calculate all limits")
