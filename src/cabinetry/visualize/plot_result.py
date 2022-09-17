@@ -42,7 +42,7 @@ def correlation_matrix(
     fig, ax = plt.subplots(
         figsize=(round(5 + len(labels) / 1.6, 1), round(3 + len(labels) / 1.6, 1)),
         dpi=100,
-        layout="tight",
+        layout="constrained",
     )
     im = ax.imshow(corr_mat, vmin=-1, vmax=1, cmap="RdBu")
 
@@ -92,7 +92,7 @@ def pulls(
     """
     num_pars = len(bestfit)
     y_positions = np.arange(num_pars)[::-1]
-    fig, ax = plt.subplots(figsize=(6, 1 + num_pars / 4), dpi=100, layout="tight")
+    fig, ax = plt.subplots(figsize=(6, 1 + num_pars / 4), dpi=100, layout="constrained")
     ax.errorbar(bestfit, y_positions, xerr=uncertainty, fmt="o", color="black")
 
     ax.fill_between([-2, 2], -0.5, len(bestfit) - 0.5, color="yellow")
@@ -149,7 +149,9 @@ def ranking(
 
     # layout to make space for legend on top
     leg_space = 1.0 / (num_pars + 3) + 0.03
-    layout = matplotlib.layout_engine.TightLayoutEngine(rect=[0, 0, 1.0, 1 - leg_space])
+    layout = matplotlib.layout_engine.ConstrainedLayoutEngine(
+        rect=[0, 0, 1.0, 1 - leg_space]
+    )
 
     mpl.style.use("seaborn-v0_8-colorblind")
     fig, ax_pulls = plt.subplots(
@@ -267,7 +269,7 @@ def scan(
         matplotlib.figure.Figure: the likelihood scan figure
     """
     mpl.style.use("seaborn-v0_8-colorblind")
-    fig, ax = plt.subplots(layout="tight")
+    fig, ax = plt.subplots(layout="constrained")
 
     y_lim = max(par_nlls) * 1.2  # upper y-axis limit, 20% headroom
 
@@ -340,7 +342,7 @@ def limit(
     Returns:
         matplotlib.figure.Figure: the CLs figure
     """
-    fig, ax = plt.subplots(layout="tight")
+    fig, ax = plt.subplots(layout="constrained")
 
     xmin = min(poi_values)
     xmax = max(poi_values)

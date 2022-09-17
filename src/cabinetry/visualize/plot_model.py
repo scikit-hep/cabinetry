@@ -61,7 +61,7 @@ def data_mc(
 
     mpl.style.use("seaborn-v0_8-colorblind")
 
-    fig = plt.figure(figsize=(6, 6), layout="tight")
+    fig = plt.figure(figsize=(6, 6), layout="constrained")
     gs = fig.add_gridspec(nrows=2, ncols=1, hspace=0, height_ratios=[3, 1])
     ax1 = fig.add_subplot(gs[0])
     ax2 = fig.add_subplot(gs[1])
@@ -266,7 +266,7 @@ def templates(
     bin_centers = 0.5 * (bin_edges[:-1] + bin_edges[1:])
 
     mpl.style.use("seaborn-v0_8-colorblind")
-    fig = plt.figure(figsize=(8, 6), layout="tight")
+    fig = plt.figure(figsize=(8, 6), layout="constrained")
     gs = fig.add_gridspec(nrows=2, ncols=1, hspace=0, height_ratios=[3, 1])
     ax1 = fig.add_subplot(gs[0])
     ax2 = fig.add_subplot(gs[1])
@@ -442,8 +442,8 @@ def modifier_grid(
     fig, ax = plt.subplots(
         len(axis_labels[0]),
         sharex=True,
-        constrained_layout=True,
         figsize=(fig_width, fig_height),
+        layout="constrained",
         squeeze=False,  # always return array of axes (even with a single subplot)
     )
     ax = ax.flatten()  # turn into 1d array
