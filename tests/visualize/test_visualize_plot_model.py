@@ -220,7 +220,7 @@ def test_modifier_grid(tmp_path):
     )
     # non-zero tolerance as layout changes very slightly in CI
     assert (
-        compare_images("tests/visualize/reference/modifier_grid.png", str(fname), 15)
+        compare_images("tests/visualize/reference/modifier_grid.png", str(fname), 16)
         is None
     )
 
@@ -238,7 +238,7 @@ def test_modifier_grid(tmp_path):
     fname = tmp_path / "fig_from_return.png"
     fig.savefig(fname)
     assert (
-        compare_images("tests/visualize/reference/modifier_grid.png", str(fname), 15)
+        compare_images("tests/visualize/reference/modifier_grid.png", str(fname), 16)
         is None
     )
 
