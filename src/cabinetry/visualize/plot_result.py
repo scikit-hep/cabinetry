@@ -6,6 +6,7 @@ import pathlib
 from typing import List, Optional, Union
 
 import matplotlib as mpl
+import matplotlib.layout_engine
 import matplotlib.pyplot as plt
 import numpy as np
 
@@ -41,6 +42,7 @@ def correlation_matrix(
     fig, ax = plt.subplots(
         figsize=(round(5 + len(labels) / 1.6, 1), round(3 + len(labels) / 1.6, 1)),
         dpi=100,
+        layout="tight",
     )
     im = ax.imshow(corr_mat, vmin=-1, vmax=1, cmap="RdBu")
 
@@ -54,7 +56,6 @@ def correlation_matrix(
 
     fig.colorbar(im, ax=ax)
     ax.set_aspect("auto")  # to get colorbar aligned with matrix
-    fig.set_tight_layout(True)
 
     # add correlation as text
     for (j, i), corr in np.ndenumerate(corr_mat):
@@ -91,7 +92,7 @@ def pulls(
     """
     num_pars = len(bestfit)
     y_positions = np.arange(num_pars)[::-1]
-    fig, ax = plt.subplots(figsize=(6, 1 + num_pars / 4), dpi=100)
+    fig, ax = plt.subplots(figsize=(6, 1 + num_pars / 4), dpi=100, layout="tight")
     ax.errorbar(bestfit, y_positions, xerr=uncertainty, fmt="o", color="black")
 
     ax.fill_between([-2, 2], -0.5, len(bestfit) - 0.5, color="yellow")
@@ -106,7 +107,6 @@ def pulls(
     ax.xaxis.set_minor_locator(mpl.ticker.AutoMinorLocator())  # minor ticks
     ax.tick_params(axis="both", which="major", pad=8)
     ax.tick_params(direction="in", top=True, right=True, which="both")
-    fig.set_tight_layout(True)
 
     utils._save_and_close(fig, figure_path, close_figure)
     return fig
@@ -147,8 +147,14 @@ def ranking(
     """
     num_pars = len(bestfit)
 
-    mpl.style.use("seaborn-colorblind")
-    fig, ax_pulls = plt.subplots(figsize=(8, 2.5 + num_pars * 0.45), dpi=100)
+    # layout to make space for legend on top
+    leg_space = 1.0 / (num_pars + 3) + 0.03
+    layout = matplotlib.layout_engine.TightLayoutEngine(rect=[0, 0, 1.0, 1 - leg_space])
+
+    mpl.style.use("seaborn-v0_8-colorblind")
+    fig, ax_pulls = plt.subplots(
+        figsize=(8, 2.5 + num_pars * 0.45), dpi=100, layout=layout
+    )
     ax_impact = ax_pulls.twiny()  # second x-axis with shared y-axis, used for pulls
 
     # since pull axis is below impact axis, flip them so pulls show up on top
@@ -228,9 +234,6 @@ def ranking(
         ncol=3,
         fontsize="large",
     )
-    leg_space = 1.0 / (num_pars + 3) + 0.03
-    # there might be a way to use set_tight_layout here as well with a bounding box
-    fig.tight_layout(rect=[0, 0, 1.0, 1 - leg_space])  # make space for legend on top
 
     utils._save_and_close(fig, figure_path, close_figure)
     return fig
@@ -263,8 +266,8 @@ def scan(
     Returns:
         matplotlib.figure.Figure: the likelihood scan figure
     """
-    mpl.style.use("seaborn-colorblind")
-    fig, ax = plt.subplots()
+    mpl.style.use("seaborn-v0_8-colorblind")
+    fig, ax = plt.subplots(layout="tight")
 
     y_lim = max(par_nlls) * 1.2  # upper y-axis limit, 20% headroom
 
@@ -308,8 +311,6 @@ def scan(
 
     ax.legend(frameon=False, fontsize="large")
 
-    fig.set_tight_layout(True)
-
     utils._save_and_close(fig, figure_path, close_figure)
     return fig
 
@@ -339,7 +340,7 @@ def limit(
     Returns:
         matplotlib.figure.Figure: the CLs figure
     """
-    fig, ax = plt.subplots()
+    fig, ax = plt.subplots(layout="tight")
 
     xmin = min(poi_values)
     xmax = max(poi_values)
@@ -402,8 +403,6 @@ def limit(
     ax.set_ylim([0, 1])
     ax.tick_params(axis="both", which="major", pad=8)
     ax.tick_params(direction="in", top=True, right=True, which="both")
-
-    fig.set_tight_layout(True)
 
     utils._save_and_close(fig, figure_path, close_figure)
     return fig

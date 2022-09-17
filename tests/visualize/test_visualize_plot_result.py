@@ -125,7 +125,7 @@ def test_scan(tmp_path):
 
     # compare figure returned by function
     fname = tmp_path / "fig_from_return.png"
-    fig.set_tight_layout(False)  # https://github.com/matplotlib/matplotlib/issues/21742
+    fig.set_layout_engine(None)  # https://github.com/matplotlib/matplotlib/issues/21742
     fig.savefig(fname)
     assert compare_images("tests/visualize/reference/scan.png", str(fname), 0) is None
 
