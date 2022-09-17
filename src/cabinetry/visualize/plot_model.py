@@ -59,9 +59,9 @@ def data_mc(
             mc_histograms_yields.append(h["yields"])
             mc_labels.append(h["label"])
 
-    mpl.style.use("seaborn-colorblind")
+    mpl.style.use("seaborn-v0_8-colorblind")
 
-    fig = plt.figure(figsize=(6, 6))
+    fig = plt.figure(figsize=(6, 6), layout="tight")
     gs = fig.add_gridspec(nrows=2, ncols=1, hspace=0, height_ratios=[3, 1])
     ax1 = fig.add_subplot(gs[0])
     ax2 = fig.add_subplot(gs[1])
@@ -223,8 +223,6 @@ def data_mc(
     ax2.tick_params(axis="both", which="major", pad=8)
     ax2.tick_params(direction="in", top=True, right=True, which="both")
 
-    fig.set_tight_layout(True)
-
     utils._save_and_close(fig, figure_path, close_figure)
     return fig
 
@@ -267,8 +265,8 @@ def templates(
     bin_width = bin_edges[1:] - bin_edges[:-1]
     bin_centers = 0.5 * (bin_edges[:-1] + bin_edges[1:])
 
-    mpl.style.use("seaborn-colorblind")
-    fig = plt.figure(figsize=(8, 6))
+    mpl.style.use("seaborn-v0_8-colorblind")
+    fig = plt.figure(figsize=(8, 6), layout="tight")
     gs = fig.add_gridspec(nrows=2, ncols=1, hspace=0, height_ratios=[3, 1])
     ax1 = fig.add_subplot(gs[0])
     ax2 = fig.add_subplot(gs[1])
@@ -395,8 +393,6 @@ def templates(
     ax2.set_yticklabels([0.5, 0.75, 1.0, 1.25, ""])
     ax2.tick_params(axis="both", which="major", pad=8)
     ax2.tick_params(direction="in", top=True, right=True, which="both")
-
-    fig.set_tight_layout(True)
 
     utils._save_and_close(fig, figure_path, close_figure)
     return fig
