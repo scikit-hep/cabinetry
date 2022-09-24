@@ -425,7 +425,7 @@ def prediction(
         ModelPrediction: model, yields and uncertainties per bin and channel
     """
     if fit_results is not None:
-        if fit_results.labels != model.config.par_names():
+        if fit_results.labels != model.config.par_names:
             log.warning("parameter names in fit results and model do not match")
         # fit results specified, so they are used
         param_values = fit_results.bestfit
@@ -531,7 +531,7 @@ def _poi_index(
     """
     if poi_name is not None:
         # use POI given by kwarg if specified
-        poi_index = _parameter_index(poi_name, model.config.par_names())
+        poi_index = _parameter_index(poi_name, model.config.par_names)
         if poi_index is None:
             raise ValueError(f"parameter {poi_name} not found in model")
     elif model.config.poi_index is not None:
@@ -642,7 +642,7 @@ def match_fit_results(model: pyhf.pdf.Model, fit_results: FitResults) -> FitResu
 
     bestfit = asimov_parameters(model)  # Asimov parameter values for target model
     uncertainty = prefit_uncertainties(model)  # pre-fit uncertainties for target model
-    labels = model.config.par_names()  # labels for target model
+    labels = model.config.par_names  # labels for target model
 
     # indices of parameters in current fit results, or None if they are missing
     indices_for_corr: List[Optional[int]] = [None] * len(labels)
