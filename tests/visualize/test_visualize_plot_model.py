@@ -123,9 +123,7 @@ def test_data_mc(tmp_path, caplog):
     caplog.clear()
 
     # expect three RuntimeWarnings from numpy due to division by zero
-    assert len(warn_record) == 3
-    for i in range(3):
-        assert "divide by zero" in str(warn_record[i].message)
+    assert sum("divide by zero" in str(m.message) for m in warn_record) == 3
 
     plt.close("all")
 
@@ -170,7 +168,6 @@ def test_templates(tmp_path):
 
     # compare figure returned by function
     fname = tmp_path / "fig_from_return.png"
-    fig.set_tight_layout(False)  # https://github.com/matplotlib/matplotlib/issues/21742
     fig.savefig(fname)
     assert (
         compare_images("tests/visualize/reference/templates.png", str(fname), 0) is None
@@ -223,7 +220,7 @@ def test_modifier_grid(tmp_path):
     )
     # non-zero tolerance as layout changes very slightly in CI
     assert (
-        compare_images("tests/visualize/reference/modifier_grid.png", str(fname), 15)
+        compare_images("tests/visualize/reference/modifier_grid.png", str(fname), 16)
         is None
     )
 
@@ -241,7 +238,7 @@ def test_modifier_grid(tmp_path):
     fname = tmp_path / "fig_from_return.png"
     fig.savefig(fname)
     assert (
-        compare_images("tests/visualize/reference/modifier_grid.png", str(fname), 15)
+        compare_images("tests/visualize/reference/modifier_grid.png", str(fname), 16)
         is None
     )
 

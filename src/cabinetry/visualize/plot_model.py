@@ -7,11 +7,18 @@ from typing import Any, Dict, List, Optional
 import matplotlib as mpl
 import matplotlib.pyplot as plt
 import numpy as np
+import packaging.version
 
 from cabinetry.visualize import utils
 
 
 log = logging.getLogger(__name__)
+
+# handling of matplotlib<3.6 (for Python 3.7)
+if packaging.version.parse(mpl.__version__) < packaging.version.parse("3.6"):
+    MPL_STYLE = "seaborn-colorblind"  # pragma: no cover
+else:
+    MPL_STYLE = "seaborn-v0_8-colorblind"
 
 
 def data_mc(
@@ -59,9 +66,9 @@ def data_mc(
             mc_histograms_yields.append(h["yields"])
             mc_labels.append(h["label"])
 
-    mpl.style.use("seaborn-colorblind")
+    mpl.style.use(MPL_STYLE)
 
-    fig = plt.figure(figsize=(6, 6))
+    fig = plt.figure(figsize=(6, 6), layout="constrained")
     gs = fig.add_gridspec(nrows=2, ncols=1, hspace=0, height_ratios=[3, 1])
     ax1 = fig.add_subplot(gs[0])
     ax2 = fig.add_subplot(gs[1])
@@ -223,8 +230,6 @@ def data_mc(
     ax2.tick_params(axis="both", which="major", pad=8)
     ax2.tick_params(direction="in", top=True, right=True, which="both")
 
-    fig.set_tight_layout(True)
-
     utils._save_and_close(fig, figure_path, close_figure)
     return fig
 
@@ -267,8 +272,8 @@ def templates(
     bin_width = bin_edges[1:] - bin_edges[:-1]
     bin_centers = 0.5 * (bin_edges[:-1] + bin_edges[1:])
 
-    mpl.style.use("seaborn-colorblind")
-    fig = plt.figure(figsize=(8, 6))
+    mpl.style.use(MPL_STYLE)
+    fig = plt.figure(figsize=(8, 6), layout="constrained")
     gs = fig.add_gridspec(nrows=2, ncols=1, hspace=0, height_ratios=[3, 1])
     ax1 = fig.add_subplot(gs[0])
     ax2 = fig.add_subplot(gs[1])
@@ -396,8 +401,6 @@ def templates(
     ax2.tick_params(axis="both", which="major", pad=8)
     ax2.tick_params(direction="in", top=True, right=True, which="both")
 
-    fig.set_tight_layout(True)
-
     utils._save_and_close(fig, figure_path, close_figure)
     return fig
 
@@ -446,8 +449,8 @@ def modifier_grid(
     fig, ax = plt.subplots(
         len(axis_labels[0]),
         sharex=True,
-        constrained_layout=True,
         figsize=(fig_width, fig_height),
+        layout="constrained",
         squeeze=False,  # always return array of axes (even with a single subplot)
     )
     ax = ax.flatten()  # turn into 1d array

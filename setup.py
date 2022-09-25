@@ -24,7 +24,7 @@ extras_require["test"] = sorted(
 extras_require["pyhf_backends"] = ["pyhf[backends]"]
 extras_require["docs"] = sorted(
     {
-        "sphinx",
+        "sphinx!=5.2.0.post0",  # broken due to version parsing in RTD theme
         "sphinx-click",
         "sphinx-copybutton",
         "sphinx-jsonschema",

@@ -23,6 +23,13 @@ def test_correlation_matrix(tmp_path):
 
     # compare figure returned by function
     fname = tmp_path / "fig_from_return.png"
+
+    # adjust layout behavior, see https://github.com/matplotlib/matplotlib/issues/21742
+    if plot_result.MPL_GEQ_36:
+        fig.set_layout_engine(None)
+    else:
+        fig.set_constrained_layout(False)
+
     fig.savefig(fname)
     assert (
         compare_images(
@@ -125,7 +132,6 @@ def test_scan(tmp_path):
 
     # compare figure returned by function
     fname = tmp_path / "fig_from_return.png"
-    fig.set_tight_layout(False)  # https://github.com/matplotlib/matplotlib/issues/21742
     fig.savefig(fname)
     assert compare_images("tests/visualize/reference/scan.png", str(fname), 0) is None
 
