@@ -7,11 +7,18 @@ from typing import Any, Dict, List, Optional
 import matplotlib as mpl
 import matplotlib.pyplot as plt
 import numpy as np
+import packaging.version
 
 from cabinetry.visualize import utils
 
 
 log = logging.getLogger(__name__)
+
+# handling of matplotlib<3.6 (for Python 3.7)
+if packaging.version.parse(mpl.__version__) < packaging.version.parse("3.6"):
+    MPL_STYLE = "seaborn-colorblind"
+else:
+    MPL_STYLE = "seaborn-v0_8-colorblind"
 
 
 def data_mc(
@@ -59,7 +66,7 @@ def data_mc(
             mc_histograms_yields.append(h["yields"])
             mc_labels.append(h["label"])
 
-    mpl.style.use("seaborn-v0_8-colorblind")
+    mpl.style.use(MPL_STYLE)
 
     fig = plt.figure(figsize=(6, 6), layout="constrained")
     gs = fig.add_gridspec(nrows=2, ncols=1, hspace=0, height_ratios=[3, 1])
@@ -265,7 +272,7 @@ def templates(
     bin_width = bin_edges[1:] - bin_edges[:-1]
     bin_centers = 0.5 * (bin_edges[:-1] + bin_edges[1:])
 
-    mpl.style.use("seaborn-v0_8-colorblind")
+    mpl.style.use(MPL_STYLE)
     fig = plt.figure(figsize=(8, 6), layout="constrained")
     gs = fig.add_gridspec(nrows=2, ncols=1, hspace=0, height_ratios=[3, 1])
     ax1 = fig.add_subplot(gs[0])
