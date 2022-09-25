@@ -470,7 +470,7 @@ def test_match_fit_results(mock_pars, mock_uncs):
     )
 
     # remove par_a, flip par_b and par_c, add par_d
-    mock_model.config.par_names.return_value = ["par_c", "par_d", "par_b"]
+    mock_model.config.par_names = ["par_c", "par_d", "par_b"]
     matched_fit_res = model_utils.match_fit_results(mock_model, fit_results)
     assert mock_pars.call_args_list == [((mock_model,), {})]
     assert mock_uncs.call_args_list == [((mock_model,), {})]
@@ -484,7 +484,7 @@ def test_match_fit_results(mock_pars, mock_uncs):
     assert matched_fit_res.goodness_of_fit == 0.1
 
     # all parameters are new
-    mock_model.config.par_names.return_value = ["par_d", "par_e"]
+    mock_model.config.par_names = ["par_d", "par_e"]
     matched_fit_res = model_utils.match_fit_results(mock_model, fit_results)
     assert np.allclose(matched_fit_res.bestfit, [4.0, 5.0])
     assert np.allclose(matched_fit_res.uncertainty, [0.4, 0.5])
@@ -494,7 +494,7 @@ def test_match_fit_results(mock_pars, mock_uncs):
     assert matched_fit_res.goodness_of_fit == 0.1
 
     # fit results already match model exactly
-    mock_model.config.par_names.return_value = ["par_a", "par_b", "par_c"]
+    mock_model.config.par_names = ["par_a", "par_b", "par_c"]
     matched_fit_res = model_utils.match_fit_results(mock_model, fit_results)
     assert np.allclose(matched_fit_res.bestfit, [1.0, 2.0, 3.0])
     assert np.allclose(matched_fit_res.uncertainty, [0.1, 0.2, 0.3])
