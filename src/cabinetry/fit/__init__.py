@@ -109,7 +109,7 @@ def _fit_model_pyhf(
     uncertainty = np.where(
         result_obj.minuit.fixed, 0.0, pyhf.tensorlib.to_numpy(result[:, 1])
     )
-    labels = model.config.par_names()
+    labels = model.config.par_names
     corr_mat = pyhf.tensorlib.to_numpy(corr_mat)
     best_twice_nll = float(best_twice_nll)  # convert 0-dim np.ndarray to float
 
@@ -183,7 +183,7 @@ def _fit_model_custom(
     fix_pars = fix_pars or model.config.suggested_fixed()
     par_bounds = par_bounds or model.config.suggested_bounds()
 
-    labels = model.config.par_names()
+    labels = model.config.par_names
 
     def twice_nll_func(pars: np.ndarray) -> Any:
         """The objective for minimization: twice the negative log-likelihood.
@@ -560,7 +560,7 @@ def ranking(
             custom_fit=custom_fit,
         )
 
-    labels = model.config.par_names()
+    labels = model.config.par_names
     prefit_unc = model_utils.prefit_uncertainties(model)
 
     # use POI given by kwarg, fall back to POI specified in model
@@ -694,7 +694,7 @@ def scan(
         ScanResults: includes parameter name, scanned values and 2*log(likelihood)
         offset
     """
-    labels = model.config.par_names()
+    labels = model.config.par_names
 
     # get index of parameter with name par_name
     par_index = model_utils._parameter_index(par_name, labels)
@@ -837,7 +837,7 @@ def limit(
     # set POI name in model config to desired value, hypotest will pick this up
     # save original value to reset model later
     original_model_poi_name = model.config.poi_name
-    model.config.set_poi(model.config.par_names()[poi_index])
+    model.config.set_poi(model.config.par_names[poi_index])
 
     # show two decimals only if confidence level in percent is not an integer
     cl_label = (
@@ -1091,7 +1091,7 @@ def significance(
     # set POI name in model config to desired value, hypotest will pick this up
     # save original value to reset model later
     original_model_poi_name = model.config.poi_name
-    model.config.set_poi(model.config.par_names()[poi_index])
+    model.config.set_poi(model.config.par_names[poi_index])
 
     log.info(f"calculating discovery significance for {model.config.poi_name}")
     obs_p_val, exp_p_val = pyhf.infer.hypotest(
