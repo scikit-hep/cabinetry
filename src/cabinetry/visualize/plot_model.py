@@ -16,7 +16,7 @@ log = logging.getLogger(__name__)
 
 # handling of matplotlib<3.6 (for Python 3.7)
 if packaging.version.parse(mpl.__version__) < packaging.version.parse("3.6"):
-    MPL_STYLE = "seaborn-colorblind"
+    MPL_STYLE = "seaborn-colorblind"  # pragma: no cover
 else:
     MPL_STYLE = "seaborn-v0_8-colorblind"
 

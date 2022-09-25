@@ -17,10 +17,10 @@ log = logging.getLogger(__name__)
 
 # handling of matplotlib<3.6 (for Python 3.7)
 if packaging.version.parse(mpl.__version__) < packaging.version.parse("3.6"):
-    MPL_GEQ_36 = False  # matplotlib version < 3.6
-    MPL_STYLE = "seaborn-colorblind"
+    MPL_GEQ_36 = False  # pragma: no cover
+    MPL_STYLE = "seaborn-colorblind"  # pragma: no cover
 else:
-    MPL_GEQ_36 = True  # matplotlib version >= 3.6
+    MPL_GEQ_36 = True
     MPL_STYLE = "seaborn-v0_8-colorblind"
 
 
@@ -164,7 +164,7 @@ def ranking(
             rect=[0, 0, 1.0, 1 - leg_space]
         )
     else:
-        layout = None  # layout set below after figure creation instead
+        layout = None  # pragma: no cover  # layout set after figure creation instead
 
     mpl.style.use(MPL_STYLE)
     fig, ax_pulls = plt.subplots(
@@ -251,7 +251,7 @@ def ranking(
     )
 
     if not MPL_GEQ_36:
-        fig.tight_layout(rect=[0, 0, 1.0, 1 - leg_space])
+        fig.tight_layout(rect=[0, 0, 1.0, 1 - leg_space])  # pragma: no cover
 
     utils._save_and_close(fig, figure_path, close_figure)
     return fig
