@@ -3,14 +3,10 @@ from unittest import mock
 import matplotlib.pyplot as plt
 from matplotlib.testing.compare import compare_images
 import numpy as np
-import pytest
 
 from cabinetry.visualize import plot_result
 
 
-@pytest.mark.skipif(
-    not plot_result.MPL_GEQ_36, reason="different layout engine in matplotlib<3.6"
-)
 def test_correlation_matrix(tmp_path):
     fname = tmp_path / "fig.png"
     # one parameter is below threshold so no text is shown for it on the plot
@@ -27,7 +23,13 @@ def test_correlation_matrix(tmp_path):
 
     # compare figure returned by function
     fname = tmp_path / "fig_from_return.png"
-    fig.set_layout_engine(None)  # https://github.com/matplotlib/matplotlib/issues/21742
+
+    # adjust layout behavior, see https://github.com/matplotlib/matplotlib/issues/21742
+    if plot_result.MPL_GEQ_36:
+        fig.set_layout_engine(None)
+    else:
+        fig.set_constrained_layout(False)
+
     fig.savefig(fname)
     assert (
         compare_images(
