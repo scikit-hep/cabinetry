@@ -3,10 +3,14 @@ from unittest import mock
 import matplotlib.pyplot as plt
 from matplotlib.testing.compare import compare_images
 import numpy as np
+import pytest
 
 from cabinetry.visualize import plot_result
 
 
+@pytest.mark.skipif(
+    not plot_result.MPL_GEQ_36, reason="different layout engine in matplotlib<3.6"
+)
 def test_correlation_matrix(tmp_path):
     fname = tmp_path / "fig.png"
     # one parameter is below threshold so no text is shown for it on the plot

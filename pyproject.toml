@@ -43,5 +43,6 @@ module = [
     "iminuit",
     "jsonschema",
     "scipy.*",
+    "packaging.*",
 ]
 ignore_missing_imports = true

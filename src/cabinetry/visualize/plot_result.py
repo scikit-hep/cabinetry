@@ -6,14 +6,22 @@ import pathlib
 from typing import List, Optional, Union
 
 import matplotlib as mpl
-import matplotlib.layout_engine
 import matplotlib.pyplot as plt
 import numpy as np
+import packaging.version
 
 from cabinetry.visualize import utils
 
 
 log = logging.getLogger(__name__)
+
+# handling of matplotlib<3.6 (for Python 3.7)
+if packaging.version.parse(mpl.__version__) < packaging.version.parse("3.6"):
+    MPL_GEQ_36 = False  # matplotlib version < 3.6
+    MPL_STYLE = "seaborn-colorblind"
+else:
+    MPL_GEQ_36 = True  # matplotlib version >= 3.6
+    MPL_STYLE = "seaborn-v0_8-colorblind"
 
 
 def correlation_matrix(
@@ -149,11 +157,16 @@ def ranking(
 
     # layout to make space for legend on top
     leg_space = 1.0 / (num_pars + 3) + 0.03
-    layout = matplotlib.layout_engine.ConstrainedLayoutEngine(
-        rect=[0, 0, 1.0, 1 - leg_space]
-    )
+    if MPL_GEQ_36:
+        import matplotlib.layout_engine
 
-    mpl.style.use("seaborn-v0_8-colorblind")
+        layout = matplotlib.layout_engine.ConstrainedLayoutEngine(
+            rect=[0, 0, 1.0, 1 - leg_space]
+        )
+    else:
+        layout = None  # layout set below after figure creation instead
+
+    mpl.style.use(MPL_STYLE)
     fig, ax_pulls = plt.subplots(
         figsize=(8, 2.5 + num_pars * 0.45), dpi=100, layout=layout
     )
@@ -237,6 +250,9 @@ def ranking(
         fontsize="large",
     )
 
+    if not MPL_GEQ_36:
+        fig.tight_layout(rect=[0, 0, 1.0, 1 - leg_space])
+
     utils._save_and_close(fig, figure_path, close_figure)
     return fig
 
@@ -268,7 +284,7 @@ def scan(
     Returns:
         matplotlib.figure.Figure: the likelihood scan figure
     """
-    mpl.style.use("seaborn-v0_8-colorblind")
+    mpl.style.use(MPL_STYLE)
     fig, ax = plt.subplots(layout="constrained")
 
     y_lim = max(par_nlls) * 1.2  # upper y-axis limit, 20% headroom
