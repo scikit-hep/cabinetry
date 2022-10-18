@@ -524,13 +524,14 @@ def ranking(
     # path is None if figure should not be saved
     figure_path = pathlib.Path(figure_folder) / "ranking.pdf" if save_figure else None
 
-    # sort parameters by decreasing average post-fit impact
-    avg_postfit_impact = (
-        np.abs(ranking_results.postfit_up) + np.abs(ranking_results.postfit_down)
-    ) / 2
+    # sort parameters by decreasing maximum post-fit impact
+    max_postfit_impact = np.maximum(
+        np.abs(ranking_results.postfit_up),
+        np.abs(ranking_results.postfit_down),
+    )
 
     # get indices to sort by decreasing impact
-    sorted_indices = np.argsort(avg_postfit_impact)[::-1]
+    sorted_indices = np.argsort(max_postfit_impact)[::-1]
     bestfit = ranking_results.bestfit[sorted_indices]
     uncertainty = ranking_results.uncertainty[sorted_indices]
     labels = np.asarray(ranking_results.labels)[sorted_indices]  # labels are list
