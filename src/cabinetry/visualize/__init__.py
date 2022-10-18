@@ -509,6 +509,8 @@ def ranking(
 ) -> mpl.figure.Figure:
     """Produces a ranking plot showing the impact of parameters on the POI.
 
+    The parameters are shown in decreasing order of greatest post-fit impact.
+
     Args:
         ranking_results (fit.RankingResults): fit results, and pre- and post-fit impacts
         figure_folder (Union[str, pathlib.Path], optional): path to the folder to save
