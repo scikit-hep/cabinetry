@@ -7,10 +7,10 @@ repos:
     rev: v0.981
     hooks:
     -   id: mypy
-        name: mypy with Python 3.7
+        name: mypy with Python 3.8
         files: src/cabinetry
         additional_dependencies: ["numpy>=1.22", "boost-histogram>=1.0.1", "click>=8", "types-tabulate", "types-PyYAML"]
-        args: ["--python-version=3.7"]
+        args: ["--python-version=3.8"]
     -   id: mypy
         name: mypy with Python 3.10
         files: src/cabinetry
