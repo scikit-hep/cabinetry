@@ -13,7 +13,7 @@ import cabinetry.visualize  # noqa: F401
 import cabinetry.workspace  # noqa: F401
 
 
-__version__ = "0.5.0"
+__version__ = "0.5.1"
 
 
 def set_logging() -> None:
