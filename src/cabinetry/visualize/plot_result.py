@@ -56,11 +56,8 @@ def correlation_matrix(
 
     ax.set_xticks(np.arange(len(labels)))
     ax.set_yticks(np.arange(len(labels)))
-    ax.set_xticklabels(labels)
+    ax.set_xticklabels(labels, rotation=45, ha="right")
     ax.set_yticklabels(labels)
-    for tick in ax.get_xticklabels():
-        tick.set_rotation(45)
-        tick.set_horizontalalignment("right")
 
     fig.colorbar(im, ax=ax)
     ax.set_aspect("auto")  # to get colorbar aligned with matrix
