@@ -13,15 +13,15 @@ from cabinetry._typing import Literal
 log = logging.getLogger(__name__)
 
 
-# type of a function processing templates, takes sample-region-systematic-template,
-# returns None
+# type of a function processing templates, takes general-region-sample-systematic-
+# template, returns None
 # template can be "Up" / "Down" for variations, or None for nominal
 ProcessorFunc = Callable[
     [Dict[str, Any], Dict[str, Any], Dict[str, Any], Optional[Literal["Up", "Down"]]],
     None,
 ]
 
-# type of a user-defined function for template processing, takes sample-region-
+# type of a user-defined function for template processing, takes general-region-sample-
 # systematic-template, returns a boost_histogram.Histogram
 # template can be any string (to match "Up" / "Down"), or None / "*" to match nominal
 UserTemplateFunc = Callable[

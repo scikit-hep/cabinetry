@@ -35,7 +35,10 @@ def build(
     # create an instance of the class doing the template building
     histogram_folder = pathlib.Path(config["General"]["HistogramFolder"])
     general_path = config["General"]["InputPath"]
-    template_builder = builder._Builder(histogram_folder, general_path, method)
+    general_filters = config["General"].get("Filters", {})
+    template_builder = builder._Builder(
+        histogram_folder, general_path, general_filters, method
+    )
 
     match_func: Optional[route.MatchFunc] = None
     if router is not None:

@@ -1,5 +1,6 @@
 import logging
 import pathlib
+from typing import Optional
 from unittest import mock
 
 import boost_histogram as bh
@@ -104,44 +105,93 @@ def test__variable():
 
 
 def test__filter():
-    # no override
-    assert builder._filter({"Filter": "jet_pt > 0"}, {}, {}, None) == "jet_pt > 0"
+    # no override, dict provided
+    assert (
+        builder._filter(
+            {"Filters": {"Name": "f", "Filter": "jet_pt > 0"}}, {}, {}, {}, None
+        )
+        == "(jet_pt > 0)"
+    )
+
+    # list of dictionaries without overrides
+    assert (
+        builder._filter(
+            {"Filters": [{"Name": "a", "Filter": "c1"}, {"Name": "b", "Filter": "c2"}]},
+            {},
+            {},
+            {},
+            None,
+        )
+        == "(c1) & (c2)"
+    )
 
     # no filter
-    assert builder._filter({}, {}, {}, None) is None
+    assert builder._filter({}, {}, {}, {}, None) is None
 
     # systematic with override
     assert (
         builder._filter(
-            {"Filter": "jet_pt > 0"},
+            {"Filters": {"Name": "f", "Filter": "jet_pt > 0"}},
             {},
-            {"Name": "variation", "Up": {"Filter": "jet_pt > 100"}},
+            {},
+            {
+                "Name": "variation",
+                "Up": {"Filters": {"Name": "f", "Filter": "jet_pt > 100"}},
+            },
             "Up",
         )
-        == "jet_pt > 100"
+        == "(jet_pt > 100)"
     )
 
     # systematic without override
     assert (
-        builder._filter({"Filter": "jet_pt > 0"}, {}, {"Name": "variation"}, "Up")
-        == "jet_pt > 0"
-    )
-
-    # sample-specific override
-    assert (
-        builder._filter({"Filter": "jet_pt > 0"}, {"Filter": "jet_pt > 100"}, {}, None)
-        == "jet_pt > 100"
-    )
-
-    # sample-specific override, again overridden by systematic
-    assert (
         builder._filter(
-            {"Filter": "jet_pt > 0"},
-            {"Filter": "jet_pt > 100"},
-            {"Name": "variation", "Up": {"Filter": "jet_pt > 200"}},
+            {"Filters": {"Name": "f", "Filter": "jet_pt > 0"}},
+            {},
+            {},
+            {"Name": "variation"},
             "Up",
         )
-        == "jet_pt > 200"
+        == "(jet_pt > 0)"
+    )
+
+    # sample-specific override for part of a region filter
+    assert (
+        builder._filter(
+            {},
+            {"Filters": [{"Name": "a", "Filter": "c1"}, {"Name": "b", "Filter": "c2"}]},
+            {"Filters": {"Name": "b", "Filter": "c3"}},
+            {},
+            None,
+        )
+        == "(c1) & (c3)"
+    )
+
+    # filter with region-, sample-, and systematic override
+    assert (
+        builder._filter(
+            {"Filters": {"Name": "f", "Filter": "jet_pt > 0"}},
+            {"Filters": {"Name": "f", "Filter": "jet_pt > 100"}},
+            {"Filters": {"Name": "f", "Filter": "jet_pt > 200"}},
+            {
+                "Name": "variation",
+                "Up": {"Filters": {"Name": "f", "Filter": "jet_pt > 300"}},
+            },
+            "Up",
+        )
+        == "(jet_pt > 300)"
+    )
+
+    # filters at all levels combining
+    assert (
+        builder._filter(
+            {"Filters": {"Name": "a", "Filter": "c1"}},
+            {"Filters": {"Name": "b", "Filter": "c2"}},
+            {"Filters": {"Name": "c", "Filter": "c3"}},
+            {"Name": "variation", "Up": {"Filters": {"Name": "d", "Filter": "c4"}}},
+            "Up",
+        )
+        == "(c1) & (c2) & (c3) & (c4)"
     )
 
 
@@ -196,26 +246,31 @@ def test__binning():
 
 
 def test__Builder():
-    builder_instance = builder._Builder(pathlib.Path("path"), "file.root", "uproot")
+    builder_instance = builder._Builder(
+        pathlib.Path("path"), "file.root", {"Name": "f", "Filter": "c"}, "uproot"
+    )
     assert builder_instance.histogram_folder == pathlib.Path("path")
     assert builder_instance.general_path == "file.root"
+    assert builder_instance.general_filters == {"Name": "f", "Filter": "c"}
     assert builder_instance.method == "uproot"
 
 
 @mock.patch("cabinetry.templates.utils._name_and_save")
 @mock.patch("cabinetry.histo.Histogram", return_value="cabinetry_histogram")
 @mock.patch("cabinetry.contrib.histogram_creator.with_uproot", return_value="histogram")
+@mock.patch("cabinetry.templates.builder._filter", return_value="(x>3)")
 @mock.patch(
     "cabinetry.templates.builder._ntuple_paths",
     return_value=[pathlib.Path("path_to_ntuple")],
 )
 def test__Builder_create_histogram(
-    mock_path, mock_uproot_builder, mock_histo, mock_save
+    mock_path, mock_filter, mock_uproot_builder, mock_histo, mock_save
 ):
     histogram_folder = pathlib.Path("path")
     general_path = "{SamplePath}"
+    general_filters = {"Name": "f", "Filter": "c"}
     # the binning [0] is not a proper binning, but simplifies the comparison
-    region = {"Name": "test_region", "Variable": "x", "Binning": [0], "Filter": "x>3"}
+    region = {"Name": "test_region", "Variable": "x", "Binning": [0]}
     sample = {
         "Name": "sample",
         "Tree": "tree",
@@ -225,7 +280,9 @@ def test__Builder_create_histogram(
     systematic = {}
     template = "Up"
 
-    builder_instance = builder._Builder(histogram_folder, general_path, "uproot")
+    builder_instance = builder._Builder(
+        histogram_folder, general_path, general_filters, "uproot"
+    )
     builder_instance._create_histogram(region, sample, systematic, template)
 
     # call to path creation
@@ -233,11 +290,16 @@ def test__Builder_create_histogram(
         ((general_path, region, sample, systematic, template), {})
     ]
 
+    # filter creation
+    assert mock_filter.call_args_list == [
+        ((general_filters, region, sample, systematic, template), {})
+    ]
+
     # verify the backend call happened properly
     assert mock_uproot_builder.call_args_list == [
         (
             ([pathlib.Path("path_to_ntuple")], "tree", "x", [0]),
-            {"weight": "weight_mc", "selection_filter": "x>3"},
+            {"weight": "weight_mc", "selection_filter": "(x>3)"},
         )
     ]
 
@@ -260,7 +322,7 @@ def test__Builder_create_histogram(
     ]
 
     # other backends
-    builder_unknown = builder._Builder(histogram_folder, "{SamplePath}", "unknown")
+    builder_unknown = builder._Builder(histogram_folder, "{SamplePath}", {}, "unknown")
     with pytest.raises(NotImplementedError, match="unknown backend unknown"):
         builder_unknown._create_histogram(region, sample, systematic, template)
 
@@ -273,10 +335,10 @@ def test__Builder__wrap_custom_template_builder(mock_save):
     systematic = {}
     histogram_folder = pathlib.Path("path")
 
-    def test_func(reg, sam, sys, tem):
+    def test_func(reg: dict, sam: dict, sys: dict, tem: Optional[str]):
         return histogram
 
-    builder_instance = builder._Builder(histogram_folder, "file.root", "uproot")
+    builder_instance = builder._Builder(histogram_folder, "file.root", {}, "uproot")
     wrapped_func = builder_instance._wrap_custom_template_builder(test_func)
 
     # check the behavior of the wrapped function
@@ -288,7 +350,7 @@ def test__Builder__wrap_custom_template_builder(mock_save):
     ]
 
     # wrapped function returns wrong type
-    def test_func_wrong_return(reg, sam, sys, tem):
+    def test_func_wrong_return(reg: dict, sam: dict, sys: dict, tem: Optional[str]):
         return None
 
     wrapped_func_wrong_return = builder_instance._wrap_custom_template_builder(

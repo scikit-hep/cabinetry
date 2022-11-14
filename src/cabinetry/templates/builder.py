@@ -135,6 +135,7 @@ def _variable(
 
 
 def _filter(
+    general: Dict[str, Any],
     region: Dict[str, Any],
     sample: Dict[str, Any],
     systematic: Dict[str, Any],
@@ -148,6 +149,7 @@ def _filter(
     the sample-specific filter if both are provided.
 
     Args:
+        general (Dict[str, Any]): containing general configuration information
         region (Dict[str, Any]): containing all region information
         sample (Dict[str, Any]): containing all sample information
         systematic (Dict[str, Any]): containing all systematic information
@@ -157,21 +159,32 @@ def _filter(
     Returns:
         Optional[str]: expression for the filter to be used, or None for no filtering
     """
-    selection_filter = region.get("Filter", None)
+    selection_filters = {}
 
-    # check for sample-specific overrides
-    selection_filter_override = sample.get("Filter", None)
-    if selection_filter_override is not None:
-        selection_filter = selection_filter_override
+    # general options can set standard values for filter
+    for filter in configuration._setting_to_list(general.get("Filters", [])):
+        selection_filters.update({filter["Name"]: filter["Filter"]})
+
+    # regions can set default filters (general level not implemented yet)
+    for filter in configuration._setting_to_list(region.get("Filters", [])):
+        selection_filters.update({filter["Name"]: filter["Filter"]})
+
+    # samples can append to and override filters
+    for filter in configuration._setting_to_list(sample.get("Filters", [])):
+        selection_filters.update({filter["Name"]: filter["Filter"]})
 
     # check whether a systematic is being processed
     if template is not None:
-        # determine whether the template has an override specified
-        selection_filter_override = utils._check_for_override(
-            systematic, template, "Filter"
-        )
-        if selection_filter_override is not None:
-            selection_filter = selection_filter_override
+        # templates can append to and override filters
+        template_filters = systematic.get(template, {}).get("Filters", [])
+        for filter in configuration._setting_to_list(template_filters):
+            selection_filters.update({filter["Name"]: filter["Filter"]})
+
+    if selection_filters == {}:
+        return None
+
+    # combine all filters
+    selection_filter = " & ".join([f"({f})" for f in selection_filters.values()])
     return selection_filter
 
 
@@ -261,17 +274,23 @@ class _Builder:
     """Handles the instructions for backends to create histograms."""
 
     def __init__(
-        self, histogram_folder: pathlib.Path, general_path: str, method: str
+        self,
+        histogram_folder: pathlib.Path,
+        general_path: str,
+        general_filters: Dict[str, Any],
+        method: str,
     ) -> None:
         """Creates an instance, sets histogram folder, path template and method.
 
         Args:
             histogram_folder (pathlib.Path): folder to save the histograms to
             general_path (str): template for paths to input files for histogram building
+            general_filters (Dict[str, Any]): dictionary with general filters to apply
             method (str): backend to use for histogram production
         """
         self.histogram_folder = histogram_folder
         self.general_path = general_path
+        self.general_filters = general_filters
         self.method = method
 
     def _create_histogram(
@@ -303,7 +322,9 @@ class _Builder:
         variable = _variable(region, sample, systematic, template)
         bins = _binning(region)
         weight = _weight(region, sample, systematic, template)
-        selection_filter = _filter(region, sample, systematic, template)
+        selection_filter = _filter(
+            self.general_filters, region, sample, systematic, template
+        )
 
         # obtain the histogram
         if self.method == "uproot":
