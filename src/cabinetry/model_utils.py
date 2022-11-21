@@ -705,7 +705,19 @@ def _modifier_map(
     return modifier_map
 
 
-def _parameters_maximizing_constraints(model, aux_data):
+def _parameters_maximizing_constraints(
+    model: pyhf.pdf.Model, aux_data: List[float]
+) -> List[float]:
+    """Returns parameters maximizing the constraint term for the given auxiliary data.
+
+    Args:
+        model (pyhf.pdf.Model): model to use for constraint term evaluation
+        aux_data (List[float]): auxiliary data for which the constraint term should be
+            maximized
+
+    Returns:
+        List[float]: parameters maximizing the model constraint term
+    """
     # need to obtain the parameters that maximize the constraint term
     i_aux = 0
     i_poisson = 0
