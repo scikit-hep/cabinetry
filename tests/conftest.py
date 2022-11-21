@@ -311,6 +311,78 @@ def example_spec_lumi():
     return spec
 
 
+@pytest.fixture
+def example_spec_modifiers():
+    spec = {
+        "channels": [
+            {
+                "name": "SR",
+                "samples": [
+                    {
+                        "data": [35.0, 30.0],
+                        "modifiers": [
+                            {
+                                "data": None,
+                                "name": "mu",
+                                "type": "normfactor",
+                            },
+                            {
+                                "data": None,
+                                "name": "mu_shapefactor",
+                                "type": "shapefactor",
+                            },
+                            {
+                                "data": {"hi": 0.8, "lo": 1.2},
+                                "name": "normsys",
+                                "type": "normsys",
+                            },
+                            {
+                                "data": {
+                                    "hi_data": [36.0, 31.0],
+                                    "lo_data": [34.0, 29.0],
+                                },
+                                "name": "histosys",
+                                "type": "histosys",
+                            },
+                            {
+                                "data": [1.0, 2.0],
+                                "name": "staterror_SR",
+                                "type": "staterror",
+                            },
+                            {
+                                "data": [1.0, 2.0],
+                                "name": "shapesys_SR",
+                                "type": "shapesys",
+                            },
+                            {"data": None, "name": "lumi", "type": "lumi"},
+                        ],
+                        "name": "Signal",
+                    }
+                ],
+            }
+        ],
+        "measurements": [
+            {
+                "config": {
+                    "parameters": [
+                        {
+                            "auxdata": [1.0],
+                            "inits": [1.0],
+                            "name": "lumi",
+                            "sigmas": [0.02],
+                        }
+                    ],
+                    "poi": "mu",
+                },
+                "name": "lumi modifier",
+            }
+        ],
+        "observations": [{"data": [35, 30], "name": "SR"}],
+        "version": "1.0.0",
+    }
+    return spec
+
+
 # code below allows marking tests as slow and adds --runslow to run them
 # implemented following https://docs.pytest.org/en/6.2.x/example/simple.html
 def pytest_addoption(parser):
