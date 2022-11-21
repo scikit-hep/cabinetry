@@ -366,7 +366,8 @@ def _goodness_of_fit(
     """Calculates goodness-of-fit p-value with a saturated model.
 
     Returns NaN if the number of degrees of freedom in the chi2 test is zero (nominal
-    fit should already be perfect) or negative (over-parameterized model).
+    fit should already be perfect) or negative (over-parameterized model). Does not
+    require to run an additional fit to get the saturated model likelihood.
 
     Args:
         model (pyhf.pdf.Model): model used in the fit for which goodness-of-fit should
@@ -380,11 +381,14 @@ def _goodness_of_fit(
     """
     if model.config.nauxdata > 0:
         main_data, aux_data = model.fullpdf_tv.split(pyhf.tensorlib.astensor(data))
+
+        # need to obtain the parameters that maximize the constraint term
+        # (will not match suggested_init() when auxdata is custom)
+        best_pars = model_utils._parameters_maximizing_constraints(model, aux_data)
+
         # constraint term: log Gaussian(aux_data|parameters) etc.
         constraint_ll = pyhf.tensorlib.to_numpy(
-            model.constraint_logpdf(
-                aux_data, pyhf.tensorlib.astensor(model.config.suggested_init())
-            )
+            model.constraint_logpdf(aux_data, pyhf.tensorlib.astensor(best_pars))
         )
     else:
         # no auxiliary data, so no constraint terms present

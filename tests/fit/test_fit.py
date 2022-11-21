@@ -323,13 +323,25 @@ def test__run_minos(caplog):
 
 
 @mock.patch("cabinetry.model_utils.unconstrained_parameter_count", return_value=1)
+@mock.patch(
+    "cabinetry.model_utils._parameters_maximizing_constraints",
+    side_effect=[
+        [1.0, 1.0, 1.0, 1.0],  # for example_spec_multibin
+        [1.0, 0.9, 1.1, 0.8],  # for custom aux
+        [1.0],  # for example_spec_no_aux
+    ],
+)
 def test__goodness_of_fit(
-    mock_count, example_spec_multibin, example_spec_no_aux, caplog
+    mock_pars, mock_count, example_spec_multibin, example_spec_no_aux, caplog
 ):
     caplog.set_level(logging.DEBUG)
 
     model, data = model_utils.model_and_data(example_spec_multibin)
     p_val = fit._goodness_of_fit(model, data, 9.964913)
+    assert mock_pars.call_count == 1
+    assert mock_pars.call_args[0][0].spec == model.spec
+    assert np.allclose(mock_pars.call_args[0][1], [1.0, 1.0, 1.0])
+    assert mock_pars.call_args[1] == {}
     assert mock_count.call_count == 1
     assert mock_count.call_args[0][0].spec == model.spec
     assert mock_count.call_args[1] == {}
@@ -337,10 +349,19 @@ def test__goodness_of_fit(
     assert np.allclose(p_val, 0.91926079)
     caplog.clear()
 
+    # same setup but using custom auxdata
+    model, _ = model_utils.model_and_data(example_spec_multibin)
+    data = [35, 8, 10] + [0.9, 1.1, 0.8]  # custom aux
+    p_val = fit._goodness_of_fit(model, data, 9.964913)
+    assert mock_pars.call_count == 2
+    assert np.allclose(mock_pars.call_args[0][1], [0.9, 1.1, 0.8])  # aux picked up
+    assert np.allclose(p_val, 0.91926079)  # same result as before
+
     # no auxdata and zero degrees of freedom in chi2 test
     model, data = model_utils.model_and_data(example_spec_no_aux)
     p_val = fit._goodness_of_fit(model, data, 6.01482863)
-    assert mock_count.call_count == 2
+    assert mock_pars.call_count == 2  # no new call (no auxdata)
+    assert mock_count.call_count == 3
     assert mock_count.call_args[0][0].spec == model.spec
     assert mock_count.call_args[1] == {}
     assert (

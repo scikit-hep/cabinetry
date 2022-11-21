@@ -703,3 +703,31 @@ def _modifier_map(
                     (channel["name"], sample["name"], modifier["name"])
                 ].append(modifier["type"])
     return modifier_map
+
+
+def _parameters_maximizing_constraints(model, aux_data):
+    # need to obtain the parameters that maximize the constraint term
+    i_aux = 0
+    i_poisson = 0
+    best_pars = []  # parameters that will maximize constraint term
+    for parname in model.config.par_order:
+        if parname in model.config.auxdata_order:
+            for _ in range(model.config.param_set(parname).n_parameters):
+                if model.config.param_set(parname).pdf_type == "poisson":
+                    # the index here is for batch_size
+                    assert model.batch_size is None
+                    tau = model.constraint_model.constraints_poisson.batched_factors[0][
+                        i_poisson
+                    ]
+                    i_poisson += 1
+                else:
+                    tau = 1
+
+                # pick up auxdata (scale if needed)
+                best_pars += [aux_data[i_aux] / tau]
+                i_aux += 1
+        else:
+            # no aux for parameter -> pick up init (free-floating parameters)
+            best_pars += model.config.param_set(parname).suggested_init
+
+    return best_pars
