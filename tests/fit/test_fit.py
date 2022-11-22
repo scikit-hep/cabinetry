@@ -324,7 +324,7 @@ def test__run_minos(caplog):
 
 @mock.patch("cabinetry.model_utils.unconstrained_parameter_count", return_value=1)
 @mock.patch(
-    "cabinetry.model_utils._parameters_maximizing_constraints",
+    "cabinetry.model_utils._parameters_maximizing_constraint_term",
     side_effect=[
         [1.0, 1.0, 1.0, 1.0],  # for example_spec_multibin
         [1.0, 0.9, 1.1, 0.8],  # for custom aux

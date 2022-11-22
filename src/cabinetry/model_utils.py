@@ -705,7 +705,7 @@ def _modifier_map(
     return modifier_map
 
 
-def _parameters_maximizing_constraints(
+def _parameters_maximizing_constraint_term(
     model: pyhf.pdf.Model, aux_data: List[float]
 ) -> List[float]:
     """Returns parameters maximizing the constraint term for the given auxiliary data.
@@ -718,7 +718,6 @@ def _parameters_maximizing_constraints(
     Returns:
         List[float]: parameters maximizing the model constraint term
     """
-    # need to obtain the parameters that maximize the constraint term
     i_aux = 0
     i_poisson = 0
     best_pars = []  # parameters that will maximize constraint term
@@ -726,11 +725,13 @@ def _parameters_maximizing_constraints(
         if parname in model.config.auxdata_order:
             for _ in range(model.config.param_set(parname).n_parameters):
                 if model.config.param_set(parname).pdf_type == "poisson":
-                    # the index here is for batch_size
-                    assert model.batch_size is None
-                    tau = model.constraint_model.constraints_poisson.batched_factors[0][
-                        i_poisson
-                    ]
+                    # the index [0] here is for batch_size
+                    # conversion to float as type can vary depending on the pyhf backend
+                    tau = float(
+                        model.constraint_model.constraints_poisson.batched_factors[0][
+                            i_poisson
+                        ]
+                    )
                     i_poisson += 1
                 else:
                     tau = 1
@@ -740,6 +741,9 @@ def _parameters_maximizing_constraints(
                 i_aux += 1
         else:
             # no aux for parameter -> pick up init (free-floating parameters)
-            best_pars += model.config.param_set(parname).suggested_init
-
+            par_inits = pyhf.tensorlib.tolist(
+                model.config.param_set(parname).suggested_init
+            )
+            # ensure conversion to float https://github.com/scikit-hep/pyhf/issues/2065
+            best_pars += [float(par_init) for par_init in par_inits]
     return best_pars

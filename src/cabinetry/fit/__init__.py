@@ -384,7 +384,7 @@ def _goodness_of_fit(
 
         # need to obtain the parameters that maximize the constraint term
         # (will not match suggested_init() when auxdata is custom)
-        best_pars = model_utils._parameters_maximizing_constraints(
+        best_pars = model_utils._parameters_maximizing_constraint_term(
             model, pyhf.tensorlib.tolist(aux_data)
         )
 
