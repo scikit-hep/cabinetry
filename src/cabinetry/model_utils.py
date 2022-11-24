@@ -703,3 +703,58 @@ def _modifier_map(
                     (channel["name"], sample["name"], modifier["name"])
                 ].append(modifier["type"])
     return modifier_map
+
+
+def _parameters_maximizing_constraint_term(
+    model: pyhf.pdf.Model, aux_data: List[float]
+) -> List[float]:
+    """Returns parameters maximizing the constraint term for the given auxiliary data.
+
+    Parameters without an associated constraint term are set to their initial value.
+
+    Args:
+        model (pyhf.pdf.Model): model to use for constraint term evaluation
+        aux_data (List[float]): auxiliary data for which the constraint term should be
+            maximized
+
+    Returns:
+        List[float]: parameters maximizing the model constraint term
+    """
+    best_pars = []  # parameters maximizing constraint term
+    i_aux = 0  # current position in auxiliary data list
+    i_poisson = 0  # current position in list of Poisson rescale factors
+
+    try:
+        # factors to rescale Poisson auxiliary data (index [0] for batch_size)
+        poisson_factors = model.constraint_model.constraints_poisson.batched_factors[0]
+    except AttributeError:
+        poisson_factors = None  # no terms with Poisson constraint
+
+    for parname in model.config.par_order:
+        if parname in model.config.auxdata_order:
+            # parameter has associated auxdata: determine parameter value from it
+            # handle parameters controlling multiple bins
+            n_params = model.config.param_set(parname).n_parameters
+            if model.config.param_set(parname).pdf_type == "poisson":
+                # auxiliary data for Poisson terms needs rescaling
+                rescale_factors = [
+                    float(rf)
+                    for rf in poisson_factors[i_poisson : i_poisson + n_params]
+                ]
+                i_poisson += n_params
+            else:
+                rescale_factors = [1.0] * n_params  # no rescaling by default
+
+            best_pars += list(
+                np.asarray(aux_data[i_aux : i_aux + n_params]) / rescale_factors
+            )
+            i_aux += n_params
+
+        else:
+            # no associated auxdata (free-floating parameters): use init value
+            par_inits = pyhf.tensorlib.tolist(
+                model.config.param_set(parname).suggested_init
+            )
+            # ensure conversion to float https://github.com/scikit-hep/pyhf/issues/2065
+            best_pars += [float(par_init) for par_init in par_inits]
+    return best_pars

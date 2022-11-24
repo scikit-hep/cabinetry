@@ -515,3 +515,26 @@ def test_modifier_map(example_spec):
         ("Signal Region", "Signal", "Signal strength"): ["normfactor"],
     }
     assert modifier_map[("a", "b", "c")] == []
+
+
+def test__parameters_maximizing_constraint_term(
+    example_spec, example_spec_no_aux, example_spec_modifiers
+):
+    # staterror, custom auxdata value
+    model = pyhf.Workspace(example_spec).model()
+    best_pars = model_utils._parameters_maximizing_constraint_term(model, [1.1])
+    assert np.allclose(best_pars, [1.0, 1.1])
+
+    # no auxdata
+    model = pyhf.Workspace(example_spec_no_aux).model()
+    best_pars = model_utils._parameters_maximizing_constraint_term(model, [])
+    assert np.allclose(best_pars, [1.0])
+
+    # all modifiers (including Poisson constraint for shapesys), custom auxdata values
+    # order: histosys, lumi, normfactor, normsys, shapefactor (2 bins),
+    # shapesys (2 bins), staterror (2 bins)
+    model = pyhf.Workspace(example_spec_modifiers).model()
+    best_pars = model_utils._parameters_maximizing_constraint_term(
+        model, [0.1, 1.1, 0.2, 1531.25, 281.25, 0.9, 0.8]
+    )
+    assert np.allclose(best_pars, [0.1, 1.1, 1.0, 0.2, 1.0, 1.0, 1.25, 1.25, 0.9, 0.8])
