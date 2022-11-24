@@ -710,6 +710,8 @@ def _parameters_maximizing_constraint_term(
 ) -> List[float]:
     """Returns parameters maximizing the constraint term for the given auxiliary data.
 
+    Parameters without an associated constraint term are set to their initial value.
+
     Args:
         model (pyhf.pdf.Model): model to use for constraint term evaluation
         aux_data (List[float]): auxiliary data for which the constraint term should be
