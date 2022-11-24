@@ -743,7 +743,7 @@ def _parameters_maximizing_constraint_term(
                 ]
                 i_poisson += n_params
             else:
-                rescale_factors = [1] * n_params  # no rescaling by default
+                rescale_factors = [1.0] * n_params  # no rescaling by default
 
             best_pars += list(
                 np.asarray(aux_data[i_aux : i_aux + n_params]) / rescale_factors
