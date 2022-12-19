@@ -321,11 +321,7 @@ def example_spec_modifiers():
                     {
                         "data": [35.0, 30.0],
                         "modifiers": [
-                            {
-                                "data": None,
-                                "name": "mu",
-                                "type": "normfactor",
-                            },
+                            {"data": None, "name": "mu", "type": "normfactor"},
                             {
                                 "data": None,
                                 "name": "mu_shapefactor",

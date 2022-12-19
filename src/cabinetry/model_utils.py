@@ -389,10 +389,7 @@ def yield_stdev(
                 tuple(parameters),
                 tuple(uncertainty),
                 corr_mat.data.tobytes(),
-            ): (
-                total_stdev_per_bin,
-                total_stdev_per_channel,
-            )
+            ): (total_stdev_per_bin, total_stdev_per_channel)
         }
     )
 
