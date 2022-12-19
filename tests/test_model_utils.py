@@ -79,9 +79,7 @@ def test_asimov_data(example_spec):
     # pre-fit Asimov, custom POI name + value
     assert np.allclose(
         model_utils.asimov_data(
-            model,
-            poi_name="staterror_Signal-Region[0]",
-            poi_value=1.1,
+            model, poi_name="staterror_Signal-Region[0]", poi_value=1.1
         ),
         [113.96, 1.1],  # 2*51.8*1.1
     )

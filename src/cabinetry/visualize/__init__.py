@@ -528,8 +528,7 @@ def ranking(
 
     # sort parameters by decreasing maximum post-fit impact
     max_postfit_impact = np.maximum(
-        np.abs(ranking_results.postfit_up),
-        np.abs(ranking_results.postfit_down),
+        np.abs(ranking_results.postfit_up), np.abs(ranking_results.postfit_down)
     )
 
     # get indices to sort by decreasing impact

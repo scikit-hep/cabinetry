@@ -344,9 +344,7 @@ def data_mc(
     help='folder to save figures to (default: "figures")',
 )
 def modifier_grid(
-    ws_spec: io.TextIOWrapper,
-    split_by_sample: bool,
-    figfolder: str,
+    ws_spec: io.TextIOWrapper, split_by_sample: bool, figfolder: str
 ) -> None:
     """Visualizes modifier structure of a model.
 

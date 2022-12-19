@@ -597,8 +597,7 @@ def test_limit(mock_draw):
 @mock.patch(
     "cabinetry.model_utils._modifier_map",
     return_value=defaultdict(
-        list,
-        {("Signal Region", "Signal", "Signal strength"): ["normfactor"]},
+        list, {("Signal Region", "Signal", "Signal strength"): ["normfactor"]}
     ),
 )
 def test_modifier_grid(mock_map, mock_draw, example_spec, caplog):
