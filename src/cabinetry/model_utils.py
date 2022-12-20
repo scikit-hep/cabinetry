@@ -69,14 +69,15 @@ def model_and_data(
             - the data (plus auxdata if requested) for the model
     """
     workspace = pyhf.Workspace(spec, validate=validate)
+    poi_name_kwarg = {"poi_name": poi_name} if poi_name is not None else {}
     model = workspace.model(
         validate=validate,
-        poi_name=poi_name,
         modifier_set=modifier_set,
         modifier_settings={
             "normsys": {"interpcode": "code4"},
             "histosys": {"interpcode": "code4p"},
         },
+        **poi_name_kwarg,
     )  # use HistFactory InterpCode=4 (default in pyhf since v0.6.0)
     if not asimov:
         data = workspace.data(model, include_auxdata=include_auxdata)
