@@ -193,7 +193,13 @@ class ModelPrediction(NamedTuple):
 
 
 def model_and_data(
-    spec: dict[str, Any], *, asimov: bool = False, include_auxdata: bool = True
+    spec: dict[str, Any],
+    *,
+    asimov: bool = False,
+    include_auxdata: bool = True,
+    validate: bool = True,
+    poi_name: str | None = None,
+    modifier_set: dict[str, tuple] | None = None,
 ) -> tuple[pyhf.pdf.Model, list[float]]:
     """Returns model and data for a ``pyhf`` workspace specification.
 
@@ -202,17 +208,26 @@ def model_and_data(
         asimov (bool, optional): whether to return the Asimov dataset, defaults to False
         include_auxdata (bool, optional): whether to also return auxdata, defaults to
             True
+        validate (bool, optional): whether to validate the workspace and model against
+            the respective JSON schema, defaults to True
+        poi_name (Optional[str], optional): name of POI to set for model, defaults to
+            None (then use POI as given in measurement specification)
+        modifier_set (Optional[Dict[str, Tuple]], optional): additional custom modifiers
+            to support, defaults to None (no custom modifiers)
 
     Returns:
         tuple[pyhf.pdf.Model, list[float]]: tuple containing a HistFactory-style model
         in ``pyhf`` format and the data (plus auxdata if requested) for the model
     """
-    workspace = pyhf.Workspace(spec)
+    workspace = pyhf.Workspace(spec, validate=validate)
     model = workspace.model(
+        validate=validate,
+        poi_name=poi_name,
+        modifier_set=modifier_set,
         modifier_settings={
             "normsys": {"interpcode": "code4"},
             "histosys": {"interpcode": "code4p"},
-        }
+        },
     )  # use HistFactory InterpCode=4 (default in pyhf since v0.6.0)
     if not asimov:
         data = workspace.data(model, include_auxdata=include_auxdata)
