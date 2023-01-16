@@ -17,7 +17,7 @@ repos:
         additional_dependencies: ["numpy>=1.22", "boost-histogram>=1.0.1", "click>=8", "types-tabulate", "types-PyYAML"]
         args: ["--python-version=3.10"]
 -   repo: https://github.com/pycqa/flake8
-    rev: 5.0.4
+    rev: 6.0.0
     hooks:
     -   id: flake8
         additional_dependencies: [flake8-bugbear, flake8-import-order, flake8-print]
@@ -33,7 +33,7 @@ repos:
         args: ["--maxkb=100"]
     -   id: trailing-whitespace
 -   repo: https://github.com/pycqa/pydocstyle
-    rev: 6.1.1
+    rev: 6.2.3
     hooks:
     -   id: pydocstyle
         # configuration duplicated in setup.cfg
