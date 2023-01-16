@@ -438,22 +438,29 @@ def correlation_matrix(
 
 
 def pulls(
-    fit_results: fit.FitResults,
+    fit_results: Union[fit.FitResults, List[fit.FitResults]],
     *,
     figure_folder: Union[str, pathlib.Path] = "figures",
     exclude: Optional[Union[str, List[str], Tuple[str, ...]]] = None,
+    fit_labels: Optional[Union[str, List[str]]] = None,
     close_figure: bool = True,
     save_figure: bool = True,
 ) -> mpl.figure.Figure:
     """Draws a pull plot of parameter results and uncertainties.
 
     Args:
-        fit_results (fit.FitResults): fit results, including correlation matrix and
-            parameter labels
+        fit_results (Union[fit.FitResults, List[fit.FitResults]]): fit results,
+            including correlation matrix and parameter labels, this can either be a
+            single result or a list of multiple results that are then compared with
+            each other (comparison of up to three results is supported)
         figure_folder (Union[str, pathlib.Path], optional): path to the folder to save
             figures in, defaults to "figures"
         exclude (Optional[Union[str, List[str], Tuple[str, ...]]], optional): parameter
             or parameters to exclude from plot, defaults to None (nothing excluded)
+        fit_labels (Optional[Union[str, List[str]]], optional): label(s) to identify fit
+            results with, has to be provided if more than one fit result is given,
+            defaults to None (then uses no label for the case of a single fit result
+            input)
         close_figure (bool, optional): whether to close figure, defaults to True
         save_figure (bool, optional): whether to save figure, defaults to True
 
@@ -462,7 +469,19 @@ def pulls(
     """
     # path is None if figure should not be saved
     figure_path = pathlib.Path(figure_folder) / "pulls.pdf" if save_figure else None
-    labels_np = np.asarray(fit_results.labels)
+
+    # handle single / multiple fit results
+    if not isinstance(fit_results, list):
+        fit_results = [fit_results]
+    if not isinstance(fit_labels, list) and fit_labels is not None:
+        fit_labels = [fit_labels]
+    if len(fit_results) > 1 and fit_labels is None:
+        raise ValueError("fit labels need to be provided when comparing fit results")
+    elif fit_labels is not None and len(fit_results) != len(fit_labels):
+        raise ValueError(
+            f"found {len(fit_results)} fit result(s) but {len(fit_labels)} "
+            "label(s), they need to match"
+        )
 
     if exclude is None:
         exclude_set = set()
@@ -471,28 +490,39 @@ def pulls(
     else:
         exclude_set = set(exclude)
 
-    # exclude fixed parameters from pull plot
-    exclude_set.update(
-        [
-            label
-            for i_np, label in enumerate(labels_np)
-            if fit_results.uncertainty[i_np] == 0.0
-        ]
-    )
+    bestfit = []
+    uncertainty = []
+    labels_np = []
 
-    # exclude staterror parameters from pull plot (they are centered at 1)
-    exclude_set.update([label for label in labels_np if label[0:10] == "staterror_"])
+    # perform filtering per instance of fit_results
+    for fit_results_inst in fit_results:
+        labels_np_inst = np.asarray(fit_results_inst.labels)
 
-    # filter out user-specified parameters
-    mask = [True if label not in exclude_set else False for label in labels_np]
-    bestfit = fit_results.bestfit[mask]
-    uncertainty = fit_results.uncertainty[mask]
-    labels_np = labels_np[mask]
+        # exclude fixed parameters from pull plot
+        exclude_set.update(
+            [
+                label
+                for i_np, label in enumerate(labels_np_inst)
+                if fit_results_inst.uncertainty[i_np] == 0.0
+            ]
+        )
+
+        # exclude staterror parameters from pull plot (they are centered at 1)
+        exclude_set.update(
+            [label for label in labels_np_inst if label[0:10] == "staterror_"]
+        )
+
+        # filter out user-specified parameters
+        mask = [True if label not in exclude_set else False for label in labels_np_inst]
+        bestfit.append(fit_results_inst.bestfit[mask])
+        uncertainty.append(fit_results_inst.uncertainty[mask])
+        labels_np.append(labels_np_inst[mask])
 
     fig = plot_result.pulls(
         bestfit,
         uncertainty,
         labels_np,
+        fit_labels,
         figure_path=figure_path,
         close_figure=close_figure,
     )
