@@ -3,6 +3,10 @@ import logging
 import cabinetry
 
 
+def test___dir__():
+    assert dir(cabinetry) == sorted(cabinetry.__all__)
+
+
 def test_set_logging(caplog):
     log = logging.getLogger("cabinetry")
 
