@@ -16,7 +16,7 @@ extras_require["test"] = sorted(
             "mypy",
             "types-tabulate",
             "types-PyYAML",
-            "typeguard~=2.13",  # typing.NamedTuple compatibility in Python 3.7
+            "typeguard~=2.13",  # typing.NamedTuple in Python 3.7, cabinetry#391
             "black",
         ]
     )
