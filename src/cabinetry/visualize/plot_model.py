@@ -149,6 +149,9 @@ def data_mc(
         )
     nonzero_model_yield = total_yield != 0.0
 
+    if np.any(total_yield < 0.0):
+        raise ValueError(f"{label} total yield {total_yield.tolist()} has negative bin(s)")
+
     # add uncertainty band around y=1
     rel_mc_unc = total_model_unc / total_yield
     # do not show band in bins where total model yield is 0
@@ -350,11 +353,19 @@ def templates(
             template_ratio_plot = template["yields"] / nominal_histo["yields"]
             line_y = [y for y in template_ratio_plot for _ in range(2)]
 
+            if np.any(nominal_histo["yields"] < 0.0):
+                log.warning(
+                    f"{label} nominal histo yield {nominal_histo['yields'].tolist()} has negative bin(s), taking absolute value for yerr on template ratio plot uncertainty"
+                )
+                template_ratio_plot_unc = template["stdev"] / np.abs(nominal_histo["yields"])
+            else:
+                template_ratio_plot_unc = template["stdev"] / nominal_histo["yields"]
+ 
             ax2.plot(line_x, line_y, color=color, linestyle=linestyle)
             ax2.errorbar(
                 bin_centers,
                 template_ratio_plot,
-                yerr=template["stdev"] / nominal_histo["yields"],
+                yerr=template_ratio_plot_unc,
                 fmt="none",
                 color=color,
             )
