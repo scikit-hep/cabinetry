@@ -350,8 +350,8 @@ def data_mc(
 def yields(
     ws_spec: io.TextIOWrapper,
     postfit: bool,
-    tablefmt: str,
     tablefolder: str,
+    tablefmt: str,
 ) -> None:
     """Creates yield tables of fit model and observed data.
 
