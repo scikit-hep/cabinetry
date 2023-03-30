@@ -541,6 +541,64 @@ def test_data_mc(
     )
 
 
+@mock.patch("cabinetry.tabulate.yields", autospec=True)
+@mock.patch(
+    "cabinetry.model_utils.prediction", return_value="mock_model_pred", autospec=True
+)
+@mock.patch(
+    "cabinetry.fit.fit",
+    return_value=fit.FitResults(
+        np.asarray([1.0]), np.asarray([0.1]), ["label"], np.asarray([[1.0]]), 1.0
+    ),
+    autospec=True,
+)
+@mock.patch(
+    "cabinetry.model_utils.model_and_data",
+    return_value=("model", "data"),
+    autospec=True,
+)
+def test_yields(mock_utils, mock_fit, mock_pred, mock_tab, tmp_path):
+    workspace = {"workspace": "mock"}
+    workspace_path = str(tmp_path / "workspace.json")
+
+    # need to save workspace to file since click looks for it
+    with open(workspace_path, "w") as f:
+        f.write('{"workspace": "mock"}')
+
+    runner = CliRunner()
+
+    # default
+    result = runner.invoke(cli.yields, [workspace_path])
+    assert result.exit_code == 0
+    assert mock_utils.call_args_list == [((workspace,), {})]
+    assert mock_fit.call_count == 0
+    assert mock_pred.call_args_list == [(("model",), {"fit_results": None})]
+    assert mock_tab.call_args_list == [
+        (
+            ("mock_model_pred", "data"),
+            {"table_folder": "tables", "table_format": "simple"},
+        )
+    ]
+
+    # with post-fit, custom table folder and format
+    fit_results = fit.FitResults(
+        np.asarray([1.0]), np.asarray([0.1]), ["label"], np.asarray([[1.0]]), 1.0
+    )
+
+    result = runner.invoke(
+        cli.yields,
+        [workspace_path, "--postfit", "--tablefolder", "folder", "--tablefmt", "html"],
+    )
+    assert result.exit_code == 0
+    assert mock_utils.call_args == ((workspace,), {})
+    assert mock_fit.call_args_list == [(("model", "data"), {})]
+    assert mock_pred.call_args == (("model",), {"fit_results": fit_results})
+    assert mock_tab.call_args == (
+        ("mock_model_pred", "data"),
+        {"table_folder": "folder", "table_format": "html"},
+    )
+
+
 @mock.patch("cabinetry.visualize.modifier_grid", autospec=True)
 @mock.patch(
     "cabinetry.model_utils.model_and_data",

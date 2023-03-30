@@ -13,6 +13,7 @@ from cabinetry import __version__
 from cabinetry import configuration as cabinetry_configuration
 from cabinetry import fit as cabinetry_fit
 from cabinetry import model_utils as cabinetry_model_utils
+from cabinetry import tabulate as cabinetry_tabulate
 from cabinetry import templates as cabinetry_templates
 from cabinetry import visualize as cabinetry_visualize
 from cabinetry import workspace as cabinetry_workspace
@@ -334,6 +335,47 @@ def data_mc(
 @click.command()
 @click.argument("ws_spec", type=click.File("r"))
 @click.option(
+    "--postfit", is_flag=True, help="show post-fit model (default: pre-fit model)"
+)
+@click.option(
+    "--tablefolder",
+    default="tables",
+    help='folder to save tables to (default: "tables")',
+)
+@click.option(
+    "--tablefmt",
+    default="simple",
+    help='format in which to save the table (default: "simple")',
+)
+def yields(
+    ws_spec: io.TextIOWrapper,
+    postfit: bool,
+    tablefolder: str,
+    tablefmt: str,
+) -> None:
+    """Creates yield tables of fit model and observed data.
+
+    WS_SPEC: path to workspace
+    """
+    _set_logging()
+    ws = json.load(ws_spec)
+    model, data = cabinetry_model_utils.model_and_data(ws)
+
+    # optionally perform maximum likelihood fit to obtain post-fit model
+    fit_results = cabinetry_fit.fit(model, data) if postfit else None
+
+    model_prediction = cabinetry_model_utils.prediction(model, fit_results=fit_results)
+    cabinetry_tabulate.yields(
+        model_prediction,
+        data,
+        table_folder=tablefolder,
+        table_format=tablefmt,
+    )
+
+
+@click.command()
+@click.argument("ws_spec", type=click.File("r"))
+@click.option(
     "--split_by_sample",
     is_flag=True,
     help="split grids by sample (default: split by channel)",
@@ -371,4 +413,5 @@ cabinetry.add_command(scan)
 cabinetry.add_command(limit)
 cabinetry.add_command(significance)
 cabinetry.add_command(data_mc)
+cabinetry.add_command(yields)
 cabinetry.add_command(modifier_grid)
