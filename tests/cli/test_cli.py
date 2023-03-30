@@ -576,10 +576,7 @@ def test_yields(mock_utils, mock_fit, mock_pred, mock_tab, tmp_path):
     assert mock_tab.call_args_list == [
         (
             ("mock_model_pred", "data"),
-            {
-                "table_folder": "tables",
-                "table_format": "simple",
-            },
+            {"table_folder": "tables", "table_format": "simple"},
         )
     ]
 
@@ -598,10 +595,7 @@ def test_yields(mock_utils, mock_fit, mock_pred, mock_tab, tmp_path):
     assert mock_pred.call_args == (("model",), {"fit_results": fit_results})
     assert mock_tab.call_args == (
         ("mock_model_pred", "data"),
-        {
-            "table_folder": "folder",
-            "table_format": "html",
-        },
+        {"table_folder": "folder", "table_format": "html"},
     )
 
 
