@@ -151,7 +151,7 @@ def data_mc(
 
     if np.any(total_yield < 0.0):
         raise ValueError(
-            f"{label} total yield {total_yield.tolist()} has negative bin(s)"
+            f"{label} total model yield has negative bin(s): {total_yield.tolist()}"
         )
 
     # add uncertainty band around y=1
@@ -317,6 +317,15 @@ def templates(
     # x positions for lines drawn showing the template distributions
     line_x = [y for y in bin_edges for _ in range(2)][1:-1]
 
+    neg_nom_bins = False  # negative bins present in nominal histogram
+    if np.any(nominal_histo["yields"] < 0.0):
+        neg_nom_bins = True
+        log.warning(
+            f"{label} nominal histogram yield has negative bin(s): "
+            f"{nominal_histo['yields'].tolist()}, taking absolute value for "
+            "ratio plot uncertainty"
+        )
+
     # draw templates
     for template, color, linestyle, template_label in zip(
         all_templates, colors, linestyles, template_labels
@@ -355,23 +364,11 @@ def templates(
             template_ratio_plot = template["yields"] / nominal_histo["yields"]
             line_y = [y for y in template_ratio_plot for _ in range(2)]
 
-            if np.any(nominal_histo["yields"] < 0.0):
-                log.warning(
-                    f"{label} nominal histo yield {nominal_histo['yields'].tolist()}\
-                        has negative bin(s), taking absolute value for yerr on\
-                        template ratio plot uncertainty"
-                )
-                template_ratio_plot_unc = template["stdev"] / np.abs(
-                    nominal_histo["yields"]
-                )
-            else:
-                template_ratio_plot_unc = template["stdev"] / nominal_histo["yields"]
-
             ax2.plot(line_x, line_y, color=color, linestyle=linestyle)
             ax2.errorbar(
                 bin_centers,
                 template_ratio_plot,
-                yerr=template_ratio_plot_unc,
+                yerr=template["stdev"] / np.abs(nominal_histo["yields"]),
                 fmt="none",
                 color=color,
             )
@@ -412,7 +409,7 @@ def templates(
     ax2.set_xlim([bin_edges[0], bin_edges[-1]])
     ax2.set_ylim([0.5, 1.5])
     ax2.set_xlabel(variable)
-    ax2.set_ylabel("variation / nominal")
+    ax2.set_ylabel(f"variation / {'nominal' if not neg_nom_bins else 'abs(nominal)'}")
     ax2.set_yticks([0.5, 0.75, 1.0, 1.25, 1.5])
     ax2.set_yticklabels([0.5, 0.75, 1.0, 1.25, ""])
     ax2.tick_params(axis="both", which="major", pad=8)

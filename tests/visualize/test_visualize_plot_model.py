@@ -125,10 +125,20 @@ def test_data_mc(tmp_path, caplog):
     # expect three RuntimeWarnings from numpy due to division by zero
     assert sum("divide by zero" in str(m.message) for m in warn_record) == 3
 
+    # negative bin yield
+    histo_dict_list[0]["yields"] = [-50, -50]
+    with pytest.raises(
+        ValueError,
+        match=r"abc total model yield has negative bin\(s\): \[-50, -45\]",
+    ):
+        plot_model.data_mc(
+            histo_dict_list, total_model_unc_log, bin_edges_log, label="abc"
+        )
+
     plt.close("all")
 
 
-def test_templates(tmp_path):
+def test_templates(tmp_path, caplog):
     fname = tmp_path / "fig.png"
     nominal_histo = {
         "yields": np.asarray([1.0, 1.2]),
@@ -172,9 +182,12 @@ def test_templates(tmp_path):
     assert (
         compare_images("tests/visualize/reference/templates.png", str(fname), 0) is None
     )
+    caplog.clear()
 
     # do not save figure, but close it
     # only single variation specified
+    # negative bin present in nominal histogram
+    nominal_histo["yields"][0] = -1
     with mock.patch("cabinetry.visualize.utils._save_and_close") as mock_close_safe:
         fig = plot_model.templates(
             nominal_histo,
@@ -188,6 +201,12 @@ def test_templates(tmp_path):
             close_figure=True,
         )
         assert mock_close_safe.call_args_list == [((fig, None, True), {})]
+    assert (
+        "region: Signal region\nsample: Signal\nsystematic: Modeling nominal histogram "
+        "yield has negative bin(s): [-1.0, 1.2], taking absolute value for ratio plot "
+        "uncertainty"
+    ) in [rec.message for rec in caplog.records]
+    caplog.clear()
 
     plt.close("all")
 
