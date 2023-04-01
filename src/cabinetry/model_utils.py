@@ -179,19 +179,19 @@ def prefit_uncertainties(model: pyhf.pdf.Model) -> np.ndarray:
     """
     pre_fit_unc = []  # pre-fit uncertainties for parameters
     for parameter in model.config.par_order:
-        # obtain pre-fit uncertainty for constrained, non-fixed parameters
-        if (
-            model.config.param_set(parameter).constrained
-            and not model.config.param_set(parameter).suggested_fixed_as_bool
-        ):
-            pre_fit_unc += model.config.param_set(parameter).width()
+        if model.config.param_set(parameter).constrained:
+            # pre-fit uncertainty for constrained parameters (if fixed, set to 0.0)
+            widths = [
+                width if not fixed else 0.0
+                for width, fixed in zip(
+                    model.config.param_set(parameter).width(),
+                    model.config.param_set(parameter).suggested_fixed,
+                )
+            ]
+            pre_fit_unc += widths
         else:
-            if model.config.param_set(parameter).n_parameters == 1:
-                # unconstrained normfactor or fixed parameter, uncertainty is 0
-                pre_fit_unc.append(0.0)
-            else:
-                # shapefactor
-                pre_fit_unc += [0.0] * model.config.param_set(parameter).n_parameters
+            # unconstrained: normfactor or shapefactor, uncertainty is 0
+            pre_fit_unc += [0.0] * model.config.param_set(parameter).n_parameters
     return np.asarray(pre_fit_unc)
 
 
@@ -476,11 +476,9 @@ def unconstrained_parameter_count(model: pyhf.pdf.Model) -> int:
     """
     n_pars = 0
     for parname in model.config.par_order:
-        if (
-            not model.config.param_set(parname).constrained
-            and not model.config.param_set(parname).suggested_fixed_as_bool
-        ):
-            n_pars += model.config.param_set(parname).n_parameters
+        if not model.config.param_set(parname).constrained:
+            # only consider non-constant parameters
+            n_pars += model.config.param_set(parname).suggested_fixed.count(False)
     return n_pars
 
 

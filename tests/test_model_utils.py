@@ -147,7 +147,10 @@ def test_asimov_parameters(example_spec, example_spec_shapefactor, example_spec_
 
 
 def test_prefit_uncertainties(
-    example_spec, example_spec_multibin, example_spec_shapefactor
+    example_spec,
+    example_spec_multibin,
+    example_spec_shapefactor,
+    example_spec_zero_staterror,
 ):
     model = pyhf.Workspace(example_spec).model()
     unc = model_utils.prefit_uncertainties(model)
@@ -160,6 +163,10 @@ def test_prefit_uncertainties(
     model = pyhf.Workspace(example_spec_shapefactor).model()
     unc = model_utils.prefit_uncertainties(model)
     assert np.allclose(unc, [0.0, 0.0, 0.0])
+
+    model = pyhf.Workspace(example_spec_zero_staterror).model()
+    unc = model_utils.prefit_uncertainties(model)
+    assert np.allclose(unc, [0.0, 0.2, 0.0])  # partially fixed staterror
 
 
 def test__hashable_model_key(example_spec):

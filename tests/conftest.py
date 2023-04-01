@@ -379,6 +379,43 @@ def example_spec_modifiers():
     return spec
 
 
+@pytest.fixture
+def example_spec_zero_staterror():
+    spec = {
+        "channels": [
+            {
+                "name": "SR",
+                "samples": [
+                    {
+                        "data": [5.0, 0.0],
+                        "modifiers": [
+                            {"data": None, "name": "mu", "type": "normfactor"},
+                            {
+                                "data": [1.0, 0.0],
+                                "name": "staterror_SR",
+                                "type": "staterror",
+                            },
+                        ],
+                        "name": "Signal",
+                    }
+                ],
+            }
+        ],
+        "measurements": [
+            {
+                "config": {
+                    "parameters": [],
+                    "poi": "mu",
+                },
+                "name": "zero staterror",
+            }
+        ],
+        "observations": [{"data": [5, 0], "name": "SR"}],
+        "version": "1.0.0",
+    }
+    return spec
+
+
 # code below allows marking tests as slow and adds --runslow to run them
 # implemented following https://docs.pytest.org/en/6.2.x/example/simple.html
 def pytest_addoption(parser):
