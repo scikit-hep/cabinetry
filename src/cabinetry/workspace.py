@@ -202,7 +202,7 @@ class WorkspaceBuilder:
         modifiers.append(norm_modifier)
 
         # add the shape part in a histosys
-        if histogram_nominal.axes[0].size > 1:
+        if len(histogram_nominal.yields) > 1:
             # only relevant if there is more than one bin, otherwise there is no "shape"
             shape_modifier = {}
             shape_modifier.update({"name": modifier_name})
