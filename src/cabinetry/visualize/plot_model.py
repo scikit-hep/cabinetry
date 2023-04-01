@@ -52,6 +52,9 @@ def data_mc(
             saving it, defaults to False (enable when producing many figures to avoid
             memory issues, prevents rendering in notebooks)
 
+    Raises:
+        ValueError: when total model yield is negative in any bin
+
     Returns:
         matplotlib.figure.Figure: the data/MC figure
     """
