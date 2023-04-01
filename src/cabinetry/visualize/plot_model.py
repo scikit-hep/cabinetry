@@ -145,8 +145,7 @@ def data_mc(
     n_zero_pred = sum(total_yield == 0.0)  # number of bins with zero predicted yields
     if n_zero_pred > 0:
         log.warning(
-            f"predicted yield is zero in {n_zero_pred} bin(s),\
-            excluded from ratio plot"
+            f"predicted yield is zero in {n_zero_pred} bin(s), excluded from ratio plot"
         )
     nonzero_model_yield = total_yield != 0.0
 
