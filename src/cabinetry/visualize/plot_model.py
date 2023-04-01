@@ -52,6 +52,9 @@ def data_mc(
             saving it, defaults to False (enable when producing many figures to avoid
             memory issues, prevents rendering in notebooks)
 
+    Raises:
+        ValueError: when total model yield is negative in any bin
+
     Returns:
         matplotlib.figure.Figure: the data/MC figure
     """
@@ -148,6 +151,11 @@ def data_mc(
             f"predicted yield is zero in {n_zero_pred} bin(s), excluded from ratio plot"
         )
     nonzero_model_yield = total_yield != 0.0
+
+    if np.any(total_yield < 0.0):
+        raise ValueError(
+            f"{label} total model yield has negative bin(s): {total_yield.tolist()}"
+        )
 
     # add uncertainty band around y=1
     rel_mc_unc = total_model_unc / total_yield
@@ -312,6 +320,15 @@ def templates(
     # x positions for lines drawn showing the template distributions
     line_x = [y for y in bin_edges for _ in range(2)][1:-1]
 
+    neg_nom_bin = False  # negative bin(s) present in nominal histogram
+    if np.any(nominal_histo["yields"] < 0.0):
+        neg_nom_bin = True
+        log.warning(
+            f"{label} nominal histogram yield has negative bin(s): "
+            f"{nominal_histo['yields'].tolist()}, taking absolute value for "
+            "ratio plot uncertainty"
+        )
+
     # draw templates
     for template, color, linestyle, template_label in zip(
         all_templates, colors, linestyles, template_labels
@@ -354,7 +371,7 @@ def templates(
             ax2.errorbar(
                 bin_centers,
                 template_ratio_plot,
-                yerr=template["stdev"] / nominal_histo["yields"],
+                yerr=template["stdev"] / np.abs(nominal_histo["yields"]),
                 fmt="none",
                 color=color,
             )
@@ -395,7 +412,7 @@ def templates(
     ax2.set_xlim([bin_edges[0], bin_edges[-1]])
     ax2.set_ylim([0.5, 1.5])
     ax2.set_xlabel(variable)
-    ax2.set_ylabel("variation / nominal")
+    ax2.set_ylabel(f"variation / {'nominal' if not neg_nom_bin else 'abs(nominal)'}")
     ax2.set_yticks([0.5, 0.75, 1.0, 1.25, 1.5])
     ax2.set_yticklabels([0.5, 0.75, 1.0, 1.25, ""])
     ax2.tick_params(axis="both", which="major", pad=8)
