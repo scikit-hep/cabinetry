@@ -136,6 +136,9 @@ def test_WorkspaceBuilder_normalization_modifier():
         # for test of symmetrization: up and nominal
         histo.Histogram.from_arrays([0, 1, 2], [26.0, 24.0], [0.1, 0.1]),
         histo.Histogram.from_arrays([0, 1, 2], [20.0, 20.0], [0.1, 0.1]),
+        # single bin for test of histosys being skipped (up and nominal)
+        histo.Histogram.from_arrays([0, 1], [26.0], [0.1]),
+        histo.Histogram.from_arrays([0, 1], [20.0], [0.1]),
     ],
 )
 def test_WorkspaceBuilder_normplusshape_modifiers(mock_histogram):
@@ -192,6 +195,12 @@ def test_WorkspaceBuilder_normplusshape_modifiers(mock_histogram):
             {"template": "Up", "modified": True},
         ),
         ((pathlib.Path("path"), region, sample, {}), {"modified": True}),
+    ]
+
+    # single bin, causing histosys being skipped
+    modifiers = ws_builder.normplusshape_modifiers(region, sample, systematic)
+    assert modifiers == [
+        {"name": "mod_name", "type": "normsys", "data": {"hi": 1.3, "lo": 0.7}},
     ]
 
 
