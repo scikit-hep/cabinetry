@@ -126,7 +126,9 @@ class WorkspaceBuilder:
         provides the `histosys` and `normsys` modifiers for ``pyhf`` (in `HistFactory`
         language, this corresponds to a `HistoSys` and an `OverallSys`). Symmetrization
         could happen either at this stage (this is the case currently), or somewhere
-        earlier, such as during template postprocessing.
+        earlier, such as during template postprocessing. A `histosys` modifier is not
+        created for single-bin channels, as it has no effect in this case (everything is
+        handled by the `normsys` modifier already).
 
         Args:
             region (Dict[str, Any]): region the systematic variation acts in
@@ -200,13 +202,15 @@ class WorkspaceBuilder:
         modifiers.append(norm_modifier)
 
         # add the shape part in a histosys
-        shape_modifier = {}
-        shape_modifier.update({"name": modifier_name})
-        shape_modifier.update({"type": "histosys"})
-        shape_modifier.update(
-            {"data": {"hi_data": histo_yield_up, "lo_data": histo_yield_down}}
-        )
-        modifiers.append(shape_modifier)
+        if histogram_nominal.axes[0].size > 1:
+            # only relevant if there is more than one bin, otherwise there is no "shape"
+            shape_modifier = {}
+            shape_modifier.update({"name": modifier_name})
+            shape_modifier.update({"type": "histosys"})
+            shape_modifier.update(
+                {"data": {"hi_data": histo_yield_up, "lo_data": histo_yield_down}}
+            )
+            modifiers.append(shape_modifier)
         return modifiers
 
     def sys_modifiers(
