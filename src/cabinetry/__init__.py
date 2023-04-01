@@ -35,7 +35,7 @@ def __dir__() -> List[str]:
     return __all__
 
 
-__version__ = "0.5.1"
+__version__ = "0.5.2"
 
 
 def set_logging() -> None:
