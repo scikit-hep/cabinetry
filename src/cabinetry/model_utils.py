@@ -480,11 +480,9 @@ def unconstrained_parameter_count(model: pyhf.pdf.Model) -> int:
     """
     n_pars = 0
     for parname in model.config.par_order:
-        if (
-            not model.config.param_set(parname).constrained
-            and not model.config.param_set(parname).suggested_fixed_as_bool
-        ):
-            n_pars += model.config.param_set(parname).n_parameters
+        if not model.config.param_set(parname).constrained:
+            # only consider non-constant parameters
+            n_pars += model.config.param_set(parname).suggested_fixed.count(False)
     return n_pars
 
 
