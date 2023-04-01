@@ -320,9 +320,9 @@ def templates(
     # x positions for lines drawn showing the template distributions
     line_x = [y for y in bin_edges for _ in range(2)][1:-1]
 
-    neg_nom_bins = False  # negative bins present in nominal histogram
+    neg_nom_bin = False  # negative bin(s) present in nominal histogram
     if np.any(nominal_histo["yields"] < 0.0):
-        neg_nom_bins = True
+        neg_nom_bin = True
         log.warning(
             f"{label} nominal histogram yield has negative bin(s): "
             f"{nominal_histo['yields'].tolist()}, taking absolute value for "
@@ -412,7 +412,7 @@ def templates(
     ax2.set_xlim([bin_edges[0], bin_edges[-1]])
     ax2.set_ylim([0.5, 1.5])
     ax2.set_xlabel(variable)
-    ax2.set_ylabel(f"variation / {'nominal' if not neg_nom_bins else 'abs(nominal)'}")
+    ax2.set_ylabel(f"variation / {'nominal' if not neg_nom_bin else 'abs(nominal)'}")
     ax2.set_yticks([0.5, 0.75, 1.0, 1.25, 1.5])
     ax2.set_yticklabels([0.5, 0.75, 1.0, 1.25, ""])
     ax2.tick_params(axis="both", which="major", pad=8)
