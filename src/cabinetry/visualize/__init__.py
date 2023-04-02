@@ -56,6 +56,8 @@ def data_mc_from_histograms(
     figure_folder: Union[str, pathlib.Path] = "figures",
     log_scale: Optional[bool] = None,
     log_scale_x: bool = False,
+    channels: Optional[Union[str, List[str]]] = None,
+    colors: Optional[Dict[str, str]] = None,
     close_figure: bool = False,
     save_figure: bool = True,
 ) -> List[Dict[str, Any]]:
@@ -71,10 +73,17 @@ def data_mc_from_histograms(
             defaults to None (automatically determine whether to use linear/log scale)
         log_scale_x (bool, optional): whether to use logarithmic horizontal axis,
             defaults to False
+        channels (Optional[Union[str, List[str]]], optional): name of channel to show,
+            or list of names to include, defaults to None (uses all channels)
+        colors (Optional[Dict[str, str]], optional): map of sample names and colors to
+            use in plot, defaults to None (use default colors)
         close_figure (bool, optional): whether to close each figure, defaults to False
             (enable when producing many figures to avoid memory issues, prevents
             automatic rendering in notebooks)
         save_figure (bool, optional): whether to save figures, defaults to True
+
+    Raises:
+        ValueError: if color specification is incomplete
 
     Returns:
         List[Dict[str, Any]]: list of dictionaries, where each dictionary contains a
@@ -83,7 +92,27 @@ def data_mc_from_histograms(
     log.info("visualizing histogram")
     histogram_folder = pathlib.Path(config["General"]["HistogramFolder"])
     figure_dict_list = []
+
+    # if custom colors are provided, ensure that they cover all samples
+    if colors is not None:
+        c_missing = {
+            sample["Name"] for sample in config["Samples"] if not sample.get("Data")
+        }.difference(colors.keys())
+        if c_missing:
+            raise ValueError(
+                f"colors need to be provided for all samples, missing for {c_missing}"
+            )
+
+    # create a list of channels to process
+    if channels is not None:
+        if isinstance(channels, str):
+            channels = [channels]
+    else:
+        channels = [region["Name"] for region in config["Regions"]]
+
     for region in config["Regions"]:
+        if region["Name"] not in channels:
+            continue  # skip region
         histogram_dict_list = []
         model_stdevs = []
         # loop over samples in reverse order, such that samples that appear first in the
@@ -119,6 +148,7 @@ def data_mc_from_histograms(
             log_scale=log_scale,
             log_scale_x=log_scale_x,
             label=label,
+            colors=colors,
             close_figure=close_figure,
         )
         figure_dict_list.append({"figure": fig, "region": region["Name"]})
@@ -167,6 +197,9 @@ def data_mc(
             automatic rendering in notebooks)
         save_figure (bool, optional): whether to save figures, defaults to True
 
+    Raises:
+        ValueError: if color specification is incomplete
+
     Returns:
         Optional[List[Dict[str, Any]]]: list of dictionaries, where each dictionary
             contains a figure and the associated region name, or None if no figure was
@@ -183,11 +216,11 @@ def data_mc(
                 f"colors need to be provided for all samples, missing for {c_missing}"
             )
 
-    # channels to include in table, with optional filtering applied
+    # channels to include in plot, with optional filtering applied
     filtered_channels = model_utils._filter_channels(model_prediction.model, channels)
 
     if filtered_channels == []:
-        # nothing to include in tables, warning already raised via _filter_channels
+        # nothing to include in plots, warning already raised via _filter_channels
         return None
 
     # indices of included channels
