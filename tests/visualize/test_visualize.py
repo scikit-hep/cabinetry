@@ -105,6 +105,7 @@ def test_data_mc_from_histograms(mock_load, mock_draw, mock_stdev):
                 "log_scale": None,
                 "log_scale_x": False,
                 "label": "reg_1\npre-fit",
+                "colors": None,
                 "close_figure": False,
             },
         )
@@ -124,6 +125,7 @@ def test_data_mc_from_histograms(mock_load, mock_draw, mock_stdev):
         "log_scale": True,
         "log_scale_x": True,
         "label": "reg_1\npre-fit",
+        "colors": None,
         "close_figure": True,
     }
 
@@ -191,6 +193,7 @@ def test_data_mc(mock_data, mock_filter, mock_dict, mock_bins, mock_draw, exampl
         "log_scale": None,
         "log_scale_x": False,
         "label": "Signal Region\npre-fit",
+        "colors": None,
         "close_figure": False,
     }
 
@@ -224,6 +227,7 @@ def test_data_mc(mock_data, mock_filter, mock_dict, mock_bins, mock_draw, exampl
         "log_scale": False,
         "log_scale_x": False,
         "label": "Signal Region\npost-fit",
+        "colors": None,
         "close_figure": True,
     }
 
