@@ -134,6 +134,7 @@ def data_mc(
     log_scale: Optional[bool] = None,
     log_scale_x: bool = False,
     channels: Optional[Union[str, List[str]]] = None,
+    colors: Optional[Dict[str, str]] = None,
     close_figure: bool = False,
     save_figure: bool = True,
 ) -> Optional[List[Dict[str, Any]]]:
@@ -159,6 +160,8 @@ def data_mc(
             defaults to False
         channels (Optional[Union[str, List[str]]], optional): name of channel to show,
             or list of names to include, defaults to None (uses all channels)
+        colors (Optional[Dict[str, str]], optional): map of sample names and colors to
+            use in plot, defaults to None (use default colors)
         close_figure (bool, optional): whether to close each figure, defaults to False
             (enable when producing many figures to avoid memory issues, prevents
             automatic rendering in notebooks)
@@ -171,6 +174,14 @@ def data_mc(
     """
     # strip off auxdata (if needed) and obtain data indexed by channel (and bin)
     data_yields = model_utils._data_per_channel(model_prediction.model, data)
+
+    # if custom colors are provided, ensure that they cover all samples
+    if colors is not None:
+        c_missing = set(model_prediction.model.config.samples).difference(colors.keys())
+        if c_missing:
+            raise ValueError(
+                f"colors need to be provided for all samples, missing for {c_missing}"
+            )
 
     # channels to include in table, with optional filtering applied
     filtered_channels = model_utils._filter_channels(model_prediction.model, channels)
@@ -241,6 +252,7 @@ def data_mc(
             log_scale=log_scale,
             log_scale_x=log_scale_x,
             label=label,
+            colors=colors,
             close_figure=close_figure,
         )
         figure_dict_list.append({"figure": fig, "region": channel_name})
