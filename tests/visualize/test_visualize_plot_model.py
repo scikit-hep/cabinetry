@@ -1,6 +1,7 @@
 import copy
 from unittest import mock
 
+import matplotlib as mpl
 import matplotlib.pyplot as plt
 from matplotlib.testing.compare import compare_images
 import numpy as np
@@ -103,19 +104,30 @@ def test_data_mc(tmp_path, caplog):
 
     # do not save figure, but close it
     # one bin with zero model prediction
+    # custom histogram colors
     histo_dict_list[0]["yields"] = np.asarray([0, 14])
     histo_dict_list[1]["yields"] = np.asarray([0, 5])
     caplog.clear()
     with mock.patch("cabinetry.visualize.utils._save_and_close") as mock_close_safe:
         with pytest.warns() as warn_record:
-            fig = fig = plot_model.data_mc(
+            fig = plot_model.data_mc(
                 histo_dict_list,
                 total_model_unc_log,
                 bin_edges_log,
                 label="",
+                colors={"Background": "blue", "Signal": "red"},
                 close_figure=True,
             )
             assert mock_close_safe.call_args_list == [((fig, None, True), {})]
+            # custom colors propagated to histogram
+            assert (
+                fig.axes[0].containers[0].patches[0].get_facecolor()
+                == mpl.colors.to_rgba_array("blue")
+            ).all()
+            assert (
+                fig.axes[0].containers[1].patches[0].get_facecolor()
+                == mpl.colors.to_rgba_array("red")
+            ).all()
 
     assert "predicted yield is zero in 1 bin(s), excluded from ratio plot" in [
         rec.message for rec in caplog.records
