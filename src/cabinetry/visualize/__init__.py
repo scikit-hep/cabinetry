@@ -76,7 +76,7 @@ def data_mc_from_histograms(
         channels (Optional[Union[str, List[str]]], optional): name of channel to show,
             or list of names to include, defaults to None (uses all channels)
         colors (Optional[Dict[str, str]], optional): map of sample names and colors to
-            use in plot, defaults to None (use default colors)
+            use in plot, defaults to None (uses default colors)
         close_figure (bool, optional): whether to close each figure, defaults to False
             (enable when producing many figures to avoid memory issues, prevents
             automatic rendering in notebooks)
@@ -191,7 +191,7 @@ def data_mc(
         channels (Optional[Union[str, List[str]]], optional): name of channel to show,
             or list of names to include, defaults to None (uses all channels)
         colors (Optional[Dict[str, str]], optional): map of sample names and colors to
-            use in plot, defaults to None (use default colors)
+            use in plot, defaults to None (uses default colors)
         close_figure (bool, optional): whether to close each figure, defaults to False
             (enable when producing many figures to avoid memory issues, prevents
             automatic rendering in notebooks)

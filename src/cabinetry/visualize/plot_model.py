@@ -50,7 +50,7 @@ def data_mc(
             defaults to False
         label (str, optional): label written on the figure, defaults to ""
         colors (Optional[Dict[str, str]], optional): map of sample names and colors to
-            use in plot, defaults to None (use default colors)
+            use in plot, defaults to None (uses default colors)
         close_figure (bool, optional): whether to close each figure immediately after
             saving it, defaults to False (enable when producing many figures to avoid
             memory issues, prevents rendering in notebooks)
