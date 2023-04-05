@@ -30,6 +30,7 @@ def data_mc(
     log_scale: Optional[bool] = None,
     log_scale_x: bool = False,
     label: str = "",
+    colors: Optional[Dict[str, str]] = None,
     close_figure: bool = False,
 ) -> mpl.figure.Figure:
     """Draws a data/MC histogram with uncertainty bands and ratio panel.
@@ -48,6 +49,8 @@ def data_mc(
         log_scale_x (bool, optional): whether to use logarithmic horizontal axis,
             defaults to False
         label (str, optional): label written on the figure, defaults to ""
+        colors (Optional[Dict[str, str]], optional): map of sample names and colors to
+            use in plot, defaults to None (uses default colors)
         close_figure (bool, optional): whether to close each figure immediately after
             saving it, defaults to False (enable when producing many figures to avoid
             memory issues, prevents rendering in notebooks)
@@ -102,9 +105,13 @@ def data_mc(
         else bin_centers
     )
     mc_containers = []
-    for mc_sample_yield in mc_histograms_yields:
+    for mc_sample_yield, sample_label in zip(mc_histograms_yields, mc_labels):
         mc_container = ax1.bar(
-            bin_centers, mc_sample_yield, width=bin_width, bottom=total_yield
+            bin_centers,
+            mc_sample_yield,
+            width=bin_width,
+            bottom=total_yield,
+            color=colors[sample_label] if colors else None,
         )
         mc_containers.append(mc_container)
 
