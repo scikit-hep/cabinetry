@@ -107,11 +107,9 @@ def data_mc_from_histograms(
     if channels is not None:
         if isinstance(channels, str):
             channels = [channels]
-    else:
-        channels = [region["Name"] for region in config["Regions"]]
 
     for region in config["Regions"]:
-        if region["Name"] not in channels:
+        if channels is not None and region["Name"] not in channels:
             continue  # skip region
         histogram_dict_list = []
         model_stdevs = []
