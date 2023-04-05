@@ -111,12 +111,15 @@ def test_data_mc_from_histograms(mock_load, mock_draw, mock_stdev):
         )
     ]
 
-    # custom log scale settings, close figure, do not save figure
+    # custom log scale settings, close figure, do not save figure, channel specified,
+    # custom colors
     _ = visualize.data_mc_from_histograms(
         config,
         figure_folder=figure_folder,
         log_scale=True,
         log_scale_x=True,
+        channels=["reg_1"],
+        colors={"sample_1": "red"},
         close_figure=True,
         save_figure=False,
     )
@@ -125,9 +128,19 @@ def test_data_mc_from_histograms(mock_load, mock_draw, mock_stdev):
         "log_scale": True,
         "log_scale_x": True,
         "label": "reg_1\npre-fit",
-        "colors": None,
+        "colors": {"sample_1": "red"},
         "close_figure": True,
     }
+
+    # no matching channels
+    assert visualize.data_mc_from_histograms(config, channels="abc") == []
+
+    # incomplete color specification
+    with pytest.raises(
+        ValueError,
+        match="colors need to be provided for all samples, missing for {'sample_1'}",
+    ):
+        _ = visualize.data_mc_from_histograms(config, colors={})
 
 
 @mock.patch(
@@ -198,8 +211,8 @@ def test_data_mc(mock_data, mock_filter, mock_dict, mock_bins, mock_draw, exampl
     }
 
     # post-fit plot (different label in model prediction), custom scale, close figure,
-    # do not save figure, histogram input mode: no binning or variable specified (via
-    # side effect)
+    # do not save figure, custom colors, histogram input mode: no binning or variable
+    # specified (via side effect)
     model_pred = model_utils.ModelPrediction(
         model, [[[11.0]]], [[[0.2], [0.2]]], [[0.2, 0.2]], "post-fit"
     )
@@ -209,6 +222,7 @@ def test_data_mc(mock_data, mock_filter, mock_dict, mock_bins, mock_draw, exampl
         config=config,
         figure_folder=figure_folder,
         log_scale=False,
+        colors={"Signal": "red"},
         close_figure=True,
         save_figure=False,
     )
@@ -227,7 +241,7 @@ def test_data_mc(mock_data, mock_filter, mock_dict, mock_bins, mock_draw, exampl
         "log_scale": False,
         "log_scale_x": False,
         "label": "Signal Region\npost-fit",
-        "colors": None,
+        "colors": {"Signal": "red"},
         "close_figure": True,
     }
 
@@ -242,6 +256,13 @@ def test_data_mc(mock_data, mock_filter, mock_dict, mock_bins, mock_draw, exampl
     assert visualize.data_mc(model_pred, data, channels="abc") is None
     assert mock_filter.call_args == ((model, "abc"), {})
     assert mock_draw.call_count == 3  # no new call
+
+    # incomplete color specification
+    with pytest.raises(
+        ValueError,
+        match="colors need to be provided for all samples, missing for {'Signal'}",
+    ):
+        _ = visualize.data_mc(model_pred, data, colors={})
 
 
 @mock.patch(
