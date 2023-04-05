@@ -104,9 +104,8 @@ def data_mc_from_histograms(
             )
 
     # create a list of channels to process
-    if channels is not None:
-        if isinstance(channels, str):
-            channels = [channels]
+    if channels is not None and isinstance(channels, str):
+        channels = [channels]
 
     for region in config["Regions"]:
         if channels is not None and region["Name"] not in channels:
