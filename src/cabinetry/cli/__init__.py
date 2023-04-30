@@ -75,7 +75,7 @@ def postprocess(config: io.TextIOWrapper) -> None:
 @click.command()
 @click.argument("config", type=click.File("r"))
 @click.argument("ws_spec", type=click.File("w"))
-def workspace(config: io.TextIOWrapper, ws_spec: io.TextIOWrapper) -> None:
+def workspace(config: io.TextIOWrapper, ws_spec: click.utils.LazyFile) -> None:
     """Produces a ``pyhf`` workspace.
 
     CONFIG: path to cabinetry configuration file
