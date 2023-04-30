@@ -3,7 +3,7 @@
 import functools
 import logging
 import pathlib
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Literal, Optional
 
 import boost_histogram as bh
 import numpy as np
@@ -11,7 +11,6 @@ import numpy as np
 from cabinetry import configuration
 from cabinetry import histo
 from cabinetry import route
-from cabinetry._typing import Literal
 from cabinetry.templates import utils
 
 

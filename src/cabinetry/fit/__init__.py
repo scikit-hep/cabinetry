@@ -1,7 +1,7 @@
 """High-level entry point for statistical inference."""
 
 import logging
-from typing import Any, Dict, List, Optional, Tuple, Union
+from typing import Any, Dict, List, Literal, Optional, Tuple, Union
 
 import iminuit
 import numpy as np
@@ -10,7 +10,6 @@ import scipy.optimize
 import scipy.stats
 
 from cabinetry import model_utils
-from cabinetry._typing import Literal
 from cabinetry.fit.results_containers import (
     FitResults,
     LimitResults,
