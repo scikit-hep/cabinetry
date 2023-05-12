@@ -3,13 +3,12 @@
 import logging
 import os
 import pathlib
-from typing import Any, Dict, List, Optional, Type, TypeVar, Union
+from typing import Any, Dict, List, Literal, Optional, Type, TypeVar, Union
 
 import boost_histogram as bh
 import numpy as np
 
 import cabinetry
-from cabinetry._typing import Literal
 
 
 log = logging.getLogger(__name__)

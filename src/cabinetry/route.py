@@ -2,12 +2,11 @@
 
 import fnmatch
 import logging
-from typing import Any, Callable, Dict, List, Optional
+from typing import Any, Callable, Dict, List, Literal, Optional
 
 import boost_histogram as bh
 
 from cabinetry import configuration
-from cabinetry._typing import Literal
 
 
 log = logging.getLogger(__name__)

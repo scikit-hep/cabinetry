@@ -1,10 +1,9 @@
 """Provides utilities for template histogram handling."""
 
 import pathlib
-from typing import Any, Dict, List, Optional, Union
+from typing import Any, Dict, List, Literal, Optional, Union
 
 from cabinetry import histo
-from cabinetry._typing import Literal
 
 
 def _check_for_override(

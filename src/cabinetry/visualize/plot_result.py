@@ -15,7 +15,7 @@ from cabinetry.visualize import utils
 
 log = logging.getLogger(__name__)
 
-# handling of matplotlib<3.6 (for Python 3.7)
+# handling of matplotlib<3.6
 if packaging.version.parse(mpl.__version__) < packaging.version.parse("3.6"):
     MPL_GEQ_36 = False  # pragma: no cover
     MPL_STYLE = "seaborn-colorblind"  # pragma: no cover

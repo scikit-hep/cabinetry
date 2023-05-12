@@ -3,7 +3,7 @@
 import copy
 import logging
 import pathlib
-from typing import Any, Dict, Optional
+from typing import Any, Dict, Literal, Optional
 
 import numpy as np
 
@@ -11,7 +11,6 @@ from cabinetry import configuration
 from cabinetry import histo
 from cabinetry import route
 from cabinetry import smooth
-from cabinetry._typing import Literal
 
 
 log = logging.getLogger(__name__)

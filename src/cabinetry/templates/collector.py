@@ -2,11 +2,10 @@
 
 import logging
 import pathlib
-from typing import Any, cast, Dict, Optional
+from typing import Any, cast, Dict, Literal, Optional
 
 from cabinetry import histo
 from cabinetry import route
-from cabinetry._typing import Literal
 from cabinetry.templates import utils
 
 
