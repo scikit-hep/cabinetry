@@ -10,8 +10,7 @@ import numpy as np
 log = logging.getLogger(__name__)
 
 
-# typeguard raises errors in tests when using List[float] instead of list
-T = TypeVar("T", list, np.ndarray)
+T = TypeVar("T", List[float], np.ndarray)
 
 
 def _medians_353(zz: Union[List[float], np.ndarray], nbins: int) -> None:
