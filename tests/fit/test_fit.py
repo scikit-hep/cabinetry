@@ -24,6 +24,15 @@ def test_print_results(caplog):
     assert "param_B =  2.0000 +/- 0.3000" in [rec.message for rec in caplog.records]
     caplog.clear()
 
+    # constant parameter
+    uncertainty = np.asarray([0.1, 0.0])
+    fit_results = fit.FitResults(bestfit, uncertainty, labels, np.empty(0), 0.0)
+    fit.print_results(fit_results)
+    assert "param_B =  2.0000 +/- 0.0000  (constant)" in [
+        rec.message for rec in caplog.records
+    ]
+    caplog.clear()
+
 
 # skip a "RuntimeWarning: numpy.ufunc size changed" warning
 # due to different numpy versions used in dependencies

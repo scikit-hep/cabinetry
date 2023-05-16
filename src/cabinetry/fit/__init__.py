@@ -25,15 +25,19 @@ log = logging.getLogger(__name__)
 def print_results(fit_results: FitResults) -> None:
     """Prints the best-fit parameter results and associated uncertainties.
 
+    Parameters with zero uncertainty (those held fixed in the fit) are in addition
+    denoted with "(constant)".
+
     Args:
         fit_results (FitResults): results of fit to be printed
     """
     max_label_length = max(len(label) for label in fit_results.labels)
     log.info("fit results (with symmetric uncertainties):")
     for i, label in enumerate(fit_results.labels):
+        const_label = "  (constant)" if fit_results.uncertainty[i] == 0.0 else ""
         log.info(
             f"{label:<{max_label_length}} = {fit_results.bestfit[i]: .4f} +/- "
-            f"{fit_results.uncertainty[i]:.4f}"
+            f"{fit_results.uncertainty[i]:.4f}{const_label}"
         )
 
 
