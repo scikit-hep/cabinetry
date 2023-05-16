@@ -24,7 +24,7 @@ def test_print_results(caplog):
     assert "param_B =  2.0000 +/- 0.3000" in [rec.message for rec in caplog.records]
     caplog.clear()
 
-    # constant parameters
+    # constant parameter
     uncertainty = np.asarray([0.1, 0.0])
     fit_results = fit.FitResults(bestfit, uncertainty, labels, np.empty(0), 0.0)
     fit.print_results(fit_results)
