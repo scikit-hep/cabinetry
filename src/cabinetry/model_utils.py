@@ -298,9 +298,9 @@ def yield_stdev(
             up_comb[:, model.config.channel_slices[ch]] for ch in model.config.channels
         ]
         # calculate list of yields summed per channel
-        up_yields_sum = np.array(
+        up_yields_sum = np.stack(
             [
-                np.sum(chan_yields, axis=-1, keepdims=True).tolist()
+                np.sum(chan_yields, axis=-1, keepdims=True)
                 for chan_yields in up_yields_per_channel
             ]
         )
@@ -325,9 +325,9 @@ def yield_stdev(
         ]
 
         # calculate list of yields summed per channel
-        down_yields_sum = np.array(
+        down_yields_sum = np.stack(
             [
-                np.sum(chan_yields, axis=-1, keepdims=True).tolist()
+                np.sum(chan_yields, axis=-1, keepdims=True)
                 for chan_yields in down_yields_per_channel
             ]
         )
