@@ -297,13 +297,15 @@ def yield_stdev(
             up_comb[:, model.config.channel_slices[ch]] for ch in model.config.channels
         ]
         # calculate list of yields summed per channel
-        up_yields_sum = np.array([
-            np.sum(chan_yields, axis=-1, keepdims=True).tolist()
-            for chan_yields in up_yields_per_channel
-        ])
+        up_yields_sum = np.array(
+            [
+                np.sum(chan_yields, axis=-1, keepdims=True).tolist()
+                for chan_yields in up_yields_per_channel
+            ]
+        )
         # reshape to get rid of extra axis
         up_yields_sum = up_yields_sum.reshape(up_yields_sum.shape[:-1]).T
-        
+
         # concatenate per-channel sum to up_comb
         up_yields = np.concatenate((up_comb, up_yields_sum), axis=1)
         # indices: variation, sample, bin
@@ -317,16 +319,19 @@ def yield_stdev(
         down_comb = np.vstack((down_comb, np.sum(down_comb, axis=0)))
         # turn into list of channels
         down_yields_per_channel = [
-            down_comb[:, model.config.channel_slices[ch]] for ch in model.config.channels
+            down_comb[:, model.config.channel_slices[ch]]
+            for ch in model.config.channels
         ]
-        
+
         # calculate list of yields summed per channel
-        down_yields_sum = np.array([
-            np.sum(chan_yields, axis=-1, keepdims=True).tolist()
-            for chan_yields in down_yields_per_channel
-        ])
+        down_yields_sum = np.array(
+            [
+                np.sum(chan_yields, axis=-1, keepdims=True).tolist()
+                for chan_yields in down_yields_per_channel
+            ]
+        )
         down_yields_sum = down_yields_sum.reshape(down_yields_sum.shape[:-1]).T
-        
+
         down_yields = np.concatenate((down_comb, down_yields_sum), axis=1)
         down_variations.append(down_yields)
 
@@ -359,10 +364,7 @@ def yield_stdev(
 
         # calculate M[i, j] * v[j] first
         # indices: pars (i), pars (j), sample, bin
-        m_times_v = (
-            corr_mat[..., np.newaxis, np.newaxis]
-            * sym_uncs[np.newaxis, ...]
-        )
+        m_times_v = corr_mat[..., np.newaxis, np.newaxis] * sym_uncs[np.newaxis, ...]
         # now multiply by v[i] as well, indices: pars(i), pars(j), sample, bin
         v_times_m_times_v = sym_uncs[:, np.newaxis, ...] * m_times_v
         # finally perform sums over i and j, remaining indices: sample, bin
@@ -372,15 +374,21 @@ def yield_stdev(
     # calculate separation between per-bin indices and per-channel indices
     last_bin_index = model.config.channel_slices[model.config.channels[-1]].stop
     # indices: (channel, sample)
-    total_stdev_per_channel = np.sqrt(total_variance[:,last_bin_index:].T).tolist()
+    total_stdev_per_channel = np.sqrt(total_variance[:, last_bin_index:].T).tolist()
     # indices: (channel, sample, bin)
     total_stdev_per_bin = [
-        np.sqrt(total_variance[:,:last_bin_index][:, model.config.channel_slices[ch]]).tolist() 
+        np.sqrt(
+            total_variance[:, :last_bin_index][:, model.config.channel_slices[ch]]
+        ).tolist()
         for ch in model.config.channels
     ]
     # log total stdev per bin / channel (-1 index for sample sum)
-    log.debug(f"total stdev is {[total_stdev_per_bin[i][-1] for i in range(len(total_stdev_per_bin))]}")
-    log.debug(f"total stdev per channel is {[total_stdev_per_channel[i][-1] for i in range(len(total_stdev_per_channel))]}")
+    log.debug(
+        f"total stdev is {[total_stdev_per_bin[i][-1] for i in range(len(total_stdev_per_bin))]}"
+    )
+    log.debug(
+        f"total stdev per channel is {[total_stdev_per_channel[i][-1] for i in range(len(total_stdev_per_channel))]}"
+    )
 
     # save to cache
     _YIELD_STDEV_CACHE.update(
