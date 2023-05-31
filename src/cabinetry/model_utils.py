@@ -300,7 +300,7 @@ def yield_stdev(
         # calculate list of yields summed per channel
         up_yields_sum = np.array(
             [
-                np.sum(chan_yields, axis=-1, keepdims=True).tolist()
+                np.sum(chan_yields, axis=-1, keepdims=True)
                 for chan_yields in up_yields_per_channel
             ]
         )
@@ -327,7 +327,7 @@ def yield_stdev(
         # calculate list of yields summed per channel
         down_yields_sum = np.array(
             [
-                np.sum(chan_yields, axis=-1, keepdims=True).tolist()
+                np.sum(chan_yields, axis=-1, keepdims=True)
                 for chan_yields in down_yields_per_channel
             ]
         )
@@ -384,14 +384,14 @@ def yield_stdev(
         for ch in model.config.channels
     ]
     # log total stdev per bin / channel (-1 index for sample sum)
-    total_stdev_bin = [
-        total_stdev_per_bin[i][-1] for i in range(len(total_stdev_per_bin))
-    ]
-    log.debug(f"total stdev is {total_stdev_bin}")
-    total_stdev_chan = [
-        total_stdev_per_channel[i][-1] for i in range(len(total_stdev_per_channel))
-    ]
-    log.debug(f"total stdev per channel is {total_stdev_chan}")
+    total_stdev_bin = [total_stdev_per_bin[i][-1] for i in range(len(total_stdev_per_bin))]
+    log.debug(
+        f"total stdev is {total_stdev_bin}"
+    )
+    total_stdev_chan = [total_stdev_per_channel[i][-1] for i in range(len(total_stdev_per_channel))]
+    log.debug(
+        f"total stdev per channel is {total_stdev_chan}"
+    )
 
     # save to cache
     _YIELD_STDEV_CACHE.update(
