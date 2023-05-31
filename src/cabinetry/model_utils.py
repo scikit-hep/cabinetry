@@ -4,6 +4,7 @@ from collections import defaultdict
 import json
 import logging
 from typing import Any, DefaultDict, Dict, List, NamedTuple, Optional, Tuple, Union
+
 import numpy as np
 import pyhf
 
@@ -383,12 +384,14 @@ def yield_stdev(
         for ch in model.config.channels
     ]
     # log total stdev per bin / channel (-1 index for sample sum)
-    log.debug(
-        f"total stdev is {[total_stdev_per_bin[i][-1] for i in range(len(total_stdev_per_bin))]}"
-    )
-    log.debug(
-        f"total stdev per channel is {[total_stdev_per_channel[i][-1] for i in range(len(total_stdev_per_channel))]}"
-    )
+    total_stdev_bin = [
+        total_stdev_per_bin[i][-1] for i in range(len(total_stdev_per_bin))
+    ]
+    log.debug(f"total stdev is {total_stdev_bin}")
+    total_stdev_chan = [
+        total_stdev_per_channel[i][-1] for i in range(len(total_stdev_per_channel))
+    ]
+    log.debug(f"total stdev per channel is {total_stdev_chan}")
 
     # save to cache
     _YIELD_STDEV_CACHE.update(
