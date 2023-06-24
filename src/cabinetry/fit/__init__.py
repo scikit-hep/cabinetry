@@ -74,15 +74,18 @@ def _get_optimizer(
     """
     if minimizer == "minuit":
         optimizer = pyhf.optimize.minuit_optimizer(
-            verbose=1, strategy=strategy, maxiter=maxiter, tolerance=tolerance
+            verbose=1,
+            strategy={"strategy": strategy} if strategy is not None else {},
+            maxiter=maxiter if maxiter is not None else 100000,
+            tolerance=tolerance,
         )
         return optimizer
 
     if minimizer == "scipy":
-        optimizer = pyhf.optimize.minuit_optimizer(
+        optimizer = pyhf.optimize.scipy_optimizer(
             verbose=1,
-            solver_options=solver_options,
-            maxiter=maxiter,
+            solver_options=solver_options if solver_options is not None else {},
+            maxiter=maxiter if maxiter is not None else 100000,
             tolerance=tolerance,
         )
         return optimizer
