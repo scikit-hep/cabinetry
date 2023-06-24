@@ -41,6 +41,55 @@ def print_results(fit_results: FitResults) -> None:
         )
 
 
+def _get_optimizer(
+    minimizer: Optional[Literal["minuit", "scipy"]] = "scipy",
+    strategy: Optional[Literal[0, 1, 2]] = None,
+    solver_options: Optional[Dict[str, Any]] = None,
+    maxiter: Optional[int] = None,
+    tolerance: Optional[float] = None,
+) -> pyhf.optimize.mixins.OptimizerMixin:
+    """Creates an optimizer instance for either `scipy` or `minuit`.
+
+    Args:
+        minimizer (Optional[Literal['minuit','scipy']]), optional): minimizer used for
+            the fit. Can be 'minuit' or 'scipy', defaults to ``scipy``.
+        strategy (Optional[Literal[0, 1, 2]], optional): minimization strategy used by
+            Minuit, can be 0/1/2, defaults to None (then uses ``pyhf`` default behavior
+            of strategy 0 with user-provided gradients and 1 otherwise)
+        solver_options (Optional[Dict], optional): solver options passed to ``scipy``
+            optimizer. See ``scipy.optimize.show_options()`` for all available options.
+        maxiter (Optional[int], optional): allowed number of calls for minimization,
+            defaults to None (use ``pyhf`` default of 100,000)
+        tolerance (Optional[float]), optional): tolerance for convergence, for details
+            see ``iminuit.Minuit.tol`` (uses EDM < 0.002*tolerance), defaults to
+            None (use ``iminuit`` default of 0.1)
+
+    Raises:
+        ValueError: if minimizer is not 'minuit' or 'scipy'
+
+    Returns:
+        pyhf.optimize.mixins.OptimizerMixin: pyhf scipy optimizer object.
+
+    """
+    if minimizer == "minuit":
+        optimizer = pyhf.optimize.minuit_optimizer(
+            verbose=1, strategy=strategy, maxiter=maxiter, tolerance=tolerance
+        )
+        return optimizer
+
+    if minimizer == "scipy":
+        optimizer = pyhf.optimize.minuit_optimizer(
+            verbose=1,
+            solver_options=solver_options,
+            maxiter=maxiter,
+            tolerance=tolerance,
+        )
+        return optimizer
+    raise ValueError(
+        f"minimizer supports only 'minuit' and 'scipy', received : {minimizer}"
+    )
+
+
 def _fit_model(
     model: pyhf.pdf.Model,
     data: List[float],
@@ -93,21 +142,15 @@ def _fit_model(
     _, initial_optimizer = pyhf.get_backend()  # store initial optimizer settings
 
     # set up the optimiser
-    optimizer_kwarg: Optional[Dict[str, Any]] = None
-    if minimizer == "minuit":
-        pyhf.set_backend(pyhf.tensorlib, pyhf.optimize.minuit_optimizer(verbose=1))
-        # strategy=None is currently not supported in pyhf
-        # https://github.com/scikit-hep/pyhf/issues/1785
-        optimizer_kwarg = {"strategy": strategy} if strategy is not None else {}
-    elif minimizer == "scipy":
-        pyhf.set_backend(pyhf.tensorlib, pyhf.optimize.scipy_optimizer(verbose=1))
-        optimizer_kwarg = (
-            {"solver_options": solver_options} if solver_options is not None else {}
-        )
-    else:
-        raise ValueError(
-            f"minimizer supports only 'minuit' and 'scipy', received : {minimizer}"
-        )
+    optimizer = _get_optimizer(
+        minimizer=minimizer,
+        strategy=strategy,
+        solver_options=solver_options,
+        maxiter=maxiter,
+        tolerance=tolerance,
+    )
+
+    pyhf.set_backend(pyhf.tensorlib, optimizer)
 
     result, corr_mat, best_twice_nll, result_obj = pyhf.infer.mle.fit(
         data,
@@ -119,9 +162,6 @@ def _fit_model(
         return_correlations=True,
         return_fitted_val=True,
         return_result_obj=True,
-        maxiter=maxiter,
-        tolerance=tolerance,
-        **optimizer_kwarg,
     )
 
     labels = model.config.par_names
@@ -618,55 +658,6 @@ def scan(
 
     scan_results = ScanResults(par_name, par_mle, par_unc, scan_values, delta_nlls)
     return scan_results
-
-
-def _get_optimizer(
-    minimizer: Optional[Literal["minuit", "scipy"]] = "scipy",
-    strategy: Optional[Literal[0, 1, 2]] = None,
-    solver_options: Optional[Dict[str, Any]] = None,
-    maxiter: Optional[int] = None,
-    tolerance: Optional[float] = None,
-) -> pyhf.optimize.mixins.OptimizerMixin:
-    """Creates an optimizer instance for either `scipy` or `minuit`.
-
-    Args:
-        minimizer (Optional[Literal['minuit','scipy']]), optional): minimizer used for
-            the fit. Can be 'minuit' or 'scipy', defaults to ``scipy``.
-        strategy (Optional[Literal[0, 1, 2]], optional): minimization strategy used by
-            Minuit, can be 0/1/2, defaults to None (then uses ``pyhf`` default behavior
-            of strategy 0 with user-provided gradients and 1 otherwise)
-        solver_options (Optional[Dict], optional): solver options passed to ``scipy``
-            optimizer. See ``scipy.optimize.show_options()`` for all available options.
-        maxiter (Optional[int], optional): allowed number of calls for minimization,
-            defaults to None (use ``pyhf`` default of 100,000)
-        tolerance (Optional[float]), optional): tolerance for convergence, for details
-            see ``iminuit.Minuit.tol`` (uses EDM < 0.002*tolerance), defaults to
-            None (use ``iminuit`` default of 0.1)
-
-    Raises:
-        ValueError: if minimizer is not 'minuit' or 'scipy'
-
-    Returns:
-        pyhf.optimize.mixins.OptimizerMixin: pyhf scipy optimizer object.
-
-    """
-    if minimizer == "minuit":
-        optimizer = pyhf.optimize.minuit_optimizer(
-            verbose=1, strategy=strategy, maxiter=maxiter, tolerance=tolerance
-        )
-        return optimizer
-
-    if minimizer == "scipy":
-        optimizer = pyhf.optimize.minuit_optimizer(
-            verbose=1,
-            solver_options=solver_options,
-            maxiter=maxiter,
-            tolerance=tolerance,
-        )
-        return optimizer
-    raise ValueError(
-        f"minimizer supports only 'minuit' and 'scipy', received : {minimizer}"
-    )
 
 
 def limit(
