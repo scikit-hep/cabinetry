@@ -47,7 +47,7 @@ def _get_optimizer(
     solver_options: Optional[Dict[str, Any]] = None,
     maxiter: Optional[int] = None,
     tolerance: Optional[float] = None,
-) -> pyhf.optimize.mixins.OptimizerMixin:
+) -> Union[pyhf.optimize.scipy_optimizer, pyhf.optimize.minuit_optimizer]:
     """Creates an optimizer instance for either `scipy` or `minuit`.
 
     Args:
@@ -68,7 +68,8 @@ def _get_optimizer(
         ValueError: if minimizer is not 'minuit' or 'scipy'
 
     Returns:
-        pyhf.optimize.mixins.OptimizerMixin: pyhf scipy optimizer object.
+        Union[pyhf.optimize.scipy_optimizer,  pyhf.optimize.minuit_optimizer]: pyhf
+            scipy or minuit optimizer object.
 
     """
     if minimizer == "minuit":
