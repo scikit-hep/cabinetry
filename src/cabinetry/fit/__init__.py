@@ -348,6 +348,7 @@ def ranking(
     init_pars: Optional[List[float]] = None,
     fix_pars: Optional[List[bool]] = None,
     par_bounds: Optional[List[Tuple[float, float]]] = None,
+    minimizer: Optional[Literal['minuit','scipy']] = None,
     strategy: Optional[Literal[0, 1, 2]] = None,
     solver_options: Optional[Dict] = None,
     maxiter: Optional[int] = None,
@@ -373,6 +374,10 @@ def ranking(
             parameters are held constant, defaults to None (use ``pyhf`` suggestion)
         par_bounds (Optional[List[Tuple[float, float]]], optional): list of tuples with
             parameter bounds for fit, defaults to None (use ``pyhf`` suggested bounds)
+        minimizer (Optional[Literal['minuit','scipy']]), optional): minimizer used for
+            the fit. Can be 'minuit' or 'scipy', defaults to None (use minuit for the 
+            initial fit to find the post fit uncertainties, then scipy for all fits used
+            to determine the impact).
         strategy (Optional[Literal[0, 1, 2]], optional): minimization strategy used by
             Minuit, can be 0/1/2, defaults to None (then uses ``pyhf`` default behavior
             of strategy 0 with user-provided gradients and 1 otherwise)
@@ -397,7 +402,7 @@ def ranking(
             init_pars=init_pars,
             fix_pars=fix_pars,
             par_bounds=par_bounds,
-            minimizer='minuit',
+            minimizer='minuit' if minimizer is None else minimizer,
             strategy=strategy,
             solver_options=solver_options,
             maxiter=maxiter,
@@ -453,7 +458,7 @@ def ranking(
                     init_pars=init_pars_ranking,
                     fix_pars=fix_pars_ranking,
                     par_bounds=par_bounds,
-                    minimizer='minuit',
+                    minimizer='scipy' if minimizer is None else minimizer,
                     strategy=strategy,
                     solver_options=solver_options,
                     maxiter=maxiter,
@@ -496,6 +501,7 @@ def scan(
     init_pars: Optional[List[float]] = None,
     fix_pars: Optional[List[bool]] = None,
     par_bounds: Optional[List[Tuple[float, float]]] = None,
+    minimizer: Optional[Literal['minuit','scipy']] = None,
     strategy: Optional[Literal[0, 1, 2]] = None,
     solver_options: Optional[Dict] = None,
     maxiter: Optional[int] = None,
@@ -521,6 +527,10 @@ def scan(
             parameters are held constant, defaults to None (use ``pyhf`` suggestion)
         par_bounds (Optional[List[Tuple[float, float]]], optional): list of tuples with
             parameter bounds for fit, defaults to None (use ``pyhf`` suggested bounds)
+        minimizer (Optional[Literal['minuit','scipy']]), optional): minimizer used for
+            the fit. Can be 'minuit' or 'scipy', defaults to None (use minuit for the 
+            initial fit to find the post fit uncertainties, then scipy for all fits used
+            for the likelihood scan).
         strategy (Optional[Literal[0, 1, 2]], optional): minimization strategy used by
             Minuit, can be 0/1/2, defaults to None (then uses ``pyhf`` default behavior
             of strategy 0 with user-provided gradients and 1 otherwise)
@@ -553,7 +563,7 @@ def scan(
         init_pars=init_pars,
         fix_pars=fix_pars,
         par_bounds=par_bounds,
-        minimizer='minuit',
+        minimizer='minuit' if minimizer is None else minimizer,
         strategy=strategy,
         solver_options=solver_options,
         maxiter=maxiter,
@@ -592,7 +602,7 @@ def scan(
             init_pars=init_pars_scan,
             fix_pars=fix_pars,
             par_bounds=par_bounds,
-            minimizer='scipy',
+            minimizer='scipy' if minimizer is None else minimizer,
             strategy=strategy,
             solver_options=solver_options,
             maxiter=maxiter,
