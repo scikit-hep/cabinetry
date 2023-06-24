@@ -49,9 +49,9 @@ def _fit_model(
     init_pars: Optional[List[float]] = None,
     fix_pars: Optional[List[bool]] = None,
     par_bounds: Optional[List[Tuple[float, float]]] = None,
-    minimizer: Optional[Literal['minuit','scipy']] = 'minuit',
+    minimizer: Optional[Literal["minuit", "scipy"]] = "minuit",
     strategy: Optional[Literal[0, 1, 2]] = None,
-    solver_options: Optional[Dict] = None,
+    solver_options: Optional[Dict[str, Any]] = None,
     maxiter: Optional[int] = None,
     tolerance: Optional[float] = None,
 ) -> FitResults:
@@ -84,8 +84,8 @@ def _fit_model(
         maxiter (Optional[int], optional): allowed number of calls for minimization,
             defaults to None (use ``pyhf`` default of 100,000)
         tolerance (Optional[float]), optional): tolerance for convergence, for details
-            see either ``iminuit.Minuit.tol`` (uses EDM < 0.002*tolerance) if using 
-            minuit, or ``scipy.optimize.minimize``. defaults to None (use ``iminuit`` 
+            see either ``iminuit.Minuit.tol`` (uses EDM < 0.002*tolerance) if using
+            minuit, or ``scipy.optimize.minimize``. defaults to None (use ``iminuit``
             default of 0.1, or `scipy`` method specific defaults)
     Returns:
         FitResults: object storing relevant fit results
@@ -93,17 +93,22 @@ def _fit_model(
     _, initial_optimizer = pyhf.get_backend()  # store initial optimizer settings
 
     # set up the optimiser
-    if minimizer == 'minuit':
+    optimizer_kwarg: Optional[Dict[str, Any]] = None
+    if minimizer == "minuit":
         pyhf.set_backend(pyhf.tensorlib, pyhf.optimize.minuit_optimizer(verbose=1))
         # strategy=None is currently not supported in pyhf
         # https://github.com/scikit-hep/pyhf/issues/1785
         optimizer_kwarg = {"strategy": strategy} if strategy is not None else {}
-    elif minimizer == 'scipy':
+    elif minimizer == "scipy":
         pyhf.set_backend(pyhf.tensorlib, pyhf.optimize.scipy_optimizer(verbose=1))
-        optimizer_kwarg = {"solver_options": solver_options} if solver_options is not None else {}
+        optimizer_kwarg = (
+            {"solver_options": solver_options} if solver_options is not None else {}
+        )
     else:
-        raise ValueError(f"minimizer supports only 'minuit' and 'scipy', received : {minimizer}")
-    
+        raise ValueError(
+            f"minimizer supports only 'minuit' and 'scipy', received : {minimizer}"
+        )
+
     result, corr_mat, best_twice_nll, result_obj = pyhf.infer.mle.fit(
         data,
         model,
@@ -122,7 +127,7 @@ def _fit_model(
     labels = model.config.par_names
     best_twice_nll = float(best_twice_nll)  # convert 0-dim np.ndarray to float
 
-    if minimizer == 'minuit':
+    if minimizer == "minuit":
         log.info(f"Migrad status:\n{result_obj.minuit.fmin}")
         bestfit = pyhf.tensorlib.to_numpy(result[:, 0])
         # set errors for fixed parameters to 0 (see iminuit#762)
@@ -133,12 +138,12 @@ def _fit_model(
         minos_results = (
             _run_minos(result_obj.minuit, minos, labels) if minos is not None else {}
         )
-        
-    elif minimizer == 'scipy':
+
+    elif minimizer == "scipy":
         bestfit = pyhf.tensorlib.to_numpy(result)
         # scipy does not return uncertainty or correlation results
         uncertainty = np.zeros(bestfit.shape)
-        corr_mat = np.diag(no.ones(bestfit.shape))
+        corr_mat = np.diag(np.ones(bestfit.shape))
         minos_results = None
 
     fit_results = FitResults(
@@ -150,11 +155,10 @@ def _fit_model(
         minos_uncertainty=minos_results,
     )
 
-    log.debug(f"-2 log(L) = {fit_results.best_twice_nll:.6f} at best-fit point")    
-    
+    log.debug(f"-2 log(L) = {fit_results.best_twice_nll:.6f} at best-fit point")
+
     pyhf.set_backend(pyhf.tensorlib, initial_optimizer)  # restore optimizer settings
     return fit_results
-
 
 
 def _run_minos(
@@ -268,45 +272,46 @@ def fit(
     model: pyhf.pdf.Model,
     data: List[float],
     *,
-    minos: Optional[Union[List[str], Tuple[str, ...]]] = None,
+    minos: Optional[Union[str, List[str], Tuple[str, ...]]] = None,
+    goodness_of_fit: bool = False,
     init_pars: Optional[List[float]] = None,
     fix_pars: Optional[List[bool]] = None,
     par_bounds: Optional[List[Tuple[float, float]]] = None,
-    minimizer: Optional[Literal['minuit','scipy']] = 'minuit',
+    minimizer: Optional[Literal["minuit", "scipy"]] = "minuit",
     strategy: Optional[Literal[0, 1, 2]] = None,
-    solver_options: Optional[Dict] = None,
+    solver_options: Optional[Dict[str, Any]] = None,
     maxiter: Optional[int] = None,
     tolerance: Optional[float] = None,
- ) -> FitResults:
+) -> FitResults:
     """Performs a  maximum likelihood fit, reports and returns the results.
 
-   Args:
-        model (pyhf.pdf.Model): the model to use in the fit
-        data (List[float]): the data to fit the model to
-        minos (Optional[Union[List[str], Tuple[str, ...]]], optional): runs the MINOS
-            algorithm for all parameters specified, defaults to None (does not run
-            MINOS). Requires ``minuit`` as the minimizer.
-        init_pars (Optional[List[float]], optional): list of initial parameter settings,
-            defaults to None (use ``pyhf`` suggested inits)
-        fix_pars (Optional[List[bool]], optional): list of booleans specifying which
-            parameters are held constant, defaults to None (use ``pyhf`` suggestion)
-        par_bounds (Optional[List[Tuple[float, float]]], optional): list of tuples with
-            parameter bounds for fit, defaults to None (use ``pyhf`` suggested bounds)
-        minimizer (Optional[Literal['minuit','scipy']]), optional): minimizer used for
-            the fit. Can be 'minuit' or 'scipy', defaults to ``minuit``.
-        strategy (Optional[Literal[0, 1, 2]], optional): minimization strategy used by
-            Minuit, can be 0/1/2, defaults to None (then uses ``pyhf`` default behavior
-            of strategy 0 with user-provided gradients and 1 otherwise)
-        solver_options (Optional[Dict], optional): solver options passed to scipy
-            optimizer. See ``scipy.optimize.show_options()`` for all available options.
-        maxiter (Optional[int], optional): allowed number of calls for minimization,
-            defaults to None (use ``pyhf`` default of 100,000)
-        tolerance (Optional[float]), optional): tolerance for convergence, for details
-            see either ``iminuit.Minuit.tol`` (uses EDM < 0.002*tolerance) if using 
-            minuit, or ``scipy.optimize.minimize``. defaults to None (use ``iminuit`` 
-            default of 0.1, or `scipy`` method specific defaults)
-    Returns:
-        FitResults: object storing relevant fit results
+    Args:
+         model (pyhf.pdf.Model): the model to use in the fit
+         data (List[float]): the data to fit the model to
+         minos (Optional[Union[List[str], Tuple[str, ...]]], optional): runs the MINOS
+             algorithm for all parameters specified, defaults to None (does not run
+             MINOS). Requires ``minuit`` as the minimizer.
+         init_pars (Optional[List[float]], optional): list of initial parameter
+             settings, defaults to None (use ``pyhf`` suggested inits)
+         fix_pars (Optional[List[bool]], optional): list of booleans specifying which
+             parameters are held constant, defaults to None (use ``pyhf`` suggestion)
+         par_bounds (Optional[List[Tuple[float, float]]], optional): list of tuples with
+             parameter bounds for fit, defaults to None (use ``pyhf`` suggested bounds)
+         minimizer (Optional[Literal['minuit','scipy']]), optional): minimizer used for
+             the fit. Can be 'minuit' or 'scipy', defaults to ``minuit``.
+         strategy (Optional[Literal[0, 1, 2]], optional): minimization strategy used by
+             Minuit, can be 0/1/2, defaults to None (then uses ``pyhf`` default behavior
+             of strategy 0 with user-provided gradients and 1 otherwise)
+         solver_options (Optional[Dict], optional): solver options passed to scipy
+             optimizer. See ``scipy.optimize.show_options()`` for all available options.
+         maxiter (Optional[int], optional): allowed number of calls for minimization,
+             defaults to None (use ``pyhf`` default of 100,000)
+         tolerance (Optional[float]), optional): tolerance for convergence, for details
+             see either ``iminuit.Minuit.tol`` (uses EDM < 0.002*tolerance) if using
+             minuit, or ``scipy.optimize.minimize``. defaults to None (use ``iminuit``
+             default of 0.1, or `scipy`` method specific defaults)
+     Returns:
+         FitResults: object storing relevant fit results
     """
     log.info("performing maximum likelihood fit")
 
@@ -348,9 +353,9 @@ def ranking(
     init_pars: Optional[List[float]] = None,
     fix_pars: Optional[List[bool]] = None,
     par_bounds: Optional[List[Tuple[float, float]]] = None,
-    minimizer: Optional[Literal['minuit','scipy']] = None,
+    minimizer: Optional[Literal["minuit", "scipy"]] = None,
     strategy: Optional[Literal[0, 1, 2]] = None,
-    solver_options: Optional[Dict] = None,
+    solver_options: Optional[Dict[str, Any]] = None,
     maxiter: Optional[int] = None,
     tolerance: Optional[float] = None,
 ) -> RankingResults:
@@ -375,7 +380,7 @@ def ranking(
         par_bounds (Optional[List[Tuple[float, float]]], optional): list of tuples with
             parameter bounds for fit, defaults to None (use ``pyhf`` suggested bounds)
         minimizer (Optional[Literal['minuit','scipy']]), optional): minimizer used for
-            the fit. Can be 'minuit' or 'scipy', defaults to None (use minuit for the 
+            the fit. Can be 'minuit' or 'scipy', defaults to None (use minuit for the
             initial fit to find the post fit uncertainties, then scipy for all fits used
             to determine the impact).
         strategy (Optional[Literal[0, 1, 2]], optional): minimization strategy used by
@@ -402,7 +407,7 @@ def ranking(
             init_pars=init_pars,
             fix_pars=fix_pars,
             par_bounds=par_bounds,
-            minimizer='minuit' if minimizer is None else minimizer,
+            minimizer="minuit" if minimizer is None else minimizer,
             strategy=strategy,
             solver_options=solver_options,
             maxiter=maxiter,
@@ -458,7 +463,7 @@ def ranking(
                     init_pars=init_pars_ranking,
                     fix_pars=fix_pars_ranking,
                     par_bounds=par_bounds,
-                    minimizer='scipy' if minimizer is None else minimizer,
+                    minimizer="scipy" if minimizer is None else minimizer,
                     strategy=strategy,
                     solver_options=solver_options,
                     maxiter=maxiter,
@@ -501,9 +506,9 @@ def scan(
     init_pars: Optional[List[float]] = None,
     fix_pars: Optional[List[bool]] = None,
     par_bounds: Optional[List[Tuple[float, float]]] = None,
-    minimizer: Optional[Literal['minuit','scipy']] = None,
+    minimizer: Optional[Literal["minuit", "scipy"]] = None,
     strategy: Optional[Literal[0, 1, 2]] = None,
-    solver_options: Optional[Dict] = None,
+    solver_options: Optional[Dict[str, Any]] = None,
     maxiter: Optional[int] = None,
     tolerance: Optional[float] = None,
 ) -> ScanResults:
@@ -528,7 +533,7 @@ def scan(
         par_bounds (Optional[List[Tuple[float, float]]], optional): list of tuples with
             parameter bounds for fit, defaults to None (use ``pyhf`` suggested bounds)
         minimizer (Optional[Literal['minuit','scipy']]), optional): minimizer used for
-            the fit. Can be 'minuit' or 'scipy', defaults to None (use minuit for the 
+            the fit. Can be 'minuit' or 'scipy', defaults to None (use minuit for the
             initial fit to find the post fit uncertainties, then scipy for all fits used
             for the likelihood scan).
         strategy (Optional[Literal[0, 1, 2]], optional): minimization strategy used by
@@ -563,7 +568,7 @@ def scan(
         init_pars=init_pars,
         fix_pars=fix_pars,
         par_bounds=par_bounds,
-        minimizer='minuit' if minimizer is None else minimizer,
+        minimizer="minuit" if minimizer is None else minimizer,
         strategy=strategy,
         solver_options=solver_options,
         maxiter=maxiter,
@@ -602,7 +607,7 @@ def scan(
             init_pars=init_pars_scan,
             fix_pars=fix_pars,
             par_bounds=par_bounds,
-            minimizer='scipy' if minimizer is None else minimizer,
+            minimizer="scipy" if minimizer is None else minimizer,
             strategy=strategy,
             solver_options=solver_options,
             maxiter=maxiter,
@@ -613,6 +618,55 @@ def scan(
 
     scan_results = ScanResults(par_name, par_mle, par_unc, scan_values, delta_nlls)
     return scan_results
+
+
+def _get_optimizer(
+    minimizer: Optional[Literal["minuit", "scipy"]] = "scipy",
+    strategy: Optional[Literal[0, 1, 2]] = None,
+    solver_options: Optional[Dict[str, Any]] = None,
+    maxiter: Optional[int] = None,
+    tolerance: Optional[float] = None,
+) -> pyhf.optimize.mixins.OptimizerMixin:
+    """Creates an optimizer instance for either `scipy` or `minuit`.
+
+    Args:
+        minimizer (Optional[Literal['minuit','scipy']]), optional): minimizer used for
+            the fit. Can be 'minuit' or 'scipy', defaults to ``scipy``.
+        strategy (Optional[Literal[0, 1, 2]], optional): minimization strategy used by
+            Minuit, can be 0/1/2, defaults to None (then uses ``pyhf`` default behavior
+            of strategy 0 with user-provided gradients and 1 otherwise)
+        solver_options (Optional[Dict], optional): solver options passed to ``scipy``
+            optimizer. See ``scipy.optimize.show_options()`` for all available options.
+        maxiter (Optional[int], optional): allowed number of calls for minimization,
+            defaults to None (use ``pyhf`` default of 100,000)
+        tolerance (Optional[float]), optional): tolerance for convergence, for details
+            see ``iminuit.Minuit.tol`` (uses EDM < 0.002*tolerance), defaults to
+            None (use ``iminuit`` default of 0.1)
+
+    Raises:
+        ValueError: if minimizer is not 'minuit' or 'scipy'
+
+    Returns:
+        pyhf.optimize.mixins.OptimizerMixin: pyhf scipy optimizer object.
+
+    """
+    if minimizer == "minuit":
+        optimizer = pyhf.optimize.minuit_optimizer(
+            verbose=1, strategy=strategy, maxiter=maxiter, tolerance=tolerance
+        )
+        return optimizer
+
+    if minimizer == "scipy":
+        optimizer = pyhf.optimize.minuit_optimizer(
+            verbose=1,
+            solver_options=solver_options,
+            maxiter=maxiter,
+            tolerance=tolerance,
+        )
+        return optimizer
+    raise ValueError(
+        f"minimizer supports only 'minuit' and 'scipy', received : {minimizer}"
+    )
 
 
 def limit(
@@ -627,9 +681,9 @@ def limit(
     init_pars: Optional[List[float]] = None,
     fix_pars: Optional[List[bool]] = None,
     par_bounds: Optional[List[Tuple[float, float]]] = None,
-    minimizer: Optional[Literal['minuit','scipy']] = 'scipy',
+    minimizer: Optional[Literal["minuit", "scipy"]] = "scipy",
     strategy: Optional[Literal[0, 1, 2]] = None,
-    solver_options: Optional[Dict] = None,
+    solver_options: Optional[Dict[str, Any]] = None,
     maxiter: Optional[int] = None,
     tolerance: Optional[float] = None,
 ) -> LimitResults:
@@ -685,17 +739,15 @@ def limit(
         LimitResults: observed and expected limits, CLs values, and scanned points
     """
     _, initial_optimizer = pyhf.get_backend()  # store initial optimizer settings
-    
-    if minimizer == 'minuit':
-        optimizer = pyhf.optimize.minuit_optimizer(
-            verbose=1, strategy=strategy, maxiter=maxiter, tolerance=tolerance)
-        
-    elif minimizer == 'scipy':
-        optimizer = pyhf.optimize.minuit_optimizer(
-            verbose=1, solver_options=solver_options, maxiter=maxiter, tolerance=tolerance)
 
-    else:
-        raise ValueError(f"minimizer supports only 'minuit' and 'scipy', received : {minimizer}")
+    optimizer = _get_optimizer(
+        minimizer=minimizer,
+        strategy=strategy,
+        solver_options=solver_options,
+        maxiter=maxiter,
+        tolerance=tolerance,
+    )
+
     pyhf.set_backend(pyhf.tensorlib, optimizer)
 
     # use POI given by kwarg, fall back to POI specified in model
@@ -913,9 +965,9 @@ def significance(
     init_pars: Optional[List[float]] = None,
     fix_pars: Optional[List[bool]] = None,
     par_bounds: Optional[List[Tuple[float, float]]] = None,
-    minimizer: Optional[Literal['minuit','scipy']] = 'scipy',
+    minimizer: Optional[Literal["minuit", "scipy"]] = "scipy",
     strategy: Optional[Literal[0, 1, 2]] = None,
-    solver_options: Optional[Dict] = None,
+    solver_options: Optional[Dict[str, Any]] = None,
     maxiter: Optional[int] = None,
     tolerance: Optional[float] = None,
 ) -> SignificanceResults:
@@ -952,17 +1004,14 @@ def significance(
         SignificanceResults: observed and expected p-values and significances
     """
     _, initial_optimizer = pyhf.get_backend()  # store initial optimizer settings
-    if minimizer == 'minuit':
-        optimizer = pyhf.optimize.minuit_optimizer(
-            verbose=1, strategy=strategy, maxiter=maxiter, tolerance=tolerance)
-        
-    elif minimizer == 'scipy':
-        optimizer = pyhf.optimize.minuit_optimizer(
-            verbose=1, solver_options=solver_options, maxiter=maxiter, tolerance=tolerance)
-    else:
-        raise ValueError(f"minimizer supports only 'minuit' and 'scipy', received : {minimizer}")
+    optimizer = _get_optimizer(
+        minimizer=minimizer,
+        strategy=strategy,
+        solver_options=solver_options,
+        maxiter=maxiter,
+        tolerance=tolerance,
+    )
     pyhf.set_backend(pyhf.tensorlib, optimizer)
-
 
     # use POI given by kwarg, fall back to POI specified in model
     poi_index = model_utils._poi_index(model, poi_name=poi_name)
