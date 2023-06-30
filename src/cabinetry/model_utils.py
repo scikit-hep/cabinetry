@@ -345,8 +345,8 @@ def yield_stdev(
     # indices: variation, channel (last entries sums), sample (last entry sum), bin
     sym_uncs = (up_variations_np - down_variations_np) / 2
 
-    # calculate total variance, indexed by sample, bin (per-channel numbers act
-    # like additional channels with one bin each)
+    # calculate total variance, indexed by sample, bin (per-channel numbers act like
+    # additional channels with one bin each)
     if np.count_nonzero(corr_mat - np.diagflat(np.ones_like(parameters))) == 0:
         # no off-diagonal contributions from correlation matrix (e.g. pre-fit)
         total_variance = np.sum(np.power(sym_uncs, 2), axis=0)
