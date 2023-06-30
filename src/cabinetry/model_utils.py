@@ -304,7 +304,8 @@ def yield_stdev(
                 for chan_yields in up_yields_per_channel
             ]
         )
-        # reshape to get rid of extra axis
+        # reshape to drop bin axis, transpose to turn channel axis into new bin axis
+        # (channel, sample, bin) -> (sample, bin) where "bin" becomes channel sums
         up_yields_channel_sum = up_yields_channel_sum.reshape(up_yields_channel_sum.shape[:-1]).T
 
         # concatenate per-channel sum to up_comb
