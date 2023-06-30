@@ -361,7 +361,7 @@ def yield_stdev(
         # variance = sum_i sum_j v[i] * M[i, j] * v[j]
         # where the product between elements of v again is elementwise (multiplying bin
         # yields), and the final variance shape is the same as element of v (yield
-        # uncertainties per bin, sample)
+        # uncertainties per sample, bin)
 
         # possible optimizations that could be considered here:
         #   - skipping staterror-staterror terms for per-bin calculation (orthogonal)
