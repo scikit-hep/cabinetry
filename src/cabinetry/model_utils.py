@@ -338,8 +338,8 @@ def yield_stdev(
         down_variations.append(down_yields)
 
     # convert to numpy arrays for further processing
-    up_variations_np = np.array(up_variations)
-    down_variations_np = np.array(down_variations)
+    up_variations_np = np.asarray(up_variations)
+    down_variations_np = np.asarray(down_variations)
 
     # calculate symmetric uncertainties for all components
     # indices: variation, channel (last entries sums), sample (last entry sum), bin
