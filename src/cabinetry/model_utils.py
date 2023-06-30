@@ -298,17 +298,17 @@ def yield_stdev(
             up_comb[:, model.config.channel_slices[ch]] for ch in model.config.channels
         ]
         # calculate list of yields summed per channel
-        up_yields_sum = np.stack(
+        up_yields_channel_sum = np.stack(
             [
                 np.sum(chan_yields, axis=-1, keepdims=True)
                 for chan_yields in up_yields_per_channel
             ]
         )
         # reshape to get rid of extra axis
-        up_yields_sum = up_yields_sum.reshape(up_yields_sum.shape[:-1]).T
+        up_yields_channel_sum = up_yields_channel_sum.reshape(up_yields_channel_sum.shape[:-1]).T
 
         # concatenate per-channel sum to up_comb
-        up_yields = np.concatenate((up_comb, up_yields_sum), axis=1)
+        up_yields = np.concatenate((up_comb, up_yields_channel_sum), axis=1)
         # indices: variation, sample, bin
         up_variations.append(up_yields.tolist())
 
@@ -325,15 +325,15 @@ def yield_stdev(
         ]
 
         # calculate list of yields summed per channel
-        down_yields_sum = np.stack(
+        down_yields_channel_sum = np.stack(
             [
                 np.sum(chan_yields, axis=-1, keepdims=True)
                 for chan_yields in down_yields_per_channel
             ]
         )
-        down_yields_sum = down_yields_sum.reshape(down_yields_sum.shape[:-1]).T
+        down_yields_channel_sum = down_yields_channel_sum.reshape(down_yields_channel_sum.shape[:-1]).T
 
-        down_yields = np.concatenate((down_comb, down_yields_sum), axis=1)
+        down_yields = np.concatenate((down_comb, down_yields_channel_sum), axis=1)
         down_variations.append(down_yields)
 
     # convert to numpy arrays for further processing
