@@ -306,7 +306,9 @@ def yield_stdev(
         )
         # reshape to drop bin axis, transpose to turn channel axis into new bin axis
         # (channel, sample, bin) -> (sample, bin) where "bin" becomes channel sums
-        up_yields_channel_sum = up_yields_channel_sum.reshape(up_yields_channel_sum.shape[:-1]).T
+        up_yields_channel_sum = up_yields_channel_sum.reshape(
+            up_yields_channel_sum.shape[:-1]
+        ).T
 
         # concatenate per-channel sums to up_comb (along bin axis)
         up_yields = np.concatenate((up_comb, up_yields_channel_sum), axis=1)
@@ -332,7 +334,9 @@ def yield_stdev(
                 for chan_yields in down_yields_per_channel
             ]
         )
-        down_yields_channel_sum = down_yields_channel_sum.reshape(down_yields_channel_sum.shape[:-1]).T
+        down_yields_channel_sum = down_yields_channel_sum.reshape(
+            down_yields_channel_sum.shape[:-1]
+        ).T
 
         down_yields = np.concatenate((down_comb, down_yields_channel_sum), axis=1)
         down_variations.append(down_yields)
