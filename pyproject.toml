@@ -31,7 +31,8 @@ warn_unreachable = true
 warn_unused_ignores = true
 strict_equality = true
 no_implicit_optional = true
-python_version = "3.8"
+# numpy 1.25 is no longer compatible with Python 3.8, so use Python >=3.9 for type checking
+python_version = "3.9"
 
 [[tool.mypy.overrides]]
 module = [
