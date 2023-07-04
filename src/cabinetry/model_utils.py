@@ -380,6 +380,7 @@ def yield_stdev(
     n_bins = sum(model.config.channel_nbins.values())
 
     # convert to standard deviations per bin and per channel
+    # add back outer channel dimension for per-bin uncertainty
     # indices: (channel, sample, bin)
     total_stdev_per_bin = [
         np.sqrt(total_variance[:, :n_bins][:, model.config.channel_slices[ch]]).tolist()
