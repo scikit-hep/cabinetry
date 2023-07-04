@@ -386,6 +386,8 @@ def yield_stdev(
         np.sqrt(total_variance[:, :n_bins][:, model.config.channel_slices[ch]]).tolist()
         for ch in model.config.channels
     ]
+    # per-channel: transpose to flip remaining dimensions (channel sums acted as
+    # individual bins before)
     # indices: (channel, sample)
     total_stdev_per_channel = np.sqrt(total_variance[:, n_bins:].T).tolist()
     # log total stdev per bin / channel (-1 index for sample sum)
