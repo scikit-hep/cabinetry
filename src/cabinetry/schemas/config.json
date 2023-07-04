@@ -145,6 +145,10 @@
                     },
                     "uniqueItems": true
                 },
+                "Rebin": {
+                    "description": "rebinning to apply",
+                    "$ref": "#/definitions/rebin_setting"
+                },
                 "Filter": {
                     "description": "selection criteria to apply",
                     "type": "string"
@@ -397,6 +401,27 @@
                     "uniqueItems": true
                 }
             ]
+        },
+        "rebin_setting": {
+            "title": "Rebin setting",
+            "$$target": "#/definitions/rebin_setting",
+            "description": "rebin settings for template histograms",
+            "type": "object",
+            "properties": {
+                "LowerIndex": {
+                    "description": "zero-based lower index for histogram",
+                    "type": "integer"
+                },
+                "UpperIndex": {
+                    "description": "zero-based upper index for histogram",
+                    "type": "integer"
+                },
+                "Steps": {
+                    "description": "number of bins to merge",
+                    "type": "integer"
+                }
+            },
+            "additionalProperties": false
         },
         "smoothing_setting": {
             "title": "Smoothing setting",

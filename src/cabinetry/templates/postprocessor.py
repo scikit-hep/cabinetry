@@ -5,6 +5,7 @@ import logging
 import pathlib
 from typing import Any, Dict, Literal, Optional
 
+import boost_histogram as bh
 import numpy as np
 
 from cabinetry import configuration
@@ -29,6 +30,30 @@ def _fix_stat_unc(histogram: histo.Histogram, name: str) -> None:
     if len(nan_pos) > 0:
         log.debug(f"fixing ill-defined stat. unc. for {name}")
         histogram.stdev = np.nan_to_num(histogram.stdev, nan=0.0)
+
+
+def _rebinning_slice(region: Dict[str, Any]) -> Optional[slice]:
+    """Returns the slice for rebinning a histogram or None otherwise.
+
+    Args:
+        region (Dict[str, Any]): containing all region information
+
+    Returns:
+        Optional[slice]: slice for rebinning or None
+    """
+    rebinning_info = region.get("Rebin", {})
+    if all(
+        [r not in ["LowerIndex", "UpperIndex", "Steps"] for r in rebinning_info.keys()]
+    ):
+        # no rebinning needed
+        return None
+
+    lower_idx = rebinning_info.get("LowerIndex", None)
+    upper_idx = rebinning_info.get("UpperIndex", None)
+    steps = rebinning_info.get("Steps", slice(None))
+    if steps < 1:
+        raise ValueError("steps for merging must be at least 1")
+    return slice(lower_idx, upper_idx, bh.rebin(steps))
 
 
 def _apply_353qh_twice(
@@ -91,6 +116,7 @@ def apply_postprocessing(
     histogram: histo.Histogram,
     name: str,
     *,
+    rebinning_slice: Optional[slice] = None,
     smoothing_algorithm: Optional[str] = None,
     nominal_histogram: Optional[histo.Histogram] = None,
 ) -> histo.Histogram:
@@ -103,6 +129,8 @@ def apply_postprocessing(
     Args:
         histogram (cabinetry.histo.Histogram): the histogram to postprocess
         name (str): histogram name for logging
+        rebinning_slice (Optional[slice]): rebinning to apply, defaults to None (no re-
+            binning applied)
         smoothing_algorithm (Optional[str]): name of smoothing algorithm to apply,
             defaults to None (no smoothing done)
         nominal_histogram (Optional[cabinetry.histo.Histogram]): nominal histogram
@@ -113,7 +141,16 @@ def apply_postprocessing(
     """
     # copy histogram to new object to leave it unchanged
     modified_histogram = copy.deepcopy(histogram)
+
+    # apply rebinning
+    if rebinning_slice is not None:
+        modified_histogram = modified_histogram[
+            rebinning_slice
+        ]  # type: ignore[assignment]
+
     _fix_stat_unc(modified_histogram, name)
+
+    # smoothing
     if smoothing_algorithm is not None:
         if smoothing_algorithm == "353QH, twice":
             if nominal_histogram is None:
@@ -121,6 +158,7 @@ def apply_postprocessing(
             _apply_353qh_twice(modified_histogram, nominal_histogram, name)
         else:
             log.warning(f"unknown smoothing algorithm {smoothing_algorithm}")
+
     return modified_histogram
 
 
@@ -162,6 +200,10 @@ def _postprocessor(histogram_folder: pathlib.Path) -> route.ProcessorFunc:
         )
         histogram_name = histo.name(region, sample, systematic, template=template)
 
+        # rebinning information from config
+        rebinning_slice = _rebinning_slice(region)
+
+        # smoothing algorithm from config
         smoothing_algorithm = _smoothing_algorithm(region, sample, systematic)
         if smoothing_algorithm is None:
             nominal_histogram = None
@@ -173,14 +215,18 @@ def _postprocessor(histogram_folder: pathlib.Path) -> route.ProcessorFunc:
                 histogram_folder, region, sample, {}, modified=False
             )
 
+        log.info("edges before rebinning", histogram.bins)  # to be removed
         new_histogram = apply_postprocessing(
             histogram,
             histogram_name,
+            rebinning_slice=rebinning_slice,
             smoothing_algorithm=smoothing_algorithm,
             nominal_histogram=nominal_histogram,
         )
         histogram.validate(histogram_name)
         new_histo_path = histogram_folder / (histogram_name + "_modified")
         new_histogram.save(new_histo_path)
+
+        log.info("edges after rebinning", new_histogram.bins)  # to be removed
 
     return process_template

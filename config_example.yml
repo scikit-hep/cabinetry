@@ -9,6 +9,10 @@ Regions:
     Variable: "jet_pt"
     Filter: "lep_charge > 0"
     Binning: [200, 300, 400, 500, 600]
+    Rebin:
+      LowerIndex: -1
+      UpperIndex: 8
+      Steps: -5
 
 Samples:
   - Name: "Data"
