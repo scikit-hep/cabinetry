@@ -376,18 +376,17 @@ def yield_stdev(
         # finally perform sums over i and j, remaining indices: sample, bin
         total_variance = np.sum(np.sum(v_times_m_times_v, axis=1), axis=0)
 
+    # get number of bins from model config
+    n_bins = sum(model.config.channel_nbins.values())
+
     # convert to standard deviations per bin and per channel
-    # calculate separation between per-bin indices and per-channel indices
-    last_bin_index = model.config.channel_slices[model.config.channels[-1]].stop
-    # indices: (channel, sample)
-    total_stdev_per_channel = np.sqrt(total_variance[:, last_bin_index:].T).tolist()
     # indices: (channel, sample, bin)
     total_stdev_per_bin = [
-        np.sqrt(
-            total_variance[:, :last_bin_index][:, model.config.channel_slices[ch]]
-        ).tolist()
+        np.sqrt(total_variance[:, :n_bins][:, model.config.channel_slices[ch]]).tolist()
         for ch in model.config.channels
     ]
+    # indices: (channel, sample)
+    total_stdev_per_channel = np.sqrt(total_variance[:, n_bins:].T).tolist()
     # log total stdev per bin / channel (-1 index for sample sum)
     total_stdev_bin = [
         total_stdev_per_bin[i][-1] for i in range(len(total_stdev_per_bin))
