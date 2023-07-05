@@ -23,7 +23,7 @@ class ModelPrediction(NamedTuple):
 
     Args:
         model (pyhf.pdf.Model): model to which prediction corresponds to
-        model_yields (List[List[List[float]]]): yields per sample, channel and bin,
+        model_yields (List[List[List[float]]]): yields per channel, sample and bin,
             indices: channel, sample, bin
         total_stdev_model_bins (List[List[List[float]]]): total yield uncertainty per
             channel, sample and bin, indices: channel, sample, bin (last sample: sum
@@ -393,9 +393,11 @@ def yield_stdev(
 
     # log total stdev per bin / channel (-1 index for sample sum)
     n_channels = len(model.config.channels)
-    total_stdev_bin = [total_stdev_per_bin[i][-1] for i in range(n_channels)]
+    total_stdev_bin = [total_stdev_per_bin[i_chan][-1] for i_chan in range(n_channels)]
     log.debug(f"total stdev is {total_stdev_bin}")
-    total_stdev_chan = [total_stdev_per_channel[i][-1] for i in range(n_channels)]
+    total_stdev_chan = [
+        total_stdev_per_channel[i_chan][-1] for i_chan in range(n_channels)
+    ]
     log.debug(f"total stdev per channel is {total_stdev_chan}")
 
     # save to cache
@@ -436,7 +438,7 @@ def prediction(
             fit" otherwise)
 
     Returns:
-        ModelPrediction: model, yields and uncertainties per bin and channel
+        ModelPrediction: model, yields and uncertainties per channel, sample, bin
     """
     if fit_results is not None:
         if fit_results.labels != model.config.par_names:
@@ -468,7 +470,8 @@ def prediction(
     ]
 
     # calculate the total standard deviation of the model prediction
-    # indices: channel (and bin) for per-bin uncertainties, channel for per-channel
+    # indices: (channel, sample, bin) for per-bin uncertainties,
+    # (channel, sample) for per-channel
     total_stdev_model_bins, total_stdev_model_channels = yield_stdev(
         model, param_values, param_uncertainty, corr_mat
     )
