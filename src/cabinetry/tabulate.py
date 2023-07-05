@@ -4,7 +4,6 @@ import logging
 import pathlib
 from typing import Any, Dict, List, Optional, Union
 
-import awkward as ak
 import numpy as np
 import pyhf
 import tabulate
@@ -285,9 +284,12 @@ def yields(
 
     if per_channel:
         # yields per channel
-        model_yields_per_channel = np.sum(
-            ak.from_iter(model_prediction.model_yields), axis=-1
-        ).tolist()
+        n_channels = len(model_prediction.model.config.channels)
+        model_yields_per_channel = [
+            np.sum(model_prediction.model_yields[i_chan], axis=-1).tolist()
+            for i_chan in range(n_channels)
+        ]
+
         data_per_channel = [sum(d) for d in data_yields]
         per_channel_table = _yields_per_channel(
             model_prediction.model,

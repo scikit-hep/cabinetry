@@ -37,8 +37,6 @@ python_version = "3.9"
 [[tool.mypy.overrides]]
 module = [
     "uproot",
-    "awkward",
-    "awkward._v2",
     "pyhf",
     "matplotlib.*",
     "iminuit",
