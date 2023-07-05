@@ -392,13 +392,10 @@ def yield_stdev(
     total_stdev_per_channel = np.sqrt(total_variance[:, n_bins:].T).tolist()
 
     # log total stdev per bin / channel (-1 index for sample sum)
-    total_stdev_bin = [
-        total_stdev_per_bin[i][-1] for i in range(len(total_stdev_per_bin))
-    ]
+    n_channels = len(model.config.channels)
+    total_stdev_bin = [total_stdev_per_bin[i][-1] for i in range(n_channels)]
     log.debug(f"total stdev is {total_stdev_bin}")
-    total_stdev_chan = [
-        total_stdev_per_channel[i][-1] for i in range(len(total_stdev_per_channel))
-    ]
+    total_stdev_chan = [total_stdev_per_channel[i][-1] for i in range(n_channels)]
     log.debug(f"total stdev per channel is {total_stdev_chan}")
 
     # save to cache
