@@ -390,6 +390,7 @@ def yield_stdev(
     # individual bins before)
     # indices: (channel, sample)
     total_stdev_per_channel = np.sqrt(total_variance[:, n_bins:].T).tolist()
+
     # log total stdev per bin / channel (-1 index for sample sum)
     total_stdev_bin = [
         total_stdev_per_bin[i][-1] for i in range(len(total_stdev_per_bin))
