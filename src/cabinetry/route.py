@@ -2,7 +2,7 @@
 
 import fnmatch
 import logging
-from typing import Any, Callable, Dict, List, Literal, Optional
+from typing import Any, Callable, Dict, List, Literal, Optional, Tuple
 
 import boost_histogram as bh
 
@@ -37,6 +37,12 @@ MatchFunc = Callable[
 # type of wrapper function that that turns a user-defined template processing function
 # (which returns a histogram) into a function that returns None
 WrapperFunc = Callable[[UserTemplateFunc], ProcessorFunc]
+
+# type of tuple capturing all relevant information to obtain a template histogram
+# this includes region, sample, systematic and template (up/down)
+TemplateHistogramInformation = Tuple[
+    Dict[str, Any], Dict[str, Any], Dict[str, Any], Optional[Literal["Up", "Down"]]
+]
 
 
 class Router:
@@ -257,33 +263,18 @@ class Router:
         return None
 
 
-def apply_to_all_templates(
-    config: Dict[str, Any],
-    default_func: ProcessorFunc,
-    *,
-    match_func: Optional[MatchFunc] = None,
-) -> None:
-    """Applies the supplied function ``default_func`` to all templates.
-
-    The templates are specified by the configuration file. The function takes four
-    arguments in this order:
-
-    - the dict specifying region information
-    - the dict specifying sample information
-    - the dict specifying systematic information
-    - the template being considered: "Up", "Down", or None for the nominal template
-
-    In addition it is possible to specify a function that returns custom overrides. If
-    one is found for a given template, it is used instead of the default.
+def required_templates(config: Dict[str, Any]) -> List[TemplateHistogramInformation]:
+    """Returns relevant information needed to produce all required template histograms.
 
     Args:
         config (Dict[str, Any]): cabinetry configuration
-        default_func (ProcessorFunc): function to be called for every template by
-            default
-        match_func: (Optional[MatchFunc], optional): function that returns user-defined
-            functions to override the call to ``default_func``, defaults to None (then
-            it is not used)
+
+    Returns:
+        List[TemplateHistogramInformation]: list of relevant information for each
+        template histogram
     """
+    all_templates = []
+
     for region in config["Regions"]:
         log.debug(f"  in region {region['Name']}")
 
@@ -321,22 +312,52 @@ def apply_to_all_templates(
                         f"{' ' + template if template is not None else ''}"
                     )
 
-                    func_override = None
-                    if match_func is not None:
-                        # check whether a user-defined function was registered that
-                        # matches this region-sample-systematic-template
-                        systematic_name = (
-                            systematic["Name"] if template is not None else ""
-                        )
-                        func_override = match_func(
-                            region["Name"], sample["Name"], systematic_name, template
-                        )
-                    if func_override is not None:
-                        # call the user-defined function
-                        log.debug(
-                            f"executing user-defined override {func_override.__name__}"
-                        )
-                        func_override(region, sample, systematic, template)
-                    else:
-                        # call the provided default function
-                        default_func(region, sample, systematic, template)
+                    all_templates.append((region, sample, systematic, template))
+
+    return all_templates
+
+
+def apply_to_templates(
+    default_func: ProcessorFunc,  # BREAKING API CHANGE
+    template_list: List[TemplateHistogramInformation],
+    *,
+    match_func: Optional[MatchFunc] = None,
+) -> None:
+    """Applies the supplied function ``default_func`` to all templates.
+
+    The templates are specified by the configuration file. The function takes four
+    arguments in this order:
+
+    - the dict specifying region information
+    - the dict specifying sample information
+    - the dict specifying systematic information
+    - the template being considered: "Up", "Down", or None for the nominal template
+
+    In addition it is possible to specify a function that returns custom overrides. If
+    one is found for a given template, it is used instead of the default.
+
+    Args:
+        default_func (ProcessorFunc): function to be called for every template by
+            default
+        template_list (List[TemplateHistogramInformation]): list of template information
+            to apply function to
+        match_func: (Optional[MatchFunc], optional): function that returns user-defined
+            functions to override the call to ``default_func``, defaults to None (then
+            it is not used)
+    """
+    for region, sample, systematic, template in template_list:
+        func_override = None
+        if match_func is not None:
+            # check whether a user-defined function was registered that
+            # matches this region-sample-systematic-template
+            systematic_name = systematic["Name"] if template is not None else ""
+            func_override = match_func(
+                region["Name"], sample["Name"], systematic_name, template
+            )
+        if func_override is not None:
+            # call the user-defined function
+            log.debug(f"executing user-defined override {func_override.__name__}")
+            func_override(region, sample, systematic, template)
+        else:
+            # call the provided default function
+            default_func(region, sample, systematic, template)
