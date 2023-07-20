@@ -286,19 +286,19 @@ def test_templates(mock_draw, mock_histo_config, mock_histo_path, tmp_path):
     # the side effects are repeated for the patched Histogram.from_path
     # to check all relevant behavior (including the unknown backend check)
     nominal_path = tmp_path / "region_sample_Nominal_modified.npz"
-    up_path = tmp_path / "region_sample_sys_Up_modified.npz"
-    down_path = tmp_path / "region_sample_sys_Down_modified.npz"
+    up_path = tmp_path / "region_sample_sys-name_Up_modified.npz"
+    down_path = tmp_path / "region_sample_sys-name_Down_modified.npz"
     region = {"Name": "region", "Variable": "x"}
     sample = {"Name": "sample"}
     config = {
         "General": {"HistogramFolder": tmp_path},
         "Regions": [region],
         "Samples": [sample, {"Name": "data", "Data": True}],
-        "Systematics": [{"Name": "sys"}],
+        "Systematics": [{"Name": "sys name"}],
     }
 
     folder_path = "tmp"
-    figure_path = pathlib.Path(folder_path) / "templates/region_sample_sys.pdf"
+    figure_path = pathlib.Path(folder_path) / "templates/region_sample_sys-name.pdf"
 
     # add fake histograms for glob
     nominal_path.touch()
@@ -306,14 +306,14 @@ def test_templates(mock_draw, mock_histo_config, mock_histo_path, tmp_path):
     down_path.touch()
 
     # also add a file that matches pattern but is not needed
-    (tmp_path / "region_sample_sys_unknown_modified.npz").touch()
+    (tmp_path / "region_sample_sys-name_unknown_modified.npz").touch()
 
     fig_dict_list = visualize.templates(config, figure_folder=folder_path)
     assert len(fig_dict_list) == 1
     assert isinstance(fig_dict_list[0]["figure"], matplotlib.figure.Figure)
     assert fig_dict_list[0]["region"] == "region"
     assert fig_dict_list[0]["sample"] == "sample"
-    assert fig_dict_list[0]["systematic"] == "sys"
+    assert fig_dict_list[0]["systematic"] == "sys name"
 
     # nominal histogram loading
     assert mock_histo_config.call_args_list == [((tmp_path, region, sample, {}), {})]
@@ -338,7 +338,7 @@ def test_templates(mock_draw, mock_histo_config, mock_histo_path, tmp_path):
             (nominal, up_orig, down_orig, up_mod, down_mod, bins, "x"),
             {
                 "figure_path": figure_path,
-                "label": "region: region\nsample: sample\nsystematic: sys",
+                "label": "region: region\nsample: sample\nsystematic: sys name",
                 "close_figure": False,
             },
         )
@@ -355,7 +355,7 @@ def test_templates(mock_draw, mock_histo_config, mock_histo_path, tmp_path):
         (nominal, up_orig, down_orig, up_mod, down_mod, bins, "observable"),
         {
             "figure_path": None,
-            "label": "region: region\nsample: sample\nsystematic: sys",
+            "label": "region: region\nsample: sample\nsystematic: sys name",
             "close_figure": True,
         },
     )
