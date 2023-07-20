@@ -335,7 +335,7 @@ def templates(
                     + "_"
                     + systematic["Name"]
                     + "*_modified*"
-                )
+                ).replace(" ", "-")
                 # create a list of paths to histograms matching the pattern
                 variation_paths = [
                     pathlib.Path(h_name)
@@ -398,7 +398,7 @@ def templates(
                 )
                 figure_name = (
                     f"{region['Name']}_{sample['Name']}_{systematic['Name']}.pdf"
-                )
+                ).replace(" ", "-")
                 figure_path = figure_folder / figure_name if save_figure else None
 
                 fig = plot_model.templates(
