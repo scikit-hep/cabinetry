@@ -16,7 +16,7 @@ extras_require["test"] = sorted(
             "mypy",
             "types-tabulate",
             "types-PyYAML",
-            "typeguard>=4.0.0",  # cabinetry#391
+            "typeguard>=4.0.0,!=4.1.0,!=4.1.1",  # cabinetry#391, cabinetry#428
             "black",
         ]
     )
