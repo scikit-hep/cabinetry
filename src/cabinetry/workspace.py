@@ -98,7 +98,9 @@ class WorkspaceBuilder:
         """Returns a normalization modifier (OverallSys in `HistFactory`).
 
         Args:
-            systematic (Dict[str, Any]): systematic for which modifier is constructed
+            region (Dict[str, Any]): region the systematic variation acts in
+            sample (Dict[str, Any]): sample the systematic variation acts on
+            systematic (Dict[str, Any]): the systematic variation under consideration
 
         Returns:
             Dict[str, Any]: single `normsys` modifier for ``pyhf`` workspace
