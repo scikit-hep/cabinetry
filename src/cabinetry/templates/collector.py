@@ -26,7 +26,9 @@ def _histo_path(
     location of the histogram within the file. Due to the presence of this colon, the
     return value is a string instead of a pathlib path. A path is built starting from
     the path specified in the general options in the configuration file. This path
-    contains placeholders for region-, sample-, and systematic-specific values.
+    contains placeholders for region-, sample-, and systematic-specific values. For
+    non-nominal templates there are overrides for ``SamplePath`` and ``VariationPath``
+    which can be used.
 
     Args:
         general_path (str): path specified in general settings, with sections that can
@@ -53,7 +55,12 @@ def _histo_path(
 
     # check whether a systematic is being processed
     if template is not None:
-        # determine whether the template has an override for VariationPath specified
+        # determine whether the template has an override for SamplePath specified
+        sample_override = utils._check_for_override(systematic, template, "SamplePath")
+        if sample_override is not None:
+            sample_path = sample_override
+
+        # check for VariationPath override
         variation_override = utils._check_for_override(
             systematic, template, "VariationPath"
         )
@@ -61,16 +68,12 @@ def _histo_path(
             # _check_for_override should return Optional[str] for VariationPath, but
             # mypy cannot know that it will not be a list, so explicitly cast to str
             variation_path = cast(str, variation_override)
-        else:
-            log.warning(
-                f"no VariationPath override specified for {region['Name']} / "
-                f"{sample['Name']} / {systematic['Name']} {template}"
-            )
-    # apply variation-specific setting
-    path = general_path.replace("{VariationPath}", variation_path)
+
+    # create a new string for path handling, with placeholders replaced subsequently
+    path = general_path
 
     # handle region-specific setting
-    region_template_exists = "{RegionPath}" in general_path
+    region_template_exists = "{RegionPath}" in path
     if region_path is not None:
         if not region_template_exists:
             log.warning(
@@ -81,7 +84,7 @@ def _histo_path(
         raise ValueError(f"no path setting found for region {region['Name']}")
 
     # handle sample-specific setting
-    sample_template_exists = "{SamplePath}" in general_path
+    sample_template_exists = "{SamplePath}" in path
     if sample_path is not None:
         if not sample_template_exists:
             log.warning(
@@ -90,6 +93,15 @@ def _histo_path(
         path = path.replace("{SamplePath}", sample_path)
     elif sample_template_exists:
         raise ValueError(f"no path setting found for sample {sample['Name']}")
+
+    # handle variation-specific setting (variation_path is always specified via function
+    # argument and possibly also via override)
+    if "{VariationPath}" not in path:
+        log.warning(
+            "variation override specified, but {VariationPath} not found in default "
+            "path"
+        )
+    path = path.replace("{VariationPath}", variation_path)
 
     # check for presence of colon to distinguish path to file and location within file
     if ":" not in path:
