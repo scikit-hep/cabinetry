@@ -1,7 +1,12 @@
 """Reads histograms with uproot."""
 
+import logging
+
 import boost_histogram as bh
 import uproot
+
+
+log = logging.getLogger(__name__)
 
 
 def with_uproot(histo_path: str) -> bh.Histogram:
@@ -14,5 +19,6 @@ def with_uproot(histo_path: str) -> bh.Histogram:
     Returns:
         bh.Histogram: histogram containing data
     """
+    log.debug(f"reading input histogram {histo_path}")
     hist = uproot.open(histo_path).to_boost()
     return hist
