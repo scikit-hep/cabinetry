@@ -13,7 +13,7 @@ def test__histo_path(caplog):
     # only general path, no override
     assert collector._histo_path("path.root:h1", "", {}, {}, {}, None) == "path.root:h1"
 
-    # general path with region, sample and nominal variation
+    # general path with region, sample and nominal variation, template with no impact
     assert (
         collector._histo_path(
             "{RegionPath}.root:{SamplePath}_{VariationPath}",
@@ -21,41 +21,23 @@ def test__histo_path(caplog):
             {"RegionPath": "region"},
             {"SamplePath": "sample"},
             {},
-            None,
+            "Up",
         )
         == "region.root:sample_nominal"
     )
 
-    # systematic with override for VariationPath
+    # systematic with override for SamplePath and VariationPath
     assert (
         collector._histo_path(
             "{RegionPath}.root:{SamplePath}_{VariationPath}",
             "nominal",
             {"RegionPath": "reg_1"},
             {"SamplePath": "path"},
-            {"Name": "variation", "Up": {"VariationPath": "up"}},
+            {"Name": "variation", "Up": {"SamplePath": "var", "VariationPath": "up"}},
             "Up",
         )
-        == "reg_1.root:path_up"
+        == "reg_1.root:var_up"
     )
-
-    caplog.clear()
-
-    # systematic without override, results in warning from VariationPath
-    assert (
-        collector._histo_path(
-            "f.root:h1_{VariationPath}",
-            "",
-            {"Name": "reg"},
-            {"Name": "sam"},
-            {"Name": "variation"},
-            "Up",
-        )
-        == "f.root:h1_"
-    )
-    assert "no VariationPath override specified for reg / sam / variation Up" in [
-        rec.message for rec in caplog.records
-    ]
     caplog.clear()
 
     # warning: no region path in template
@@ -80,6 +62,19 @@ def test__histo_path(caplog):
     assert "sample override specified, but {SamplePath} not found in default path" in [
         rec.message for rec in caplog.records
     ]
+    caplog.clear()
+
+    # warning: no variation path in template
+    assert (
+        collector._histo_path(
+            "f.root:h1", "", {}, {"VariationPath": "sample.root"}, {}, None
+        )
+        == "f.root:h1"
+    )
+    assert (
+        "variation override specified, but {VariationPath} not found in default path"
+        in [rec.message for rec in caplog.records]
+    )
     caplog.clear()
 
     # warning: no colon in path
