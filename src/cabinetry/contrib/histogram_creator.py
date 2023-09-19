@@ -1,11 +1,15 @@
 """Creates histograms from ntuples with uproot."""
 
+import logging
 import pathlib
 from typing import List, Optional
 
 import boost_histogram as bh
 import numpy as np
 import uproot
+
+
+log = logging.getLogger(__name__)
 
 
 def with_uproot(
@@ -50,6 +54,8 @@ def with_uproot(
         # no weight specified, all weights are 1.0
         weight_is_expression = False
         weight = "1.0"
+
+    log.debug(f"reading input ntuples {paths_with_trees}")
 
     if weight_is_expression:
         # need to read observables and weights

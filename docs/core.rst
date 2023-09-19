@@ -116,13 +116,12 @@ SamplePath
 
 The ``SamplePath`` setting sets the value for the ``{SamplePath}`` placeholder.
 In contrast to the ntuple case, this value cannot be a list of strings.
-It also cannot be overridden on a per-systematic basis, just like ``RegionPath``.
 
 VariationPath
 """""""""""""
 
 Each systematic template can set the value for the ``{VariationPath}`` placeholder via the ``VariationPath`` setting.
-``RegionPath`` and ``SamplePath`` settings cannot be overridden.
+The ``RegionPath`` setting cannot be overridden.
 
 An example
 """"""""""

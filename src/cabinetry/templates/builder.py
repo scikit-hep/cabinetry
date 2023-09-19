@@ -29,9 +29,9 @@ def _ntuple_paths(
     A path is built starting from the path specified in the general options in the
     configuration file. This path can contain placeholders for region- and sample-
     specific overrides, via ``{Region}`` and ``{Sample}``. For non-nominal templates, it
-    is possible to override the sample path if the ``SamplePath`` option is specified
-    for the template. If ``SamplePath`` is a list, return a list of paths (one per
-    entry in the list).
+    is possible to override the path if the ``RegionPath`` or ``SamplePath`` options are
+    specified for the template. If ``SamplePath`` is a list, return a list of paths
+    (one per entry in the list).
 
     Args:
         general_path (str): path specified in general settings, with sections that can
