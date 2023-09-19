@@ -121,7 +121,7 @@ VariationPath
 """""""""""""
 
 Each systematic template can set the value for the ``{VariationPath}`` placeholder via the ``VariationPath`` setting.
-The ``SamplePath`` setting cannot be overridden.
+The ``RegionPath`` setting cannot be overridden.
 
 An example
 """"""""""
