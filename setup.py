@@ -28,7 +28,7 @@ extras_require["docs"] = sorted(
         "sphinx-click",
         "sphinx-copybutton",
         "sphinx-jsonschema",
-        "sphinx-rtd-theme",
+        "sphinx-rtd-theme>=1.2",  # Sphinx 7 compatibility
     }
 )
 
