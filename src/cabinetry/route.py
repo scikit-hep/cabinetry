@@ -323,7 +323,7 @@ def apply_to_templates(
     *,
     match_func: Optional[MatchFunc] = None,
 ) -> None:
-    """Applies the supplied function ``default_func`` to all templates.
+    """Applies the supplied function ``default_func`` to all specified templates.
 
     The templates are specified by the configuration file. The function takes four
     arguments in this order:
