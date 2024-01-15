@@ -71,7 +71,7 @@ def data_mc(
         bin_width_norm = (bin_edges[1:] - bin_edges[:-1]) / rescaling_factor
     else:
         unit = None
-        bin_width_norm = np.ones_like(bin_edges)
+        bin_width_norm = np.ones_like(bin_edges[:-1])
 
     total_model_unc /= bin_width_norm  # apply bin width normalization
 
