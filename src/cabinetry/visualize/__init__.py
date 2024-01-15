@@ -162,6 +162,7 @@ def data_mc(
     log_scale_x: bool = False,
     channels: Optional[Union[str, List[str]]] = None,
     colors: Optional[Dict[str, str]] = None,
+    plot_options: Optional[Dict[str, dict]] = None,
     close_figure: bool = False,
     save_figure: bool = True,
 ) -> Optional[List[Dict[str, Any]]]:
@@ -189,6 +190,8 @@ def data_mc(
             or list of names to include, defaults to None (uses all channels)
         colors (Optional[Dict[str, str]], optional): map of sample names and colors to
             use in plot, defaults to None (uses default colors)
+        plot_options (Optional[Dict[str, dict]], optional): plotting configuration
+            per region, defaults to None (no additional configuration)
         close_figure (bool, optional): whether to close each figure, defaults to False
             (enable when producing many figures to avoid memory issues, prevents
             automatic rendering in notebooks)
@@ -212,6 +215,8 @@ def data_mc(
             raise ValueError(
                 f"colors need to be provided for all samples, missing for {c_missing}"
             )
+
+    plot_options = plot_options or {}  # no additional plot options by default
 
     # channels to include in plot, with optional filtering applied
     filtered_channels = model_utils._filter_channels(model_prediction.model, channels)
@@ -283,6 +288,7 @@ def data_mc(
             log_scale_x=log_scale_x,
             label=label,
             colors=colors,
+            plot_options=plot_options.get(channel_name, None),
             close_figure=close_figure,
         )
         figure_dict_list.append({"figure": fig, "region": channel_name})
