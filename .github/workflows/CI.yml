@@ -42,9 +42,9 @@ jobs:
         flake8 src/cabinetry --select=E9,F63,F7,F82 --show-source
         # check for additional issues flagged by flake8
         flake8
-    # - name: Format with Black
-    #   run: |
-    #     black --check --diff --verbose .
+    - name: Format with Black
+      run: |
+        black --check --diff --verbose .
     - name: Run example
       run: |
         python utils/create_ntuples.py
