@@ -402,13 +402,7 @@ def example_spec_zero_staterror():
             }
         ],
         "measurements": [
-            {
-                "config": {
-                    "parameters": [],
-                    "poi": "mu",
-                },
-                "name": "zero staterror",
-            }
+            {"config": {"parameters": [], "poi": "mu"}, "name": "zero staterror"}
         ],
         "observations": [{"data": [5, 0], "name": "SR"}],
         "version": "1.0.0",
