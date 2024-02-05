@@ -140,8 +140,7 @@ def test_data_mc(tmp_path, caplog):
     # negative bin yield
     histo_dict_list[0]["yields"] = [-50, -50]
     with pytest.raises(
-        ValueError,
-        match=r"abc total model yield has negative bin\(s\): \[-50, -45\]",
+        ValueError, match=r"abc total model yield has negative bin\(s\): \[-50, -45\]"
     ):
         plot_model.data_mc(
             histo_dict_list, total_model_unc_log, bin_edges_log, label="abc"

@@ -1,4 +1,5 @@
 """Creates histograms used as input for a minimal example of cabinetry."""
+
 import os
 
 import boost_histogram as bh

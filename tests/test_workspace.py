@@ -200,7 +200,7 @@ def test_WorkspaceBuilder_normplusshape_modifiers(mock_histogram):
     # single bin, causing histosys being skipped
     modifiers = ws_builder.normplusshape_modifiers(region, sample, systematic)
     assert modifiers == [
-        {"name": "mod_name", "type": "normsys", "data": {"hi": 1.3, "lo": 0.7}},
+        {"name": "mod_name", "type": "normsys", "data": {"hi": 1.3, "lo": 0.7}}
     ]
 
 

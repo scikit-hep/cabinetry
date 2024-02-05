@@ -1,4 +1,5 @@
 """Creates ntuples used as input for a minimal example of cabinetry."""
+
 import os
 
 import matplotlib.pyplot as plt

@@ -348,10 +348,7 @@ def data_mc(
     help='format in which to save the table (default: "simple")',
 )
 def yields(
-    ws_spec: io.TextIOWrapper,
-    postfit: bool,
-    tablefolder: str,
-    tablefmt: str,
+    ws_spec: io.TextIOWrapper, postfit: bool, tablefolder: str, tablefmt: str
 ) -> None:
     """Creates yield tables of fit model and observed data.
 
@@ -366,10 +363,7 @@ def yields(
 
     model_prediction = cabinetry_model_utils.prediction(model, fit_results=fit_results)
     cabinetry_tabulate.yields(
-        model_prediction,
-        data,
-        table_folder=tablefolder,
-        table_format=tablefmt,
+        model_prediction, data, table_folder=tablefolder, table_format=tablefmt
     )
 
 
