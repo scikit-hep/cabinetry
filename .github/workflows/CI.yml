@@ -65,12 +65,13 @@ jobs:
         pytest --runslow
     - name: Upload coverage to codecov
       if: matrix.python-version == '3.8'
-      uses: codecov/codecov-action@v3
+      uses: codecov/codecov-action@v4
       with:
         token: ${{ secrets.CODECOV_TOKEN }}
         file: ./coverage.xml
         name: codecov-umbrella
         fail_ci_if_error: true
+        verbose: true
     - name: Build docs with sphinx
       run: |
         python -m pip install .[docs]
