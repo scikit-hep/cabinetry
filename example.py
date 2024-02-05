@@ -49,5 +49,8 @@ if __name__ == "__main__":
     cabinetry.tabulate.yields(prediction_postfit, data)
 
     # visualize pre- and post-fit distributions
-    cabinetry.visualize.data_mc(prediction_prefit, data, config=config)
+    plot_options = {"Signal_region": {"normalize_binwidth": (100, "GeV")}}
+    cabinetry.visualize.data_mc(
+        prediction_prefit, data, config=config, plot_options=plot_options
+    )
     cabinetry.visualize.data_mc(prediction_postfit, data, config=config)

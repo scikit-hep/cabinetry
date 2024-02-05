@@ -31,6 +31,7 @@ def data_mc(
     log_scale_x: bool = False,
     label: str = "",
     colors: Optional[Dict[str, str]] = None,
+    plot_options: Optional[Dict[str, Any]] = None,
     close_figure: bool = False,
 ) -> mpl.figure.Figure:
     """Draws a data/MC histogram with uncertainty bands and ratio panel.
@@ -51,6 +52,8 @@ def data_mc(
         label (str, optional): label written on the figure, defaults to ""
         colors (Optional[Dict[str, str]], optional): map of sample names and colors to
             use in plot, defaults to None (uses default colors)
+        plot_options (Optional[Dict[str, Any]], optional): plotting configuration for
+            this figure, defaults to None (no additional configuration)
         close_figure (bool, optional): whether to close each figure immediately after
             saving it, defaults to False (enable when producing many figures to avoid
             memory issues, prevents rendering in notebooks)
@@ -61,15 +64,26 @@ def data_mc(
     Returns:
         matplotlib.figure.Figure: the data/MC figure
     """
+    plot_options = plot_options or {}  # no additional plot options by default
+
+    if "normalize_binwidth" in plot_options:
+        rescaling_factor, unit = plot_options["normalize_binwidth"]
+        bin_width_norm = (bin_edges[1:] - bin_edges[:-1]) / rescaling_factor
+    else:
+        unit = None
+        bin_width_norm = np.ones_like(bin_edges[:-1])
+
+    total_model_unc /= bin_width_norm  # apply bin width normalization
+
     mc_histograms_yields = []
     mc_labels = []
     for h in histogram_dict_list:
         if h["isData"]:
-            data_histogram_yields = h["yields"]
+            data_histogram_yields = h["yields"] / bin_width_norm
             data_histogram_stdev = np.sqrt(data_histogram_yields)
             data_label = h["label"]
         else:
-            mc_histograms_yields.append(h["yields"])
+            mc_histograms_yields.append(h["yields"] / bin_width_norm)
             mc_labels.append(h["label"])
 
     mpl.style.use(MPL_STYLE)
@@ -229,8 +243,12 @@ def data_mc(
         all_containers, all_labels, frameon=False, fontsize="large", loc="upper right"
     )
 
+    vertical_axis_label = "events"
+    if unit is not None:  # bin width normalization
+        vertical_axis_label += f" / {rescaling_factor} {unit}"
+
     ax1.set_xlim(bin_edges[0], bin_edges[-1])
-    ax1.set_ylabel("events")
+    ax1.set_ylabel(vertical_axis_label)
     ax1.set_xticklabels([])
     ax1.set_xticklabels([], minor=True)
     ax1.tick_params(axis="both", which="major", pad=8)  # tick label - axis padding

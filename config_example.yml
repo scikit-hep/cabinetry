@@ -8,7 +8,7 @@ Regions:
   - Name: "Signal_region"
     Variable: "jet_pt"
     Filter: "lep_charge > 0"
-    Binning: [200, 300, 400, 500, 600]
+    Binning: [200, 300, 400, 600]
 
 Samples:
   - Name: "Data"
