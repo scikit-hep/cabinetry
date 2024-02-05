@@ -13,8 +13,8 @@ jobs:
   pre-commit:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v3
-    - uses: actions/setup-python@v4
+    - uses: actions/checkout@v4
+    - uses: actions/setup-python@v5
       with:
         python-version: '3.11'
     - uses: pre-commit/action@v3.0.0
@@ -27,9 +27,9 @@ jobs:
         python-version: ['3.8', '3.9', '3.10', '3.11']
 
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
     - name: Set up Python ${{ matrix.python-version }}
-      uses: actions/setup-python@v4
+      uses: actions/setup-python@v5
       with:
         python-version: ${{ matrix.python-version }}
     - name: Install cabinetry and dependencies
@@ -42,9 +42,9 @@ jobs:
         flake8 src/cabinetry --select=E9,F63,F7,F82 --show-source
         # check for additional issues flagged by flake8
         flake8
-    - name: Format with Black
-      run: |
-        black --check --diff --verbose .
+    # - name: Format with Black
+    #   run: |
+    #     black --check --diff --verbose .
     - name: Run example
       run: |
         python utils/create_ntuples.py
@@ -65,12 +65,13 @@ jobs:
         pytest --runslow
     - name: Upload coverage to codecov
       if: matrix.python-version == '3.8'
-      uses: codecov/codecov-action@v3
+      uses: codecov/codecov-action@v4
       with:
         token: ${{ secrets.CODECOV_TOKEN }}
         file: ./coverage.xml
         name: codecov-umbrella
         fail_ci_if_error: true
+        verbose: true
     - name: Build docs with sphinx
       run: |
         python -m pip install .[docs]
