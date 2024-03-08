@@ -218,8 +218,20 @@ def ranking(
     ax_impact.set_xlim([-5, 5])
     ax_pulls.set_ylim([-1, num_pars])
 
-    # impact axis limits: need largest pre-fit impact
-    impact_max = np.amax(np.fabs(np.hstack((impact_prefit_up, impact_prefit_down))))
+    # impact axis limits: need largest impact
+    # consider also post-fit, normalization factors have no pre-fit impact defined
+    impact_max = np.amax(
+        np.fabs(
+            np.hstack(
+                (
+                    impact_prefit_up,
+                    impact_prefit_down,
+                    impact_postfit_up,
+                    impact_postfit_down,
+                )
+            )
+        )
+    )
     ax_impact.set_xlim([-impact_max * 1.1, impact_max * 1.1])
 
     # minor ticks
