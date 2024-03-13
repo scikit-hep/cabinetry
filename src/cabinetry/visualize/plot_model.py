@@ -6,11 +6,11 @@ from typing import Any, Dict, List, Optional
 
 import matplotlib as mpl
 import matplotlib.pyplot as plt
+from hist.intervals import poisson_interval
 import numpy as np
 import packaging.version
 
 from cabinetry.visualize import utils
-
 
 log = logging.getLogger(__name__)
 
@@ -138,7 +138,7 @@ def data_mc(
     data_container = ax1.errorbar(
         bin_centers_data,
         data_histogram_yields,
-        yerr=data_histogram_stdev,
+        yerr=np.abs(data_histogram_yields - poisson_interval(np.asarray(data_histogram_yields))),
         fmt="o",
         color="k",
     )
