@@ -4,9 +4,9 @@ import logging
 import pathlib
 from typing import Any, Dict, List, Optional
 
+import hist.intervals
 import matplotlib as mpl
 import matplotlib.pyplot as plt
-from hist.intervals import poisson_interval
 import numpy as np
 import packaging.version
 
@@ -34,6 +34,9 @@ def data_mc(
     close_figure: bool = False,
 ) -> mpl.figure.Figure:
     """Draws a data/MC histogram with uncertainty bands and ratio panel.
+
+    Uncertainties for data points are drawn using the "Garwood" frequentist coverage
+    interval as provided by ``hist`` via ``hist.intervals.poisson_interval``.
 
     Args:
         histogram_dict_list (List[Dict[str, Any]]): list of samples (with info stored in
@@ -66,7 +69,10 @@ def data_mc(
     for h in histogram_dict_list:
         if h["isData"]:
             data_histogram_yields = h["yields"]
-            data_histogram_stdev = np.sqrt(data_histogram_yields)
+            # frequentist coverage interval
+            data_histogram_interval = hist.intervals.poisson_interval(
+                np.asarray(data_histogram_yields)
+            )
             data_label = h["label"]
         else:
             mc_histograms_yields.append(h["yields"])
@@ -138,7 +144,7 @@ def data_mc(
     data_container = ax1.errorbar(
         bin_centers_data,
         data_histogram_yields,
-        yerr=np.abs(data_histogram_yields - poisson_interval(np.asarray(data_histogram_yields))),
+        yerr=np.abs(data_histogram_yields - data_histogram_interval),
         fmt="o",
         color="k",
     )
@@ -180,12 +186,14 @@ def data_mc(
 
     # data in ratio plot
     data_model_ratio = data_histogram_yields / total_yield
-    data_model_ratio_unc = data_histogram_stdev / total_yield
+    data_model_ratio_unc = (
+        np.abs(data_histogram_yields - data_histogram_interval) / total_yield
+    )
     # mask data in bins where total model yield is 0
     ax2.errorbar(
         bin_centers_data[nonzero_model_yield],
         data_model_ratio[nonzero_model_yield],
-        yerr=data_model_ratio_unc[nonzero_model_yield],
+        yerr=data_model_ratio_unc[:, nonzero_model_yield],
         fmt="o",
         color="k",
     )
