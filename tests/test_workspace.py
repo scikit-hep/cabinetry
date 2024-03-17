@@ -2,6 +2,7 @@ import copy
 import pathlib
 from unittest import mock
 
+import numpy as np
 import pytest
 
 from cabinetry import histo
@@ -129,16 +130,19 @@ def test_WorkspaceBuilder_normalization_modifier():
 @mock.patch(
     "cabinetry.workspace.histo.Histogram.from_config",
     side_effect=[
-        # without symmetrization: up, nominal, down
-        histo.Histogram.from_arrays([0, 1, 2], [26.0, 24.0], [0.1, 0.1]),
+        # without symmetrization: nominal, up, down
         histo.Histogram.from_arrays([0, 1, 2], [20.0, 20.0], [0.1, 0.1]),
+        histo.Histogram.from_arrays([0, 1, 2], [26.0, 24.0], [0.1, 0.1]),
         histo.Histogram.from_arrays([0, 1, 2], [8.0, 12.0], [0.1, 0.1]),
-        # for test of symmetrization: up and nominal
-        histo.Histogram.from_arrays([0, 1, 2], [26.0, 24.0], [0.1, 0.1]),
+        # for test of symmetrization: nominal and up
         histo.Histogram.from_arrays([0, 1, 2], [20.0, 20.0], [0.1, 0.1]),
-        # single bin for test of histosys being skipped (up and nominal)
-        histo.Histogram.from_arrays([0, 1], [26.0], [0.1]),
+        histo.Histogram.from_arrays([0, 1, 2], [26.0, 24.0], [0.1, 0.1]),
+        # symmetrization with nominal and down
+        histo.Histogram.from_arrays([0, 1, 2], [20.0, 20.0], [0.1, 0.1]),
+        histo.Histogram.from_arrays([0, 1, 2], [26.0, 24.0], [0.1, 0.1]),
+        # single bin for test of histosys being skipped (nominal and down)
         histo.Histogram.from_arrays([0, 1], [20.0], [0.1]),
+        histo.Histogram.from_arrays([0, 1], [26.0], [0.1]),
     ],
 )
 def test_WorkspaceBuilder_normplusshape_modifiers(mock_histogram):
@@ -162,11 +166,11 @@ def test_WorkspaceBuilder_normplusshape_modifiers(mock_histogram):
         },
     ]
     assert mock_histogram.call_args_list == [
+        ((pathlib.Path("path"), region, sample, {}), {"modified": True}),
         (
             (pathlib.Path("path"), region, sample, systematic),
             {"template": "Up", "modified": True},
         ),
-        ((pathlib.Path("path"), region, sample, {}), {"modified": True}),
         (
             (pathlib.Path("path"), region, sample, systematic),
             {"template": "Down", "modified": True},
@@ -190,18 +194,48 @@ def test_WorkspaceBuilder_normplusshape_modifiers(mock_histogram):
         },
     ]
     assert mock_histogram.call_args_list[3:] == [
+        ((pathlib.Path("path"), region, sample, {}), {"modified": True}),
         (
             (pathlib.Path("path"), region, sample, systematic),
             {"template": "Up", "modified": True},
         ),
-        ((pathlib.Path("path"), region, sample, {}), {"modified": True}),
+    ]
+
+    # symmetrization of down template
+    systematic = {
+        "Name": "sys",
+        "Up": {"Symmetrize": True},
+        "Down": {},
+        "ModifierName": "mod_name",
+    }
+    modifiers = ws_builder.normplusshape_modifiers(region, sample, systematic)
+    assert modifiers == [
+        {"name": "mod_name", "type": "normsys", "data": {"hi": 0.75, "lo": 1.25}},
+        {
+            "name": "mod_name",
+            "type": "histosys",
+            "data": {"hi_data": [19.2, 20.8], "lo_data": [20.8, 19.2]},
+        },
     ]
 
     # single bin, causing histosys being skipped
     modifiers = ws_builder.normplusshape_modifiers(region, sample, systematic)
     assert modifiers == [
-        {"name": "mod_name", "type": "normsys", "data": {"hi": 1.3, "lo": 0.7}}
+        {"name": "mod_name", "type": "normsys", "data": {"hi": 0.7, "lo": 1.3}}
     ]
+
+    # error when symmetrizing both up and down
+    systematic = {
+        "Name": "sys",
+        "Up": {"Symmetrize": True},
+        "Down": {"Symmetrize": True},
+        "ModifierName": "mod_name",
+    }
+    with pytest.raises(
+        ValueError,
+        match="up and down variation of systematic sys cannot both be symmetrized",
+    ):
+        ws_builder.normplusshape_modifiers(region, sample, systematic)
 
 
 @mock.patch(
@@ -561,3 +595,17 @@ def test_load(tmp_path):
     ws = {"version": "1.0.0"}
     workspace.save(ws, fname)
     assert workspace.load(fname) == ws
+
+
+def test__symmetrized_templates_and_norm():
+    # could mock Histogram.normalize_to_yield
+    var = histo.Histogram.from_arrays([0, 1, 2], [26.0, 24.0], [0.1, 0.1])
+    nom = histo.Histogram.from_arrays([0, 1, 2], [20.0, 20.0], [0.1, 0.1])
+
+    yield_var, yield_nom, norm_var, norm_nom = (
+        workspace._symmetrized_templates_and_norm(var, nom)
+    )
+    np.testing.assert_equal(yield_var, [20.8, 19.2])
+    np.testing.assert_equal(yield_nom, [19.2, 20.8])
+    assert norm_var == 1.25
+    assert norm_nom == 0.75

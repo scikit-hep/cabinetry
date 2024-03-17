@@ -3,7 +3,7 @@
 import json
 import logging
 import pathlib
-from typing import Any, Dict, List, Optional, Union
+from typing import Any, Dict, List, Optional, Tuple, Union
 
 import pyhf
 
@@ -135,45 +135,40 @@ class WorkspaceBuilder:
             sample (Dict[str, Any]): sample the systematic variation acts on
             systematic (Dict[str, Any]): the systematic variation under consideration
 
+        Raises:
+            ValueError: when both up and down variation specify symmetrization
+
         Returns:
             List[Dict[str, Any]]: a list with a ``pyhf`` `normsys` modifier and a
             `histosys` modifier
         """
-        # load the systematic variation histogram
-        histogram_up = histo.Histogram.from_config(
-            self.histogram_folder,
-            region,
-            sample,
-            systematic,
-            template="Up",
-            modified=True,
-        )
+        # ensure that not both up and down variations are built by symmetrization
+        symmetrize_up = systematic.get("Up", {}).get("Symmetrize", False)
+        symmetrize_down = systematic.get("Down", {}).get("Symmetrize", False)
+        if symmetrize_up and symmetrize_down:
+            raise ValueError(
+                f"up and down variation of systematic {systematic['Name']} cannot both "
+                "be symmetrized"
+            )
 
-        # also need the nominal histogram
+        # load the nominal histogram
         histogram_nominal = histo.Histogram.from_config(
             self.histogram_folder, region, sample, {}, modified=True
         )
 
-        if systematic.get("Down", {}).get("Symmetrize", False):
-            # if symmetrization is desired, should support different implementations
-            # symmetrization according to "method 1" from issue #26:
-            # first normalization, then symmetrization
-
-            # normalize the variation to the same yield as nominal
-            norm_effect = histogram_up.normalize_to_yield(histogram_nominal)
-            norm_effect_up = norm_effect
-            norm_effect_down = 2 - norm_effect
-            histo_yield_up = histogram_up.yields.tolist()
-            log.debug(
-                f"normalization impact of systematic {systematic['Name']} on sample "
-                f"{sample['Name']} in region {region['Name']} is {norm_effect:.3f}"
+        if not symmetrize_up:
+            # load the systematic variation histogram for the up variation
+            histogram_up = histo.Histogram.from_config(
+                self.histogram_folder,
+                region,
+                sample,
+                systematic,
+                template="Up",
+                modified=True,
             )
-            # need another histogram that corresponds to the "down" variation, which is
-            # 2*nominal - up
-            histo_yield_down = (
-                2 * histogram_nominal.yields - histogram_up.yields
-            ).tolist()
-        else:
+
+        if not symmetrize_down:
+            # load the systematic variation histogram for the down variation
             histogram_down = histo.Histogram.from_config(
                 self.histogram_folder,
                 region,
@@ -182,13 +177,26 @@ class WorkspaceBuilder:
                 template="Down",
                 modified=True,
             )
-            norm_effect_up = sum(histogram_up.yields) / sum(histogram_nominal.yields)
-            norm_effect_down = sum(histogram_down.yields) / sum(
-                histogram_nominal.yields
+
+        if symmetrize_down:
+            histo_yield_up, histo_yield_down, norm_effect_up, norm_effect_down = (
+                _symmetrized_templates_and_norm(histogram_up, histogram_nominal)
             )
-            # normalize templates to same yield as nominal
-            histo_yield_up = list(histogram_up.yields / norm_effect_up)
-            histo_yield_down = list(histogram_down.yields / norm_effect_down)
+        elif symmetrize_up:
+            histo_yield_down, histo_yield_up, norm_effect_down, norm_effect_up = (
+                _symmetrized_templates_and_norm(histogram_down, histogram_nominal)
+            )
+        else:
+            norm_effect_up = histogram_up.normalize_to_yield(histogram_nominal)
+            norm_effect_down = histogram_down.normalize_to_yield(histogram_nominal)
+            histo_yield_up = histogram_up.yields.tolist()
+            histo_yield_down = histogram_down.yields.tolist()
+
+        log.debug(
+            f"normalization impact of systematic {systematic['Name']} on sample "
+            f"{sample['Name']} in region {region['Name']} is {norm_effect_up:.3f} "
+            f"(up) {norm_effect_down:.3f} (down)"
+        )
 
         # take name of modifier from ModifierName if set, default to systematic name
         modifier_name = systematic.get("ModifierName", systematic["Name"])
@@ -475,3 +483,34 @@ def load(file_path_string: Union[str, pathlib.Path]) -> Dict[str, Any]:
     file_path = pathlib.Path(file_path_string)
     ws = json.loads(file_path.read_text())
     return ws
+
+
+def _symmetrized_templates_and_norm(
+    variation: histo.Histogram, reference: histo.Histogram
+) -> Tuple[List[float], List[float], float, float]:
+    """Returns symmetrized normalized templates and normalization factors.
+
+    The ``variation`` input will be normalized in the process.
+
+    Args:
+        variation (histo.Histogram): variation histogram to symmetrize
+        reference (histo.Histogram): reference nominal histogram
+
+    Returns:
+        Tuple[List[float], List[float], float, float]: yields for variation, symmetrized
+        variation, normalization factor for variation, and symmetrized version of the
+        normalization factor
+    """
+    # if symmetrization is desired, should support different implementations
+    # symmetrization according to "method 1" from issue #26:
+    # first normalization, then symmetrization
+
+    # normalize the variation to the same yield as nominal
+    norm_effect_var = variation.normalize_to_yield(reference)
+    norm_effect_sym = 2 - norm_effect_var
+    histo_yield_var = variation.yields.tolist()
+    # need another histogram that corresponds to the symmetrized variation,
+    # which is 2*nominal - variation
+    histo_yield_sym = (2 * reference.yields - variation.yields).tolist()
+
+    return histo_yield_var, histo_yield_sym, norm_effect_var, norm_effect_sym
