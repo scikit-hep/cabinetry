@@ -498,7 +498,7 @@ def _symmetrized_templates_and_norm(
 
     Returns:
         Tuple[List[float], List[float], float, float]: yields for variation, symmetrized
-        variation, normalization factor for variation and symmetrized version of the
+        variation, normalization factor for variation, and symmetrized version of the
         normalization factor
     """
     # if symmetrization is desired, should support different implementations
