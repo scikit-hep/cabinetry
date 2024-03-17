@@ -193,7 +193,7 @@ class WorkspaceBuilder:
             histo_yield_down = histogram_down.yields.tolist()
 
         log.debug(
-            f"normalization impact of systematic {systematic['Name']} on sample"
+            f"normalization impact of systematic {systematic['Name']} on sample "
             f"{sample['Name']} in region {region['Name']} is {norm_effect_up:.3f} "
             f"(up) {norm_effect_down:.3f} (down)"
         )
