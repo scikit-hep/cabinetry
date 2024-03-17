@@ -12,6 +12,7 @@ import packaging.version
 
 from cabinetry.visualize import utils
 
+
 log = logging.getLogger(__name__)
 
 # handling of matplotlib<3.6
