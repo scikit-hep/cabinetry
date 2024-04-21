@@ -347,9 +347,27 @@ def templates(
                     v for v in variation_paths if ("Up" in v.name or "Down" in v.name)
                 )
 
+                # check for histogram-based variations and pure normalization variations
                 if len(variation_paths) == 0:
-                    # no associated templates (normalization systematics)
-                    continue
+                    # no histograms for variations found, check for norm systematic
+                    sys_region = configuration.region_contains_modifier(
+                        region, systematic
+                    )
+                    sys_sample = configuration.sample_contains_modifier(
+                        sample, systematic
+                    )
+                    if not (sys_region and sys_sample):
+                        continue  # systematic does not act here
+
+                    up_size = systematic["Up"].get("Normalization", None)
+                    down_size = systematic["Down"].get("Normalization", None)
+                    if up_size is None or down_size is None:
+                        # not a normalization systematic, continue
+                        continue
+
+                    has_norm_variation = True
+                else:
+                    has_norm_variation = False
 
                 # extract nominal histogram
                 nominal_histo = histo.Histogram.from_config(
@@ -362,35 +380,50 @@ def templates(
                 variable = region.get("Variable", "observable")
                 nominal = {"yields": nominal_histo.yields, "stdev": nominal_histo.stdev}
 
-                # extract original and modified (after post-processing) variation
-                # histograms, if they exist
-                up_orig = {}
-                down_orig = {}
-                up_mod = {}
-                down_mod = {}
-                for variation_path in variation_paths:
-                    # original variation, before post-processing
-                    variation_path_orig = pathlib.Path(
-                        str(variation_path).replace("_modified", "")
-                    )
-                    var_histo_orig = histo.Histogram.from_path(variation_path_orig)
-                    var_orig = {
-                        "yields": var_histo_orig.yields,
-                        "stdev": var_histo_orig.stdev,
+                if has_norm_variation:
+                    # scale nominal histogram to show normalization variations
+                    up_orig = {
+                        "yields": (1 + up_size) * nominal_histo.yields,
+                        "stdev": np.zeros_like(nominal["stdev"]),
                     }
+                    down_orig = {
+                        "yields": (1 + down_size) * nominal_histo.yields,
+                        "stdev": np.zeros_like(nominal["stdev"]),
+                    }
+                    # no post-processing exists for pure norm variations
+                    up_mod: dict = {}
+                    down_mod: dict = {}
 
-                    # variation after post-processing
-                    var_histo_mod = histo.Histogram.from_path(variation_path)
-                    var_mod = {
-                        "yields": var_histo_mod.yields,
-                        "stdev": var_histo_mod.stdev,
-                    }
-                    if "Up" in variation_path.parts[-1]:
-                        up_orig.update(var_orig)
-                        up_mod.update(var_mod)
-                    else:
-                        down_orig.update(var_orig)
-                        down_mod.update(var_mod)
+                else:
+                    # extract original and modified (after post-processing) variation
+                    # histograms, if they exist
+                    up_orig = {}
+                    down_orig = {}
+                    up_mod = {}
+                    down_mod = {}
+                    for variation_path in variation_paths:
+                        # original variation, before post-processing
+                        variation_path_orig = pathlib.Path(
+                            str(variation_path).replace("_modified", "")
+                        )
+                        var_histo_orig = histo.Histogram.from_path(variation_path_orig)
+                        var_orig = {
+                            "yields": var_histo_orig.yields,
+                            "stdev": var_histo_orig.stdev,
+                        }
+
+                        # variation after post-processing
+                        var_histo_mod = histo.Histogram.from_path(variation_path)
+                        var_mod = {
+                            "yields": var_histo_mod.yields,
+                            "stdev": var_histo_mod.stdev,
+                        }
+                        if "Up" in variation_path.parts[-1]:
+                            up_orig.update(var_orig)
+                            up_mod.update(var_mod)
+                        else:
+                            down_orig.update(var_orig)
+                            down_mod.update(var_mod)
 
                 figure_label = (
                     f"region: {region['Name']}\nsample: {sample['Name']}"
