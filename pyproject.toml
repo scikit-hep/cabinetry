@@ -1,6 +1,115 @@
 [build-system]
-requires = ["setuptools>=42"]
-build-backend = "setuptools.build_meta"
+requires = [
+    "hatchling>=1.13.0",
+]
+build-backend = "hatchling.build"
+
+[project]
+name = "cabinetry"
+version = "0.6.0"
+description = "design and steer profile likelihood fits"
+readme = "README.md"
+license = { text = "BSD-3-Clause" }  # SPDX short identifier
+requires-python = ">=3.8"
+authors = [
+    { name = "Alexander Held", email = "alexander.held@cern.ch" },
+]
+maintainers = [ {name = "The Scikit-HEP admins", email = "scikit-hep-admins@googlegroups.com"} ]
+keywords = [
+    "fitting",
+    "physics",
+    "profile likelihood",
+]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Science/Research",
+    "License :: OSI Approved :: BSD License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3 :: Only",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: Implementation :: CPython",
+    "Topic :: Scientific/Engineering",
+    "Topic :: Scientific/Engineering :: Physics",
+]
+dependencies = [
+    "pyhf[minuit]~=0.7.0",  # model.config.suggested_fixed / .par_names API changes, set_poi(None)
+    "boost_histogram>=1.0.0",  # subclassing with family, 1.02 for stdev scaling fix (currently not needed)
+    "hist>=2.5.0",  # hist.intervals.poisson_interval
+    "tabulate>=0.8.1",  # multiline text
+    "matplotlib>=3.5.0",  # layout kwarg for subplots
+    # below are direct dependencies of cabinetry, which are also included via pyhf[iminuit]
+    "numpy",
+    "pyyaml",
+    "iminuit",
+    "jsonschema",
+    "click",
+    "scipy",
+    "packaging",  # for version parsing
+]
+
+[project.scripts]
+cabinetry = "cabinetry.cli:cabinetry"
+
+[project.urls]
+Documentation = "https://cabinetry.readthedocs.io/"
+Homepage = "https://github.com/scikit-hep/cabinetry"
+"Issue Tracker" = "https://github.com/scikit-hep/cabinetry/issues"
+"Releases" = "https://github.com/scikit-hep/cabinetry/releases"
+"Source Code" = "https://github.com/scikit-hep/cabinetry"
+
+[project.optional-dependencies]
+contrib = ["uproot>=4.1.5"]  # file writing bug-fixes
+pyhf_backends = ["pyhf[backends]"]
+
+# Developer extras
+test = [
+    "cabinetry[contrib]",
+    "pytest",
+    "pytest-cov>=2.6.1",  # no_cover support
+    "pydocstyle",
+    "check-manifest",
+    "flake8",
+    "flake8-bugbear",
+    "flake8-import-order",
+    "flake8-print",
+    "mypy",
+    "types-tabulate",
+    "types-PyYAML",
+    "typeguard>=4.0.0",  # cabinetry#391
+    "black",
+]
+docs = [
+    "sphinx!=5.2.0.post0",  # broken due to version parsing in RTD theme
+    "sphinx-click",
+    "sphinx-copybutton",
+    "sphinx-jsonschema",
+    "sphinx-rtd-theme>=1.2",  # Sphinx 7 compatibility
+]
+develop = [
+    "cabinetry[test,docs]",
+    "pre-commit",
+    "twine",
+]
+complete = [
+    "cabinetry[develop]",
+    "cabinetry[pyhf_backends]",
+]
+
+[tool.hatch.build.targets.sdist]
+# hatchling always includes:
+# pyproject.toml, .gitignore, any README, any LICENSE, AUTHORS
+only-include = [
+    "/src",
+    "/tests",
+    "/utils",
+]
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/cabinetry"]
 
 [tool.black]
 target-version = ['py38']
@@ -12,6 +121,19 @@ exclude = '''
   | build
 )/
 '''
+
+[tool.pytest.ini_options]
+# running typeguard can result in lower coverage https://github.com/agronholm/typeguard/issues/356
+addopts = "--cov=cabinetry --cov-report html --cov-report term-missing --cov-branch -rsx --typeguard-packages=cabinetry"
+
+[tool.pytype]
+inputs = "src/cabinetry"
+
+[tool.pydocstyle]
+# configuration duplicated in pre-commit config
+match = "(?!setup|example).*\\.py"
+match_dir = "^(?!(tests|utils|docs)).*"
+convention = "google"
 
 [tool.mypy]
 files = "src/cabinetry"
