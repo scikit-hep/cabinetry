@@ -120,7 +120,8 @@ def test_ranking(tmp_path):
 
 
 @pytest.mark.skipif(
-    sys.version_info == (3, 8), reason="legend positioning, see cabinetry#476"
+    sys.version_info <= (3, 9),
+    reason="legend positioning in Python 3.8 with older matplotlib, see cabinetry#476",
 )
 def test_scan(tmp_path):
     fname = tmp_path / "fig.png"
