@@ -119,7 +119,7 @@ def test_ranking(tmp_path):
     plt.close("all")
 
 
-@pytest.mark.skipif(
+@pytest.mark.xfail(
     sys.version_info <= (3, 9),
     reason="legend positioning in Python 3.8 with older matplotlib, see cabinetry#476",
 )
