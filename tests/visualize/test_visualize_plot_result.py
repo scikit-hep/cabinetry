@@ -1,8 +1,10 @@
+import sys
 from unittest import mock
 
 import matplotlib.pyplot as plt
 from matplotlib.testing.compare import compare_images
 import numpy as np
+import pytest
 
 from cabinetry.visualize import plot_result
 
@@ -117,6 +119,9 @@ def test_ranking(tmp_path):
     plt.close("all")
 
 
+@pytest.mark.skipif(
+    sys.version_info == (3, 8), reason="legend positioning, see cabinetry#476"
+)
 def test_scan(tmp_path):
     fname = tmp_path / "fig.png"
     par_name = "a"
