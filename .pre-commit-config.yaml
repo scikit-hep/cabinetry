@@ -13,10 +13,10 @@ repos:
         # numpy 1.25 is no longer compatible with Python 3.8, so use Python >=3.9 for type checking
         args: ["--python-version=3.9"]
     -   id: mypy
-        name: mypy with Python 3.11
+        name: mypy with Python 3.12
         files: src/cabinetry
         additional_dependencies: ["numpy>=1.22", "boost-histogram>=1.0.1", "click>=8", "types-tabulate", "types-PyYAML", "hist>=2.3.0"]
-        args: ["--python-version=3.11"]
+        args: ["--python-version=3.12"]
 -   repo: https://github.com/pycqa/flake8
     rev: 7.0.0
     hooks:
