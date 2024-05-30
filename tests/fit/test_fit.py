@@ -502,7 +502,7 @@ def test_fit(mock_fit, mock_print, mock_gof):
 
     # goodness-of-fit test
     fit_results_gof = fit.fit(model, data, goodness_of_fit=True)
-    assert mock_gof.call_args_list == [((model, data, 2.0), {})]
+    assert mock_gof.call_args_list == [((model, data, 2.0, None), {})]
     assert fit_results_gof.goodness_of_fit == 0.1
 
 

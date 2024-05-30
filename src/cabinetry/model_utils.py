@@ -481,8 +481,11 @@ def prediction(
     )
 
 
-def unconstrained_parameter_count(model: pyhf.pdf.Model) -> int:
-    """Returns the number of unconstrained parameters in a model.
+def unconstrained_parameter_count(
+    model: pyhf.pdf.Model,
+    fix_pars: Optional[List[bool]] = None,
+) -> int:
+    """Returns the number of unconstrained, non-constant parameters in a model.
 
     The number is the sum of all independent parameters in a fit. A shapefactor that
     affects multiple bins enters the count once for each independent bin. Parameters
@@ -490,15 +493,23 @@ def unconstrained_parameter_count(model: pyhf.pdf.Model) -> int:
 
     Args:
         model (pyhf.pdf.Model): model to count parameters for
+        fix_pars (Optional[List[bool]], optional): list of booleans specifying which
+            parameters are held constant, defaults to None (use ``pyhf`` suggestion)
 
     Returns:
         int: number of unconstrained parameters
     """
     n_pars = 0
+    # custom fixed parameters overrule suggested fixed parameters
+    if fix_pars is None:
+        fix_pars = model.config.suggested_fixed()
+
     for parname in model.config.par_order:
         if not model.config.param_set(parname).constrained:
             # only consider non-constant parameters
-            n_pars += model.config.param_set(parname).suggested_fixed.count(False)
+            par_slice = model.config.par_slice(parname)
+            n_pars += fix_pars[par_slice].count(False)
+
     return n_pars
 
 
