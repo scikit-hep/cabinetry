@@ -483,6 +483,7 @@ def prediction(
 
 def unconstrained_parameter_count(
     model: pyhf.pdf.Model,
+    *,
     fix_pars: Optional[List[bool]] = None,
 ) -> int:
     """Returns the number of unconstrained, non-constant parameters in a model.

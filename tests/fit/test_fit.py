@@ -371,7 +371,7 @@ def test__goodness_of_fit(
     assert mock_pars.call_args[1] == {}
     assert mock_count.call_count == 1
     assert mock_count.call_args[0][0].spec == model.spec
-    assert mock_count.call_args[1] == {}
+    assert mock_count.call_args[1] == {"fix_pars": None}
     assert "Delta NLL = 0.084185" in [rec.message for rec in caplog.records]
     assert np.allclose(p_val, 0.91926079)
     caplog.clear()
@@ -390,7 +390,7 @@ def test__goodness_of_fit(
     assert mock_pars.call_count == 2  # no new call (no auxdata)
     assert mock_count.call_count == 3
     assert mock_count.call_args[0][0].spec == model.spec
-    assert mock_count.call_args[1] == {}
+    assert mock_count.call_args[1] == {"fix_pars": None}
     assert (
         "cannot calculate p-value: 0 degrees of freedom and Delta NLL = 0.000000"
         in [rec.message for rec in caplog.records]
@@ -502,7 +502,8 @@ def test_fit(mock_fit, mock_print, mock_gof):
 
     # goodness-of-fit test
     fit_results_gof = fit.fit(model, data, goodness_of_fit=True)
-    assert mock_gof.call_args_list == [((model, data, 2.0, None), {})]
+    assert mock_gof.call_args[0] == (model, data, 2.0)
+    assert mock_gof.call_args[1] == {"fix_pars": None}
     assert fit_results_gof.goodness_of_fit == 0.1
 
 
