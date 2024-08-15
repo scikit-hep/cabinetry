@@ -212,7 +212,7 @@ class Histogram(bh.Histogram, family=cabinetry):
 
         # check whether there are any bins with ill-defined stat. uncertainty
         # but non-empty yield, those deserve a closer look
-        not_empty_but_nan = [b for b in nan_pos if b not in empty_bins]
+        not_empty_but_nan = np.asarray([b for b in nan_pos if b not in empty_bins])
         if len(not_empty_but_nan) > 0:
             log.warning(
                 f"{name} has non-empty bins with ill-defined stat. unc.: "
