@@ -17,7 +17,20 @@ if __name__ == "__main__":
     cabinetry.configuration.print_overview(config)
 
     # create template histograms
-    cabinetry.templates.build(config, method="uproot")
+    from dask.distributed import Client, LocalCluster, wait
+
+    def produce_single_template(template):
+        cabinetry.templates.build(config, template_list=[template])
+
+    template_list = cabinetry.route.required_templates(config)
+
+    with LocalCluster(n_workers=2) as cluster:
+        client = Client(cluster)
+        wait(client.map(produce_single_template, template_list))
+
+    # cabinetry.templates.build(config, template_list=template_list)
+
+    raise SystemExit
 
     # perform histogram post-processing
     cabinetry.templates.postprocess(config)
