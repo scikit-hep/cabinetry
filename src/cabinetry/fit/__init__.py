@@ -633,6 +633,13 @@ def ranking(
                 log.debug(f"impact of {label} is zero, skipping fit")
                 parameter_impacts.append(0.0)
             else:
+                par_bounds = par_bounds or [
+                    tuple(bound) for bound in model.config.suggested_bounds()
+                ]
+                if not par_bounds[i_par][0] <= np_val <= par_bounds[i_par][1]:
+                    np_val = min(
+                        max(np_val, par_bounds[i_par][0]), par_bounds[i_par][1]
+                    )
                 init_pars_ranking = init_pars.copy()
                 init_pars_ranking[i_par] = np_val  # value of current nuisance parameter
                 fit_results_ranking = _fit_model(
