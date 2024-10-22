@@ -608,6 +608,10 @@ def ranking(
     init_pars = init_pars or model.config.suggested_init()
     fix_pars = fix_pars or model.config.suggested_fixed()
 
+    par_bounds = par_bounds or [
+        tuple(bound) for bound in model.config.suggested_bounds()
+    ]
+
     all_impacts = []
     for i_par, label in enumerate(labels):
         if i_par == poi_index:
@@ -633,9 +637,6 @@ def ranking(
                 log.debug(f"impact of {label} is zero, skipping fit")
                 parameter_impacts.append(0.0)
             else:
-                par_bounds = par_bounds or [
-                    tuple(bound) for bound in model.config.suggested_bounds()
-                ]
                 if not par_bounds[i_par][0] <= np_val <= par_bounds[i_par][1]:
                     np_val = min(
                         max(np_val, par_bounds[i_par][0]), par_bounds[i_par][1]
