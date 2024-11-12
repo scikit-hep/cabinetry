@@ -72,8 +72,7 @@ It requires additional dependencies obtained with `pip install cabinetry[contrib
 ## Documentation
 
 Find more information in the [documentation](https://cabinetry.readthedocs.io/) and tutorial material in the [cabinetry-tutorials](https://github.com/cabinetry/cabinetry-tutorials) repository.
-`cabinetry` is also described in a paper submitted to vCHEP 2021: [10.5281/zenodo.4627037](https://doi.org/10.5281/zenodo.4627037).
-
+`cabinetry` is also described in a paper submitted to vCHEP 2021: [10.1051/epjconf/202125103067](https://doi.org/10.1051/epjconf/202125103067).
 
 ## Acknowledgements
 
