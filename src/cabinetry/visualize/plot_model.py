@@ -223,7 +223,7 @@ def data_mc(
 
     # figure label (region name)
     at = mpl.offsetbox.AnchoredText(
-        label,
+        f"{label[:30]}..." if len(label) > 30 else label,
         loc="upper left",
         frameon=False,
         prop={"fontsize": "large", "linespacing": 1.5},
