@@ -46,6 +46,7 @@ def _fit_model_pyhf(
     data: List[float],
     *,
     minos: Optional[Union[List[str], Tuple[str, ...]]] = None,
+    minos_cl: Optional[float] = None,
     init_pars: Optional[List[float]] = None,
     fix_pars: Optional[List[bool]] = None,
     par_bounds: Optional[List[Tuple[float, float]]] = None,
@@ -66,6 +67,8 @@ def _fit_model_pyhf(
         minos (Optional[Union[List[str], Tuple[str, ...]]], optional): runs the MINOS
             algorithm for all parameters specified, defaults to None (does not run
             MINOS)
+        minos_cl (Optional[float]), optional): confidence level for the MINOS confidence
+            interval, defaults to None (use ``iminuit`` default of 68.27%)
         init_pars (Optional[List[float]], optional): list of initial parameter settings,
             defaults to None (use ``pyhf`` suggested inits)
         fix_pars (Optional[List[bool]], optional): list of booleans specifying which
@@ -117,7 +120,9 @@ def _fit_model_pyhf(
     best_twice_nll = float(best_twice_nll)  # convert 0-dim np.ndarray to float
 
     minos_results = (
-        _run_minos(result_obj.minuit, minos, labels) if minos is not None else {}
+        _run_minos(result_obj.minuit, minos, labels, minos_cl)
+        if minos is not None
+        else {}
     )
 
     fit_results = FitResults(
@@ -137,6 +142,7 @@ def _fit_model_custom(
     data: List[float],
     *,
     minos: Optional[Union[List[str], Tuple[str, ...]]] = None,
+    minos_cl: Optional[float] = None,
     init_pars: Optional[List[float]] = None,
     fix_pars: Optional[List[bool]] = None,
     par_bounds: Optional[List[Tuple[float, float]]] = None,
@@ -157,6 +163,8 @@ def _fit_model_custom(
         minos (Optional[Union[List[str], Tuple[str, ...]]], optional): runs the MINOS
             algorithm for all parameters specified, defaults to None (does not run
             MINOS)
+        minos_cl (Optional[float]), optional): confidence level for the MINOS confidence
+            interval, defaults to None (use ``iminuit`` default of 68.27%)
         init_pars (Optional[List[float]], optional): list of initial parameter settings,
             defaults to None (use ``pyhf`` suggested inits)
         fix_pars (Optional[List[bool]], optional): list of booleans specifying which
@@ -234,7 +242,7 @@ def _fit_model_custom(
     corr_mat = m.covariance.correlation()  # iminuit.util.Matrix, subclass of np.ndarray
     best_twice_nll = m.fval
 
-    minos_results = _run_minos(m, minos, labels) if minos is not None else {}
+    minos_results = _run_minos(m, minos, labels, minos_cl) if minos is not None else {}
 
     fit_results = FitResults(
         bestfit,
@@ -253,6 +261,7 @@ def _fit_model(
     data: List[float],
     *,
     minos: Optional[Union[List[str], Tuple[str, ...]]] = None,
+    minos_cl: Optional[float] = None,
     init_pars: Optional[List[float]] = None,
     fix_pars: Optional[List[bool]] = None,
     par_bounds: Optional[List[Tuple[float, float]]] = None,
@@ -260,6 +269,7 @@ def _fit_model(
     maxiter: Optional[int] = None,
     tolerance: Optional[float] = None,
     custom_fit: bool = False,
+    cl: Optional[float] = None,
 ) -> FitResults:
     """Interface for maximum likelihood fits through ``pyhf.infer`` API or ``iminuit``.
 
@@ -274,6 +284,8 @@ def _fit_model(
         minos (Optional[Union[List[str], Tuple[str, ...]]], optional): runs the MINOS
             algorithm for all parameters specified, defaults to None (does not run
             MINOS)
+        minos_cl (Optional[float]), optional): confidence level for the MINOS confidence
+            interval, defaults to None (use ``iminuit`` default of 68.27%)
         init_pars (Optional[List[float]], optional): list of initial parameter settings,
             defaults to None (use ``pyhf`` suggested inits)
         fix_pars (Optional[List[bool]], optional): list of booleans specifying which
@@ -300,6 +312,7 @@ def _fit_model(
             model,
             data,
             minos=minos,
+            minos_cl=minos_cl,
             init_pars=init_pars,
             fix_pars=fix_pars,
             par_bounds=par_bounds,
@@ -313,6 +326,7 @@ def _fit_model(
             model,
             data,
             minos=minos,
+            minos_cl=minos_cl,
             init_pars=init_pars,
             fix_pars=fix_pars,
             par_bounds=par_bounds,
@@ -328,8 +342,7 @@ def _run_minos(
     minuit_obj: iminuit.Minuit,
     minos: Union[List[str], Tuple[str, ...]],
     labels: List[str],
-    *,
-    cl: Optional[float] = None,
+    minos_cl: Optional[float],
 ) -> Dict[str, Tuple[float, float]]:
     """Determines parameter uncertainties for a list of parameters with MINOS.
 
@@ -339,8 +352,7 @@ def _run_minos(
         labels (List[str]]): names of all parameters known to ``iminuit``, these names
             are used in output (may be the same as the names under which ``iminiuit``
             knows parameters)
-        cl (Optional[float]), optional): confidence level for the confidence interval,
-            defaults to None (use ``iminuit`` default of 68.27%)
+        minos_cl (Optional[float])): confidence level for the confidence interval
 
     Returns:
         Dict[str, Tuple[float, float]]: uncertainties indexed by parameter name
@@ -351,7 +363,7 @@ def _run_minos(
             log.warning(f"parameter {par_name} not found in model")
             continue
         log.info(f"running MINOS for {par_name}")
-        minuit_obj.minos(par_name, cl=cl)
+        minuit_obj.minos(par_name, cl=minos_cl)
 
     minos_results = {}
 
@@ -440,6 +452,7 @@ def fit(
     data: List[float],
     *,
     minos: Optional[Union[str, List[str], Tuple[str, ...]]] = None,
+    minos_cl: Optional[float] = None,
     goodness_of_fit: bool = False,
     init_pars: Optional[List[float]] = None,
     fix_pars: Optional[List[bool]] = None,
@@ -460,6 +473,8 @@ def fit(
         minos (Optional[Union[str, List[str], Tuple[str, ...]]], optional): runs the
             MINOS algorithm for all parameters specified, defaults to None (does not run
             MINOS)
+        minos_cl (Optional[float]), optional): confidence level for the MINOS confidence
+            interval, defaults to None (use ``iminuit`` default of 68.27%)
         goodness_of_fit (bool, optional): calculate goodness of fit with a saturated
             model (perfectly fits data with shapefactors in all bins), defaults to False
         init_pars (Optional[List[float]], optional): list of initial parameter settings,
@@ -493,6 +508,7 @@ def fit(
         model,
         data,
         minos=minos,
+        minos_cl=minos_cl,
         init_pars=init_pars,
         fix_pars=fix_pars,
         par_bounds=par_bounds,
