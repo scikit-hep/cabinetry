@@ -121,7 +121,7 @@ def _yields_per_bin(
                         _header_name(
                             channel_name, i_bin
                         ): f"{model_yields[i_chan][i_sam][i_bin]:.2f} "
-                        f"\u00B1 {total_stdev_model[i_chan][i_sam][i_bin]:.2f}"
+                        f"\u00b1 {total_stdev_model[i_chan][i_sam][i_bin]:.2f}"
                     }
                 )
         table.append(sample_dict)
@@ -140,7 +140,7 @@ def _yields_per_bin(
                 {
                     header_name: (
                         f"{total_model[i_bin]:.2f} "
-                        f"\u00B1 {total_stdev_model[i_chan][-1][i_bin]:.2f}"
+                        f"\u00b1 {total_stdev_model[i_chan][-1][i_bin]:.2f}"
                     )
                 }
             )
@@ -188,7 +188,7 @@ def _yields_per_channel(
             sample_dict.update(
                 {
                     channel_name: f"{model_yields[i_chan][i_sam]:.2f} "
-                    f"\u00B1 {total_stdev_model[i_chan][i_sam]:.2f}"
+                    f"\u00b1 {total_stdev_model[i_chan][i_sam]:.2f}"
                 }
             )
         table.append(sample_dict)
@@ -201,7 +201,7 @@ def _yields_per_channel(
         total_dict.update(
             {
                 channel_name: f"{total_model:.2f} "
-                f"\u00B1 {total_stdev_model[i_chan][-1]:.2f}"
+                f"\u00b1 {total_stdev_model[i_chan][-1]:.2f}"
             }
         )
         data_dict.update({channel_name: f"{data[i_chan]:.2f}"})
