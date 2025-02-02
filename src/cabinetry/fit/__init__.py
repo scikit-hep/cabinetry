@@ -328,6 +328,8 @@ def _run_minos(
     minuit_obj: iminuit.Minuit,
     minos: Union[List[str], Tuple[str, ...]],
     labels: List[str],
+    *,
+    cl: Optional[float] = None,
 ) -> Dict[str, Tuple[float, float]]:
     """Determines parameter uncertainties for a list of parameters with MINOS.
 
@@ -337,6 +339,8 @@ def _run_minos(
         labels (List[str]]): names of all parameters known to ``iminuit``, these names
             are used in output (may be the same as the names under which ``iminiuit``
             knows parameters)
+        cl (Optional[float]), optional): confidence level for the confidence interval,
+            defaults to None (use ``iminuit`` default of 68.27%)
 
     Returns:
         Dict[str, Tuple[float, float]]: uncertainties indexed by parameter name
@@ -347,7 +351,7 @@ def _run_minos(
             log.warning(f"parameter {par_name} not found in model")
             continue
         log.info(f"running MINOS for {par_name}")
-        minuit_obj.minos(par_name)
+        minuit_obj.minos(par_name, cl=cl)
 
     minos_results = {}
 
