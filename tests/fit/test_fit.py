@@ -329,7 +329,7 @@ def test__run_minos(caplog):
     assert "b =  1.5909 -0.7262 +0.4738" in [rec.message for rec in caplog.records]
     caplog.clear()
 
-    # custom confidence interval
+    # custom confidence level
     minos_results = fit._run_minos(m, ["b"], ["a", "b"], minos_cl=0.95)
     assert np.allclose(minos_results["b"][0], -1.47037911)
     assert np.allclose(minos_results["b"][1], 0.81994008)
