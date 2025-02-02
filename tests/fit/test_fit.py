@@ -101,7 +101,9 @@ def test__fit_model_pyhf(mock_minos, example_spec, example_spec_multibin):
 
     # including minos, one parameter is unknown
     model, data = model_utils.model_and_data(example_spec)
-    fit_results = fit._fit_model_pyhf(model, data, minos=["Signal strength", "abc"])
+    fit_results = fit._fit_model_pyhf(
+        model, data, minos=["Signal strength", "abc"], minos_cl=0.95
+    )
     assert fit_results.minos_uncertainty["Signal strength"] == (-0.1, 0.2)
     assert mock_minos.call_count == 1
     # first argument to minos call is the Minuit instance
@@ -110,6 +112,7 @@ def test__fit_model_pyhf(mock_minos, example_spec, example_spec_multibin):
         "Signal strength",
         "staterror_Signal-Region[0]",
     ]
+    assert mock_minos.call_args[0][3] == 0.95
     assert mock_minos.call_args[1] == {}
 
 
@@ -180,7 +183,9 @@ def test__fit_model_custom(mock_minos, example_spec, example_spec_multibin):
 
     # including minos
     model, data = model_utils.model_and_data(example_spec)
-    fit_results = fit._fit_model_custom(model, data, minos=["Signal strength"])
+    fit_results = fit._fit_model_custom(
+        model, data, minos=["Signal strength"], minos_cl=0.95
+    )
     assert fit_results.minos_uncertainty["Signal strength"] == (-0.1, 0.2)
     assert mock_minos.call_count == 1
     # first argument to minos call is the Minuit instance
@@ -189,6 +194,7 @@ def test__fit_model_custom(mock_minos, example_spec, example_spec_multibin):
         "Signal strength",
         "staterror_Signal-Region[0]",
     ]
+    assert mock_minos.call_args[0][3] == 0.95
     assert mock_minos.call_args[1] == {}
 
 
@@ -214,6 +220,7 @@ def test__fit_model(mock_pyhf, mock_custom, example_spec):
     assert mock_pyhf.call_args[0][1] == data
     assert mock_pyhf.call_args[1] == {
         "minos": None,
+        "minos_cl": None,
         "init_pars": None,
         "fix_pars": None,
         "par_bounds": None,
@@ -228,6 +235,7 @@ def test__fit_model(mock_pyhf, mock_custom, example_spec):
         model,
         data,
         minos=["Signal strength"],
+        minos_cl=0.95,
         init_pars=[1.5, 2.0],
         fix_pars=[False, True],
         par_bounds=[(0, 5), (0.1, 10.0)],
@@ -240,6 +248,7 @@ def test__fit_model(mock_pyhf, mock_custom, example_spec):
     assert mock_pyhf.call_args[0][1] == data
     assert mock_pyhf.call_args[1] == {
         "minos": ["Signal strength"],
+        "minos_cl": 0.95,
         "init_pars": [1.5, 2.0],
         "fix_pars": [False, True],
         "par_bounds": [(0, 5), (0.1, 10.0)],
@@ -256,6 +265,7 @@ def test__fit_model(mock_pyhf, mock_custom, example_spec):
     assert mock_custom.call_args[0][1] == data
     assert mock_custom.call_args[1] == {
         "minos": None,
+        "minos_cl": None,
         "init_pars": None,
         "fix_pars": None,
         "par_bounds": None,
@@ -270,6 +280,7 @@ def test__fit_model(mock_pyhf, mock_custom, example_spec):
         model,
         data,
         minos=["Signal strength"],
+        minos_cl=0.95,
         init_pars=[1.5, 2.0],
         fix_pars=[False, True],
         par_bounds=[(0, 5), (0.1, 10.0)],
@@ -283,6 +294,7 @@ def test__fit_model(mock_pyhf, mock_custom, example_spec):
     assert mock_custom.call_args[0][1] == data
     assert mock_custom.call_args[1] == {
         "minos": ["Signal strength"],
+        "minos_cl": 0.95,
         "init_pars": [1.5, 2.0],
         "fix_pars": [False, True],
         "par_bounds": [(0, 5), (0.1, 10.0)],
@@ -310,11 +322,17 @@ def test__run_minos(caplog):
     m.errordef = 1
     m.migrad()
 
-    minos_results = fit._run_minos(m, ["b"], ["a", "b"])
+    minos_results = fit._run_minos(m, ["b"], ["a", "b"], minos_cl=None)
     assert np.allclose(minos_results["b"][0], -0.72622053)
     assert np.allclose(minos_results["b"][1], 0.47381869)
     assert "running MINOS for b" in [rec.message for rec in caplog.records]
     assert "b =  1.5909 -0.7262 +0.4738" in [rec.message for rec in caplog.records]
+    caplog.clear()
+
+    # custom confidence level
+    minos_results = fit._run_minos(m, ["b"], ["a", "b"], minos_cl=0.95)
+    assert np.allclose(minos_results["b"][0], -1.47037911)
+    assert np.allclose(minos_results["b"][1], 0.81994008)
     caplog.clear()
 
     # unknown parameter, MINOS does not run
@@ -322,7 +340,7 @@ def test__run_minos(caplog):
     m.errordef = 1
     m.migrad()
 
-    minos_results = fit._run_minos(m, ["x2"], ["a", "b"])
+    minos_results = fit._run_minos(m, ["x2"], ["a", "b"], minos_cl=None)
     assert minos_results == {}
     assert [rec.message for rec in caplog.records] == [
         "parameter x2 not found in model",
@@ -400,6 +418,7 @@ def test_fit(mock_fit, mock_print, mock_gof):
             (model, data),
             {
                 "minos": None,
+                "minos_cl": None,
                 "init_pars": None,
                 "fix_pars": None,
                 "par_bounds": None,
@@ -437,6 +456,7 @@ def test_fit(mock_fit, mock_print, mock_gof):
         (model, data),
         {
             "minos": None,
+            "minos_cl": None,
             "init_pars": init_pars,
             "fix_pars": fix_pars,
             "par_bounds": par_bounds,
@@ -451,10 +471,11 @@ def test_fit(mock_fit, mock_print, mock_gof):
     assert fit_results.bestfit == [1.0]
 
     # parameters for MINOS
-    fit_results = fit.fit(model, data, minos=["abc"])
+    fit_results = fit.fit(model, data, minos=["abc"], minos_cl=0.95)
     assert mock_fit.call_count == 3
     assert mock_fit.call_args[1] == {
         "minos": ["abc"],
+        "minos_cl": 0.95,
         "init_pars": None,
         "fix_pars": None,
         "par_bounds": None,
@@ -464,10 +485,11 @@ def test_fit(mock_fit, mock_print, mock_gof):
         "custom_fit": False,
     }
     assert fit_results.bestfit == [1.0]
-    fit_results = fit.fit(model, data, minos="abc", custom_fit=True)
+    fit_results = fit.fit(model, data, minos="abc", minos_cl=0.95, custom_fit=True)
     assert mock_fit.call_count == 4
     assert mock_fit.call_args[1] == {
         "minos": ["abc"],
+        "minos_cl": 0.95,
         "init_pars": None,
         "fix_pars": None,
         "par_bounds": None,
