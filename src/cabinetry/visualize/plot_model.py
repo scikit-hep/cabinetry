@@ -221,7 +221,7 @@ def data_mc(
         ax1.set_xscale("log")
         ax2.set_xscale("log")
 
-    # figure label (region name)
+    # figure label (region name and prediction label, truncate per line)
     label = "\n".join(
         [f"{line[:30]}..." if len(line) > 30 else line for line in label.split("\n")]
     )
