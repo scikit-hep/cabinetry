@@ -222,8 +222,11 @@ def data_mc(
         ax2.set_xscale("log")
 
     # figure label (region name)
+    label = "\n".join(
+        [f"{line[:30]}..." if len(line) > 30 else line for line in label.split("\n")]
+    )
     at = mpl.offsetbox.AnchoredText(
-        f"{label[:30]}..." if len(label) > 30 else label,
+        label,
         loc="upper left",
         frameon=False,
         prop={"fontsize": "large", "linespacing": 1.5},
