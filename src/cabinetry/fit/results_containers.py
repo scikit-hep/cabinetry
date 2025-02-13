@@ -1,9 +1,10 @@
 """Provides containers for inference results."""
 
-from typing import Dict, List, NamedTuple, Tuple
+from typing import Dict, List, NamedTuple, Optional, Tuple
 
-import numpy as np
 import iminuit
+import numpy as np
+
 
 class FitResults(NamedTuple):
     """Collects fit results in one object.
@@ -28,7 +29,7 @@ class FitResults(NamedTuple):
     best_twice_nll: float
     goodness_of_fit: float = -1
     minos_uncertainty: Dict[str, Tuple[float, float]] = {}
-    minuit_obj: iminuit.Minuit = None
+    minuit_obj: Optional[iminuit.Minuit] = None
 
 
 class RankingResults(NamedTuple):
