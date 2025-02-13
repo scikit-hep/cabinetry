@@ -3,7 +3,7 @@
 from typing import Dict, List, NamedTuple, Tuple
 
 import numpy as np
-
+import iminuit
 
 class FitResults(NamedTuple):
     """Collects fit results in one object.
@@ -18,6 +18,7 @@ class FitResults(NamedTuple):
         goodess_of_fit (float, optional): goodness-of-fit p-value, defaults to -1
         minos_uncertainty (Dict[str, Tuple[float, float]]): uncertainties of best-fit
             parameter results indexed by parameter name, calculated with MINOS
+        minuit_obj (iminuit.Minuit, optional) = underlying minimizer
     """
 
     bestfit: np.ndarray
@@ -27,6 +28,7 @@ class FitResults(NamedTuple):
     best_twice_nll: float
     goodness_of_fit: float = -1
     minos_uncertainty: Dict[str, Tuple[float, float]] = {}
+    minuit_obj: iminuit.Minuit = None
 
 
 class RankingResults(NamedTuple):
