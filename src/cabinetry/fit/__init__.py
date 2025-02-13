@@ -383,7 +383,11 @@ def _run_minos(
 
 
 def _goodness_of_fit(
-    model: pyhf.pdf.Model, data: List[float], best_twice_nll: float
+    model: pyhf.pdf.Model,
+    data: List[float],
+    best_twice_nll: float,
+    *,
+    fix_pars: Optional[List[bool]] = None,
 ) -> float:
     """Calculates goodness-of-fit p-value with a saturated model.
 
@@ -397,6 +401,8 @@ def _goodness_of_fit(
         data (List[float]): the observed data
         best_twice_nll (float): best-fit -2 log(likelihood) of fit for which goodness-
             of-fit should be calculated
+        fix_pars (Optional[List[bool]], optional): list of booleans specifying which
+            parameters are held constant, defaults to None (use ``pyhf`` suggestion)
 
     Returns:
         float: goodness-of-fit p-value
@@ -432,7 +438,7 @@ def _goodness_of_fit(
     # of bins minus the number of unconstrained parameters
     n_dof = sum(
         model.config.channel_nbins.values()
-    ) - model_utils.unconstrained_parameter_count(model)
+    ) - model_utils.unconstrained_parameter_count(model, fix_pars=fix_pars)
     log.debug(f"number of degrees of freedom: {n_dof}")
 
     if n_dof <= 0:
@@ -522,7 +528,9 @@ def fit(
 
     if goodness_of_fit:
         # calculate goodness-of-fit with saturated model
-        p_val = _goodness_of_fit(model, data, fit_results.best_twice_nll)
+        p_val = _goodness_of_fit(
+            model, data, fit_results.best_twice_nll, fix_pars=fix_pars
+        )
         fit_results = fit_results._replace(goodness_of_fit=p_val)
 
     return fit_results
