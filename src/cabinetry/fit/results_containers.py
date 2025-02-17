@@ -19,7 +19,7 @@ class FitResults(NamedTuple):
         goodess_of_fit (float, optional): goodness-of-fit p-value, defaults to -1
         minos_uncertainty (Dict[str, Tuple[float, float]]): uncertainties of best-fit
             parameter results indexed by parameter name, calculated with MINOS
-        minuit_obj (iminuit.Minuit, optional) = underlying minimizer
+        minuit_obj (iminuit.Minuit, optional): underlying minimizer
     """
 
     bestfit: np.ndarray
