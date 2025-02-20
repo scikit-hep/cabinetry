@@ -18,73 +18,11 @@ log = logging.getLogger(__name__)
 _YIELD_STDEV_CACHE: Dict[Any, Tuple[List[List[List[float]]], List[List[float]]]] = {}
 
 
-class LightConfig(pyhf.pdf._ModelConfig):
-    def __init__(
-        self,
-        model: pyhf.pdf.Model,
-        samples_merge_map: Optional[Dict[str, List[str]]] = None,
-    ):
-        super().__init__(model.spec)
-        # self.channel_nbins = model.config.channel_nbins
-        # self.channels = model.config.channels
-        # self.channel_slices = model.config.channel_slices
-        # self.pyhf_model = model # Can this get too big and become a memory issue ?
-        # self.samples = model.config.samples
-        if samples_merge_map is not None:
-            self._update_samples(samples_merge_map)
-
-    @property
-    def samples(self) -> list[str]:
-        """
-        Ordered list of sample names in the model.
-        """
-        return self._samples
-
-    @samples.setter
-    def samples(self, samples):
-        """
-        Set the Ordered list of sample names in the model.
-        """
-        self._samples = samples
-
-    def _update_samples(self, samples_merge_map: Optional[Dict[str, List[str]]]):
-        # Delete samples being merged from config
-        # Flatten all merged samples into a set for O(1) lookups
-        merged_samples_set = {
-            merged_sample
-            for merged_samples_list in samples_merge_map.values()
-            for merged_sample in merged_samples_list
-        }
-        merged_samples_idxs = [
-            idx
-            for idx, sample in enumerate(self.samples)
-            if sample in merged_samples_set
-        ]
-        self.samples = np.delete(self.samples, merged_samples_idxs).tolist()
-        # Add new samples at the bottom of stack
-        self.samples = np.insert(
-            np.array(self.samples, dtype=object),
-            np.arange(len(samples_merge_map)),
-            list(samples_merge_map.keys()),
-            axis=0,
-        ).tolist()
-
-
-class LightModel:
-    def __init__(
-        self,
-        model: pyhf.pdf.Model,
-        samples_merge_map: Optional[Dict[str, List[str]]] = None,
-    ):
-        self.config = LightConfig(model, samples_merge_map)
-
-
 class ModelPrediction(NamedTuple):
     """Model prediction with yields and total uncertainties per bin and channel.
 
     Args:
-        model (LightModel): model (a light-weight version of pyhf.pdf.Model) to
-            which prediction corresponds to
+        model (pyhf.pdf.Model): model to which prediction corresponds to
         model_yields (List[List[List[float]]]): yields per channel, sample and bin,
             indices: channel, sample, bin
         total_stdev_model_bins (List[List[List[float]]]): total yield uncertainty per
@@ -482,7 +420,6 @@ def prediction(
     *,
     fit_results: Optional[FitResults] = None,
     label: Optional[str] = None,
-    samples_merge_map: Optional[Dict[str, List[str]]] = None,
 ) -> ModelPrediction:
     """Returns model prediction, including model yields and uncertainties.
 
@@ -503,8 +440,6 @@ def prediction(
     Returns:
         ModelPrediction: model, yields and uncertainties per channel, sample, bin
     """
-    light_model = LightModel(model, samples_merge_map)
-    log.debug(light_model.config.samples)
     if fit_results is not None:
         if fit_results.labels != model.config.par_names:
             log.warning("parameter names in fit results and model do not match")
