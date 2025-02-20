@@ -44,7 +44,7 @@ class LightConfig(pyhf.pdf._ModelConfig):
             self._update_samples(samples_merge_map)
 
     @property
-    def samples(self) -> list[str]:
+    def samples(self) -> List[str]:
         """
         Ordered list of sample names in the model.
         """
