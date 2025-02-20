@@ -258,11 +258,12 @@ def test_yield_stdev(example_spec, example_spec_multibin):
     "cabinetry.model_utils.yield_stdev",
     side_effect=[
         (
-            [[[5.0, 2.0], [5.0, 2.0]], [[1.0], [1.0]]],
-            [[5.38516481, 5.38516481], [1.0, 1.0]],
+            [[[5.0, 2.0], [5.0, 2.0]], [[1.0], [1.0]]],  # pre-fit, per-bin
+            [[5.38516481, 5.38516481], [1.0, 1.0]],  # pre-fit, per-channel
         ),
-        ([[[0.3], [0.3]]], [[0.3, 0.3]]),
-        ([[[0.3], [0.3]]], [[0.3, 0.3]]),
+        ([[[0.3], [0.3]]], [[0.3, 0.3]]),  # post-fit, single-channel nominal
+        ([[[0.3], [0.3]]], [[0.3, 0.3]]),  # post-fit single-channel, custom
+        ([[[0.3], [0.3]]], [[0.3, 0.3]]),  # post-fit single-channel, merged (values?)
     ],
 )
 @mock.patch(
@@ -278,7 +279,13 @@ def test_yield_stdev(example_spec, example_spec_multibin):
     ],
 )
 def test_prediction(
-    mock_asimov, mock_unc, mock_stdev, example_spec_multibin, example_spec, caplog
+    mock_asimov,
+    mock_unc,
+    mock_stdev,
+    example_spec_multibin,
+    example_spec,
+    example_spec_with_multiple_background,
+    caplog,
 ):
     caplog.set_level(logging.DEBUG)
     model = pyhf.Workspace(example_spec_multibin).model()
@@ -358,6 +365,22 @@ def test_prediction(
         rec.message for rec in caplog.records
     ]
     assert model_pred.label == "abc"
+    caplog.clear()
+
+    # Test with merging samples
+    model = pyhf.Workspace(example_spec_with_multiple_background).model()
+    fit_results = FitResults(
+        np.asarray([1.1, 1.01, 1.2]),
+        np.asarray([0.1, 0.03, 0.07]),
+        ["Signal strength", "staterror_Signal-Region[0]", "Background 2 norm"],
+        np.asarray([[1.0, 0.2, 0.1], [0.2, 1.0, 0.3], [0.1, 0.3, 1.0]]),
+        0.0,
+    )
+    model_pred = model_utils.prediction(
+        model,
+        fit_results=fit_results,
+        samples_merge_map={"Total Background": ["Background", "Background 2"]},
+    )
     caplog.clear()
 
 
