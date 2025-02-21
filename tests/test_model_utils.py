@@ -369,7 +369,7 @@ def test_prediction(
     assert np.allclose(
         mock_stdev.call_args_list[0][0][3], np.diagflat([1.0, 1.0, 1.0, 1.0])
     )
-    assert mock_stdev.call_args_list[0][1] == {}
+    assert mock_stdev.call_args_list[0][1] == {"samples_merge_map": None}
 
     # post-fit prediction, single-channel model
     model = pyhf.Workspace(example_spec).model()
@@ -401,7 +401,7 @@ def test_prediction(
     assert np.allclose(
         mock_stdev.call_args_list[1][0][3], np.asarray([[1.0, 0.2], [0.2, 1.0]])
     )
-    assert mock_stdev.call_args_list[1][1] == {}
+    assert mock_stdev.call_args_list[1][1] == {"samples_merge_map": None}
 
     caplog.clear()
 
