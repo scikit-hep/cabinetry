@@ -628,7 +628,7 @@ def prediction(
     if samples_merge_map is not None:
         model_yields = _merge_sample_yields(
             light_model, model_yields, samples_merge_map
-        )
+        ).tolist()
 
     # calculate the total standard deviation of the model prediction
     # indices: (channel, sample, bin) for per-bin uncertainties,
