@@ -634,7 +634,11 @@ def prediction(
     # indices: (channel, sample, bin) for per-bin uncertainties,
     # (channel, sample) for per-channel
     total_stdev_model_bins, total_stdev_model_channels = yield_stdev(
-        light_model, param_values, param_uncertainty, corr_mat
+        light_model,
+        param_values,
+        param_uncertainty,
+        corr_mat,
+        samples_merge_map=samples_merge_map,
     )
 
     return ModelPrediction(
