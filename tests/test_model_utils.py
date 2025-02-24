@@ -264,6 +264,7 @@ def test_yield_stdev(
         pyhf.Workspace(example_spec_with_multiple_background).model(),
         samples_merge_map={"Total Background": ["Background", "Background 2"]},
     )
+
     parameters = np.asarray([1.1, 1.01, 1.2])
     uncertainty = np.asarray([0.1, 0.03, 0.07])
     corr_mat = np.asarray([[1.0, 0.2, 0.1], [0.2, 1.0, 0.3], [0.1, 0.3, 1.0]])
@@ -275,12 +276,17 @@ def test_yield_stdev(
         corr_mat,
         samples_merge_map={"Total Background": ["Background", "Background 2"]},
     )
-    # assert np.allclose(total_stdev_bin, [[[xx], [xx]]])
-    # assert np.allclose(total_stdev_chan, [[xx, xx]])
+    assert np.allclose(
+        total_stdev_bin,
+        [[[12.510027977586642], [4.421993328805458], [16.66150128289767]]],
+    )
+    assert np.allclose(
+        total_stdev_chan, [[12.510027977586642, 4.421993328805458, 16.66150128289767]]
+    )
 
     # pre-fit
     parameters = np.asarray([1.0, 1.0, 1.0])
-    uncertainty = np.asarray([0.0, 0.0495665682, 0.01])
+    uncertainty = np.asarray([0.1, 0.03, 0.07])
     diag_corr_mat = np.diagflat([1.0, 1.0, 1.0])
     total_stdev_bin, total_stdev_chan = model_utils.yield_stdev(
         model,
@@ -289,8 +295,13 @@ def test_yield_stdev(
         diag_corr_mat,
         samples_merge_map={"Total Background": ["Background", "Background 2"]},
     )
-    # assert np.allclose(total_stdev_bin, [[[xx], [xx]]])  # the staterror
-    # assert np.allclose(total_stdev_chan, [[xx, xx]])
+    assert np.allclose(
+        total_stdev_bin,
+        [[[12.066896867049131], [3.8078865529319543], [15.601602481796547]]],
+    )
+    assert np.allclose(
+        total_stdev_chan, [[12.066896867049131, 3.8078865529319543, 15.601602481796547]]
+    )
 
 
 @mock.patch(
@@ -415,8 +426,7 @@ def test_prediction(
     assert model_pred.label == "abc"
     caplog.clear()
 
-    # Test with merging samples
-    # print("\n Testing merged samples \n")
+    # Multiple backgrounds with sample merging
     model = pyhf.Workspace(example_spec_with_multiple_background).model()
     # pre-fit prediction, merged samples
     model_pred = model_utils.prediction(
@@ -447,7 +457,7 @@ def test_prediction(
         np.asarray([1.2, 1.1, 1.01]),
         np.asarray([0.1, 0.07, 0.03]),
         ["Background 2 norm", "Signal strength", "staterror_Signal-Region[0]"],
-        np.asarray([[1.0, 0.0, 0.0], [0.0, 1.0, 0.0], [0.0, 0.0, 1.0]]),
+        np.asarray([[1.0, 0.2, 0.1], [0.2, 1.0, 0.3], [0.1, 0.3, 1.0]]),
         0.0,
     )
     model_pred = model_utils.prediction(
