@@ -10,6 +10,69 @@ from cabinetry import model_utils
 from cabinetry.fit.results_containers import FitResults
 
 
+def test_LightModel(example_spec_with_multiple_background):
+    # Test without merging samples
+    model = pyhf.Workspace(example_spec_with_multiple_background).model()
+    fit_results = FitResults(
+        np.asarray([1.0, 1.0, 1.0]),
+        np.asarray([0.1, 0.03, 0.07]),
+        ["Background 2 norm", "Signal strength", "staterror_Signal-Region[0]"],
+        np.asarray([[1.0, 0.0, 0.0], [0.0, 1.0, 0.0], [0.0, 0.0, 1.0]]),
+        0.0,
+    )
+    model_pred = model_utils.prediction(
+        model, fit_results=fit_results, samples_merge_map=None
+    )
+
+    assert model_pred.model.config.samples == ["Background", "Background 2", "Signal"]
+    assert model_pred.model_yields == [[[150.0], [20.0], [50.0]]]
+    assert model_pred.total_stdev_model_bins == [
+        [[10.5], [2.441311123146742], [3.8078865529319543], [15.601602481796547]]
+    ]
+    assert model_pred.total_stdev_model_channels == [
+        [10.5, 2.441311123146742, 3.8078865529319543, 15.601602481796547]
+    ]
+    assert model_pred.model.pyhf_model == model
+    assert model_pred.model.config.channels == model.config.channels
+    assert model_pred.model.config.channel_nbins == model.config.channel_nbins
+    assert model_pred.model.config.channel_slices == model.config.channel_slices
+    assert model_pred.model.config.modifier_settings == model.config.modifier_settings
+    assert model_pred.model.spec == model.spec
+
+    # Test with merging samples
+    model_pred = model_utils.prediction(
+        model,
+        fit_results=fit_results,
+        samples_merge_map={"Total Background": ["Background", "Background 2"]},
+    )
+
+    assert model_pred.model.config.samples == ["Total Background", "Signal"]
+    assert model_pred.model_yields == [[[170.0], [50.0]]]
+    assert model_pred.total_stdev_model_bins == [
+        [[12.066896867049131], [3.8078865529319543], [15.601602481796547]]
+    ]
+    assert model_pred.total_stdev_model_channels == [
+        [12.066896867049131, 3.8078865529319543, 15.601602481796547]
+    ]
+    assert model_pred.model.pyhf_model == model
+    assert model_pred.model.config.channels == model.config.channels
+    assert model_pred.model.config.channel_nbins == model.config.channel_nbins
+    assert model_pred.model.config.channel_slices == model.config.channel_slices
+    assert model_pred.model.config.modifier_settings == model.config.modifier_settings
+    assert model_pred.model.spec == model.spec
+
+    with pytest.raises(
+        AttributeError,
+        match="'LightConfig' object has no attribute 'NonExistent'",
+    ):
+        model_pred.model.config.NonExistent
+    with pytest.raises(
+        AttributeError,
+        match="'LightModel' object has no attribute 'NonExistent'",
+    ):
+        model_pred.model.NonExistent
+
+
 def test_ModelPrediction(example_spec):
     model = pyhf.Workspace(example_spec).model()
     model_yields = [[[10.0]]]
@@ -253,6 +316,7 @@ def test_yield_stdev(
         tuple(parameters),
         tuple(uncertainty),
         corr_mat.tobytes(),
+        ",".join(model.config.samples),
     ]
     for i_reg in range(2):
         assert np.allclose(from_cache[0][i_reg], expected_stdev_bin[i_reg])
@@ -455,7 +519,7 @@ def test_prediction(
     # post-fit
     fit_results = FitResults(
         np.asarray([1.2, 1.1, 1.01]),
-        np.asarray([0.1, 0.07, 0.03]),
+        np.asarray([0.1, 0.03, 0.07]),
         ["Background 2 norm", "Signal strength", "staterror_Signal-Region[0]"],
         np.asarray([[1.0, 0.2, 0.1], [0.2, 1.0, 0.3], [0.1, 0.3, 1.0]]),
         0.0,
