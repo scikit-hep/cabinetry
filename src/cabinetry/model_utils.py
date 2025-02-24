@@ -393,6 +393,7 @@ def yield_stdev(
             tuple(parameters),
             tuple(uncertainty),
             corr_mat.data.tobytes(),
+            ",".join(model.config.samples),
         ),
         None,
     )
@@ -490,7 +491,6 @@ def yield_stdev(
     # convert to numpy arrays for further processing
     up_variations_np = np.asarray(up_variations)
     down_variations_np = np.asarray(down_variations)
-
     # calculate symmetric uncertainties for all components
     # indices: variation, channel (last entries sums), sample (last entry sum), bin
     sym_uncs = (up_variations_np - down_variations_np) / 2
@@ -554,6 +554,7 @@ def yield_stdev(
                 tuple(parameters),
                 tuple(uncertainty),
                 corr_mat.data.tobytes(),
+                ",".join(model.config.samples),
             ): (total_stdev_per_bin, total_stdev_per_channel)
         }
     )
@@ -588,7 +589,6 @@ def prediction(
         ModelPrediction: model, yields and uncertainties per channel, sample, bin
     """
     light_model = LightModel(model, samples_merge_map)
-    log.debug(light_model.config.samples)
     if fit_results is not None:
         if fit_results.labels != model.config.par_names:
             log.warning("parameter names in fit results and model do not match")
