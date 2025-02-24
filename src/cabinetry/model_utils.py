@@ -155,8 +155,8 @@ class ModelPrediction(NamedTuple):
     """Model prediction with yields and total uncertainties per bin and channel.
 
     Args:
-        model (LightModel): model (a light-weight version of pyhf.pdf.Model) to
-            which prediction corresponds to
+        model (LightModel or pyhf.pdf.Model): model (or a light-weight version of
+            pyhf.pdf.Model) to which prediction corresponds to
         model_yields (List[List[List[float]]]): yields per channel, sample and bin,
             indices: channel, sample, bin
         total_stdev_model_bins (List[List[List[float]]]): total yield uncertainty per
@@ -167,7 +167,7 @@ class ModelPrediction(NamedTuple):
         label (str): label for the prediction, e.g. "pre-fit" or "post-fit"
     """
 
-    model: pyhf.pdf.Model
+    model: Union[LightModel, pyhf.pdf.Model]
     model_yields: List[List[List[float]]]
     total_stdev_model_bins: List[List[List[float]]]
     total_stdev_model_channels: List[List[float]]
@@ -635,7 +635,11 @@ def prediction(
     )
 
     return ModelPrediction(
-        model, model_yields, total_stdev_model_bins, total_stdev_model_channels, label
+        light_model,
+        model_yields,
+        total_stdev_model_bins,
+        total_stdev_model_channels,
+        label,
     )
 
 
@@ -728,11 +732,11 @@ def _poi_index(
     return poi_index
 
 
-def _strip_auxdata(model: pyhf.pdf.Model, data: List[float]) -> List[float]:
+def _strip_auxdata(model: LightModel, data: List[float]) -> List[float]:
     """Always returns observed yields, no matter whether data includes auxdata.
 
     Args:
-        model (pyhf.pdf.Model): model to which data corresponds to
+        model (LightModel): model to which data corresponds to
         data (List[float]): data, either including auxdata which is then stripped off or
             only observed yields
 
@@ -746,11 +750,11 @@ def _strip_auxdata(model: pyhf.pdf.Model, data: List[float]) -> List[float]:
     return data
 
 
-def _data_per_channel(model: pyhf.pdf.Model, data: List[float]) -> List[List[float]]:
+def _data_per_channel(model: LightModel, data: List[float]) -> List[List[float]]:
     """Returns data split per channel, and strips off auxiliary data if included.
 
     Args:
-        model (pyhf.pdf.Model): model to which data corresponds to
+        model (LightModel): model to which data corresponds to
         data (List[float]): data (not split by channel), can either include auxdata
             which is then stripped off, or only observed yields
 
@@ -768,12 +772,12 @@ def _data_per_channel(model: pyhf.pdf.Model, data: List[float]) -> List[List[flo
 
 
 def _filter_channels(
-    model: pyhf.pdf.Model, channels: Optional[Union[str, List[str]]]
+    model: LightModel, channels: Optional[Union[str, List[str]]]
 ) -> List[str]:
     """Returns a list of channels in a model after applying filtering.
 
     Args:
-        model (pyhf.pdf.Model): model from which to extract channels
+        model (LightModel): model from which to extract channels
         channels (Optional[Union[str, List[str]]]): name of channel or list of channels
             to filter, only including those channels provided via this argument in the
             return of the function

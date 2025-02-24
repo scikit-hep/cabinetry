@@ -331,7 +331,7 @@ def test_prediction(
 
     # pre-fit prediction, multi-channel model
     model_pred = model_utils.prediction(model)
-    assert model_pred.model == model
+    assert model_pred.model.pyhf_model == model
     # yields from pyhf expected_data call, per-bin / per-channel uncertainty from mock
     assert model_pred.model_yields == [[[25.0, 5.0]], [[8.0]]]
     assert model_pred.total_stdev_model_bins == [
@@ -367,7 +367,7 @@ def test_prediction(
         0.0,
     )
     model_pred = model_utils.prediction(model, fit_results=fit_results)
-    assert model_pred.model == model
+    assert model_pred.model.pyhf_model == model
     assert np.allclose(model_pred.model_yields, [[[57.54980000]]])  # new par value
     assert model_pred.total_stdev_model_bins == [[[0.3], [0.3]]]  # from mock
     assert model_pred.total_stdev_model_channels == [[0.3, 0.3]]  # from mock
@@ -482,40 +482,46 @@ def test__poi_index(example_spec, caplog):
 
 def test__strip_auxdata(example_spec):
     model = pyhf.Workspace(example_spec).model()
+    light_model = model_utils.LightModel(model)
     data_with_aux = list(model.expected_data([1.0, 1.0], include_auxdata=True))
     data_without_aux = list(model.expected_data([1.0, 1.0], include_auxdata=False))
 
-    assert model_utils._strip_auxdata(model, data_with_aux) == [51.8]
-    assert model_utils._strip_auxdata(model, data_without_aux) == [51.8]
+    assert model_utils._strip_auxdata(light_model, data_with_aux) == [51.8]
+    assert model_utils._strip_auxdata(light_model, data_without_aux) == [51.8]
 
 
 @mock.patch("cabinetry.model_utils._strip_auxdata", return_value=[25.0, 5.0, 8.0])
 def test__data_per_channel(mock_aux, example_spec_multibin):
     model = pyhf.Workspace(example_spec_multibin).model()
+    light_model = model_utils.LightModel(model)
     data = [25.0, 5.0, 8.0, 1.0, 1.0, 1.0]
 
-    data_per_ch = model_utils._data_per_channel(model, [25.0, 5.0, 8.0, 1.0, 1.0, 1.0])
+    data_per_ch = model_utils._data_per_channel(
+        light_model, [25.0, 5.0, 8.0, 1.0, 1.0, 1.0]
+    )
     assert data_per_ch == [[25.0, 5.0], [8.0]]  # auxdata stripped and split by channel
 
     # auxdata and channel index call
-    assert mock_aux.call_args_list == [((model, data), {})]
+    assert mock_aux.call_args_list == [((light_model, data), {})]
 
 
 def test__filter_channels(example_spec_multibin, caplog):
     caplog.set_level(logging.DEBUG)
     model = pyhf.Workspace(example_spec_multibin).model()
-
-    assert model_utils._filter_channels(model, None) == ["region_1", "region_2"]
-    assert model_utils._filter_channels(model, "region_1") == ["region_1"]
-    assert model_utils._filter_channels(model, ["region_1", "region_2"]) == [
+    light_model = model_utils.LightModel(model)
+    assert model_utils._filter_channels(light_model, None) == ["region_1", "region_2"]
+    assert model_utils._filter_channels(light_model, "region_1") == ["region_1"]
+    assert model_utils._filter_channels(light_model, ["region_1", "region_2"]) == [
         "region_1",
         "region_2",
     ]
-    assert model_utils._filter_channels(model, ["region_1", "abc"]) == ["region_1"]
+    assert model_utils._filter_channels(light_model, ["region_1", "abc"]) == [
+        "region_1"
+    ]
     caplog.clear()
 
     # no matching channels
-    assert model_utils._filter_channels(model, "abc") == []
+    assert model_utils._filter_channels(light_model, "abc") == []
     assert (
         "channel(s) ['abc'] not found in model, available channel(s): "
         "['region_1', 'region_2']" in [rec.message for rec in caplog.records]
