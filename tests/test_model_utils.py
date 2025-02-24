@@ -302,19 +302,28 @@ def test_yield_stdev(
         ),
         ([[[0.3], [0.3]]], [[0.3, 0.3]]),  # post-fit, single-channel nominal
         ([[[0.3], [0.3]]], [[0.3, 0.3]]),  # post-fit single-channel, custom
-        ([[[0.3], [0.3]]], [[0.3, 0.3]]),  # post-fit single-channel, merged (values?)
+        (
+            [[[12.5], [4.4], [16.7]]],
+            [[12.5, 4.4, 16.7]],
+        ),  # pre-fit single-channel, merged samples model
+        (
+            [[[12.5], [4.4], [16.7]]],
+            [[12.5, 4.4, 16.7]],
+        ),  # post-fit single-channel, merged samples model
     ],
 )
 @mock.patch(
     "cabinetry.model_utils.prefit_uncertainties",
-    return_value=np.asarray([0.0, 0.2, 0.4, 0.125]),
+    side_effect=[
+        np.asarray([0.0, 0.2, 0.4, 0.125]),
+        np.asarray([0.0, 0.0, 0.039]),  # pre-fit unc, merged samples model
+    ],
 )
 @mock.patch(
     "cabinetry.model_utils.asimov_parameters",
     side_effect=[
         np.asarray([1.0, 1.0, 1.0, 1.0]),
-        np.asarray([1.0, 1.0]),
-        np.asarray([1.0, 1.0]),
+        np.asarray([1.0, 1.0, 1.0]),
     ],
 )
 def test_prediction(
@@ -344,8 +353,8 @@ def test_prediction(
     assert model_pred.label == "pre-fit"
 
     # Asimov parameter calculation and pre-fit uncertainties
-    assert mock_asimov.call_args_list == [((model,), {})]
-    assert mock_unc.call_args_list == [((model,), {})]
+    assert mock_asimov.call_args_list[0] == ((model,), {})
+    assert mock_unc.call_args_list[0] == ((model,), {})
 
     # call to stdev calculation
     assert mock_stdev.call_count == 1
@@ -407,12 +416,38 @@ def test_prediction(
     caplog.clear()
 
     # Test with merging samples
+    # print("\n Testing merged samples \n")
     model = pyhf.Workspace(example_spec_with_multiple_background).model()
+    # pre-fit prediction, merged samples
+    model_pred = model_utils.prediction(
+        model, samples_merge_map={"Total Background": ["Background", "Background 2"]}
+    )
+    assert model_pred.model.pyhf_model == model
+    # yields from pyhf expected_data call, per-bin / per-channel uncertainty from mock
+    assert model_pred.model_yields == [[[170.0], [50.0]]]
+    assert model_pred.total_stdev_model_bins == [[[12.5], [4.4], [16.7]]]
+    assert model_pred.total_stdev_model_channels == [[12.5, 4.4, 16.7]]
+    assert model_pred.label == "pre-fit"
+
+    # Asimov parameter calculation and pre-fit uncertainties
+    assert mock_asimov.call_args_list[1] == ((model,), {})
+    assert mock_unc.call_args_list[1] == ((model,), {})
+
+    assert mock_asimov.call_count == 2  # one new call
+    assert mock_unc.call_count == 2  # one new call
+
+    # call to stdev calculation
+    assert mock_stdev.call_count == 4
+    assert mock_stdev.call_args_list[3][1] == {
+        "samples_merge_map": {"Total Background": ["Background", "Background 2"]}
+    }
+
+    # post-fit
     fit_results = FitResults(
-        np.asarray([1.1, 1.01, 1.2]),
-        np.asarray([0.1, 0.03, 0.07]),
-        ["Signal strength", "staterror_Signal-Region[0]", "Background 2 norm"],
-        np.asarray([[1.0, 0.2, 0.1], [0.2, 1.0, 0.3], [0.1, 0.3, 1.0]]),
+        np.asarray([1.2, 1.1, 1.01]),
+        np.asarray([0.1, 0.07, 0.03]),
+        ["Background 2 norm", "Signal strength", "staterror_Signal-Region[0]"],
+        np.asarray([[1.0, 0.0, 0.0], [0.0, 1.0, 0.0], [0.0, 0.0, 1.0]]),
         0.0,
     )
     model_pred = model_utils.prediction(
@@ -420,6 +455,25 @@ def test_prediction(
         fit_results=fit_results,
         samples_merge_map={"Total Background": ["Background", "Background 2"]},
     )
+    assert model_pred.model.pyhf_model == model
+    assert np.allclose(model_pred.model_yields, [[[175.74], [55.55]]])  # new par value
+    assert model_pred.total_stdev_model_bins == [[[12.5], [4.4], [16.7]]]  # from mock
+    assert model_pred.total_stdev_model_channels == [[12.5, 4.4, 16.7]]  # from mock
+    assert model_pred.label == "post-fit"
+    assert "parameter names in fit results and model do not match" not in [
+        rec.message for rec in caplog.records
+    ]
+
+    # Asimov parameter calculation and pre-fit uncertainties
+    assert mock_asimov.call_count == 2  # no new call
+    assert mock_unc.call_count == 2  # no new call
+
+    # call to stdev calculation
+    assert mock_stdev.call_count == 5
+    assert mock_stdev.call_args_list[4][1] == {
+        "samples_merge_map": {"Total Background": ["Background", "Background 2"]}
+    }
+
     caplog.clear()
 
 
