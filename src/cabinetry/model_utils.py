@@ -28,13 +28,12 @@ log = logging.getLogger(__name__)
 _YIELD_STDEV_CACHE: Dict[Any, Tuple[List[List[List[float]]], List[List[float]]]] = {}
 
 
-class LightConfig(pyhf.pdf._ModelConfig):
+class LightConfig:
     def __init__(
         self,
         model: pyhf.pdf.Model,
         samples_merge_map: Optional[Dict[str, List[str]]] = None,
     ):
-        super().__init__(model.spec)
         self._original_config = model.config
         # this is going to break if more config kwargs added in pyhf _ModelConfig
         self.modifier_settings = self._original_config.modifier_settings
@@ -425,16 +424,13 @@ def yield_stdev(
         up_comb = pyhf.tensorlib.to_numpy(
             model.main_model.expected_data(up_pars, return_by_sample=True)
         )
-
         # attach another entry with the total model prediction (sum over all samples)
         # indices: sample, bin
         up_comb = np.vstack((up_comb, np.sum(up_comb, axis=0)))
-        # print("up_comb:: ", up_comb)
         if samples_merge_map is not None:
             up_comb = _merge_sample_yields(
                 model, up_comb.tolist(), samples_merge_map, one_channel=True
             )
-            # print("up_comb post merge:: ", up_comb)
 
         # turn into list of channels (keep all samples, select correct bins per channel)
         # indices: channel, sample, bin
@@ -448,7 +444,6 @@ def yield_stdev(
                 for chan_yields in up_yields_per_channel
             ]
         )
-        # print("up_yields_channel_sum:: ", up_yields_channel_sum)
 
         # reshape to drop bin axis, transpose to turn channel axis into new bin axis
         # (channel, sample, bin) -> (sample, bin) where "bin" becomes channel sums
@@ -459,7 +454,7 @@ def yield_stdev(
         # concatenate per-channel sums to up_comb (along bin axis)
         up_yields = np.concatenate((up_comb, up_yields_channel_sum), axis=1)
         # indices: variation, sample, bin
-        up_variations.append(up_yields.tolist())
+        up_variations.append(up_yields)
 
         # model distribution per sample with this parameter varied down
         down_comb = pyhf.tensorlib.to_numpy(
@@ -467,12 +462,10 @@ def yield_stdev(
         )
         # add total prediction (sum over samples)
         down_comb = np.vstack((down_comb, np.sum(down_comb, axis=0)))
-        # print("down_comb:: ", up_comb)
         if samples_merge_map is not None:
             down_comb = _merge_sample_yields(
                 model, down_comb.tolist(), samples_merge_map, one_channel=True
             )
-            # print("down_comb post merge:: ", down_comb)
 
         # turn into list of channels
         down_yields_per_channel = [

@@ -264,20 +264,6 @@ def test_yield_stdev(
         pyhf.Workspace(example_spec_with_multiple_background).model(),
         samples_merge_map={"Total Background": ["Background", "Background 2"]},
     )
-    """
-    fit_results = FitResults(
-        np.asarray([1.1, 1.01, 1.2]),
-        np.asarray([0.1, 0.03, 0.07]),
-        ["Signal strength", "staterror_Signal-Region[0]", "Background 2 norm"],
-        np.asarray([[1.0, 0.2, 0.1], [0.2, 1.0, 0.3], [0.1, 0.3, 1.0]]),
-        0.0,
-    )
-    model_pred = model_utils.prediction(
-        model,
-        fit_results=fit_results,
-        samples_merge_map={"Total Background": ["Background", "Background 2"]},
-    )
-    """
     parameters = np.asarray([1.1, 1.01, 1.2])
     uncertainty = np.asarray([0.1, 0.03, 0.07])
     corr_mat = np.asarray([[1.0, 0.2, 0.1], [0.2, 1.0, 0.3], [0.1, 0.3, 1.0]])
