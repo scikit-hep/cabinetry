@@ -2,6 +2,7 @@
 
 import os
 
+import click
 import matplotlib.pyplot as plt
 import numpy as np
 import uproot
@@ -151,7 +152,17 @@ def plot_distributions(data, weights, labels, pseudodata, bins):
     plt.close()
 
 
+@click.command()
+@click.option(
+    "--output_directory",
+    type=str,
+    default="inputs/",
+    help="Outpt directory for n-tuples to use in hello_world example. Useful for devs.",
+)
 def run(output_directory, *, visualize=False):
+    # Create the output directory
+    if not os.path.exists(output_directory):
+        os.mkdir(output_directory)
     # configuration
     num_events = 5000
     yield_s = 125
@@ -202,7 +213,4 @@ def run(output_directory, *, visualize=False):
 
 
 if __name__ == "__main__":
-    output_directory = "inputs/"
-    if not os.path.exists(output_directory):
-        os.mkdir(output_directory)
-    run(output_directory)
+    run()
