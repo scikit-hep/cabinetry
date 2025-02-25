@@ -47,18 +47,6 @@ class LightConfig:
         if samples_merge_map is not None:
             self._update_samples(samples_merge_map)
 
-    # def __getattr__(self, name):
-    #     """
-    #     Dynamically forward attribute access to the original config if not found.
-    #     """
-    #     try:
-    #         print("name from config: ", name)
-    #         return getattr(self._original_config, name)
-    #     except AttributeError as e:
-    #         raise AttributeError(
-    #             f"'LightConfig' object has no attribute '{name}'"
-    #         ) from e
-
     @property
     def samples(self) -> List[str]:
         """
@@ -105,18 +93,6 @@ class LightModel:
     ):
         self.config = LightConfig(model, samples_merge_map)
         self.spec = model.spec
-
-    # def __getattr__(self, name):
-    #     """
-    #     Dynamically forward attribute access to the original model if not found.
-    #     """
-    #     try:
-    #         print("name from model: ", name)
-    #         return getattr(self._pyhf_model, name)
-    #     except AttributeError as e:
-    #         raise AttributeError(
-    #             f"'LightModel' object has no attribute '{name}'"
-    #         ) from e
 
 
 def _merge_sample_yields(
