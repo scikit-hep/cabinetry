@@ -32,7 +32,6 @@ def test_LightModel(example_spec_with_multiple_background):
     assert model_pred.total_stdev_model_channels == [
         [10.5, 2.441311123146742, 3.8078865529319543, 15.601602481796547]
     ]
-    assert model_pred.model.pyhf_model == model
     assert model_pred.model.config.channels == model.config.channels
     assert model_pred.model.config.channel_nbins == model.config.channel_nbins
     assert model_pred.model.config.channel_slices == model.config.channel_slices
@@ -54,7 +53,6 @@ def test_LightModel(example_spec_with_multiple_background):
     assert model_pred.total_stdev_model_channels == [
         [12.066896867049131, 3.8078865529319543, 15.601602481796547]
     ]
-    assert model_pred.model.pyhf_model == model
     assert model_pred.model.config.channels == model.config.channels
     assert model_pred.model.config.channel_nbins == model.config.channel_nbins
     assert model_pred.model.config.channel_slices == model.config.channel_slices
@@ -234,20 +232,18 @@ def test_prefit_uncertainties(
 
 def test__hashable_model_key(example_spec):
     # key matches for two models built from the same spec
-    model_1 = model_utils.LightModel(pyhf.Workspace(example_spec).model())
-    model_2 = model_utils.LightModel(pyhf.Workspace(example_spec).model())
+    model_1 = pyhf.Workspace(example_spec).model()
+    model_2 = pyhf.Workspace(example_spec).model()
     assert model_utils._hashable_model_key(model_1) == model_utils._hashable_model_key(
         model_2
     )
 
     # key does not match if model has different interpcode
-    model_new_interpcode = model_utils.LightModel(
-        pyhf.Workspace(example_spec).model(
-            modifier_settings={
-                "normsys": {"interpcode": "code1"},
-                "histosys": {"interpcode": "code0"},
-            }
-        )
+    model_new_interpcode = pyhf.Workspace(example_spec).model(
+        modifier_settings={
+            "normsys": {"interpcode": "code1"},
+            "histosys": {"interpcode": "code0"},
+        }
     )
 
     assert model_utils._hashable_model_key(model_1) != model_utils._hashable_model_key(
@@ -258,7 +254,7 @@ def test__hashable_model_key(example_spec):
 def test_yield_stdev(
     example_spec, example_spec_multibin, example_spec_with_multiple_background
 ):
-    model = model_utils.LightModel(pyhf.Workspace(example_spec).model())
+    model = pyhf.Workspace(example_spec).model()
     parameters = np.asarray([0.95, 1.05])
     uncertainty = np.asarray([0.1, 0.1])
     corr_mat = np.asarray([[1.0, 0.2], [0.2, 1.0]])
@@ -280,7 +276,7 @@ def test_yield_stdev(
     assert np.allclose(total_stdev_chan, [[2.56754823, 2.56754823]])
 
     # multiple channels, bins, staterrors
-    model = model_utils.LightModel(pyhf.Workspace(example_spec_multibin).model())
+    model = pyhf.Workspace(example_spec_multibin).model()
     parameters = np.asarray([1.3, 0.9, 1.05, 0.95])
     uncertainty = np.asarray([0.3, 0.1, 0.05, 0.1])
     corr_mat = np.asarray(
@@ -324,11 +320,11 @@ def test_yield_stdev(
 
     # Multiple backgrounds with sample merging
     # post-fit
-    model = model_utils.LightModel(
-        pyhf.Workspace(example_spec_with_multiple_background).model(),
+    model = pyhf.Workspace(example_spec_with_multiple_background).model()
+    light_model = model_utils.LightModel(
+        model,
         samples_merge_map={"Total Background": ["Background", "Background 2"]},
     )
-
     parameters = np.asarray([1.1, 1.01, 1.2])
     uncertainty = np.asarray([0.1, 0.03, 0.07])
     corr_mat = np.asarray([[1.0, 0.2, 0.1], [0.2, 1.0, 0.3], [0.1, 0.3, 1.0]])
@@ -338,7 +334,7 @@ def test_yield_stdev(
         parameters,
         uncertainty,
         corr_mat,
-        samples_merge_map={"Total Background": ["Background", "Background 2"]},
+        light_model=light_model,
     )
     assert np.allclose(
         total_stdev_bin,
@@ -357,7 +353,7 @@ def test_yield_stdev(
         parameters,
         uncertainty,
         diag_corr_mat,
-        samples_merge_map={"Total Background": ["Background", "Background 2"]},
+        light_model=light_model,
     )
     assert np.allclose(
         total_stdev_bin,
@@ -415,7 +411,8 @@ def test_prediction(
 
     # pre-fit prediction, multi-channel model
     model_pred = model_utils.prediction(model)
-    assert model_pred.model.pyhf_model == model
+    assert model_pred.model.config.samples == model.config.samples
+    assert model_pred.model.spec == model.spec
     # yields from pyhf expected_data call, per-bin / per-channel uncertainty from mock
     assert model_pred.model_yields == [[[25.0, 5.0]], [[8.0]]]
     assert model_pred.total_stdev_model_bins == [
@@ -433,13 +430,13 @@ def test_prediction(
 
     # call to stdev calculation
     assert mock_stdev.call_count == 1
-    assert mock_stdev.call_args_list[0][0][0].pyhf_model == model
+    assert mock_stdev.call_args_list[0][0][0].spec == model.spec
     assert np.allclose(mock_stdev.call_args_list[0][0][1], [1.0, 1.0, 1.0, 1.0])
     assert np.allclose(mock_stdev.call_args_list[0][0][2], [0.0, 0.2, 0.4, 0.125])
     assert np.allclose(
         mock_stdev.call_args_list[0][0][3], np.diagflat([1.0, 1.0, 1.0, 1.0])
     )
-    assert mock_stdev.call_args_list[0][1] == {"samples_merge_map": None}
+    assert mock_stdev.call_args_list[0][1] == {"light_model": None}
 
     # post-fit prediction, single-channel model
     model = pyhf.Workspace(example_spec).model()
@@ -451,7 +448,8 @@ def test_prediction(
         0.0,
     )
     model_pred = model_utils.prediction(model, fit_results=fit_results)
-    assert model_pred.model.pyhf_model == model
+    assert model_pred.model.config.samples == model.config.samples
+    assert model_pred.model.spec == model.spec
     assert np.allclose(model_pred.model_yields, [[[57.54980000]]])  # new par value
     assert model_pred.total_stdev_model_bins == [[[0.3], [0.3]]]  # from mock
     assert model_pred.total_stdev_model_channels == [[0.3, 0.3]]  # from mock
@@ -465,13 +463,13 @@ def test_prediction(
 
     # call to stdev calculation with fit_results propagated
     assert mock_stdev.call_count == 2
-    assert mock_stdev.call_args_list[1][0][0].pyhf_model == model
+    assert mock_stdev.call_args_list[1][0][0].spec == model.spec
     assert np.allclose(mock_stdev.call_args_list[1][0][1], [1.1, 1.01])
     assert np.allclose(mock_stdev.call_args_list[1][0][2], [0.1, 0.03])
     assert np.allclose(
         mock_stdev.call_args_list[1][0][3], np.asarray([[1.0, 0.2], [0.2, 1.0]])
     )
-    assert mock_stdev.call_args_list[1][1] == {"samples_merge_map": None}
+    assert mock_stdev.call_args_list[1][1] == {"light_model": None}
 
     caplog.clear()
 
@@ -496,7 +494,8 @@ def test_prediction(
     model_pred = model_utils.prediction(
         model, samples_merge_map={"Total Background": ["Background", "Background 2"]}
     )
-    assert model_pred.model.pyhf_model == model
+    assert len(model_pred.model.config.samples) == len(model.config.samples) - 1
+    assert model_pred.model.spec == model.spec
     # yields from pyhf expected_data call, per-bin / per-channel uncertainty from mock
     assert model_pred.model_yields == [[[170.0], [50.0]]]
     assert model_pred.total_stdev_model_bins == [[[12.5], [4.4], [16.7]]]
@@ -512,9 +511,7 @@ def test_prediction(
 
     # call to stdev calculation
     assert mock_stdev.call_count == 4
-    assert mock_stdev.call_args_list[3][1] == {
-        "samples_merge_map": {"Total Background": ["Background", "Background 2"]}
-    }
+    assert mock_stdev.call_args_list[3][1] == {"light_model": model_pred.model}
 
     # post-fit
     fit_results = FitResults(
@@ -529,7 +526,8 @@ def test_prediction(
         fit_results=fit_results,
         samples_merge_map={"Total Background": ["Background", "Background 2"]},
     )
-    assert model_pred.model.pyhf_model == model
+    assert len(model_pred.model.config.samples) == len(model.config.samples) - 1
+    assert model_pred.model.spec == model.spec
     assert np.allclose(model_pred.model_yields, [[[175.74], [55.55]]])  # new par value
     assert model_pred.total_stdev_model_bins == [[[12.5], [4.4], [16.7]]]  # from mock
     assert model_pred.total_stdev_model_channels == [[12.5, 4.4, 16.7]]  # from mock
@@ -544,9 +542,7 @@ def test_prediction(
 
     # call to stdev calculation
     assert mock_stdev.call_count == 5
-    assert mock_stdev.call_args_list[4][1] == {
-        "samples_merge_map": {"Total Background": ["Background", "Background 2"]}
-    }
+    assert mock_stdev.call_args_list[4][1] == {"light_model": model_pred.model}
 
     caplog.clear()
 
