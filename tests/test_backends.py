@@ -55,7 +55,7 @@ def test_backend_integration(backend, reset_backend):
     corr_mat = np.zeros(shape=(len(param_values), len(param_values)))
     np.fill_diagonal(corr_mat, 1.0)
     cabinetry.model_utils.yield_stdev(
-        cabinetry.model_utils.LightModel(model),
+        model,
         param_values,
         param_uncertainty,
         corr_mat,
