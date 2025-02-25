@@ -995,8 +995,9 @@ def limit(
         except ValueError:
             # invalid starting bracket is most common issue
             log.error(
-                f"CLs values at {bracket[0]:.4f} and {bracket[1]:.4f} do not bracket "
-                f"CLs={cls_target:.4f}, try a different starting bracket"
+                f"CLs values for {model.config.poi_name}={bracket[0]:.4f} and "
+                f"{bracket[1]:.4f} do not bracket CLs={cls_target:.4f}, try a "
+                "different starting bracket"
             )
             # set POI in model back to original value
             model.config.set_poi(original_model_poi_name)
