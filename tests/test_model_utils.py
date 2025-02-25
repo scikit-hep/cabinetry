@@ -345,6 +345,26 @@ def test_prediction(
 
     caplog.clear()
 
+    # post-fit prediction, single-channel model, no uncertainty
+    fit_results = FitResults(
+        np.asarray([1.1, 1.01]),
+        np.asarray([0.1, 0.03]),
+        ["Signal strength", "staterror_Signal-Region[0]"],
+        np.asarray([[1.0, 0.2], [0.2, 1.0]]),
+        0.0,
+    )
+    model_pred = model_utils.prediction(model, fit_results=fit_results, skip_unc=True)
+    assert model_pred.model == model
+    assert np.allclose(model_pred.model_yields, [[[57.54980000]]])  # new par value
+    assert model_pred.total_stdev_model_bins == [[[0.0], [0.0]]]  # new par value
+    assert model_pred.total_stdev_model_channels == [[0.0, 0.0]]  # new par value
+    assert model_pred.label == "post-fit"
+
+    assert mock_asimov.call_count == 1  # no new call
+    assert mock_unc.call_count == 1  # no new call
+    assert mock_stdev.call_count == 2  # no new call
+    caplog.clear()
+
     # custom prediction label, mismatch in parameter names
     fit_results = FitResults(
         np.asarray([1.1, 1.01]),
