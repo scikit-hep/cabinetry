@@ -34,23 +34,30 @@ class LightConfig:
         model: pyhf.pdf.Model,
         samples_merge_map: Optional[Dict[str, List[str]]] = None,
     ):
-        self._original_config = model.config
+        self.samples = model.config.samples
+        self.channels = model.config.channels
+        self.channel_slices = model.config.channel_slices
+        self.channel_nbins = model.config.channel_nbins
+        self.npars = model.config.npars
+        # self._original_config = model.config
         # this is going to break if more config kwargs added in pyhf _ModelConfig
-        self.modifier_settings = self._original_config.modifier_settings
+        self.modifier_settings = model.config.modifier_settings
+        self.samples_merge_map = samples_merge_map
         self.merged_samples_indices = None
         if samples_merge_map is not None:
             self._update_samples(samples_merge_map)
 
-    def __getattr__(self, name):
-        """
-        Dynamically forward attribute access to the original config if not found.
-        """
-        try:
-            return getattr(self._original_config, name)
-        except AttributeError as e:
-            raise AttributeError(
-                f"'LightConfig' object has no attribute '{name}'"
-            ) from e
+    # def __getattr__(self, name):
+    #     """
+    #     Dynamically forward attribute access to the original config if not found.
+    #     """
+    #     try:
+    #         print("name from config: ", name)
+    #         return getattr(self._original_config, name)
+    #     except AttributeError as e:
+    #         raise AttributeError(
+    #             f"'LightConfig' object has no attribute '{name}'"
+    #         ) from e
 
     @property
     def samples(self) -> List[str]:
@@ -96,30 +103,25 @@ class LightModel:
         model: pyhf.pdf.Model,
         samples_merge_map: Optional[Dict[str, List[str]]] = None,
     ):
-        # super().__init__(model.spec)
         self.config = LightConfig(model, samples_merge_map)
-        self._pyhf_model = model
+        self.spec = model.spec
 
-    def __getattr__(self, name):
-        """
-        Dynamically forward attribute access to the original config if not found.
-        """
-        try:
-            return getattr(self._pyhf_model, name)
-        except AttributeError as e:
-            raise AttributeError(
-                f"'LightModel' object has no attribute '{name}'"
-            ) from e
-
-    @property
-    def pyhf_model(self):
-        return self._pyhf_model
+    # def __getattr__(self, name):
+    #     """
+    #     Dynamically forward attribute access to the original model if not found.
+    #     """
+    #     try:
+    #         print("name from model: ", name)
+    #         return getattr(self._pyhf_model, name)
+    #     except AttributeError as e:
+    #         raise AttributeError(
+    #             f"'LightModel' object has no attribute '{name}'"
+    #         ) from e
 
 
 def _merge_sample_yields(
     model: LightModel,
     old_yields: Union[List[List[List[float]]], List[List[float]]],
-    samples_merge_map: Dict[str, List[str]],
     one_channel: Optional[bool] = False,
 ):
 
@@ -137,7 +139,10 @@ def _merge_sample_yields(
             old_yield, model.config.merged_samples_indices, axis=0
         )
         model_yields_one_channel = np.insert(
-            remaining_samples, np.arange(len(samples_merge_map)), summed_sample, axis=0
+            remaining_samples,
+            np.arange(len(model.config.samples_merge_map)),
+            summed_sample,
+            axis=0,
         )
         return model_yields_one_channel
 
@@ -324,7 +329,7 @@ def prefit_uncertainties(model: pyhf.pdf.Model) -> np.ndarray:
 
 
 def _hashable_model_key(
-    model: LightModel,  # pyhf.pdf.Model,
+    model: pyhf.pdf.Model,
 ) -> Tuple[str, Tuple[Tuple[str, str], ...]]:
     """Compute a hashable representation of the values that uniquely identify a model.
 
@@ -355,11 +360,11 @@ def _hashable_model_key(
 
 
 def yield_stdev(
-    model: LightModel,
+    model: pyhf.pdf.Model,
     parameters: np.ndarray,
     uncertainty: np.ndarray,
     corr_mat: np.ndarray,
-    samples_merge_map: Optional[Dict[str, List[str]]] = None,
+    light_model: Optional[LightModel] = None,
 ) -> Tuple[List[List[List[float]]], List[List[float]]]:
     """Calculates symmetrized model yield standard deviation per channel / sample / bin.
 
@@ -387,13 +392,18 @@ def yield_stdev(
               over all samples)
     """
     # check whether results are already stored in cache
+    samples_string = (
+        ",".join(light_model.config.samples)
+        if light_model is not None
+        else ",".join(model.config.samples)
+    )
     cached_results = _YIELD_STDEV_CACHE.get(
         (
             _hashable_model_key(model),
             tuple(parameters),
             tuple(uncertainty),
             corr_mat.data.tobytes(),
-            ",".join(model.config.samples),
+            samples_string,
         ),
         None,
     )
@@ -428,9 +438,9 @@ def yield_stdev(
         # attach another entry with the total model prediction (sum over all samples)
         # indices: sample, bin
         up_comb = np.vstack((up_comb, np.sum(up_comb, axis=0)))
-        if samples_merge_map is not None:
+        if light_model is not None:
             up_comb = _merge_sample_yields(
-                model, up_comb.tolist(), samples_merge_map, one_channel=True
+                light_model, up_comb.tolist(), one_channel=True
             )
 
         # turn into list of channels (keep all samples, select correct bins per channel)
@@ -463,9 +473,9 @@ def yield_stdev(
         )
         # add total prediction (sum over samples)
         down_comb = np.vstack((down_comb, np.sum(down_comb, axis=0)))
-        if samples_merge_map is not None:
+        if light_model is not None:
             down_comb = _merge_sample_yields(
-                model, down_comb.tolist(), samples_merge_map, one_channel=True
+                light_model, down_comb.tolist(), one_channel=True
             )
 
         # turn into list of channels
@@ -554,7 +564,7 @@ def yield_stdev(
                 tuple(parameters),
                 tuple(uncertainty),
                 corr_mat.data.tobytes(),
-                ",".join(model.config.samples),
+                samples_string,
             ): (total_stdev_per_bin, total_stdev_per_channel)
         }
     )
@@ -619,19 +629,17 @@ def prediction(
     ]
 
     if samples_merge_map is not None:
-        model_yields = _merge_sample_yields(
-            light_model, model_yields, samples_merge_map
-        ).tolist()
+        model_yields = _merge_sample_yields(light_model, model_yields).tolist()
 
     # calculate the total standard deviation of the model prediction
     # indices: (channel, sample, bin) for per-bin uncertainties,
     # (channel, sample) for per-channel
     total_stdev_model_bins, total_stdev_model_channels = yield_stdev(
-        light_model,
+        model,
         param_values,
         param_uncertainty,
         corr_mat,
-        samples_merge_map=samples_merge_map,
+        light_model=light_model if samples_merge_map is not None else None,
     )
 
     return ModelPrediction(
