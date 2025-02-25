@@ -55,3 +55,32 @@ def _name_and_save(
     # save it
     histo_path = histogram_folder / histogram_name
     histogram.save(histo_path)
+
+
+def _find_key_in_nested_dict(d: Dict[str, Any], target_key: str) -> Optional[Any]:
+    """
+    Searches for a key in a nested dictionary at any level and
+    returns its value if found.
+
+    Args:
+        d (Dict[str, Any]): The nested dictionary to search.
+        target_key (str): The key to search for.
+
+    Returns:
+        Optional[Any]: The value associated with the target_key
+            if found, otherwise None.
+    """
+    stack = [d]  # Initialize stack with the root dictionary
+
+    while stack:
+        current = stack.pop()  # Pop the last dictionary from the stack
+
+        if target_key in current:
+            return current[target_key]  # Key found, return the value
+
+        # Add nested dictionaries to the stack
+        for value in current.values():
+            if isinstance(value, dict):
+                stack.append(value)
+
+    return None  # Key not found

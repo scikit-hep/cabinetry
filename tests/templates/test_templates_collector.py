@@ -67,7 +67,7 @@ def test__histo_path(caplog):
     # warning: no variation path in template
     assert (
         collector._histo_path(
-            "f.root:h1", "", {}, {"VariationPath": "sample.root"}, {}, None
+            "f.root:h1", "", {}, {}, {"VariationPath": "sample.root"}, None
         )
         == "f.root:h1"
     )
@@ -82,6 +82,14 @@ def test__histo_path(caplog):
     assert "no colon found in path f.root, may not be able to find histogram" in [
         rec.message for rec in caplog.records
     ]
+    caplog.clear()
+
+    # no variation path anywhere, so no warning
+    assert collector._histo_path("f.root:h1", "", {}, {}, {}, None) == "f.root:h1"
+    assert (
+        "variation override specified, but {VariationPath} not found in default path"
+        not in [rec.message for rec in caplog.records]
+    )
     caplog.clear()
 
     # error: no override for {RegionPath}

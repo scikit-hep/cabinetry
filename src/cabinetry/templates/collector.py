@@ -96,7 +96,10 @@ def _histo_path(
 
     # handle variation-specific setting (variation_path is always specified via function
     # argument and possibly also via override)
-    if "{VariationPath}" not in path:
+    variation_path_override = (
+        utils._find_key_in_nested_dict(systematic, "VariationPath") is not None
+    )
+    if "{VariationPath}" not in path and variation_path_override:
         log.warning(
             "variation override specified, but {VariationPath} not found in default "
             "path"
