@@ -818,8 +818,8 @@ def test_limit(example_spec_with_background, caplog):
             poi_name="Signal strength",
         )
     assert (
-        "CLs values at 1.0000 and 2.0000 do not bracket CLs=0.1000, try a different "
-        "starting bracket" in [rec.message for rec in caplog.records]
+        "CLs values for Signal strength=1.0000 and 2.0000 do not bracket CLs=0.1000, "
+        "try a different starting bracket" in [rec.message for rec in caplog.records]
     )
     caplog.clear()
 
