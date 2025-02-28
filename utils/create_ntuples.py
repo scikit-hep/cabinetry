@@ -157,7 +157,7 @@ def plot_distributions(data, weights, labels, pseudodata, bins):
     "--output_directory",
     type=str,
     default="inputs/",
-    help="Outpt directory for n-tuples to use in hello_world example. Useful for devs.",
+    help="Output directory for n-tuples to use in hello_world example. Useful for devs.",
 )
 def run(output_directory, *, visualize=False):
     # Create the output directory
