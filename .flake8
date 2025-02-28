@@ -1,0 +1,13 @@
+[flake8]
+max-complexity = 18
+max-line-length = 88
+exclude = docs/conf.py
+count = True
+statistics = True
+import-order-style = google
+application-import-names = cabinetry, utils
+# ignore whitespace before ':'
+extend-ignore = E203
+# ignore print statements in example
+per-file-ignores =
+    example.py: T

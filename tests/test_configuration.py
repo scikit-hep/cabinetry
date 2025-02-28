@@ -23,12 +23,13 @@ def test_validate():
     }
     assert configuration.validate(config_valid)
 
-    # not exactly one data sample
+    # not exactly one data sample, custom additional top-level properties
     config_multiple_data_samples = {
         "General": {"Measurement": "", "HistogramFolder": "", "InputPath": ""},
         "Regions": [{"Name": "", "Filter": "", "Variable": "", "Binning": [0, 1]}],
         "Samples": [{"Name": "", "Tree": ""}],
         "NormFactors": [{"Name": ""}],
+        "ABC": [],
     }
     with pytest.raises(
         NotImplementedError, match="can only handle cases with exactly one data sample"
