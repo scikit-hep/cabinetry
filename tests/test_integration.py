@@ -1,5 +1,6 @@
 import logging
 
+from click.testing import CliRunner
 import numpy as np
 import pytest
 
@@ -22,7 +23,8 @@ def test_integration(tmp_path, ntuple_creator, caplog):
     """The purpose of this integration test is to check whether the
     steps run without error and whether the fit result is as expected.
     """
-    ntuple_creator(str(tmp_path))
+    runner = CliRunner()
+    runner.invoke(ntuple_creator, ["--output_directory", str(tmp_path)])
 
     cabinetry_config = cabinetry.configuration.load("config_example.yml")
 
