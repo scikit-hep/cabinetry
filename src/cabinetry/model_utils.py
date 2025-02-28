@@ -411,7 +411,6 @@ def yield_stdev(
             ): (total_stdev_per_bin, total_stdev_per_channel)
         }
     )
-
     return total_stdev_per_bin, total_stdev_per_channel
 
 
@@ -420,6 +419,7 @@ def prediction(
     *,
     fit_results: Optional[FitResults] = None,
     label: Optional[str] = None,
+    skip_unc: bool = False,
 ) -> ModelPrediction:
     """Returns model prediction, including model yields and uncertainties.
 
@@ -469,12 +469,19 @@ def prediction(
         for ch in model.config.channels
     ]
 
-    # calculate the total standard deviation of the model prediction
-    # indices: (channel, sample, bin) for per-bin uncertainties,
-    # (channel, sample) for per-channel
-    total_stdev_model_bins, total_stdev_model_channels = yield_stdev(
-        model, param_values, param_uncertainty, corr_mat
-    )
+    if not skip_unc:
+        # calculate the total standard deviation of the model prediction
+        # indices: (channel, sample, bin) for per-bin uncertainties,
+        # (channel, sample) for per-channel
+        total_stdev_model_bins, total_stdev_model_channels = yield_stdev(
+            model, param_values, param_uncertainty, corr_mat
+        )
+    else:
+        n_bins = sum(model.config.channel_nbins.values())
+        n_channels = len(model.config.channels)
+        n_samples = len(model.config.samples)
+        total_stdev_model_channels = np.zeros((n_channels, n_bins + 1)).tolist()
+        total_stdev_model_bins = np.zeros((n_bins, n_samples + 1, n_channels)).tolist()
 
     return ModelPrediction(
         model, model_yields, total_stdev_model_bins, total_stdev_model_channels, label
