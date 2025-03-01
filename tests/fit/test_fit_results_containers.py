@@ -1,5 +1,6 @@
 import logging
 
+import iminuit
 import numpy as np
 
 from cabinetry import fit
@@ -11,7 +12,10 @@ def test_FitResults():
     labels = ["par_a"]
     corr_mat = np.asarray([[1.0]])
     best_twice_nll = 2.0
-    fit_results = fit.FitResults(bestfit, uncertainty, labels, corr_mat, best_twice_nll)
+    minuit_obj = iminuit.Minuit(lambda x: x, x=1)
+    fit_results = fit.FitResults(
+        bestfit, uncertainty, labels, corr_mat, best_twice_nll, minuit_obj=minuit_obj
+    )
     assert np.allclose(fit_results.bestfit, bestfit)
     assert np.allclose(fit_results.uncertainty, uncertainty)
     assert fit_results.labels == labels
@@ -19,6 +23,7 @@ def test_FitResults():
     assert fit_results.best_twice_nll == best_twice_nll
     assert fit_results.goodness_of_fit == -1
     assert fit_results.minos_uncertainty == {}
+    assert fit_results.minuit_obj == minuit_obj
 
 
 def test_RankingResults():
