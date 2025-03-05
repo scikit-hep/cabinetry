@@ -541,6 +541,7 @@ def ranking(
     maxiter: Optional[int] = None,
     tolerance: Optional[float] = None,
     custom_fit: bool = False,
+    use_suggested_bounds: bool = False,
 ) -> RankingResults:
     """Calculates the impact of nuisance parameters on the parameter of interest (POI).
 
@@ -572,6 +573,11 @@ def ranking(
             None (use ``iminuit`` default of 0.1)
         custom_fit (bool, optional): whether to use the ``pyhf.infer`` API or
             ``iminuit``, defaults to False (using ``pyhf.infer``)
+        use_suggested_bounds (bool, optional): if parameter bounds are not specified,
+            this option specifies that the ``pyhf`` suggested parameter bounds should
+            be used to limit values of the parameters during ranking. Useful if one
+            of the ranking fits is failing. If some parameter bounds are specified,
+            the suggested bound will not be used.
 
     Raises:
         ValueError: if no POI is found
@@ -608,9 +614,26 @@ def ranking(
     init_pars = init_pars or model.config.suggested_init()
     fix_pars = fix_pars or model.config.suggested_fixed()
 
-    par_bounds = par_bounds or [
-        tuple(bound) for bound in model.config.suggested_bounds()
-    ]
+    if par_bounds is None and use_suggested_bounds:
+        log.warning(
+            "All parameter bounds are not specified, using suggested bounds from pyhf"
+        )
+        par_bounds = model.config.suggested_bounds()
+    elif par_bounds is not None and use_suggested_bounds:
+        log.warning(
+            "Some parameter bounds are not specified, using suggested bounds from pyhf"
+        )
+        par_bounds = [
+            user_bound if user_bound is not None else suggested_bound
+            for user_bound, suggested_bound in zip(
+                par_bounds, model.config.suggested_bounds()
+            )
+        ]
+    elif par_bounds is None and not use_suggested_bounds:
+        log.warning(
+            "Parameter bounds are not set, some fits in ranking might"
+            + " fail to converge if NP value goes out-of-bounds"
+        )
 
     all_impacts = []
     for i_par, label in enumerate(labels):
@@ -637,10 +660,11 @@ def ranking(
                 log.debug(f"impact of {label} is zero, skipping fit")
                 parameter_impacts.append(0.0)
             else:
-                if not par_bounds[i_par][0] <= np_val <= par_bounds[i_par][1]:
-                    np_val = min(
-                        max(np_val, par_bounds[i_par][0]), par_bounds[i_par][1]
-                    )
+                if par_bounds is not None:
+                    if not par_bounds[i_par][0] <= np_val <= par_bounds[i_par][1]:
+                        np_val = min(
+                            max(np_val, par_bounds[i_par][0]), par_bounds[i_par][1]
+                        )
                 init_pars_ranking = init_pars.copy()
                 init_pars_ranking[i_par] = np_val  # value of current nuisance parameter
                 fit_results_ranking = _fit_model(
