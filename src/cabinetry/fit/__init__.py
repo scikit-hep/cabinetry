@@ -541,6 +541,8 @@ def ranking(
     maxiter: Optional[int] = None,
     tolerance: Optional[float] = None,
     custom_fit: bool = False,
+    minos: Optional[Union[List[str], Tuple[str, ...]]] = None,
+    minos_cl: Optional[float] = None,
     use_suggested_bounds: bool = False,
 ) -> RankingResults:
     """Calculates the impact of nuisance parameters on the parameter of interest (POI).
@@ -573,6 +575,12 @@ def ranking(
             None (use ``iminuit`` default of 0.1)
         custom_fit (bool, optional): whether to use the ``pyhf.infer`` API or
             ``iminuit``, defaults to False (using ``pyhf.infer``)
+        minos (Optional[Union[List[str], Tuple[str, ...]]], optional): runs the MINOS
+            algorithm for all parameters specified, defaults to None (does not run
+            MINOS). Used only if fit_results is not provided.
+        minos_cl (Optional[float]), optional): confidence level for the MINOS confidence
+            interval, defaults to None (use ``iminuit`` default of 68.27%). Used only
+            if fit_results is not provided.
         use_suggested_bounds (bool, optional): if parameter bounds are not specified,
             this option specifies that the ``pyhf`` suggested parameter bounds should
             be used to limit values of the parameters during ranking. Useful if one
@@ -596,6 +604,8 @@ def ranking(
             maxiter=maxiter,
             tolerance=tolerance,
             custom_fit=custom_fit,
+            minos=minos,
+            minos_cl=minos_cl,
         )
 
     labels = model.config.par_names
@@ -645,13 +655,21 @@ def ranking(
         fix_pars_ranking = fix_pars.copy()
         fix_pars_ranking[i_par] = True
 
+        # Get post-fit uncertainty from MINOS if available
+        postfit_unc_up = fit_results.uncertainty[i_par]
+        postfit_unc_do = -1 * fit_results.uncertainty[i_par]
+        if fit_results.minos_uncertainty is not None:
+            if label in fit_results.minos_uncertainty.keys():
+                postfit_unc_up = fit_results.minos_uncertainty[label][1]
+                postfit_unc_do = fit_results.minos_uncertainty[label][0]
+
         parameter_impacts = []
         # calculate impacts: pre-fit up, pre-fit down, post-fit up, post-fit down
         for np_val in [
             fit_results.bestfit[i_par] + prefit_unc[i_par],
             fit_results.bestfit[i_par] - prefit_unc[i_par],
-            fit_results.bestfit[i_par] + fit_results.uncertainty[i_par],
-            fit_results.bestfit[i_par] - fit_results.uncertainty[i_par],
+            fit_results.bestfit[i_par] + postfit_unc_up,
+            fit_results.bestfit[i_par] + postfit_unc_do,
         ]:
             # can skip pre-fit calculation for unconstrained parameters (their
             # pre-fit uncertainty is set to 0), and pre- and post-fit calculation
