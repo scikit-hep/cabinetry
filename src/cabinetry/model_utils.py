@@ -502,8 +502,7 @@ def unconstrained_parameter_count(
     """
     n_pars = 0
     # custom fixed parameters overrule suggested fixed parameters
-    if fix_pars is None:
-        fix_pars = model.config.suggested_fixed()
+    fix_pars = fix_pars or model.config.suggested_fixed()
 
     for parname in model.config.par_order:
         if not model.config.param_set(parname).constrained:
