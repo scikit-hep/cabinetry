@@ -448,6 +448,68 @@ def _goodness_of_fit(
     return p_val
 
 
+# def _cov_ipmacts():
+#     pass
+
+# def _np_impacts(model, data, fit_results, prefit_unc, labels, init_pars, fix_pars):
+#     all_impacts = []
+#     i_global_par = 0
+#     for parameter in model.config.par_order:
+#         for i_sub_par in np.arange(model.config.param_set(parameter).n_parameters):
+#             i_par = i_global_par + i_sub_par
+#             label = model.config.par_names[i_par]
+#             if i_par == poi_index:
+#                 i_par += model.config.param_set(parameter).n_parameters
+#                 continue  # do not calculate impact of POI on itself
+#             log.info(f"calculating impact of {label} on {labels[poi_index]}")
+
+#             # hold current parameter constant
+#             fix_pars_ranking = fix_pars.copy()
+#             fix_pars_ranking[i_par] = True
+
+#             parameter_impacts = []
+#             # calculate impacts: pre-fit up, pre-fit down, post-fit up, post-fit down
+#             for np_val in [
+#                 fit_results.bestfit[i_par] + prefit_unc[i_par],
+#                 fit_results.bestfit[i_par] - prefit_unc[i_par],
+#                 fit_results.bestfit[i_par] + fit_results.uncertainty[i_par],
+#                 fit_results.bestfit[i_par] - fit_results.uncertainty[i_par],
+#             ]:
+#                 # can skip pre-fit calculation for unconstrained parameters (their
+#                 # pre-fit uncertainty is set to 0), and pre- and post-fit calculation
+#                 # for fixed parameters (both uncertainties set to 0 as well)
+#                 if np_val == fit_results.bestfit[i_par]:
+#                     log.debug(f"impact of {label} is zero, skipping fit")
+#                     parameter_impacts.append(0.0)
+#                 else:
+#                     init_pars_ranking = init_pars.copy()
+#                     init_pars_ranking[i_par] = (
+#                         np_val  # value of current nuisance parameter
+#                     )
+#                     fit_results_ranking = _fit_model(
+#                         model,
+#                         data,
+#                         init_pars=init_pars_ranking,
+#                         fix_pars=fix_pars_ranking,
+#                         par_bounds=par_bounds,
+#                         strategy=strategy,
+#                         maxiter=maxiter,
+#                         tolerance=tolerance,
+#                         custom_fit=custom_fit,
+#                     )
+#                     poi_val = fit_results_ranking.bestfit[poi_index]
+#                     parameter_impact = poi_val - nominal_poi
+#                     log.debug(
+#                         f"POI is {poi_val:.6f}, difference to nominal is "
+#                         f"{parameter_impact:.6f}"
+#                     )
+#                     parameter_impacts.append(parameter_impact)
+#             all_impacts.append(parameter_impacts)
+
+# def _aux_impacts():
+#     pass
+
+
 def fit(
     model: pyhf.pdf.Model,
     data: List[float],
@@ -542,6 +604,7 @@ def ranking(
     maxiter: Optional[int] = None,
     tolerance: Optional[float] = None,
     custom_fit: bool = False,
+    impacts_method: str = "covariance",
 ) -> RankingResults:
     """Calculates the impact of nuisance parameters on the parameter of interest (POI).
 
@@ -573,6 +636,12 @@ def ranking(
             None (use ``iminuit`` default of 0.1)
         custom_fit (bool, optional): whether to use the ``pyhf.infer`` API or
             ``iminuit``, defaults to False (using ``pyhf.infer``)
+        impacts_method (str, optional): The method to be used for evaluating impacts.
+            covariance = use post-fit covaraince matrix
+            np_shift = shift each NP according to its uncertainty, fix it,
+            then re-run fit.
+            auxdata_shift = shift the auxiliary data values by their pre-fit
+            uncertatinties, then re-run a fit.
 
     Raises:
         ValueError: if no POI is found
@@ -584,18 +653,18 @@ def ranking(
     # NP_IMPACTS = True
     # GO_IMPACTS = False
 
+    fit_settings = {
+        "init_pars": init_pars or model.config.suggested_init(),
+        "fix_pars": fix_pars or model.config.suggested_fixed(),
+        "par_bounds": par_bounds,
+        "strategy": strategy,
+        "maxiter": maxiter,
+        "tolerance": tolerance,
+        "custom_fit": custom_fit,
+    }
+
     if fit_results is None:
-        fit_results = _fit_model(
-            model,
-            data,
-            init_pars=init_pars,
-            fix_pars=fix_pars,
-            par_bounds=par_bounds,
-            strategy=strategy,
-            maxiter=maxiter,
-            tolerance=tolerance,
-            custom_fit=custom_fit,
-        )
+        fit_results = _fit_model(model, data, **fit_settings)
 
     labels = model.config.par_names
     prefit_unc = model_utils.prefit_uncertainties(model)
@@ -627,8 +696,8 @@ def ranking(
             log.info(f"calculating impact of {label} on {labels[poi_index]}")
 
             # hold current parameter constant
-            fix_pars_ranking = fix_pars.copy()
-            fix_pars_ranking[i_par] = True
+            fit_settings["fix_pars"] = fix_pars.copy()
+            fit_settings["fix_pars"][i_par] = True
 
             parameter_impacts = []
             # calculate impacts: pre-fit up, pre-fit down, post-fit up, post-fit down
@@ -645,21 +714,12 @@ def ranking(
                     log.debug(f"impact of {label} is zero, skipping fit")
                     parameter_impacts.append(0.0)
                 else:
-                    init_pars_ranking = init_pars.copy()
-                    init_pars_ranking[i_par] = (
-                        np_val  # value of current nuisance parameter
-                    )
-                    fit_results_ranking = _fit_model(
-                        model,
-                        data,
-                        init_pars=init_pars_ranking,
-                        fix_pars=fix_pars_ranking,
-                        par_bounds=par_bounds,
-                        strategy=strategy,
-                        maxiter=maxiter,
-                        tolerance=tolerance,
-                        custom_fit=custom_fit,
-                    )
+                    fit_settings["init_pars"] = init_pars.copy()
+                    fit_settings["init_pars"][
+                        i_par
+                    ] = np_val  # value of current nuisance parameter
+
+                    fit_results_ranking = _fit_model(model, data, **fit_settings)
                     poi_val = fit_results_ranking.bestfit[poi_index]
                     parameter_impact = poi_val - nominal_poi
                     log.debug(
