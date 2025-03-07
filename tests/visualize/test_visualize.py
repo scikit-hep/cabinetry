@@ -510,10 +510,11 @@ def test_ranking(mock_draw):
         impact_prefit_down,
         impact_postfit_up,
         impact_postfit_down,
+        impacts_method="np_shift",
     )
     folder_path = "tmp"
 
-    figure_path = pathlib.Path(folder_path) / "ranking.pdf"
+    figure_path = pathlib.Path(folder_path) / "ranking_np_shift.pdf"
     bestfit_expected = np.asarray([0.1, 1.2])
     uncertainty_expected = np.asarray([0.8, 0.2])
     labels_expected = ["modeling", "staterror_a"]
@@ -530,7 +531,11 @@ def test_ranking(mock_draw):
     assert np.allclose(mock_draw.call_args[0][4], impact_prefit_down[::-1])
     assert np.allclose(mock_draw.call_args[0][5], impact_postfit_up[::-1])
     assert np.allclose(mock_draw.call_args[0][6], impact_postfit_down[::-1])
-    assert mock_draw.call_args[1] == {"figure_path": figure_path, "close_figure": True}
+    assert mock_draw.call_args[1] == {
+        "figure_path": figure_path,
+        "close_figure": True,
+        "impacts_method": "np_shift",
+    }
 
     # maximum parameter amount specified, do not close figure, do not save figure
     _ = visualize.ranking(
@@ -548,7 +553,44 @@ def test_ranking(mock_draw):
     assert np.allclose(mock_draw.call_args[0][4], impact_prefit_down[1])
     assert np.allclose(mock_draw.call_args[0][5], impact_postfit_up[1])
     assert np.allclose(mock_draw.call_args[0][6], impact_postfit_down[1])
-    assert mock_draw.call_args[1] == {"figure_path": None, "close_figure": False}
+    assert mock_draw.call_args[1] == {
+        "figure_path": None,
+        "close_figure": False,
+        "impacts_method": "np_shift",
+    }
+
+    # maximum parameter amount specified, do not close figure, do not save figure
+    # covariance impacts
+    ranking_results = fit.RankingResults(
+        bestfit,
+        uncertainty,
+        labels,
+        impact_prefit_up,
+        impact_prefit_down,
+        impact_postfit_up,
+        impact_postfit_down,
+        impacts_method="covariance",
+    )
+    _ = visualize.ranking(
+        ranking_results,
+        figure_folder=folder_path,
+        max_pars=1,
+        close_figure=False,
+        save_figure=False,
+    )
+    assert mock_draw.call_count == 3
+    assert np.allclose(mock_draw.call_args[0][0], bestfit_expected[0])
+    assert np.allclose(mock_draw.call_args[0][1], uncertainty_expected[0])
+    assert mock_draw.call_args[0][2] == labels_expected[0]
+    assert np.allclose(mock_draw.call_args[0][3], impact_prefit_up[1])
+    assert np.allclose(mock_draw.call_args[0][4], impact_prefit_down[1])
+    assert np.allclose(mock_draw.call_args[0][5], impact_postfit_up[1])
+    assert np.allclose(mock_draw.call_args[0][6], impact_postfit_down[1])
+    assert mock_draw.call_args[1] == {
+        "figure_path": None,
+        "close_figure": False,
+        "impacts_method": "covariance",
+    }
 
 
 @mock.patch(
