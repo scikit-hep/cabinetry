@@ -541,6 +541,13 @@ def test_fit(mock_fit, mock_print, mock_gof):
         fit.FitResults(
             np.asarray([0.7, 0.9]), np.asarray([0.1, 0.1]), ["a", "b"], np.empty(0), 0.0
         ),
+        fit.FitResults(
+            np.asarray([0.7, 0.9]),
+            np.asarray([0.1, 0.1]),
+            ["a", "b"],
+            np.asarray([[1.0, 0.1], [0.1, 1.0]]),
+            0.0,
+        ),
     ],
 )
 def test_ranking(mock_fit, example_spec):
@@ -548,8 +555,10 @@ def test_ranking(mock_fit, example_spec):
     bestfit = np.asarray([1.0, 0.9])
     uncertainty = np.asarray([0.1, 0.02])
     labels = ["Signal strength", "staterror"]
-    fit_results = fit.FitResults(bestfit, uncertainty, labels, np.empty(0), 0.0)
+    corr_mat = np.asarray([[1.0, 0.1], [0.1, 1.0]])
+    fit_results = fit.FitResults(bestfit, uncertainty, labels, corr_mat, 0.0)
     model, data = model_utils.model_and_data(example_spec)
+    # NP shifting method
     ranking_results = fit.ranking(
         model, data, fit_results=fit_results, impacts_method="np_shift"
     )
@@ -581,10 +590,30 @@ def test_ranking(mock_fit, example_spec):
     assert np.allclose(ranking_results.postfit_up, [0.2])
     assert np.allclose(ranking_results.postfit_down, [-0.2])
 
+    # Covariance-based method
+    ranking_results = fit.ranking(
+        model, data, fit_results=fit_results, impacts_method="covariance"
+    )
+    # no further calls to mock fit
+    assert mock_fit.call_count == 4
+    # POI removed from fit results
+    assert np.allclose(ranking_results.bestfit, [0.9])
+    assert np.allclose(ranking_results.uncertainty, [0.02])
+    assert ranking_results.labels == ["staterror"]
+
+    # received correct results - new values
+    assert np.allclose(ranking_results.prefit_up, [0.0])
+    assert np.allclose(ranking_results.prefit_down, [0.0])
+    assert np.allclose(
+        ranking_results.postfit_up, [0.003984615385]
+    )  # 0.02*0.1*0.1/0.05
+    assert np.allclose(ranking_results.postfit_down, [-0.003984615385])
+
     # fixed parameter in ranking, custom fit, POI via kwarg
     example_spec["measurements"][0]["config"]["parameters"][0]["fixed"] = True
     example_spec["measurements"][0]["config"]["poi"] = ""
     model, data = model_utils.model_and_data(example_spec)
+    # NP shifting method for impacts
     ranking_results = fit.ranking(
         model,
         data,
@@ -603,6 +632,7 @@ def test_ranking(mock_fit, example_spec):
     assert np.allclose(ranking_results.postfit_down, [-0.2])
 
     # no reference results, init/fixed pars, par bounds, strategy/maxiter/tolerance
+    # NP shifting method
     ranking_results = fit.ranking(
         model,
         data,
@@ -652,6 +682,43 @@ def test_ranking(mock_fit, example_spec):
     assert np.allclose(ranking_results.prefit_down, [0.0])
     assert np.allclose(ranking_results.postfit_up, [0.3])
     assert np.allclose(ranking_results.postfit_down, [-0.3])
+
+    # Covariance-based method
+    # approach requires non-zero pre-fit uncertainty on staterror modifiers
+    example_spec["measurements"][0]["config"]["parameters"][0]["fixed"] = False
+    model, data = model_utils.model_and_data(example_spec)
+    ranking_results = fit.ranking(
+        model,
+        data,
+        poi_name="Signal strength",
+        init_pars=[1.5, 1.0],
+        fix_pars=[False, False],
+        par_bounds=[(0, 5), (0.1, 10)],
+        strategy=2,
+        maxiter=100,
+        tolerance=0.01,
+        custom_fit=True,
+        impacts_method="covariance",
+    )
+    # reference fit
+    assert mock_fit.call_count == 10
+    assert mock_fit.call_args_list[-1] == (
+        (model, data),
+        {
+            "init_pars": [1.5, 1.0],
+            "fix_pars": [False, False],
+            "par_bounds": [(0, 5), (0.1, 10)],
+            "strategy": 2,
+            "maxiter": 100,
+            "tolerance": 0.01,
+            "custom_fit": True,
+        },
+    )
+    # ranking results
+    assert np.allclose(ranking_results.prefit_up, [0.0])
+    assert np.allclose(ranking_results.prefit_down, [0.0])
+    assert np.allclose(ranking_results.postfit_up, [0.01992307692])  # 0.1*0.1*0.1/0.05
+    assert np.allclose(ranking_results.postfit_down, [-0.01992307692])
 
     # no POI specified anywhere
     with pytest.raises(ValueError, match="no POI specified, cannot calculate ranking"):
