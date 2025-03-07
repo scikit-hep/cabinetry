@@ -785,9 +785,9 @@ def ranking(
             "Impacts using auxiliary data shifting are not supported yet."
         )
     else:
-        log.error(
+        raise ValueError(
             f"The option {impacts_method} is not a valid method to compute impacts."
-            + "Valid options are: [np_shift, covariance, auxdata_shift]"
+            + " Valid options are: (np_shift, covariance, auxdata_shift)"
         )
 
     # Impacts of all parameters
