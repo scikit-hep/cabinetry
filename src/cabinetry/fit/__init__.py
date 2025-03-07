@@ -786,7 +786,7 @@ def ranking(
         )
     else:
         log.error(
-            f"The option {impacts_method} is not a valid method to compute impacts"
+            f"The option {impacts_method} is not a valid method to compute impacts."
             + "Valid options are: [np_shift, covariance, auxdata_shift]"
         )
 
