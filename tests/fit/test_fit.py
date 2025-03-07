@@ -683,9 +683,14 @@ def test_ranking(mock_fit, example_spec):
     assert np.allclose(ranking_results.postfit_up, [0.3])
     assert np.allclose(ranking_results.postfit_down, [-0.3])
 
+    # no POI specified anywhere
+    with pytest.raises(ValueError, match="no POI specified, cannot calculate ranking"):
+        fit.ranking(model, data, fit_results=fit_results)
+
     # Covariance-based method
     # approach requires non-zero pre-fit uncertainty on staterror modifiers
     example_spec["measurements"][0]["config"]["parameters"][0]["fixed"] = False
+    example_spec["measurements"][0]["config"]["poi"] = "Signal Strength"
     model, data = model_utils.model_and_data(example_spec)
     ranking_results = fit.ranking(
         model,
@@ -720,9 +725,21 @@ def test_ranking(mock_fit, example_spec):
     assert np.allclose(ranking_results.postfit_up, [0.01992307692])  # 0.1*0.1*0.1/0.05
     assert np.allclose(ranking_results.postfit_down, [-0.01992307692])
 
-    # no POI specified anywhere
-    with pytest.raises(ValueError, match="no POI specified, cannot calculate ranking"):
-        fit.ranking(model, data, fit_results=fit_results)
+    # Aux data shifting method not supported yet
+    with pytest.raises(
+        NotImplementedError,
+        match="Impacts using auxiliary data shifting are not supported yet.",
+    ):
+        fit.ranking(
+            model, data, fit_results=fit_results, impacts_method="auxdata_shift"
+        )
+    #
+    with pytest.raises(
+        NotImplementedError,
+        match="The option wrong_method is not a valid method to compute impacts."
+        + "Valid options are: [np_shift, covariance, auxdata_shift]",
+    ):
+        fit.ranking(model, data, fit_results=fit_results, impacts_method="wrong_method")
 
 
 @mock.patch(
