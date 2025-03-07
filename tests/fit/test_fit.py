@@ -690,7 +690,7 @@ def test_ranking(mock_fit, example_spec):
     # Covariance-based method
     # approach requires non-zero pre-fit uncertainty on staterror modifiers
     example_spec["measurements"][0]["config"]["parameters"][0]["fixed"] = False
-    example_spec["measurements"][0]["config"]["poi"] = "Signal Strength"
+    example_spec["measurements"][0]["config"]["poi"] = "Signal strength"
     model, data = model_utils.model_and_data(example_spec)
     ranking_results = fit.ranking(
         model,
@@ -733,11 +733,11 @@ def test_ranking(mock_fit, example_spec):
         fit.ranking(
             model, data, fit_results=fit_results, impacts_method="auxdata_shift"
         )
-    #
+    # catch non-existent method
     with pytest.raises(
-        NotImplementedError,
+        ValueError,
         match="The option wrong_method is not a valid method to compute impacts."
-        + "Valid options are: [np_shift, covariance, auxdata_shift]",
+        + " Valid options are: \\(np_shift, covariance, auxdata_shift\\)",
     ):
         fit.ranking(model, data, fit_results=fit_results, impacts_method="wrong_method")
 
