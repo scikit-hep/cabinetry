@@ -517,8 +517,8 @@ def _cov_impacts(model, data, poi_index, fit_results, prefit_unc, labels):
                     parameter_impact = parameter_error * corr_with_POI * total_poi_error
                     if par_modifier == "staterror":
                         prefit_parameter_error = prefit_unc[i_par]
-                        if "down" in impact_type:
-                            prefit_parameter_error *= -1
+                        # if "down" in impact_type:
+                        #    prefit_parameter_error *= -1
                         parameter_impact /= prefit_parameter_error
 
                 impacts_by_modifier_type[par_modifier][impact_type].append(
