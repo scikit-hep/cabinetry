@@ -811,7 +811,14 @@ def ranking(
     labels = np.delete(fit_results.labels, poi_index).tolist()
 
     ranking_results = RankingResults(
-        bestfit, uncertainty, labels, prefit_up, prefit_down, postfit_up, postfit_down
+        bestfit,
+        uncertainty,
+        labels,
+        prefit_up,
+        prefit_down,
+        postfit_up,
+        postfit_down,
+        impacts_method,
     )
     return ranking_results
 
