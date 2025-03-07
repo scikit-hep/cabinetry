@@ -128,6 +128,7 @@ def ranking(
     *,
     figure_path: Optional[pathlib.Path] = None,
     close_figure: bool = False,
+    impacts_method: str = "covariance",
 ) -> mpl.figure.Figure:
     """Draws a ranking plot.
 
@@ -146,6 +147,8 @@ def ranking(
         close_figure (bool, optional): whether to close each figure immediately after
             saving it, defaults to False (enable when producing many figures to avoid
             memory issues, prevents rendering in notebooks)
+        impacts_method (str, optional): the method used to compute parameter impacts.
+            Options are np_shift, covariance, auxdata_shift
 
     Returns:
         matplotlib.figure.Figure: the ranking figure
@@ -162,6 +165,12 @@ def ranking(
         )
     else:
         layout = None  # pragma: no cover  # layout set after figure creation instead
+
+    impacts_color_map = {
+        "np_shift": ["C0", "C5"],
+        "covariance": ["#2CA02C", "#98DF8A"],
+        "auxdata_shift": ["#9467BD", "#C5B0D5"],
+    }
 
     mpl.style.use(MPL_STYLE)
     fig, ax_pulls = plt.subplots(
@@ -197,18 +206,33 @@ def ranking(
 
     y_pos = np.arange(num_pars)[::-1]
 
-    # pre-fit up
-    pre_up = ax_impact.barh(
-        y_pos, impact_prefit_up, fill=False, linewidth=1, edgecolor="C0"
-    )
-    # pre-fit down
-    pre_down = ax_impact.barh(
-        y_pos, impact_prefit_down, fill=False, linewidth=1, edgecolor="C5"
-    )
+    pre_up, pre_down = None, None
+    if impacts_method == "np_shifts":
+        # pre-fit up
+        pre_up = ax_impact.barh(
+            y_pos,
+            impact_prefit_up,
+            fill=False,
+            linewidth=1,
+            edgecolor=impacts_color_map[impacts_method][0],
+        )
+        # pre-fit down
+        pre_down = ax_impact.barh(
+            y_pos,
+            impact_prefit_down,
+            fill=False,
+            linewidth=1,
+            edgecolor=impacts_color_map[impacts_method][1],
+        )
+
     # post-fit up
-    post_up = ax_impact.barh(y_pos, impact_postfit_up, color="C0")
+    post_up = ax_impact.barh(
+        y_pos, impact_postfit_up, color=impacts_color_map[impacts_method][0]
+    )
     # post-fit down
-    post_down = ax_impact.barh(y_pos, impact_postfit_down, color="C5")
+    post_down = ax_impact.barh(
+        y_pos, impact_postfit_down, color=impacts_color_map[impacts_method][1]
+    )
     # nuisance parameter pulls
     pulls = ax_pulls.errorbar(bestfit, y_pos, xerr=uncertainty, fmt="o", color="k")
 
@@ -244,20 +268,44 @@ def ranking(
     ax_pulls.tick_params(direction="in", which="both")
     ax_impact.tick_params(direction="in", which="both")
 
-    fig.legend(
-        (pre_up, pre_down, post_up, post_down, pulls),
-        (
-            r"pre-fit impact: $\theta = \hat{\theta} + \Delta \theta$",
-            r"pre-fit impact: $\theta = \hat{\theta} - \Delta \theta$",
-            r"post-fit impact: $\theta = \hat{\theta} + \Delta \hat{\theta}$",
-            r"post-fit impact: $\theta = \hat{\theta} - \Delta \hat{\theta}$",
-            "pulls",
-        ),
-        frameon=False,
-        loc="upper left",
-        ncol=3,
-        fontsize="large",
+    leg_handlers = (
+        (pre_up, pre_down, post_up, post_down, pulls)
+        if impacts_method == "np_shift"
+        else (post_up, post_down, pulls)
     )
+    leg_settings = {
+        "frameon": False,
+        "loc": "upper left",
+        "ncol": 3,
+        "fontsize": "large",
+    }
+
+    if impacts_method == "np_shift":
+        fig.legend(
+            leg_handlers,
+            (
+                r"pre-fit impact: $\theta = \hat{\theta} + \Delta \theta$",
+                r"pre-fit impact: $\theta = \hat{\theta} - \Delta \theta$",
+                r"post-fit impact: $\theta = \hat{\theta} + \Delta \hat{\theta}$",
+                r"post-fit impact: $\theta = \hat{\theta} - \Delta \hat{\theta}$",
+                "pulls",
+            ),
+            **leg_settings,
+        )
+    elif impacts_method == "covariance":
+        fig.legend(
+            leg_handlers,
+            (
+                r"post-fit impact: $\sigma_{\text{POI}}\,$"
+                + r"$\rho(\text{POI},\theta)\,\sigma_{\theta}$",
+                r"post-fit impact: $-\sigma_{\text{POI}}\,$"
+                + r"$\rho(\text{POI},\theta)\,\sigma_{\theta}$",
+                "pulls",
+            ),
+            **leg_settings,
+        )
+    else:
+        pass  # to be implemented
 
     if not MPL_GEQ_36:
         fig.tight_layout(rect=[0, 0, 1.0, 1 - leg_space])  # pragma: no cover
