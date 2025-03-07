@@ -166,6 +166,16 @@ def ranking(
     else:
         layout = None  # pragma: no cover  # layout set after figure creation instead
 
+    if impacts_method not in ["np_shift", "covariance", "auxdata_shift"]:
+        raise ValueError(
+            f"The impacts method {impacts_method} provided is not supported."
+            + " Valid options are (np_shift, covariance, auxdata_shift)"
+        )
+    if impacts_method == "auxdata_shift":
+        raise NotImplementedError(
+            "Plotting impacts computed by shifting auxiliary data is not supported yet."
+        )
+
     impacts_color_map = {
         "np_shift": ["C0", "C5"],
         "covariance": ["#2CA02C", "#98DF8A"],
@@ -207,7 +217,7 @@ def ranking(
     y_pos = np.arange(num_pars)[::-1]
 
     pre_up, pre_down = None, None
-    if impacts_method == "np_shifts":
+    if impacts_method == "np_shift":
         # pre-fit up
         pre_up = ax_impact.barh(
             y_pos,
