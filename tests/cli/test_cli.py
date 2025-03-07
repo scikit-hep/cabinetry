@@ -203,6 +203,7 @@ def test_fit(mock_utils, mock_fit, mock_pulls, mock_corrmat, tmp_path):
         np.asarray([[0.8]]),
         np.asarray([[1.1]]),
         np.asarray([[0.9]]),
+        impacts_method="np_shift",
     ),
     autospec=True,
 )
