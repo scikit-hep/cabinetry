@@ -547,7 +547,9 @@ def test_ranking(mock_fit, example_spec):
     labels = ["Signal strength", "staterror"]
     fit_results = fit.FitResults(bestfit, uncertainty, labels, np.empty(0), 0.0)
     model, data = model_utils.model_and_data(example_spec)
-    ranking_results = fit.ranking(model, data, fit_results=fit_results)
+    ranking_results = fit.ranking(
+        model, data, fit_results=fit_results, impacts_method="np_shift"
+    )
 
     # correct call to fit
     expected_fix = [False, True]
@@ -586,6 +588,7 @@ def test_ranking(mock_fit, example_spec):
         fit_results=fit_results,
         poi_name="Signal strength",
         custom_fit=True,
+        impacts_method="np_shift",
     )
     # expect two calls in this ranking (and had 4 before, so 6 total): pre-fit
     # uncertainty is 0 since parameter is fixed, mock post-fit uncertainty is not 0
@@ -608,6 +611,7 @@ def test_ranking(mock_fit, example_spec):
         maxiter=100,
         tolerance=0.01,
         custom_fit=True,
+        impacts_method="np_shift",
     )
     assert mock_fit.call_count == 9
     # reference fit
