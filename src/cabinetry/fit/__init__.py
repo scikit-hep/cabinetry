@@ -454,7 +454,7 @@ def _goodness_of_fit(
     return p_val
 
 
-def _get_impacts_summary(impacts_by_modifier_type):
+def _get_impacts_summary(impacts_by_modifier_type, method, total_error=None):
 
     non_syst_modifiers = ["normfactor", "shapefactor", "staterror"]  # Lumi ?
     impact_totals = defaultdict(lambda: defaultdict(float))
@@ -467,12 +467,16 @@ def _get_impacts_summary(impacts_by_modifier_type):
                 syst_impacts_map[impact_type].extend(impact_values)
 
     for impact_type in ["impact_up", "impact_down"]:
-        impact_totals["syst"][impact_type] = sum(
-            np.power(syst_impacts_map[impact_type], 2)
+        impact_totals["syst"][impact_type] = np.sqrt(
+            sum(np.power(syst_impacts_map[impact_type], 2))
         )
         for non_syst_modifier in non_syst_modifiers:
-            impact_totals[non_syst_modifier][impact_type] = sum(
-                np.power(impacts_by_modifier_type[non_syst_modifier][impact_type], 2)
+            impact_totals[non_syst_modifier][impact_type] = np.sqrt(
+                sum(
+                    np.power(
+                        impacts_by_modifier_type[non_syst_modifier][impact_type], 2
+                    )
+                )
             )
 
     return impact_totals
@@ -554,7 +558,9 @@ def _cov_impacts(
 
         # update combined parameters index (e.g. staterrors)
         i_global_par += model.config.param_set(parameter).n_parameters
-    impacts_summary = _get_impacts_summary(impacts_by_modifier_type)
+    impacts_summary = _get_impacts_summary(
+        impacts_by_modifier_type, "cov", total_error=total_poi_error
+    )
 
     return impacts_by_modifier_type, impacts_summary
 
@@ -661,7 +667,7 @@ def _np_impacts(
 
         # update combined parameters index (e.g. staterrors)
         i_global_par += model.config.param_set(parameter).n_parameters
-    impacts_summary = _get_impacts_summary(impacts_by_modifier_type)
+    impacts_summary = _get_impacts_summary(impacts_by_modifier_type, "np")
 
     return impacts_by_modifier_type, impacts_summary
 
