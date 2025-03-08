@@ -479,58 +479,88 @@ def _get_impacts_summary(impacts_by_modifier_type, method, total_error=None):
                 )
             )
 
-    # Compute statistical uncertainty by quadruture differences if covariance-based
-    # method is used.
-    if method != "np":
-        for impact_type in ["impact_up", "impact_down"]:
-            # Statistical uncertainties including shape and norm factors
-            data_staterror_with_nf_sf = np.sqrt(
-                np.power(total_error, 2)
-                - (
-                    np.power(impact_totals["syst"][impact_type], 2)
-                    + np.power(impact_totals["staterror"][impact_type], 2)
-                )
-            )
-            impact_totals["datastat_with_NF_SF"][
-                impact_type
-            ] = data_staterror_with_nf_sf
-            # Statistical uncertainties  including norm factors only
-            data_staterror_with_nf_only = np.sqrt(
-                np.power(total_error, 2)
-                - (
-                    np.power(impact_totals["syst"][impact_type], 2)
-                    + np.power(impact_totals["staterror"][impact_type], 2)
-                    + np.power(impact_totals["shapefactor"][impact_type], 2)
-                )
-            )
-            impact_totals["datastat_with_NF_only"][
-                impact_type
-            ] = data_staterror_with_nf_only
-            # Statistical uncertainties  including shape factors only
-            data_staterror_with_sf_only = np.sqrt(
-                np.power(total_error, 2)
-                - (
-                    np.power(impact_totals["syst"][impact_type], 2)
-                    + np.power(impact_totals["staterror"][impact_type], 2)
-                    + np.power(impact_totals["normfactor"][impact_type], 2)
-                )
-            )
-            impact_totals["datastat_with_SF_only"][
-                impact_type
-            ] = data_staterror_with_sf_only
-            # Statistical uncertainties without shape and norm factors
-            data_staterror_without_nf_sf = np.sqrt(
-                np.power(total_error, 2)
-                - (
-                    np.power(impact_totals["syst"][impact_type], 2)
-                    + np.power(impact_totals["staterror"][impact_type], 2)
-                    + np.power(impact_totals["normfactor"][impact_type], 2)
-                    + np.power(impact_totals["shapefactor"][impact_type], 2)
-                )
-            )
-            impact_totals["datastat"][impact_type] = data_staterror_without_nf_sf
-
     return impact_totals
+
+
+def _get_datastat_impacts_np_shift(
+    impacts_summary, model, data, poi_index, fit_results, fit_kwargs
+):
+
+    nominal_poi = fit_results.bestfit[poi_index]
+    # Get statistical uncertainty
+    fix_pars_datastat = fit_kwargs["fix_pars"].copy()
+    fix_pars_datastat = [
+        True for i_par in range(len(fix_pars_datastat)) if i_par != poi_index
+    ]
+    init_pars_datastat = fit_kwargs["init_pars"].copy()
+    init_pars_datastat = [
+        fit_results.bestfit[i_par]
+        for i_par in range(len(init_pars_datastat))
+        if i_par != poi_index
+    ]
+    fit_results_datastat = _fit_model(
+        model,
+        data,
+        init_pars=fix_pars_datastat,
+        fix_pars=init_pars_datastat,
+        **{k: v for k, v in fit_kwargs.items() if k not in ["init_pars", "fix_pars"]},
+    )
+    datastat_poi_val = fit_results_datastat.bestfit[poi_index]
+    datastat_impact = datastat_poi_val - nominal_poi
+    impacts_summary["datastat"] = datastat_impact
+
+    return impacts_summary
+
+
+def _get_datastat_impacts_quadruture(impacts_summary, total_error):
+
+    for impact_type in ["impact_up", "impact_down"]:
+        # Statistical uncertainties including shape and norm factors
+        data_staterror_with_nf_sf = np.sqrt(
+            np.power(total_error, 2)
+            - (
+                np.power(impacts_summary["syst"][impact_type], 2)
+                + np.power(impacts_summary["staterror"][impact_type], 2)
+            )
+        )
+        impacts_summary["datastat_with_NF_SF"][impact_type] = data_staterror_with_nf_sf
+        # Statistical uncertainties  including norm factors only
+        data_staterror_with_nf_only = np.sqrt(
+            np.power(total_error, 2)
+            - (
+                np.power(impacts_summary["syst"][impact_type], 2)
+                + np.power(impacts_summary["staterror"][impact_type], 2)
+                + np.power(impacts_summary["shapefactor"][impact_type], 2)
+            )
+        )
+        impacts_summary["datastat_with_NF_only"][
+            impact_type
+        ] = data_staterror_with_nf_only
+        # Statistical uncertainties  including shape factors only
+        data_staterror_with_sf_only = np.sqrt(
+            np.power(total_error, 2)
+            - (
+                np.power(impacts_summary["syst"][impact_type], 2)
+                + np.power(impacts_summary["staterror"][impact_type], 2)
+                + np.power(impacts_summary["normfactor"][impact_type], 2)
+            )
+        )
+        impacts_summary["datastat_with_SF_only"][
+            impact_type
+        ] = data_staterror_with_sf_only
+        # Statistical uncertainties without shape and norm factors
+        data_staterror_without_nf_sf = np.sqrt(
+            np.power(total_error, 2)
+            - (
+                np.power(impacts_summary["syst"][impact_type], 2)
+                + np.power(impacts_summary["staterror"][impact_type], 2)
+                + np.power(impacts_summary["normfactor"][impact_type], 2)
+                + np.power(impacts_summary["shapefactor"][impact_type], 2)
+            )
+        )
+        impacts_summary["datastat"][impact_type] = data_staterror_without_nf_sf
+
+    return impacts_summary
 
 
 def _cov_impacts(
@@ -609,9 +639,8 @@ def _cov_impacts(
 
         # update combined parameters index (e.g. staterrors)
         i_global_par += model.config.param_set(parameter).n_parameters
-    impacts_summary = _get_impacts_summary(
-        impacts_by_modifier_type, "cov", total_error=total_poi_error
-    )
+    impacts_summary = _get_impacts_summary(impacts_by_modifier_type)
+    impacts_summary = _get_datastat_impacts_quadruture(impacts_summary, total_poi_error)
 
     return impacts_by_modifier_type, impacts_summary
 
@@ -718,7 +747,10 @@ def _np_impacts(
 
         # update combined parameters index (e.g. staterrors)
         i_global_par += model.config.param_set(parameter).n_parameters
-    impacts_summary = _get_impacts_summary(impacts_by_modifier_type, "np")
+    impacts_summary = _get_impacts_summary(impacts_by_modifier_type)
+    impacts_summary = _get_datastat_impacts_quadruture(
+        impacts_summary, model, data, poi_index, fit_results, fit_kwargs
+    )
 
     return impacts_by_modifier_type, impacts_summary
 
