@@ -168,6 +168,7 @@ def test_ranking(tmp_path):
             close_figure=True,
             impacts_method="wrong_method",
         )
+
     with pytest.raises(
         NotImplementedError,
         match="Plotting impacts computed by shifting auxiliary data is not "
