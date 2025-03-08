@@ -524,12 +524,20 @@ def test_fit(mock_fit, mock_print, mock_gof):
         fit.FitResults(
             np.asarray([0.8, 0.9]), np.asarray([0.1, 0.1]), ["a", "b"], np.empty(0), 0.0
         ),
+        # !datastats: nominal fit results because everything is fixed except POI
+        fit.FitResults(
+            np.asarray([1.0, 0.9]), np.asarray([0.1, 0.1]), ["a", "b"], np.empty(0), 0.0
+        ),
         # for second ranking call with fixed parameter
         fit.FitResults(
             np.asarray([1.2, 0.9]), np.asarray([0.1, 0.1]), ["a", "b"], np.empty(0), 0.0
         ),
         fit.FitResults(
             np.asarray([0.8, 0.9]), np.asarray([0.1, 0.1]), ["a", "b"], np.empty(0), 0.0
+        ),
+        # !datastats: nominal fit results because everything is fixed except POI
+        fit.FitResults(
+            np.asarray([1.0, 0.9]), np.asarray([0.1, 0.1]), ["a", "b"], np.empty(0), 0.0
         ),
         # for third ranking call without reference results
         fit.FitResults(
@@ -541,6 +549,11 @@ def test_fit(mock_fit, mock_print, mock_gof):
         fit.FitResults(
             np.asarray([0.7, 0.9]), np.asarray([0.1, 0.1]), ["a", "b"], np.empty(0), 0.0
         ),
+        # !datastats: nominal fit results because everything is fixed except POI
+        fit.FitResults(
+            np.asarray([1.0, 0.9]), np.asarray([0.1, 0.1]), ["a", "b"], np.empty(0), 0.0
+        ),
+        # covariance-based method
         fit.FitResults(
             np.asarray([0.7, 0.9]),
             np.asarray([0.1, 0.1]),
@@ -566,7 +579,7 @@ def test_ranking(mock_fit, example_spec):
     # correct call to fit
     expected_fix = [False, True]
     expected_inits = [[1.0, 0.95019305], [1.0, 0.84980695], [1.0, 0.92], [1.0, 0.88]]
-    assert mock_fit.call_count == 4
+    assert mock_fit.call_count == 5  # four fits + datastat fit
     for i in range(4):
         assert mock_fit.call_args_list[i][0] == (model, data)
         assert np.allclose(
@@ -595,7 +608,7 @@ def test_ranking(mock_fit, example_spec):
         model, data, fit_results=fit_results, impacts_method="covariance"
     )
     # no further calls to mock fit
-    assert mock_fit.call_count == 4
+    assert mock_fit.call_count == 5
     # POI removed from fit results
     assert np.allclose(ranking_results.bestfit, [0.9])
     assert np.allclose(ranking_results.uncertainty, [0.02])
@@ -622,9 +635,9 @@ def test_ranking(mock_fit, example_spec):
         custom_fit=True,
         impacts_method="np_shift",
     )
-    # expect two calls in this ranking (and had 4 before, so 6 total): pre-fit
+    # expect three calls in this ranking (and had 5 before, so  8 total): pre-fit
     # uncertainty is 0 since parameter is fixed, mock post-fit uncertainty is not 0
-    assert mock_fit.call_count == 6
+    assert mock_fit.call_count == 8
     assert mock_fit.call_args[1]["custom_fit"] is True
     assert np.allclose(ranking_results.prefit_up, [0.0])
     assert np.allclose(ranking_results.prefit_down, [0.0])
@@ -633,6 +646,7 @@ def test_ranking(mock_fit, example_spec):
 
     # no reference results, init/fixed pars, par bounds, strategy/maxiter/tolerance
     # NP shifting method
+    # !is this test complete? parameter is still considered fixed with prefit_unc = 0.0
     ranking_results = fit.ranking(
         model,
         data,
@@ -646,9 +660,9 @@ def test_ranking(mock_fit, example_spec):
         custom_fit=True,
         impacts_method="np_shift",
     )
-    assert mock_fit.call_count == 9
+    assert mock_fit.call_count == 12
     # reference fit
-    assert mock_fit.call_args_list[-3] == (
+    assert mock_fit.call_args_list[-4] == (
         (model, data),
         {
             "init_pars": [1.5, 1.0],
@@ -661,22 +675,23 @@ def test_ranking(mock_fit, example_spec):
         },
     )
     # fits for impact (comparing each option separately since init_pars needs allclose)
+    assert mock_fit.call_args_list[-3][0] == (model, data)
+    assert np.allclose(mock_fit.call_args_list[-3][1]["init_pars"], [1.5, 1.2])
+    assert mock_fit.call_args_list[-3][1]["fix_pars"] == [False, True]
+    assert mock_fit.call_args_list[-3][1]["par_bounds"] == [(0, 5), (0.1, 10)]
+    assert mock_fit.call_args_list[-3][1]["strategy"] == 2
+    assert mock_fit.call_args_list[-3][1]["maxiter"] == 100
+    assert mock_fit.call_args_list[-3][1]["tolerance"] == 0.01
+    assert mock_fit.call_args_list[-3][1]["custom_fit"] is True
     assert mock_fit.call_args_list[-2][0] == (model, data)
-    assert np.allclose(mock_fit.call_args_list[-2][1]["init_pars"], [1.5, 1.2])
+    assert np.allclose(mock_fit.call_args_list[-2][1]["init_pars"], [1.5, 0.6])
     assert mock_fit.call_args_list[-2][1]["fix_pars"] == [False, True]
     assert mock_fit.call_args_list[-2][1]["par_bounds"] == [(0, 5), (0.1, 10)]
     assert mock_fit.call_args_list[-2][1]["strategy"] == 2
     assert mock_fit.call_args_list[-2][1]["maxiter"] == 100
     assert mock_fit.call_args_list[-2][1]["tolerance"] == 0.01
     assert mock_fit.call_args_list[-2][1]["custom_fit"] is True
-    assert mock_fit.call_args_list[-1][0] == (model, data)
-    assert np.allclose(mock_fit.call_args_list[-1][1]["init_pars"], [1.5, 0.6])
-    assert mock_fit.call_args_list[-1][1]["fix_pars"] == [False, True]
-    assert mock_fit.call_args_list[-1][1]["par_bounds"] == [(0, 5), (0.1, 10)]
-    assert mock_fit.call_args_list[-1][1]["strategy"] == 2
-    assert mock_fit.call_args_list[-1][1]["maxiter"] == 100
-    assert mock_fit.call_args_list[-1][1]["tolerance"] == 0.01
-    assert mock_fit.call_args_list[-1][1]["custom_fit"] is True
+    # [-1] is datastat
     # ranking results
     assert np.allclose(ranking_results.prefit_up, [0.0])
     assert np.allclose(ranking_results.prefit_down, [0.0])
@@ -706,7 +721,7 @@ def test_ranking(mock_fit, example_spec):
         impacts_method="covariance",
     )
     # reference fit
-    assert mock_fit.call_count == 10
+    assert mock_fit.call_count == 13
     assert mock_fit.call_args_list[-1] == (
         (model, data),
         {
