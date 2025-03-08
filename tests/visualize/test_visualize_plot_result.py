@@ -70,6 +70,10 @@ def test_pulls(tmp_path):
     plt.close("all")
 
 
+@pytest.mark.xfail(
+    sys.version_info <= (3, 9),
+    reason="legend positioning in Python 3.8 with older matplotlib, see cabinetry#476",
+)
 def test_ranking(tmp_path):
     fname = tmp_path / "fig.png"
     bestfit = np.asarray([0.3, -0.1])
@@ -105,6 +109,7 @@ def test_ranking(tmp_path):
         is None
     )
 
+    cov_ranking_comparisons = []
     fname = tmp_path / "fig_cov.png"
     fig = plot_result.ranking(
         bestfit,
@@ -118,21 +123,19 @@ def test_ranking(tmp_path):
         impacts_method="covariance",
     )
     # large tolerance needed here, possibly related to lack of set_tight_layout usage
-    assert (
+    cov_ranking_comparisons.append(
         compare_images(
             "tests/visualize/reference/ranking_covariance.png", str(fname), 50
         )
-        is None
     )
 
     # compare figure returned by function
     fname = tmp_path / "fig_cov_from_return.png"
     fig.savefig(fname)
-    assert (
+    cov_ranking_comparisons.append(
         compare_images(
             "tests/visualize/reference/ranking_covariance.png", str(fname), 50
         )
-        is None
     )
 
     # do not save figure, but close it
@@ -181,6 +184,9 @@ def test_ranking(tmp_path):
             close_figure=True,
             impacts_method="auxdata_shift",
         )
+
+    for cov_ranking_comparison in cov_ranking_comparisons:
+        assert cov_ranking_comparison is None
 
     plt.close("all")
 
