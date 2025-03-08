@@ -454,10 +454,10 @@ def _goodness_of_fit(
     return p_val
 
 
-def _get_impacts_summary(impacts_by_modifier_type, method, total_error=None):
+def _get_impacts_summary(impacts_by_modifier_type):
 
     non_syst_modifiers = ["normfactor", "shapefactor", "staterror"]  # Lumi ?
-    impact_totals = defaultdict(lambda: defaultdict(float))
+    impacts_summary = defaultdict(lambda: defaultdict(float))
     # Dictionary to store the merged values after removing certain modifiers
     syst_impacts_map = defaultdict(list)
     # Iterate through each modifier and its corresponding data
@@ -467,11 +467,11 @@ def _get_impacts_summary(impacts_by_modifier_type, method, total_error=None):
                 syst_impacts_map[impact_type].extend(impact_values)
 
     for impact_type in ["impact_up", "impact_down"]:
-        impact_totals["syst"][impact_type] = np.sqrt(
+        impacts_summary["syst"][impact_type] = np.sqrt(
             sum(np.power(syst_impacts_map[impact_type], 2))
         )
         for non_syst_modifier in non_syst_modifiers:
-            impact_totals[non_syst_modifier][impact_type] = np.sqrt(
+            impacts_summary[non_syst_modifier][impact_type] = np.sqrt(
                 sum(
                     np.power(
                         impacts_by_modifier_type[non_syst_modifier][impact_type], 2
@@ -479,7 +479,7 @@ def _get_impacts_summary(impacts_by_modifier_type, method, total_error=None):
                 )
             )
 
-    return impact_totals
+    return impacts_summary
 
 
 def _get_datastat_impacts_np_shift(
@@ -490,19 +490,19 @@ def _get_datastat_impacts_np_shift(
     # Get statistical uncertainty
     fix_pars_datastat = fit_kwargs["fix_pars"].copy()
     fix_pars_datastat = [
-        True for i_par in range(len(fix_pars_datastat)) if i_par != poi_index
+        True if i_par != poi_index else False
+        for i_par in range(len(model.config.par_names))
     ]
     init_pars_datastat = fit_kwargs["init_pars"].copy()
     init_pars_datastat = [
-        fit_results.bestfit[i_par]
-        for i_par in range(len(init_pars_datastat))
-        if i_par != poi_index
+        fit_results.bestfit[i_par] if i_par != poi_index else init_pars_datastat[i_par]
+        for i_par in range(len(model.config.par_names))
     ]
     fit_results_datastat = _fit_model(
         model,
         data,
-        init_pars=fix_pars_datastat,
-        fix_pars=init_pars_datastat,
+        init_pars=init_pars_datastat,
+        fix_pars=fix_pars_datastat,
         **{k: v for k, v in fit_kwargs.items() if k not in ["init_pars", "fix_pars"]},
     )
     datastat_poi_val = fit_results_datastat.bestfit[poi_index]
@@ -748,7 +748,7 @@ def _np_impacts(
         # update combined parameters index (e.g. staterrors)
         i_global_par += model.config.param_set(parameter).n_parameters
     impacts_summary = _get_impacts_summary(impacts_by_modifier_type)
-    impacts_summary = _get_datastat_impacts_quadruture(
+    impacts_summary = _get_datastat_impacts_np_shift(
         impacts_summary, model, data, poi_index, fit_results, fit_kwargs
     )
 
