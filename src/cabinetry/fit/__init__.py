@@ -479,6 +479,50 @@ def _get_impacts_summary(impacts_by_modifier_type, method, total_error=None):
                 )
             )
 
+    # Compute statistical uncertainty by quadruture differences if covariance-based
+    # method is used.
+    if method != "np":
+        # Statistical uncertainties including shape and norm factors
+        data_staterror_with_nf_sf = np.sqrt(
+            np.power(total_error, 2)
+            - (
+                np.power(impact_totals["syst"], 2)
+                + np.power(impact_totals["staterror"], 2)
+            )
+        )
+        impact_totals["datastat_with_NF_SF"] = data_staterror_with_nf_sf
+        # Statistical uncertainties  including norm factors only
+        data_staterror_with_nf_only = np.sqrt(
+            np.power(total_error, 2)
+            - (
+                np.power(impact_totals["syst"], 2)
+                + np.power(impact_totals["staterror"], 2)
+                + np.power(impact_totals["shapefactor"], 2)
+            )
+        )
+        impact_totals["datastat_with_NF_only"] = data_staterror_with_nf_only
+        # Statistical uncertainties  including shape factors only
+        data_staterror_with_sf_only = np.sqrt(
+            np.power(total_error, 2)
+            - (
+                np.power(impact_totals["syst"], 2)
+                + np.power(impact_totals["staterror"], 2)
+                + np.power(impact_totals["normfactor"], 2)
+            )
+        )
+        impact_totals["datastat_with_SF_only"] = data_staterror_with_sf_only
+        # Statistical uncertainties without shape and norm factors
+        data_staterror_without_nf_sf = np.sqrt(
+            np.power(total_error, 2)
+            - (
+                np.power(impact_totals["syst"], 2)
+                + np.power(impact_totals["staterror"], 2)
+                + np.power(impact_totals["normfactor"], 2)
+                + np.power(impact_totals["normfactor"], 2)
+            )
+        )
+        impact_totals["datastat"] = data_staterror_without_nf_sf
+
     return impact_totals
 
 
