@@ -454,8 +454,21 @@ def _goodness_of_fit(
     return p_val
 
 
-def _get_impacts_summary(impacts_by_modifier_type):
+def _get_impacts_summary(
+    impacts_by_modifier_type: Dict[str, Dict[str, List[float]]],
+) -> Dict[str, Dict[str, float]]:
+    """
+    Get the impacts summary, which includes the total impact of all nuisance parameters
+    split by systematic and non-systematic sources.
 
+    Args:
+        impacts_by_modifier_type (Dict[str, Dict[str, List[float]]]): impacts of
+            nuisance parameters categorized by modifier type and impact type
+
+    Returns:
+        Dict[str, Dict[str, float]]: impacts summary categorized by systematic and
+            non-systematic sources
+    """
     non_syst_modifiers = ["normfactor", "shapefactor", "staterror"]  # Lumi ?
     impacts_summary = defaultdict(lambda: defaultdict(float))
     # Dictionary to store the merged values after removing certain modifiers
@@ -483,9 +496,30 @@ def _get_impacts_summary(impacts_by_modifier_type):
 
 
 def _get_datastat_impacts_np_shift(
-    impacts_summary, model, data, poi_index, fit_results, fit_kwargs
-):
+    impacts_summary: Dict[str, Dict[str, float]],
+    model: pyhf.pdf.model,
+    data: List[float],
+    poi_index: int,
+    fit_results: FitResults,
+    fit_kwargs,
+) -> Dict[str, Dict[str, float]]:
+    """
+    Calculate the impact of statistical uncertainties on the parameter of interest by
+    fixing all nuisance parameters to their best-fit values and repeating the fit
 
+    Args:
+        impacts_summary (Dict[str, Dict[str, float]]): The impacts summary
+        categorized by systematic and non-systematic sources
+        model (pyhf.pdf.model): the model to be used in the fit
+        data (List[float]): data (including auxdata) the model is fit to
+        poi_index (int): index of the parameter of interest
+        fit_results (FitResults): nominal fit results to use in impacts calculation
+        fit_kwargs (_type_): settings to be used in the fits
+
+    Returns:
+        Dict[str, Dict[str, float]]: impacts summary categorized by systematic and
+            non-systematic sources with the statistical uncertainty on data added.
+    """
     nominal_poi = fit_results.bestfit[poi_index]
     # Get statistical uncertainty
     fix_pars_datastat = fit_kwargs["fix_pars"].copy()
@@ -513,7 +547,19 @@ def _get_datastat_impacts_np_shift(
 
 
 def _get_datastat_impacts_quadruture(impacts_summary, total_error):
+    """
+    Calculate the impact of statistical uncertainties on the parameter of subtracting
+    other sources from the total error in quadrature.
 
+    Args:
+        impacts_summary (Dict[str, Dict[str, float]]): The impacts summary
+        categorized by systematic and non-systematic sources
+        total_error (float): total error on the parameter of interest
+
+    Returns:
+        Dict[str, Dict[str, float]]: impacts summary categorized by systematic and
+            non-systematic sources with the statistical uncertainty on data added.
+    """
     for impact_type in ["impact_up", "impact_down"]:
         # Statistical uncertainties including shape and norm factors
         data_staterror_with_nf_sf = np.sqrt(
