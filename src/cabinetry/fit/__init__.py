@@ -497,7 +497,7 @@ def _get_impacts_summary(
 
 def _get_datastat_impacts_np_shift(
     impacts_summary: Dict[str, Dict[str, float]],
-    model: pyhf.pdf.model,
+    model: pyhf.pdf.Model,
     data: List[float],
     poi_index: int,
     fit_results: FitResults,
