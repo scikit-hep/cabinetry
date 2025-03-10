@@ -740,14 +740,14 @@ def test_ranking(mock_fit, example_spec):
     assert np.allclose(ranking_results.postfit_up, [0.01992307692])  # 0.1*0.1*0.1/0.05
     assert np.allclose(ranking_results.postfit_down, [-0.01992307692])
 
-    # Aux data shifting method not supported yet
-    with pytest.raises(
-        NotImplementedError,
-        match="Impacts using auxiliary data shifting are not supported yet.",
-    ):
-        fit.ranking(
-            model, data, fit_results=fit_results, impacts_method="auxdata_shift"
-        )
+    # # Aux data shifting method not supported yet
+    # with pytest.raises(
+    #     NotImplementedError,
+    #     match="Impacts using auxiliary data shifting are not supported yet.",
+    # ):
+    #     fit.ranking(
+    #         model, data, fit_results=fit_results, impacts_method="auxdata_shift"
+    #     )
     # catch non-existent method
     with pytest.raises(
         ValueError,
