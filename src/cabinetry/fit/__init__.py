@@ -585,7 +585,7 @@ def ranking(
             this option specifies that the ``pyhf`` suggested parameter bounds should
             be used to limit values of the parameters during ranking. Useful if one
             of the ranking fits is failing. If some parameter bounds are specified,
-            the suggested bound will not be used.
+            the suggested bound will not be used. Default is False.
 
     Raises:
         ValueError: if no POI is found
