@@ -3,7 +3,17 @@
 from collections import defaultdict
 import json
 import logging
-from typing import Any, DefaultDict, Dict, List, NamedTuple, Optional, Tuple, Union
+from typing import (
+    Any,
+    cast,
+    DefaultDict,
+    Dict,
+    List,
+    NamedTuple,
+    Optional,
+    Tuple,
+    Union,
+)
 
 import numpy as np
 import pyhf
@@ -771,9 +781,13 @@ def _parameters_maximizing_constraint_term(
             else:
                 rescale_factors = [1.0] * n_params  # no rescaling by default
 
-            best_pars += (
-                np.asarray(aux_data[i_aux : i_aux + n_params]) / rescale_factors
-            ).tolist()
+            # manually cast, possible cause https://github.com/numpy/numpy/issues/27944
+            best_pars += cast(
+                List[float],
+                (
+                    np.asarray(aux_data[i_aux : i_aux + n_params]) / rescale_factors
+                ).tolist(),
+            )
             i_aux += n_params
 
         else:
