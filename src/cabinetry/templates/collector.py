@@ -103,7 +103,7 @@ def _histo_path(
         if "{VariationPath}" not in path and variation_path_override:
             log.warning(
                 "variation override specified, but {VariationPath} not found in "
-                " default path"
+                "default path"
             )
 
     path = path.replace("{VariationPath}", variation_path)
