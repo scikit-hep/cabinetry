@@ -625,12 +625,12 @@ def ranking(
     fix_pars = fix_pars or model.config.suggested_fixed()
 
     if par_bounds is None and use_suggested_bounds:
-        log.warning(
+        log.info(
             "All parameter bounds are not specified, using suggested bounds from pyhf"
         )
         par_bounds = model.config.suggested_bounds()
     elif par_bounds is not None and use_suggested_bounds:
-        log.warning(
+        log.info(
             "Some parameter bounds are not specified, using suggested bounds from pyhf"
         )
         par_bounds = [
