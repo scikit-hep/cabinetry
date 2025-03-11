@@ -109,7 +109,7 @@ def test_ranking(tmp_path):
         is None
     )
 
-    cov_ranking_comparisons = []
+    ranking_comparisons = []
     fname = tmp_path / "fig_cov.png"
     fig = plot_result.ranking(
         bestfit,
@@ -123,7 +123,7 @@ def test_ranking(tmp_path):
         impacts_method="covariance",
     )
     # large tolerance needed here, possibly related to lack of set_tight_layout usage
-    cov_ranking_comparisons.append(
+    ranking_comparisons.append(
         compare_images(
             "tests/visualize/reference/ranking_covariance.png", str(fname), 50
         )
@@ -132,9 +132,37 @@ def test_ranking(tmp_path):
     # compare figure returned by function
     fname = tmp_path / "fig_cov_from_return.png"
     fig.savefig(fname)
-    cov_ranking_comparisons.append(
+    ranking_comparisons.append(
         compare_images(
             "tests/visualize/reference/ranking_covariance.png", str(fname), 50
+        )
+    )
+
+    fname = tmp_path / "fig_auxdata.png"
+    fig = plot_result.ranking(
+        bestfit,
+        uncertainty,
+        labels,
+        impact_prefit_up,
+        impact_prefit_down,
+        impact_postfit_up,
+        impact_postfit_down,
+        figure_path=fname,
+        impacts_method="auxdata_shift",
+    )
+    # large tolerance needed here, possibly related to lack of set_tight_layout usage
+    ranking_comparisons.append(
+        compare_images(
+            "tests/visualize/reference/ranking_auxdata_shift.png", str(fname), 50
+        )
+    )
+
+    # compare figure returned by function
+    fname = tmp_path / "fig_auxdata_from_return.png"
+    fig.savefig(fname)
+    ranking_comparisons.append(
+        compare_images(
+            "tests/visualize/reference/ranking_auxdata_shift.png", str(fname), 50
         )
     )
 
@@ -169,25 +197,8 @@ def test_ranking(tmp_path):
             impacts_method="wrong_method",
         )
 
-    # with pytest.raises(
-    #     NotImplementedError,
-    #     match="Plotting impacts computed by shifting auxiliary data is not "
-    #     + "supported yet.",
-    # ):
-    #     plot_result.ranking(
-    #         bestfit,
-    #         uncertainty,
-    #         labels,
-    #         impact_prefit_up,
-    #         impact_prefit_down,
-    #         impact_postfit_up,
-    #         impact_postfit_down,
-    #         close_figure=True,
-    #         impacts_method="auxdata_shift",
-    #     )
-
-    for cov_ranking_comparison in cov_ranking_comparisons:
-        assert cov_ranking_comparison is None
+    for ranking_comparison in ranking_comparisons:
+        assert ranking_comparison is None
 
     plt.close("all")
 
