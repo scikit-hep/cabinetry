@@ -67,7 +67,7 @@ def test__histo_path(caplog):
     # warning: no variation path in template
     assert (
         collector._histo_path(
-            "f.root:h1", "", {}, {}, {"VariationPath": "sample.root"}, None
+            "f.root:h1", "", {}, {}, {"Up": {"VariationPath": "sample.root"}}, "Up"
         )
         == "f.root:h1"
     )
