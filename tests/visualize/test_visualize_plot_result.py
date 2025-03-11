@@ -169,22 +169,22 @@ def test_ranking(tmp_path):
             impacts_method="wrong_method",
         )
 
-    with pytest.raises(
-        NotImplementedError,
-        match="Plotting impacts computed by shifting auxiliary data is not "
-        + "supported yet.",
-    ):
-        plot_result.ranking(
-            bestfit,
-            uncertainty,
-            labels,
-            impact_prefit_up,
-            impact_prefit_down,
-            impact_postfit_up,
-            impact_postfit_down,
-            close_figure=True,
-            impacts_method="auxdata_shift",
-        )
+    # with pytest.raises(
+    #     NotImplementedError,
+    #     match="Plotting impacts computed by shifting auxiliary data is not "
+    #     + "supported yet.",
+    # ):
+    #     plot_result.ranking(
+    #         bestfit,
+    #         uncertainty,
+    #         labels,
+    #         impact_prefit_up,
+    #         impact_prefit_down,
+    #         impact_postfit_up,
+    #         impact_postfit_down,
+    #         close_figure=True,
+    #         impacts_method="auxdata_shift",
+    #     )
 
     for cov_ranking_comparison in cov_ranking_comparisons:
         assert cov_ranking_comparison is None

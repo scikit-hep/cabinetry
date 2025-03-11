@@ -171,10 +171,6 @@ def ranking(
             f"The impacts method {impacts_method} provided is not supported."
             + " Valid options are (np_shift, covariance, auxdata_shift)"
         )
-    if impacts_method == "auxdata_shift":
-        raise NotImplementedError(
-            "Plotting impacts computed by shifting auxiliary data is not supported yet."
-        )
 
     impacts_color_map = {
         "np_shift": ["C0", "C5"],
@@ -315,7 +311,15 @@ def ranking(
             **leg_settings,
         )
     else:
-        pass  # to be implemented
+        fig.legend(
+            leg_handlers,
+            (
+                r"post-fit impact: $a = a_0 + \Delta a$",
+                r"post-fit impact: $a = a_0 - \Delta a$",
+                "pulls",
+            ),
+            **leg_settings,
+        )
 
     if not MPL_GEQ_36:
         fig.tight_layout(rect=[0, 0, 1.0, 1 - leg_space])  # pragma: no cover
