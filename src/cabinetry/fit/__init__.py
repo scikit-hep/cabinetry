@@ -658,10 +658,10 @@ def ranking(
         # Get post-fit uncertainty from MINOS if available
         postfit_unc_up = fit_results.uncertainty[i_par]
         postfit_unc_do = -1 * fit_results.uncertainty[i_par]
-        if fit_results.minos_uncertainty is not None:
-            if label in fit_results.minos_uncertainty.keys():
-                postfit_unc_up = fit_results.minos_uncertainty[label][1]
-                postfit_unc_do = fit_results.minos_uncertainty[label][0]
+        # walrus assignment to avoid multiple lookups
+        if minos_unc := fit_results.minos_uncertainty.get(label):
+            postfit_unc_up = minos_unc[1]
+            postfit_unc_do = minos_unc[0]
 
         parameter_impacts = []
         # calculate impacts: pre-fit up, pre-fit down, post-fit up, post-fit down
