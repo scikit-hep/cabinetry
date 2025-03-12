@@ -306,9 +306,9 @@ def scan(
     text_x_pos = par_vals[-1] - 0.01 * (par_vals[-1] - par_vals[0])
     # only draw text if it fits in the figure
     if y_lim >= 1:
-        ax.text(text_x_pos, 1.0, "68% CL", ha="right", va="bottom", color="gray")
+        ax.text(text_x_pos, 1.0, "68.3% CL", ha="right", va="bottom", color="gray")
     if y_lim >= 4:
-        ax.text(text_x_pos, 4.0, "95% CL", ha="right", va="bottom", color="gray")
+        ax.text(text_x_pos, 4.0, "95.5% CL", ha="right", va="bottom", color="gray")
 
     # Gaussian at best-fit parameter value for reference
     val_grid = np.linspace(par_vals[0], par_vals[-1], 100)
