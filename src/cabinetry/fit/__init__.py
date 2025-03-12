@@ -2,7 +2,7 @@
 
 from collections import defaultdict
 import logging
-from typing import Any, cast, Dict, List, Literal, Optional, Tuple, Union
+from typing import Any, cast, Dict, List, Literal, Optional, Tuple, TypedDict, Union
 
 import iminuit
 import numpy as np
@@ -21,6 +21,16 @@ from cabinetry.fit.results_containers import (
 
 
 log = logging.getLogger(__name__)
+
+
+class FitKwargs(TypedDict, total=False):
+    init_pars: List[float]
+    fix_pars: List[bool]  # Explicitly state it's a list
+    par_bounds: Optional[List[Tuple[float, float]]]
+    strategy: Optional[Literal[0, 1, 2]]
+    maxiter: Optional[int]
+    tolerance: Optional[float]
+    custom_fit: bool
 
 
 def print_results(fit_results: FitResults) -> None:
@@ -470,7 +480,9 @@ def _get_impacts_summary(
             non-systematic sources
     """
     non_syst_modifiers = ["normfactor", "shapefactor", "staterror"]  # Lumi ?
-    impacts_summary = defaultdict(lambda: defaultdict(float))
+    impacts_summary: Dict[str, Dict[str, float]] = defaultdict(
+        lambda: defaultdict(float)
+    )
     # Dictionary to store the merged values after removing certain modifiers
     syst_impacts_map = defaultdict(list)
     # Iterate through each modifier and its corresponding data
@@ -492,7 +504,7 @@ def _get_impacts_summary(
                 )
             )
 
-    return impacts_summary
+    return dict(impacts_summary)
 
 
 def _get_datastat_impacts_np_shift(
@@ -501,7 +513,7 @@ def _get_datastat_impacts_np_shift(
     data: List[float],
     poi_index: int,
     fit_results: FitResults,
-    fit_kwargs,
+    fit_kwargs: FitKwargs,
 ) -> Dict[str, Dict[str, float]]:
     """
     Calculate the impact of statistical uncertainties on the parameter of interest by
@@ -514,7 +526,7 @@ def _get_datastat_impacts_np_shift(
         data (List[float]): data (including auxdata) the model is fit to
         poi_index (int): index of the parameter of interest
         fit_results (FitResults): nominal fit results to use in impacts calculation
-        fit_kwargs (_type_): settings to be used in the fits
+        fit_kwargs (FitKwargs): settings to be used in the fits
 
     Returns:
         Dict[str, Dict[str, float]]: impacts summary categorized by systematic and
@@ -532,12 +544,19 @@ def _get_datastat_impacts_np_shift(
         fit_results.bestfit[i_par] if i_par != poi_index else init_pars_datastat[i_par]
         for i_par in range(len(model.config.par_names))
     ]
+    # removing init_pars and fix_pars from dict, cast it to FitKwargs
+    # type then update values in dict since casting re-introduces them.
+    updated_fit_kwargs = cast(
+        FitKwargs,
+        {k: v for k, v in fit_kwargs.items() if k not in ["init_pars", "fix_pars"]},
+    )
+    updated_fit_kwargs["init_pars"] = init_pars_datastat
+    updated_fit_kwargs["fix_pars"] = fix_pars_datastat
+
     fit_results_datastat = _fit_model(
         model,
         data,
-        init_pars=init_pars_datastat,
-        fix_pars=fix_pars_datastat,
-        **{k: v for k, v in fit_kwargs.items() if k not in ["init_pars", "fix_pars"]},
+        **updated_fit_kwargs,
     )
     datastat_poi_val = fit_results_datastat.bestfit[poi_index]
     datastat_impact = datastat_poi_val - nominal_poi
@@ -546,7 +565,9 @@ def _get_datastat_impacts_np_shift(
     return impacts_summary
 
 
-def _get_datastat_impacts_quadruture(impacts_summary, total_error):
+def _get_datastat_impacts_quadruture(
+    impacts_summary: Dict[str, Dict[str, float]], total_error: float
+) -> Dict[str, Dict[str, float]]:
     """
     Calculate the impact of statistical uncertainties on the parameter of subtracting
     other sources from the total error in quadrature.
@@ -636,7 +657,9 @@ def _cov_impacts(
               systematic and non-systematic sources
     """
     total_poi_error = fit_results.uncertainty[poi_index]
-    impacts_by_modifier_type = defaultdict(lambda: defaultdict(list))
+    impacts_by_modifier_type: Dict[str, Dict[str, List[float]]] = defaultdict(
+        lambda: defaultdict(list)
+    )
     i_global_par = 0
 
     for parameter in model.config.par_order:
@@ -688,7 +711,7 @@ def _cov_impacts(
     impacts_summary = _get_impacts_summary(impacts_by_modifier_type)
     impacts_summary = _get_datastat_impacts_quadruture(impacts_summary, total_poi_error)
 
-    return impacts_by_modifier_type, impacts_summary
+    return dict(impacts_by_modifier_type), impacts_summary
 
 
 def _np_impacts(
@@ -698,7 +721,7 @@ def _np_impacts(
     fit_results: FitResults,
     prefit_unc: np.ndarray,
     labels: List[str],
-    fit_kwargs,
+    fit_kwargs: FitKwargs,
 ) -> Tuple[Dict[str, Dict[str, List[float]]], Dict[str, Dict[str, float]]]:
     """
     Computes the impact of nuisance parameters on the POI by shifting parameter
@@ -712,7 +735,7 @@ def _np_impacts(
         fit_results (FitResults): nominal fit results to use in impacts calculation
         prefit_unc (np.ndarray): pre-fit uncertainties of parameters
         labels (List[str]): list of parameter names
-        fit_kwargs: settings to be used in the fits.
+        fit_kwargs (FitKwargs): settings to be used in the fits.
 
     Returns:
         Tuple[Dict[str, Dict[str, List[float]]], Dict[str, Dict[str, float]]]:
@@ -723,7 +746,9 @@ def _np_impacts(
               systematic and non-systematic sources.
     """
     nominal_poi = fit_results.bestfit[poi_index]
-    impacts_by_modifier_type = defaultdict(lambda: defaultdict(list))
+    impacts_by_modifier_type: Dict[str, Dict[str, List[float]]] = defaultdict(
+        lambda: defaultdict(list)
+    )
     i_global_par = 0
 
     for parameter in model.config.par_order:
@@ -765,16 +790,24 @@ def _np_impacts(
                     init_pars_ranking = fit_kwargs["init_pars"].copy()
                     # value of current nuisance parameter
                     init_pars_ranking[i_par] = np_val
-                    fit_results_ranking = _fit_model(
-                        model,
-                        data,
-                        init_pars=init_pars_ranking,
-                        fix_pars=fix_pars_ranking,
-                        **{
+
+                    # removing init_pars and fix_pars from dict, cast it to FitKwargs
+                    # type then update values in dict since casting re-introduces them.
+                    updated_fit_kwargs = cast(
+                        FitKwargs,
+                        {
                             k: v
                             for k, v in fit_kwargs.items()
                             if k not in ["init_pars", "fix_pars"]
                         },
+                    )
+                    updated_fit_kwargs["init_pars"] = init_pars_ranking
+                    updated_fit_kwargs["fix_pars"] = fix_pars_ranking
+
+                    fit_results_ranking = _fit_model(
+                        model,
+                        data,
+                        **updated_fit_kwargs,
                     )
                     poi_val = fit_results_ranking.bestfit[poi_index]
                     parameter_impact = poi_val - nominal_poi
@@ -798,7 +831,7 @@ def _np_impacts(
         impacts_summary, model, data, poi_index, fit_results, fit_kwargs
     )
 
-    return impacts_by_modifier_type, impacts_summary
+    return dict(impacts_by_modifier_type), impacts_summary
 
 
 def _auxdata_shift_impacts(
@@ -1047,15 +1080,18 @@ def ranking(
         RankingResults: fit results for parameters, and pre- and post-fit impacts
     """
 
-    fit_settings = {
-        "init_pars": init_pars or model.config.suggested_init(),
-        "fix_pars": fix_pars or model.config.suggested_fixed(),
-        "par_bounds": par_bounds,
-        "strategy": strategy,
-        "maxiter": maxiter,
-        "tolerance": tolerance,
-        "custom_fit": custom_fit,
-    }
+    fit_settings = cast(
+        FitKwargs,
+        {
+            "init_pars": init_pars or model.config.suggested_init(),
+            "fix_pars": fix_pars or model.config.suggested_fixed(),
+            "par_bounds": par_bounds,
+            "strategy": strategy,
+            "maxiter": maxiter,
+            "tolerance": tolerance,
+            "custom_fit": custom_fit,
+        },
+    )
 
     if fit_results is None:
         fit_results = _fit_model(model, data, **fit_settings)
