@@ -1,0 +1,51 @@
+cff-version: 1.2.0
+message: "Please cite the following works when using this software."
+type: software
+authors:
+- family-names: "Held"
+  given-names: "Alexander"
+  orcid: "https://orcid.org/0000-0002-8924-5885"
+  affiliation: "University of Wisconsin-Madison"
+title: "cabinetry: v0.6.0"
+version: 0.6.0
+doi: 10.5281/zenodo.4742752
+repository-code: "https://github.com/scikit-hep/cabinetry/releases/tag/v0.6.0"
+url: "https://cabinetry.readthedocs.io/"
+keywords:
+  - python
+  - fitting
+  - physics
+  - profile likelihood
+license: "BSD-3-Clause"
+abstract: |
+  Statistical models in [HistFactory](https://cds.cern.ch/record/1456844)
+  format can be built by `cabinetry` from instructions in a declarative
+  configuration.
+  `cabinetry` makes heavy use of [`pyhf`](https://pyhf.readthedocs.io/) for
+  statistical inference, and provides additional utilities to help study and
+  disseminate fit results.
+  This includes commonly used visualizations.
+  Due to its modular approach, analyzers are free to use all of `cabinetry`'s
+  functionality or only some pieces.
+  `cabinetry` can be used for inference and visualization with any
+  `pyhf`-compatible model, whether it was built with `cabinetry` or not.
+references:
+  - type: article
+    authors:
+    - family-names: "Held"
+      given-names: "Alexander"
+      orcid: "https://orcid.org/0000-0002-8924-5885"
+      affiliation: "New York University"
+    - family-names: "Cranmer"
+      given-names: "Kyle"
+      orcid: "https://orcid.org/0000-0002-5769-7094"
+      affiliation: "New York University"
+    title: "Building and steering binned template fits with cabinetry"
+    doi: 10.1051/epjconf/202125103067
+    url: "https://doi.org/10.1051/epjconf/202125103067"
+    year: 2021
+    publisher:
+      name: "EDP Sciences"
+    volume: 251
+    pages: 03067
+    journal: EPJ Web of Web of Conferences

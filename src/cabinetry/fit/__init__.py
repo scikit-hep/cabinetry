@@ -1,7 +1,7 @@
 """High-level entry point for statistical inference."""
 
 import logging
-from typing import Any, Dict, List, Literal, Optional, Tuple, Union
+from typing import Any, cast, Dict, List, Literal, Optional, Tuple, Union
 
 import iminuit
 import numpy as np
@@ -383,7 +383,11 @@ def _run_minos(
 
 
 def _goodness_of_fit(
-    model: pyhf.pdf.Model, data: List[float], best_twice_nll: float
+    model: pyhf.pdf.Model,
+    data: List[float],
+    best_twice_nll: float,
+    *,
+    fix_pars: Optional[List[bool]] = None,
 ) -> float:
     """Calculates goodness-of-fit p-value with a saturated model.
 
@@ -397,6 +401,8 @@ def _goodness_of_fit(
         data (List[float]): the observed data
         best_twice_nll (float): best-fit -2 log(likelihood) of fit for which goodness-
             of-fit should be calculated
+        fix_pars (Optional[List[bool]], optional): list of booleans specifying which
+            parameters are held constant, defaults to None (use ``pyhf`` suggestion)
 
     Returns:
         float: goodness-of-fit p-value
@@ -432,7 +438,7 @@ def _goodness_of_fit(
     # of bins minus the number of unconstrained parameters
     n_dof = sum(
         model.config.channel_nbins.values()
-    ) - model_utils.unconstrained_parameter_count(model)
+    ) - model_utils.unconstrained_parameter_count(model, fix_pars=fix_pars)
     log.debug(f"number of degrees of freedom: {n_dof}")
 
     if n_dof <= 0:
@@ -522,7 +528,9 @@ def fit(
 
     if goodness_of_fit:
         # calculate goodness-of-fit with saturated model
-        p_val = _goodness_of_fit(model, data, fit_results.best_twice_nll)
+        p_val = _goodness_of_fit(
+            model, data, fit_results.best_twice_nll, fix_pars=fix_pars
+        )
         fit_results = fit_results._replace(goodness_of_fit=p_val)
 
     return fit_results
@@ -771,7 +779,7 @@ def scan(
     for i_par, par_value in enumerate(scan_values):
         log.debug(f"performing fit with {par_name} = {par_value:.3f}")
         init_pars_scan = init_pars.copy()
-        init_pars_scan[par_index] = par_value
+        init_pars_scan[par_index] = cast(float, par_value)
         scan_fit_results = _fit_model(
             model,
             data,
@@ -995,8 +1003,9 @@ def limit(
         except ValueError:
             # invalid starting bracket is most common issue
             log.error(
-                f"CLs values at {bracket[0]:.4f} and {bracket[1]:.4f} do not bracket "
-                f"CLs={cls_target:.4f}, try a different starting bracket"
+                f"CLs values for {model.config.poi_name}={bracket[0]:.4f} and "
+                f"{bracket[1]:.4f} do not bracket CLs={cls_target:.4f}, try a "
+                "different starting bracket"
             )
             # set POI in model back to original value
             model.config.set_poi(original_model_poi_name)

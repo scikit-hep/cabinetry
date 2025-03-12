@@ -388,6 +388,12 @@ def test_unconstrained_parameter_count(example_spec, example_spec_shapefactor):
     model = pyhf.Workspace(example_spec_shapefactor).model()
     assert model_utils.unconstrained_parameter_count(model) == 3
 
+    # fixed parameters can be provided to function
+    model = pyhf.Workspace(example_spec_shapefactor).model()
+    fix_pars = model.config.suggested_fixed()
+    fix_pars[0] = True
+    assert model_utils.unconstrained_parameter_count(model, fix_pars=fix_pars) == 2
+
     # fixed parameters are skipped in counting
     example_spec_shapefactor["measurements"][0]["config"]["parameters"].append(
         {"name": "Signal strength", "fixed": True}
