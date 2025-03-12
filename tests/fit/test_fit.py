@@ -455,12 +455,14 @@ def test__goodness_of_fit(
     assert np.allclose(p_val, 0.91926079)
     caplog.clear()
 
-    # same setup but using custom auxdata
+    # same setup but using custom auxdata and custom fixed parameters
     model, _ = model_utils.model_and_data(example_spec_multibin)
     data = [35, 8, 10] + [0.9, 1.1, 0.8]  # custom aux
-    p_val = fit._goodness_of_fit(model, data, 9.964913)
+    fix_pars = [False, False, False, True]  # custom fixed
+    p_val = fit._goodness_of_fit(model, data, 9.964913, fix_pars=fix_pars)
     assert mock_pars.call_count == 2
     assert np.allclose(mock_pars.call_args[0][1], [0.9, 1.1, 0.8])  # aux picked up
+    assert mock_count.call_args[1] == {"fix_pars": fix_pars}  # fixed pars picked up
     assert np.allclose(p_val, 0.91926079)  # same result as before
 
     # no auxdata and zero degrees of freedom in chi2 test
@@ -582,9 +584,9 @@ def test_fit(mock_fit, mock_print, mock_gof):
     assert np.allclose(fit_results.bestfit, [1.0])
 
     # goodness-of-fit test
-    fit_results_gof = fit.fit(model, data, goodness_of_fit=True)
+    fit_results_gof = fit.fit(model, data, goodness_of_fit=True, fix_pars=fix_pars)
     assert mock_gof.call_args[0] == (model, data, 2.0)
-    assert mock_gof.call_args[1] == {"fix_pars": None}
+    assert mock_gof.call_args[1] == {"fix_pars": fix_pars}
     assert fit_results_gof.goodness_of_fit == 0.1
 
 

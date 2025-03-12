@@ -1,7 +1,7 @@
 """High-level entry point for statistical inference."""
 
 import logging
-from typing import Any, Dict, List, Literal, Optional, Tuple, Union
+from typing import Any, cast, Dict, List, Literal, Optional, Tuple, Union
 
 import iminuit
 import numpy as np
@@ -781,7 +781,7 @@ def scan(
     for i_par, par_value in enumerate(scan_values):
         log.debug(f"performing fit with {par_name} = {par_value:.3f}")
         init_pars_scan = init_pars.copy()
-        init_pars_scan[par_index] = par_value
+        init_pars_scan[par_index] = cast(float, par_value)
         scan_fit_results = _fit_model(
             model,
             data,
