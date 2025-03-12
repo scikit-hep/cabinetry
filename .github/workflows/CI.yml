@@ -58,18 +58,22 @@ jobs:
     - name: List installed Python packages
       run: python -m pip list
     - name: Test with pytest, generate coverage report (skipping typeguard)
+      if: matrix.python-version == '3.9'
+      run: |
+        # skip typeguard for coverage https://github.com/agronholm/typeguard/issues/356
+        pytest --runslow --cov-report=xml --typeguard-packages=""
+    - name: Test with pytest
+      if: matrix.python-version != '3.9' && matrix.python-version != '3.8'
+      run: |
+        pytest --runslow
+    - name: Test with pytest for py38
       if: matrix.python-version == '3.8'
       run: |
         # https://github.com/scikit-hep/cabinetry/issues/428
         pip install --upgrade typing_extensions
-        # skip typeguard for coverage https://github.com/agronholm/typeguard/issues/356
-        pytest --runslow --cov-report=xml --typeguard-packages=""
-    - name: Test with pytest
-      if: matrix.python-version != '3.8'
-      run: |
         pytest --runslow
     - name: Upload coverage to codecov
-      if: matrix.python-version == '3.8'
+      if: matrix.python-version == '3.9'
       uses: codecov/codecov-action@v4
       with:
         token: ${{ secrets.CODECOV_TOKEN }}
