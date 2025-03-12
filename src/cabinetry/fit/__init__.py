@@ -504,7 +504,7 @@ def _get_impacts_summary(
                 )
             )
 
-    return dict(impacts_summary)
+    return impacts_summary
 
 
 def _get_datastat_impacts_np_shift(
