@@ -66,6 +66,12 @@ jobs:
       if: matrix.python-version != '3.9'
       run: |
         pytest --runslow
+    - name: Test with pytest for py38
+      if: matrix.python-version == '3.8'
+      run: |
+        # https://github.com/scikit-hep/cabinetry/issues/428
+        pip install --upgrade typing_extensions
+        pytest --runslow
     - name: Upload coverage to codecov
       if: matrix.python-version == '3.9'
       uses: codecov/codecov-action@v4
