@@ -446,6 +446,8 @@ def prediction(
         label (Optional[str], optional): label to include in model prediction, defaults
             to None (then will use "pre-fit" if fit results are not included, and "post-
             fit" otherwise)
+        skip_unc (bool, optional): whether to skip the calculation of uncertainties or
+            not, defaults to False
 
     Returns:
         ModelPrediction: model, yields and uncertainties per channel, sample, bin
@@ -490,8 +492,14 @@ def prediction(
         n_bins = sum(model.config.channel_nbins.values())
         n_channels = len(model.config.channels)
         n_samples = len(model.config.samples)
-        total_stdev_model_channels = np.zeros((n_channels, n_bins + 1)).tolist()
-        total_stdev_model_bins = np.zeros((n_bins, n_samples + 1, n_channels)).tolist()
+        # manually cast, possible cause https://github.com/numpy/numpy/issues/27944
+        total_stdev_model_channels = cast(
+            List[List[float]], np.zeros((n_channels, n_bins + 1)).tolist()
+        )
+        total_stdev_model_bins = cast(
+            List[List[List[float]]],
+            np.zeros((n_bins, n_samples + 1, n_channels)).tolist(),
+        )
 
     return ModelPrediction(
         model, model_yields, total_stdev_model_bins, total_stdev_model_channels, label
