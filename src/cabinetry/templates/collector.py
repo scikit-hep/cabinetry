@@ -54,7 +54,7 @@ def _histo_path(
     sample_path = sample.get("SamplePath", None)
 
     # check whether a systematic is being processed
-    variation_override = False
+    variation_override = None
     if template is not None:
         # determine whether the template has an override for SamplePath specified
         sample_override = utils._check_for_override(systematic, template, "SamplePath")
