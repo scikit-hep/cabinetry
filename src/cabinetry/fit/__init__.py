@@ -841,7 +841,7 @@ def _auxdata_shift_impacts(
     fit_results: FitResults,
     prefit_unc: np.ndarray,
     labels: List[str],
-    fit_kwargs,
+    fit_kwargs: FitKwargs,
 ) -> Tuple[Dict[str, Dict[str, List[float]]], Dict[str, Dict[str, float]]]:
     """
     Computes the impact of a parameter on the POI by shifting its associated
@@ -855,7 +855,7 @@ def _auxdata_shift_impacts(
         fit_results (FitResults): nominal fit results to use in impacts calculation
         prefit_unc (np.ndarray): pre-fit uncertainties of parameters
         labels (List[str]): list of parameter names
-        fit_kwargs: settings to be used in the fits.
+        fit_kwargs (FitKwargs): settings to be used in the fits.
 
     Returns:
         Tuple[Dict[str, Dict[str, List[float]]], Dict[str, Dict[str, float]]]:
@@ -868,7 +868,9 @@ def _auxdata_shift_impacts(
     nominal_poi = fit_results.bestfit[poi_index]
     total_poi_error = fit_results.uncertainty[poi_index]
     n_bins_total = sum(model.config.channel_nbins.values())
-    impacts_by_modifier_type = defaultdict(lambda: defaultdict(list))
+    impacts_by_modifier_type: Dict[str, Dict[str, List[float]]] = defaultdict(
+        lambda: defaultdict(list)
+    )
     i_global_par = 0
     i_auxdata = 0
     for parameter in model.config.par_order:
@@ -935,7 +937,7 @@ def _auxdata_shift_impacts(
     impacts_summary = _get_impacts_summary(impacts_by_modifier_type)
     impacts_summary = _get_datastat_impacts_quadruture(impacts_summary, total_poi_error)
 
-    return impacts_by_modifier_type, impacts_summary
+    return dict(impacts_by_modifier_type), impacts_summary
 
 
 def fit(
