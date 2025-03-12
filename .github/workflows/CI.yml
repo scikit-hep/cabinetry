@@ -63,7 +63,7 @@ jobs:
         # skip typeguard for coverage https://github.com/agronholm/typeguard/issues/356
         pytest --runslow --cov-report=xml --typeguard-packages=""
     - name: Test with pytest
-      if: matrix.python-version != '3.9'
+      if: matrix.python-version != '3.9' && matrix.python-version != '3.8'
       run: |
         pytest --runslow
     - name: Test with pytest for py38
