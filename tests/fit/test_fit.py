@@ -563,6 +563,7 @@ def test_ranking(mock_fit, example_spec):
         )
         assert np.allclose(mock_fit.call_args_list[i][1]["fix_pars"], expected_fix)
         assert mock_fit.call_args_list[i][1]["par_bounds"] is None
+
         assert mock_fit.call_args_list[i][1]["strategy"] is None
         assert mock_fit.call_args_list[i][1]["maxiter"] is None
         assert mock_fit.call_args_list[i][1]["tolerance"] is None
@@ -624,6 +625,8 @@ def test_ranking(mock_fit, example_spec):
             "maxiter": 100,
             "tolerance": 0.01,
             "custom_fit": True,
+            "minos": None,
+            "minos_cl": None,
         },
     )
     # fits for impact (comparing each option separately since init_pars needs allclose)
