@@ -679,12 +679,16 @@ def ranking(
 
         parameter_impacts = []
         # calculate impacts: pre-fit up, pre-fit down, post-fit up, post-fit down
-        for np_val in [
-            fit_results.bestfit[i_par] + prefit_unc[i_par],
-            fit_results.bestfit[i_par] - prefit_unc[i_par],
-            fit_results.bestfit[i_par] + postfit_unc_up,
-            fit_results.bestfit[i_par] + postfit_unc_do,
-        ]:
+        fit_labels = ["pre-fit up", "pre-fit down", "post-fit up", "post-fit down"]
+        for fit_idx, np_val in enumerate(
+            [
+                fit_results.bestfit[i_par] + prefit_unc[i_par],
+                fit_results.bestfit[i_par] - prefit_unc[i_par],
+                fit_results.bestfit[i_par] + postfit_unc_up,
+                fit_results.bestfit[i_par] + postfit_unc_do,
+            ]
+        ):
+            fit_label = fit_labels[fit_idx]
             # can skip pre-fit calculation for unconstrained parameters (their
             # pre-fit uncertainty is set to 0), and pre- and post-fit calculation
             # for fixed parameters (both uncertainties set to 0 as well)
@@ -694,6 +698,10 @@ def ranking(
             else:
                 if par_bounds is not None:
                     if not par_bounds[i_par][0] <= np_val <= par_bounds[i_par][1]:
+                        log.info(
+                            f"Parameter {label} value is out of bounds in the"
+                            + f" {fit_label} fit. Fixing it to its boundary."
+                        )
                         np_val = min(
                             max(np_val, par_bounds[i_par][0]), par_bounds[i_par][1]
                         )

@@ -609,6 +609,19 @@ def test_fit(mock_fit, mock_print, mock_gof):
         fit.FitResults(
             np.asarray([0.8, 0.9]), np.asarray([0.1, 0.1]), ["a", "b"], np.empty(0), 0.0
         ),
+        # for ninth ranking call with reference result including minos
+        fit.FitResults(
+            np.asarray([1.3, 0.9]), np.asarray([0.1, 0.1]), ["a", "b"], np.empty(0), 0.0
+        ),
+        fit.FitResults(
+            np.asarray([0.7, 0.9]), np.asarray([0.1, 0.1]), ["a", "b"], np.empty(0), 0.0
+        ),
+        fit.FitResults(
+            np.asarray([1.2, 0.9]), np.asarray([0.1, 0.1]), ["a", "b"], np.empty(0), 0.0
+        ),
+        fit.FitResults(
+            np.asarray([0.8, 0.9]), np.asarray([0.1, 0.1]), ["a", "b"], np.empty(0), 0.0
+        ),
     ],
 )
 def test_ranking(mock_fit, example_spec, caplog):
@@ -790,6 +803,23 @@ def test_ranking(mock_fit, example_spec, caplog):
     )
     assert (
         "No parameter bounds specified. Falling back to suggested bounds from pyhf."
+        in [rec.message for rec in caplog.records]
+    )
+    caplog.clear()
+
+    # parameter bounds specified but np_value for a ranking fit is out of bound
+    fit_results = fit.FitResults(
+        np.asarray([1.0, 0.9]), np.asarray([0.1, 1.1]), ["a", "b"], np.empty(0), 0.0
+    )
+    ranking_results = fit.ranking(
+        model,
+        data,
+        fit_results=fit_results,
+        use_suggested_bounds=True,
+    )
+    assert (
+        "Parameter staterror_Signal-Region[0] value is out of bounds in the"
+        + " post-fit down fit. Fixing it to its boundary."
         in [rec.message for rec in caplog.records]
     )
     caplog.clear()
