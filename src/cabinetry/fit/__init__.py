@@ -626,23 +626,22 @@ def ranking(
 
     if par_bounds is None and use_suggested_bounds:
         log.info(
-            "All parameter bounds are not specified, using suggested bounds from pyhf"
+            "No parameter bounds specified. Falling back to suggested bounds from pyhf."
         )
         par_bounds = model.config.suggested_bounds()
     elif par_bounds is not None and use_suggested_bounds:
-        log.info(
-            "Some parameter bounds are not specified, using suggested bounds from pyhf"
-        )
-        par_bounds = [
-            user_bound if user_bound is not None else suggested_bound
-            for user_bound, suggested_bound in zip(
-                par_bounds, model.config.suggested_bounds()
+        if len(par_bounds) != len(model.config.suggested_bounds()):
+            log.warning(
+                "Partial set of parameter bounds provided."
+                + " Overriding with suggested bounds from pyhf for all parameters."
             )
-        ]
+            par_bounds = model.config.suggested_bounds()
+        else:
+            log.info("Parameter bounds are specified and will be used for ranking.")
     elif par_bounds is None and not use_suggested_bounds:
         log.warning(
-            "Parameter bounds are not set, some fits in ranking might"
-            + " fail to converge if NP value goes out-of-bounds"
+            "No parameter bounds specified and suggested bounds are disabled."
+            + " Ranking fits might be unstable."
         )
 
     all_impacts = []
