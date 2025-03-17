@@ -538,9 +538,52 @@ def test_fit(mock_fit, mock_print, mock_gof):
         fit.FitResults(
             np.asarray([0.7, 0.9]), np.asarray([0.1, 0.1]), ["a", "b"], np.empty(0), 0.0
         ),
+        # for fourth ranking call without reference results with param bounds and
+        # use_suggested_bounds used together
+        fit.FitResults(
+            np.asarray([1.3, 0.9]), np.asarray([0.1, 0.1]), ["a", "b"], np.empty(0), 0.0
+        ),
+        fit.FitResults(
+            np.asarray([0.7, 0.9]), np.asarray([0.1, 0.1]), ["a", "b"], np.empty(0), 0.0
+        ),
+        fit.FitResults(
+            np.asarray([1.2, 0.9]), np.asarray([0.1, 0.1]), ["a", "b"], np.empty(0), 0.0
+        ),
+        fit.FitResults(
+            np.asarray([0.8, 0.9]), np.asarray([0.1, 0.1]), ["a", "b"], np.empty(0), 0.0
+        ),
+        # for fifth ranking call without reference results with partial param bounds and
+        # use_suggested_bounds=True
+        fit.FitResults(
+            np.asarray([1.3, 0.9]), np.asarray([0.1, 0.1]), ["a", "b"], np.empty(0), 0.0
+        ),
+        fit.FitResults(
+            np.asarray([0.7, 0.9]), np.asarray([0.1, 0.1]), ["a", "b"], np.empty(0), 0.0
+        ),
+        fit.FitResults(
+            np.asarray([1.2, 0.9]), np.asarray([0.1, 0.1]), ["a", "b"], np.empty(0), 0.0
+        ),
+        fit.FitResults(
+            np.asarray([0.8, 0.9]), np.asarray([0.1, 0.1]), ["a", "b"], np.empty(0), 0.0
+        ),
+        # for sixth ranking call without reference results with partial param bounds and
+        # use_suggested_bounds=False
+        fit.FitResults(
+            np.asarray([1.3, 0.9]), np.asarray([0.1, 0.1]), ["a", "b"], np.empty(0), 0.0
+        ),
+        fit.FitResults(
+            np.asarray([0.7, 0.9]), np.asarray([0.1, 0.1]), ["a", "b"], np.empty(0), 0.0
+        ),
+        fit.FitResults(
+            np.asarray([1.2, 0.9]), np.asarray([0.1, 0.1]), ["a", "b"], np.empty(0), 0.0
+        ),
+        fit.FitResults(
+            np.asarray([0.8, 0.9]), np.asarray([0.1, 0.1]), ["a", "b"], np.empty(0), 0.0
+        ),
     ],
 )
-def test_ranking(mock_fit, example_spec):
+def test_ranking(mock_fit, example_spec, caplog):
+    caplog.set_level(logging.DEBUG)
     example_spec["measurements"][0]["config"]["parameters"][0]["fixed"] = False
     bestfit = np.asarray([1.0, 0.9])
     uncertainty = np.asarray([0.1, 0.02])
@@ -565,6 +608,13 @@ def test_ranking(mock_fit, example_spec):
         assert mock_fit.call_args_list[i][1]["maxiter"] is None
         assert mock_fit.call_args_list[i][1]["tolerance"] is None
         assert mock_fit.call_args_list[i][1]["custom_fit"] is False
+
+    assert (
+        "No parameter bounds specified and suggested bounds are disabled."
+        + " Ranking fits might be unstable."
+        in [rec.message for rec in caplog.records]
+    )
+    caplog.clear()
 
     # POI removed from fit results
     assert np.allclose(ranking_results.bestfit, [0.9])
@@ -652,6 +702,54 @@ def test_ranking(mock_fit, example_spec):
     # no POI specified anywhere
     with pytest.raises(ValueError, match="no POI specified, cannot calculate ranking"):
         fit.ranking(model, data, fit_results=fit_results)
+
+    # test parameter bounding
+    # parameter bounds fully specified
+    caplog.clear()
+    example_spec["measurements"][0]["config"]["parameters"][0]["fixed"] = False
+    example_spec["measurements"][0]["config"]["poi"] = "Signal strength"
+    model, data = model_utils.model_and_data(example_spec)
+    ranking_results = fit.ranking(
+        model,
+        data,
+        fit_results=fit_results,
+        par_bounds=[(0, 5), (0.1, 10)],
+    )
+
+    assert "Parameter bounds are specified and will be used for ranking." in [
+        rec.message for rec in caplog.records
+    ]
+    caplog.clear()
+
+    # parameter bounds partially specified and use_suggested_bounds used
+    ranking_results = fit.ranking(
+        model,
+        data,
+        fit_results=fit_results,
+        par_bounds=[(0, 5)],
+        use_suggested_bounds=True,
+    )
+    assert (
+        "Partial set of parameter bounds provided."
+        + " Overriding with suggested bounds from pyhf for all parameters."
+        in [rec.message for rec in caplog.records]
+    )
+    caplog.clear()
+
+    # parameter bounds partially specified and use_suggested_bounds not used
+    ranking_results = fit.ranking(
+        model,
+        data,
+        fit_results=fit_results,
+        par_bounds=[(0, 5)],
+        use_suggested_bounds=False,
+    )
+    assert (
+        "Partial set of parameter bounds provided and suggested bounds are disabled."
+        + " Ranking fits might be unstable."
+        in [rec.message for rec in caplog.records]
+    )
+    caplog.clear()
 
 
 @mock.patch(
