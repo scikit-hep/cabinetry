@@ -642,7 +642,7 @@ def ranking(
             "No parameter bounds specified and suggested bounds are disabled."
             + " Ranking fits might be unstable."
         )
-    else:  # par_bounds is not None
+    elif par_bounds is not None:
         if len(par_bounds) != len(model.config.suggested_bounds()):
             if use_suggested_bounds:
                 log.warning(
