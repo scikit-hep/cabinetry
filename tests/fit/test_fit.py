@@ -580,6 +580,19 @@ def test_fit(mock_fit, mock_print, mock_gof):
         fit.FitResults(
             np.asarray([0.8, 0.9]), np.asarray([0.1, 0.1]), ["a", "b"], np.empty(0), 0.0
         ),
+        # for seventh ranking call with reference result including minos
+        fit.FitResults(
+            np.asarray([1.3, 0.9]), np.asarray([0.1, 0.1]), ["a", "b"], np.empty(0), 0.0
+        ),
+        fit.FitResults(
+            np.asarray([0.7, 0.9]), np.asarray([0.1, 0.1]), ["a", "b"], np.empty(0), 0.0
+        ),
+        fit.FitResults(
+            np.asarray([1.2, 0.9]), np.asarray([0.1, 0.1]), ["a", "b"], np.empty(0), 0.0
+        ),
+        fit.FitResults(
+            np.asarray([0.8, 0.9]), np.asarray([0.1, 0.1]), ["a", "b"], np.empty(0), 0.0
+        ),
     ],
 )
 def test_ranking(mock_fit, example_spec, caplog):
@@ -603,7 +616,6 @@ def test_ranking(mock_fit, example_spec, caplog):
         )
         assert np.allclose(mock_fit.call_args_list[i][1]["fix_pars"], expected_fix)
         assert mock_fit.call_args_list[i][1]["par_bounds"] is None
-
         assert mock_fit.call_args_list[i][1]["strategy"] is None
         assert mock_fit.call_args_list[i][1]["maxiter"] is None
         assert mock_fit.call_args_list[i][1]["tolerance"] is None
@@ -750,6 +762,33 @@ def test_ranking(mock_fit, example_spec, caplog):
         in [rec.message for rec in caplog.records]
     )
     caplog.clear()
+
+    fit_results = fit.FitResults(
+        bestfit,
+        uncertainty,
+        labels,
+        np.empty(0),
+        0.0,
+        0.0,
+        {"Signal strength": (-0.28, 0.32), "staterror_Signal-Region[0]": (-0.18, 0.22)},
+    )
+    ranking_results = fit.ranking(model, data, fit_results=fit_results)
+    # post-fit down, POI (stays same because we only vary NPs)
+    assert np.allclose(
+        mock_fit.call_args_list[-1][1]["init_pars"][0], (fit_results.bestfit[0])
+    )
+    # post-fit up, POI (stays same because we only vary NPs)
+    assert np.allclose(
+        mock_fit.call_args_list[-2][1]["init_pars"][0], (fit_results.bestfit[0])
+    )
+    # post-fit down, staterror
+    assert np.allclose(
+        mock_fit.call_args_list[-1][1]["init_pars"][1], (fit_results.bestfit[1] + -0.18)
+    )
+    # post-fit up, staterror
+    assert np.allclose(
+        mock_fit.call_args_list[-2][1]["init_pars"][1], (fit_results.bestfit[1] + 0.22)
+    )
 
 
 @mock.patch(
