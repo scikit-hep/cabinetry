@@ -370,11 +370,13 @@ def yield_stdev(
     of this function are cached to speed up subsequent calls with the same arguments.
 
     Args:
-        model (LightModel): the model for which to calculate the standard deviations
+        model (pyhf.pdf.Model): the model for which to calculate the standard deviations
             for all bins
         parameters (np.ndarray): central values of model parameters
         uncertainty (np.ndarray): uncertainty of model parameters
         corr_mat (np.ndarray): correlation matrix
+        light_model (Optional[LightModel], optional): light-weight model to use for
+            merging samples, defaults to None
 
     Returns:
         Tuple[List[List[List[float]]], List[List[float]]]:
