@@ -662,7 +662,7 @@ def test_ranking(mock_fit, example_spec, caplog):
     assert np.allclose(ranking_results.postfit_up, [0.2])
     assert np.allclose(ranking_results.postfit_down, [-0.2])
 
-    # no reference results, init/fixed pars, par bounds, strategy/maxiter/tolerance
+    # no fit results, init/fixed_pars, bounds, strategy/maxiter/tolerance,minos
     ranking_results = fit.ranking(
         model,
         data,
@@ -674,6 +674,8 @@ def test_ranking(mock_fit, example_spec, caplog):
         maxiter=100,
         tolerance=0.01,
         custom_fit=True,
+        minos=["Signal strength", "staterror_Signal-Region[0]"],
+        minos_cl=0.95,
     )
     assert mock_fit.call_count == 9
     # reference fit
@@ -687,8 +689,8 @@ def test_ranking(mock_fit, example_spec, caplog):
             "maxiter": 100,
             "tolerance": 0.01,
             "custom_fit": True,
-            "minos": None,
-            "minos_cl": None,
+            "minos": ["Signal strength", "staterror_Signal-Region[0]"],
+            "minos_cl": 0.95,
         },
     )
     # fits for impact (comparing each option separately since init_pars needs allclose)
