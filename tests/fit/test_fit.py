@@ -763,6 +763,7 @@ def test_ranking(mock_fit, example_spec, caplog):
         rec.message for rec in caplog.records
     ]
     caplog.clear()
+    assert mock_fit.call_count == 13
 
     # parameter bounds partially specified and use_suggested_bounds used
     ranking_results = fit.ranking(
@@ -778,6 +779,7 @@ def test_ranking(mock_fit, example_spec, caplog):
         in [rec.message for rec in caplog.records]
     )
     caplog.clear()
+    assert mock_fit.call_count == 17
 
     # parameter bounds partially specified and use_suggested_bounds not used
     ranking_results = fit.ranking(
@@ -793,6 +795,7 @@ def test_ranking(mock_fit, example_spec, caplog):
         in [rec.message for rec in caplog.records]
     )
     caplog.clear()
+    assert mock_fit.call_count == 21
 
     # parameter bounds not specified and use_suggested_bounds is used
     ranking_results = fit.ranking(
@@ -806,6 +809,7 @@ def test_ranking(mock_fit, example_spec, caplog):
         in [rec.message for rec in caplog.records]
     )
     caplog.clear()
+    assert mock_fit.call_count == 25
 
     # parameter bounds specified but np_value for a ranking fit is out of bound
     fit_results = fit.FitResults(
@@ -823,6 +827,7 @@ def test_ranking(mock_fit, example_spec, caplog):
         in [rec.message for rec in caplog.records]
     )
     caplog.clear()
+    assert mock_fit.call_count == 29
 
     fit_results = fit.FitResults(
         bestfit,
@@ -850,6 +855,8 @@ def test_ranking(mock_fit, example_spec, caplog):
     assert np.allclose(
         mock_fit.call_args_list[-2][1]["init_pars"][1], (fit_results.bestfit[1] + 0.22)
     )
+    caplog.clear()
+    assert mock_fit.call_count == 33
 
 
 @mock.patch(
