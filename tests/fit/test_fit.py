@@ -596,6 +596,19 @@ def test_fit(mock_fit, mock_print, mock_gof):
         fit.FitResults(
             np.asarray([0.8, 0.9]), np.asarray([0.1, 0.1]), ["a", "b"], np.empty(0), 0.0
         ),
+        # for eighth ranking call with reference result including minos
+        fit.FitResults(
+            np.asarray([1.3, 0.9]), np.asarray([0.1, 0.1]), ["a", "b"], np.empty(0), 0.0
+        ),
+        fit.FitResults(
+            np.asarray([0.7, 0.9]), np.asarray([0.1, 0.1]), ["a", "b"], np.empty(0), 0.0
+        ),
+        fit.FitResults(
+            np.asarray([1.2, 0.9]), np.asarray([0.1, 0.1]), ["a", "b"], np.empty(0), 0.0
+        ),
+        fit.FitResults(
+            np.asarray([0.8, 0.9]), np.asarray([0.1, 0.1]), ["a", "b"], np.empty(0), 0.0
+        ),
     ],
 )
 def test_ranking(mock_fit, example_spec, caplog):
@@ -764,6 +777,19 @@ def test_ranking(mock_fit, example_spec, caplog):
     assert (
         "Partial set of parameter bounds provided and suggested bounds are disabled."
         + " Ranking fits might be unstable."
+        in [rec.message for rec in caplog.records]
+    )
+    caplog.clear()
+
+    # parameter bounds not specified and use_suggested_bounds is used
+    ranking_results = fit.ranking(
+        model,
+        data,
+        fit_results=fit_results,
+        use_suggested_bounds=True,
+    )
+    assert (
+        "No parameter bounds specified. Falling back to suggested bounds from pyhf."
         in [rec.message for rec in caplog.records]
     )
     caplog.clear()
