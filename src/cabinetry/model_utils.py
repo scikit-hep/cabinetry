@@ -39,7 +39,6 @@ class LightConfig:
         self.channel_slices = model.config.channel_slices
         self.channel_nbins = model.config.channel_nbins
         self.npars = model.config.npars
-        # self._original_config = model.config
         # this is going to break if more config kwargs added in pyhf _ModelConfig
         self.modifier_settings = model.config.modifier_settings
         self.samples_merge_map = samples_merge_map
@@ -102,43 +101,53 @@ class LightModel:
 
 def _merge_sample_yields(
     model: LightModel,
-    old_yields: np.ndarray,
+    old_yields: Union[List[List[List[float]]], List[List[float]]],
     one_channel: Optional[bool] = False,
 ) -> np.ndarray:
+
+    samples_merge_map = model.config.samples_merge_map
 
     def _sum_per_channel(i_ch: Optional[int] = None) -> np.ndarray:
         # explicit type casting because mypy worries that old_yield
         # will be list(list(float)) or list(float)
         # but this will never happen because of the if condition
         if i_ch is not None:
-            old_yield = old_yields[i_ch]
+            old_yield = cast(List[List[float]], old_yields[i_ch])
         else:
-            old_yield = old_yields
+            old_yield = cast(List[List[float]], old_yields)
         # for each channel, sum together the desired samples
-        summed_sample = np.sum(old_yield[model.config.merged_samples_indices], axis=0)
+        summed_sample = np.sum(
+            np.asarray(old_yield)[model.config.merged_samples_indices], axis=0
+        )
         # build set of remaining samples and remove the ones already summed
         remaining_samples: np.ndarray = np.delete(
             old_yield, model.config.merged_samples_indices, axis=0
         )
         # mypy not able to tell that map cannot be None-typed
-        # so we explicitly cast it to use dict attributes
-        samples_merge_map = cast(Dict[str, List[str]], model.config.samples_merge_map)
-        model_yields_one_channel = np.insert(
-            remaining_samples,
-            np.arange(len(samples_merge_map.keys())),
-            summed_sample,
-            axis=0,
-        )
+        # so we have to check
+        if samples_merge_map is not None:
+            model_yields_one_channel = np.insert(
+                remaining_samples,
+                np.arange(len(samples_merge_map.keys())),
+                summed_sample,
+                axis=0,
+            )
+        else:
+            log.critical(
+                "Something has gone wrong in merging samples."
+                + " Report this to the dev team."
+            )
         return model_yields_one_channel
 
-    new_yields = np.zeros(0)
+    new_yields = []
     if not one_channel:
         for i_ch in range(len(model.config.channels)):
-            np.append(new_yields, _sum_per_channel(i_ch=i_ch))
+            new_yields.append(_sum_per_channel(i_ch=i_ch))
     else:
-        new_yields = _sum_per_channel()
+        new_yields = [_sum_per_channel()]  # wrap in list for consistent type
 
-    return new_yields
+    return_yields = np.asarray(new_yields[0]) if one_channel else np.asarray(new_yields)
+    return return_yields
 
 
 class ModelPrediction(NamedTuple):
@@ -424,7 +433,9 @@ def yield_stdev(
         # indices: sample, bin
         up_comb = np.vstack((up_comb, np.sum(up_comb, axis=0)))
         if light_model is not None:
-            up_comb = _merge_sample_yields(light_model, up_comb, one_channel=True)
+            up_comb = _merge_sample_yields(
+                light_model, up_comb.tolist(), one_channel=True
+            )
 
         # turn into list of channels (keep all samples, select correct bins per channel)
         # indices: channel, sample, bin
@@ -457,7 +468,9 @@ def yield_stdev(
         # add total prediction (sum over samples)
         down_comb = np.vstack((down_comb, np.sum(down_comb, axis=0)))
         if light_model is not None:
-            down_comb = _merge_sample_yields(light_model, down_comb, one_channel=True)
+            down_comb = _merge_sample_yields(
+                light_model, down_comb.tolist(), one_channel=True
+            )
 
         # turn into list of channels
         down_yields_per_channel = [
@@ -611,8 +624,8 @@ def prediction(
 
     if samples_merge_map is not None:
         model_yields = cast(
-            List[List[List[str]]],
-            _merge_sample_yields(light_model, np.asarray(model_yields)).tolist(),
+            List[List[List[float]]],
+            _merge_sample_yields(light_model, model_yields).tolist(),
         )
 
     # calculate the total standard deviation of the model prediction
@@ -625,7 +638,6 @@ def prediction(
         corr_mat,
         light_model=light_model if samples_merge_map is not None else None,
     )
-
     return ModelPrediction(
         light_model,
         model_yields,
