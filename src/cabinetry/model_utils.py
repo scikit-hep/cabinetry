@@ -3,7 +3,17 @@
 from collections import defaultdict
 import json
 import logging
-from typing import Any, DefaultDict, Dict, List, NamedTuple, Optional, Tuple, Union
+from typing import (
+    Any,
+    cast,
+    DefaultDict,
+    Dict,
+    List,
+    NamedTuple,
+    Optional,
+    Tuple,
+    Union,
+)
 
 import numpy as np
 import pyhf
@@ -481,8 +491,12 @@ def prediction(
     )
 
 
-def unconstrained_parameter_count(model: pyhf.pdf.Model) -> int:
-    """Returns the number of unconstrained parameters in a model.
+def unconstrained_parameter_count(
+    model: pyhf.pdf.Model,
+    *,
+    fix_pars: Optional[List[bool]] = None,
+) -> int:
+    """Returns the number of unconstrained, non-constant parameters in a model.
 
     The number is the sum of all independent parameters in a fit. A shapefactor that
     affects multiple bins enters the count once for each independent bin. Parameters
@@ -490,15 +504,22 @@ def unconstrained_parameter_count(model: pyhf.pdf.Model) -> int:
 
     Args:
         model (pyhf.pdf.Model): model to count parameters for
+        fix_pars (Optional[List[bool]], optional): list of booleans specifying which
+            parameters are held constant, defaults to None (use ``pyhf`` suggestion)
 
     Returns:
         int: number of unconstrained parameters
     """
     n_pars = 0
+    # custom fixed parameters overrule suggested fixed parameters
+    fix_pars = fix_pars or model.config.suggested_fixed()
+
     for parname in model.config.par_order:
         if not model.config.param_set(parname).constrained:
             # only consider non-constant parameters
-            n_pars += model.config.param_set(parname).suggested_fixed.count(False)
+            par_slice = model.config.par_slice(parname)
+            n_pars += fix_pars[par_slice].count(False)
+
     return n_pars
 
 
@@ -735,7 +756,7 @@ def _parameters_maximizing_constraint_term(
     Returns:
         List[float]: parameters maximizing the model constraint term
     """
-    best_pars = []  # parameters maximizing constraint term
+    best_pars: List[float] = []  # parameters maximizing constraint term
     i_aux = 0  # current position in auxiliary data list
     i_poisson = 0  # current position in list of Poisson rescale factors
 
@@ -760,8 +781,12 @@ def _parameters_maximizing_constraint_term(
             else:
                 rescale_factors = [1.0] * n_params  # no rescaling by default
 
-            best_pars += list(
-                np.asarray(aux_data[i_aux : i_aux + n_params]) / rescale_factors
+            # manually cast, possible cause https://github.com/numpy/numpy/issues/27944
+            best_pars += cast(
+                List[float],
+                (
+                    np.asarray(aux_data[i_aux : i_aux + n_params]) / rescale_factors
+                ).tolist(),
             )
             i_aux += n_params
 
