@@ -567,7 +567,7 @@ def test_fit(mock_fit, mock_print, mock_gof):
     }
     assert np.allclose(fit_results.bestfit, [1.0])
 
-    # Custom fit
+    # custom fit
     fit_results = fit.fit(model, data, minos="abc", minos_cl=0.95, custom_fit=True)
     assert mock_fit.call_count == 4
     assert mock_fit.call_args[1] == {
