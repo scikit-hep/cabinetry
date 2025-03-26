@@ -35,7 +35,14 @@ def test_RankingResults():
     postfit_up = np.asarray([0.2])
     postfit_down = np.asarray([-0.2])
     ranking_results = fit.RankingResults(
-        bestfit, uncertainty, labels, prefit_up, prefit_down, postfit_up, postfit_down
+        bestfit,
+        uncertainty,
+        labels,
+        prefit_up,
+        prefit_down,
+        postfit_up,
+        postfit_down,
+        impacts_method="np_shift",
     )
     assert np.allclose(ranking_results.bestfit, bestfit)
     assert np.allclose(ranking_results.uncertainty, uncertainty)
@@ -44,6 +51,7 @@ def test_RankingResults():
     assert np.allclose(ranking_results.prefit_down, prefit_down)
     assert np.allclose(ranking_results.postfit_up, postfit_up)
     assert np.allclose(ranking_results.postfit_down, postfit_down)
+    assert ranking_results.impacts_method, "np_shift"
 
 
 def test_ScanResults():
