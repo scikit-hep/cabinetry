@@ -542,7 +542,7 @@ def test_fit(mock_fit, mock_print, mock_gof):
             np.asarray([0.7, 0.9]), np.asarray([0.1, 0.1]), ["a", "b"], np.empty(0), 0.0
         ),
         # for fourth ranking call without reference results with param bounds and
-        # use_suggested_bounds used together
+        # vary_within_bounds used together
         fit.FitResults(
             np.asarray([1.3, 0.9]), np.asarray([0.1, 0.1]), ["a", "b"], np.empty(0), 0.0
         ),
@@ -555,8 +555,7 @@ def test_fit(mock_fit, mock_print, mock_gof):
         fit.FitResults(
             np.asarray([0.8, 0.9]), np.asarray([0.1, 0.1]), ["a", "b"], np.empty(0), 0.0
         ),
-        # for fifth ranking call without reference results with partial param bounds and
-        # use_suggested_bounds=True
+        # for fifth ranking call with reference result including minos
         fit.FitResults(
             np.asarray([1.3, 0.9]), np.asarray([0.1, 0.1]), ["a", "b"], np.empty(0), 0.0
         ),
@@ -569,8 +568,7 @@ def test_fit(mock_fit, mock_print, mock_gof):
         fit.FitResults(
             np.asarray([0.8, 0.9]), np.asarray([0.1, 0.1]), ["a", "b"], np.empty(0), 0.0
         ),
-        # for sixth ranking call without reference results with partial param bounds and
-        # use_suggested_bounds=False
+        # for sixth ranking call with reference result including minos
         fit.FitResults(
             np.asarray([1.3, 0.9]), np.asarray([0.1, 0.1]), ["a", "b"], np.empty(0), 0.0
         ),
@@ -584,32 +582,6 @@ def test_fit(mock_fit, mock_print, mock_gof):
             np.asarray([0.8, 0.9]), np.asarray([0.1, 0.1]), ["a", "b"], np.empty(0), 0.0
         ),
         # for seventh ranking call with reference result including minos
-        fit.FitResults(
-            np.asarray([1.3, 0.9]), np.asarray([0.1, 0.1]), ["a", "b"], np.empty(0), 0.0
-        ),
-        fit.FitResults(
-            np.asarray([0.7, 0.9]), np.asarray([0.1, 0.1]), ["a", "b"], np.empty(0), 0.0
-        ),
-        fit.FitResults(
-            np.asarray([1.2, 0.9]), np.asarray([0.1, 0.1]), ["a", "b"], np.empty(0), 0.0
-        ),
-        fit.FitResults(
-            np.asarray([0.8, 0.9]), np.asarray([0.1, 0.1]), ["a", "b"], np.empty(0), 0.0
-        ),
-        # for eighth ranking call with reference result including minos
-        fit.FitResults(
-            np.asarray([1.3, 0.9]), np.asarray([0.1, 0.1]), ["a", "b"], np.empty(0), 0.0
-        ),
-        fit.FitResults(
-            np.asarray([0.7, 0.9]), np.asarray([0.1, 0.1]), ["a", "b"], np.empty(0), 0.0
-        ),
-        fit.FitResults(
-            np.asarray([1.2, 0.9]), np.asarray([0.1, 0.1]), ["a", "b"], np.empty(0), 0.0
-        ),
-        fit.FitResults(
-            np.asarray([0.8, 0.9]), np.asarray([0.1, 0.1]), ["a", "b"], np.empty(0), 0.0
-        ),
-        # for ninth ranking call with reference result including minos
         fit.FitResults(
             np.asarray([1.3, 0.9]), np.asarray([0.1, 0.1]), ["a", "b"], np.empty(0), 0.0
         ),
@@ -765,51 +737,47 @@ def test_ranking(mock_fit, example_spec, caplog):
     caplog.clear()
     assert mock_fit.call_count == 13
 
-    # parameter bounds partially specified and use_suggested_bounds used
-    ranking_results = fit.ranking(
-        model,
-        data,
-        fit_results=fit_results,
-        par_bounds=[(0, 5)],
-        use_suggested_bounds=True,
-    )
-    assert (
-        "Partial set of parameter bounds provided."
-        + " Overriding with suggested bounds from pyhf for all parameters."
-        in [rec.message for rec in caplog.records]
-    )
+    # parameter bounds partially specified and vary_within_bounds used
+    with pytest.raises(
+        ValueError,
+        match=r"Number of parameter bounds provided \(\(1, 2\)\) "
+        + r"does not match number of parameters \(\(2, 2\)\).",
+    ):
+        fit.ranking(
+            model,
+            data,
+            fit_results=fit_results,
+            par_bounds=[(0, 5)],
+            vary_within_bounds=True,
+        )
+    # ranking_results = fit.ranking(
+    #     model,
+    #     data,
+    #     fit_results=fit_results,
+    #     par_bounds=[(0, 5), ],
+    #     vary_within_bounds=True,
+    # )
+    # assert (
+    #     "Partial set of parameter bounds provided."
+    #     + " Overriding with suggested bounds from pyhf for all parameters."
+    #     in [rec.message for rec in caplog.records]
+    # )
     caplog.clear()
-    assert mock_fit.call_count == 17
+    assert mock_fit.call_count == 13
 
-    # parameter bounds partially specified and use_suggested_bounds not used
+    # parameter bounds not specified and vary_within_bounds is used
     ranking_results = fit.ranking(
         model,
         data,
         fit_results=fit_results,
-        par_bounds=[(0, 5)],
-        use_suggested_bounds=False,
-    )
-    assert (
-        "Partial set of parameter bounds provided and suggested bounds are disabled."
-        + " Ranking fits might be unstable."
-        in [rec.message for rec in caplog.records]
-    )
-    caplog.clear()
-    assert mock_fit.call_count == 21
-
-    # parameter bounds not specified and use_suggested_bounds is used
-    ranking_results = fit.ranking(
-        model,
-        data,
-        fit_results=fit_results,
-        use_suggested_bounds=True,
+        vary_within_bounds=True,
     )
     assert (
         "No parameter bounds specified. Falling back to suggested bounds from pyhf."
         in [rec.message for rec in caplog.records]
     )
     caplog.clear()
-    assert mock_fit.call_count == 25
+    assert mock_fit.call_count == 17
 
     # parameter bounds specified but np_value for a ranking fit is out of bound
     fit_results = fit.FitResults(
@@ -819,7 +787,7 @@ def test_ranking(mock_fit, example_spec, caplog):
         model,
         data,
         fit_results=fit_results,
-        use_suggested_bounds=True,
+        vary_within_bounds=True,
     )
     assert (
         "Parameter staterror_Signal-Region[0] value is out of bounds in the"
@@ -827,7 +795,7 @@ def test_ranking(mock_fit, example_spec, caplog):
         in [rec.message for rec in caplog.records]
     )
     caplog.clear()
-    assert mock_fit.call_count == 29
+    assert mock_fit.call_count == 21
 
     fit_results = fit.FitResults(
         bestfit,
@@ -856,7 +824,7 @@ def test_ranking(mock_fit, example_spec, caplog):
         mock_fit.call_args_list[-2][1]["init_pars"][1], (fit_results.bestfit[1] + 0.22)
     )
     caplog.clear()
-    assert mock_fit.call_count == 33
+    assert mock_fit.call_count == 25
 
 
 @mock.patch(

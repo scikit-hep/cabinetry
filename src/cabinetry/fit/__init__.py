@@ -551,7 +551,7 @@ def ranking(
     custom_fit: bool = False,
     minos: Optional[Union[List[str], Tuple[str, ...]]] = None,
     minos_cl: Optional[float] = None,
-    use_suggested_bounds: bool = False,
+    vary_within_bounds: bool = False,
 ) -> RankingResults:
     """Calculates the impact of nuisance parameters on the parameter of interest (POI).
 
@@ -589,7 +589,7 @@ def ranking(
         minos_cl (Optional[float]), optional): confidence level for the MINOS confidence
             interval, defaults to None (use ``iminuit`` default of 68.27%). Used only
             if fit_results is not provided.
-        use_suggested_bounds (bool, optional): if parameter bounds are not specified,
+        vary_within_bounds (bool, optional): if parameter bounds are not specified,
             this option specifies that the ``pyhf`` suggested parameter bounds should
             be used to limit values of the parameters during ranking. Useful if one
             of the ranking fits is failing. If some parameter bounds are specified,
@@ -632,30 +632,24 @@ def ranking(
     init_pars = init_pars or model.config.suggested_init()
     fix_pars = fix_pars or model.config.suggested_fixed()
 
-    if par_bounds is None and use_suggested_bounds:
+    if par_bounds is None and vary_within_bounds:
         log.info(
             "No parameter bounds specified. Falling back to suggested bounds from pyhf."
         )
         par_bounds = model.config.suggested_bounds()
-    elif par_bounds is None and not use_suggested_bounds:
+    elif par_bounds is None and not vary_within_bounds:
         log.warning(
             "No parameter bounds specified and suggested bounds are disabled."
             + " Ranking fits might be unstable."
         )
-    elif par_bounds is not None:
-        if len(par_bounds) != len(model.config.suggested_bounds()):
-            if use_suggested_bounds:
-                log.warning(
-                    "Partial set of parameter bounds provided."
-                    + " Overriding with suggested bounds from pyhf for all parameters."
-                )
-                par_bounds = model.config.suggested_bounds()
-            else:
-                log.warning(
-                    "Partial set of parameter bounds provided and suggested"
-                    + " bounds are disabled. Ranking fits might be unstable."
-                )
-                par_bounds = None
+    else:
+        if (shape_par := np.asarray(par_bounds).shape) != (
+            shape_suggested := np.asarray(model.config.suggested_bounds()).shape
+        ):
+            raise ValueError(
+                f"Number of parameter bounds provided ({shape_par}) "
+                + f"does not match number of parameters ({shape_suggested})."
+            )
         else:
             log.info("Parameter bounds are specified and will be used for ranking.")
 
