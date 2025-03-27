@@ -750,18 +750,7 @@ def test_ranking(mock_fit, example_spec, caplog):
             par_bounds=[(0, 5)],
             vary_within_bounds=True,
         )
-    # ranking_results = fit.ranking(
-    #     model,
-    #     data,
-    #     fit_results=fit_results,
-    #     par_bounds=[(0, 5), ],
-    #     vary_within_bounds=True,
-    # )
-    # assert (
-    #     "Partial set of parameter bounds provided."
-    #     + " Overriding with suggested bounds from pyhf for all parameters."
-    #     in [rec.message for rec in caplog.records]
-    # )
+
     caplog.clear()
     assert mock_fit.call_count == 13
 
