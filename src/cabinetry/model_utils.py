@@ -108,6 +108,13 @@ def _merge_sample_yields(
     samples_merge_map = model.config.samples_merge_map
 
     def _sum_per_channel(i_ch: Optional[int] = None) -> np.ndarray:
+        # mypy not able to tell that map cannot be None-typed
+        # so we have to check
+        if samples_merge_map is None:
+            raise ValueError(
+                "Something has gone wrong in merging samples."
+                + " Report this to the dev team."
+            )
         # explicit type casting because mypy worries that old_yield
         # will be list(list(float)) or list(float)
         # but this will never happen because of the if condition
@@ -123,20 +130,14 @@ def _merge_sample_yields(
         remaining_samples: np.ndarray = np.delete(
             old_yield, model.config.merged_samples_indices, axis=0
         )
-        # mypy not able to tell that map cannot be None-typed
-        # so we have to check
-        if samples_merge_map is not None:
-            model_yields_one_channel = np.insert(
-                remaining_samples,
-                np.arange(len(samples_merge_map.keys())),
-                summed_sample,
-                axis=0,
-            )
-        else:
-            log.critical(
-                "Something has gone wrong in merging samples."
-                + " Report this to the dev team."
-            )
+
+        model_yields_one_channel = np.insert(
+            remaining_samples,
+            np.arange(len(samples_merge_map.keys())),
+            summed_sample,
+            axis=0,
+        )
+
         return model_yields_one_channel
 
     new_yields = []

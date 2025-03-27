@@ -71,6 +71,34 @@ def test_LightModel(example_spec_with_multiple_background):
         model_pred.model.NonExistent
 
 
+def test__merge_sample_yields(example_spec_with_multiple_background):
+    model = pyhf.Workspace(example_spec_with_multiple_background).model()
+    samples_merge_map = {"Total Background": ["Background", "Background 2"]}
+    light_model = model_utils.LightModel(model, samples_merge_map)
+    # per-channel
+    yields = [[10.0], [20.0], [30.0]]
+    merged_yields = model_utils._merge_sample_yields(
+        light_model, yields, one_channel=True
+    )
+    assert np.allclose(merged_yields, [[30.0], [30.0]])
+    # per-bin
+    yields = [[[10.0], [20.0], [30.0]]]
+    merged_yields = model_utils._merge_sample_yields(
+        light_model, yields, one_channel=False
+    )
+    assert np.allclose(merged_yields, [[[30.0], [30.0]]])
+
+    light_model = model_utils.LightModel(model, None)
+    with pytest.raises(
+        ValueError,
+        match="Something has gone wrong in merging samples."
+        + " Report this to the dev team.",
+    ):
+        merged_yields = model_utils._merge_sample_yields(
+            light_model, yields, one_channel=False
+        )
+
+
 def test_ModelPrediction(example_spec):
     model = pyhf.Workspace(example_spec).model()
     model_yields = [[[10.0]]]
