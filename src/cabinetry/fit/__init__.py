@@ -132,6 +132,7 @@ def _fit_model_pyhf(
         corr_mat,
         best_twice_nll,
         minos_uncertainty=minos_results,
+        minuit_obj=result_obj.minuit,
     )
     pyhf.set_backend(pyhf.tensorlib, initial_optimizer)  # restore optimizer settings
     return fit_results
@@ -251,6 +252,7 @@ def _fit_model_custom(
         corr_mat,
         best_twice_nll,
         minos_uncertainty=minos_results,
+        minuit_obj=m,
     )
     pyhf.set_backend(pyhf.tensorlib, initial_optimizer)  # restore optimizer settings
     return fit_results
