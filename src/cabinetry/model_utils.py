@@ -358,7 +358,7 @@ def yield_stdev(
     parameters: np.ndarray,
     uncertainty: np.ndarray,
     corr_mat: np.ndarray,
-    light_model: Optional[LightModel] = None,
+    samples_merge_map: Optional[Dict[str, List[str]]] = None,
 ) -> Tuple[List[List[List[float]]], List[List[float]]]:
     """Calculates symmetrized model yield standard deviation per channel / sample / bin.
 
@@ -375,8 +375,8 @@ def yield_stdev(
         parameters (np.ndarray): central values of model parameters
         uncertainty (np.ndarray): uncertainty of model parameters
         corr_mat (np.ndarray): correlation matrix
-        light_model (Optional[LightModel], optional): light-weight model to use for
-            merging samples, defaults to None
+        samples_merge_map (Optional[Dict[str, List[str]]], optional): a map specifying
+        how to merge samples, defaults to None
 
     Returns:
         Tuple[List[List[List[float]]], List[List[float]]]:
@@ -387,10 +387,11 @@ def yield_stdev(
               the standard deviations per sample (the last sample corresponds to a sum
               over all samples)
     """
+    light_model = LightModel(model, samples_merge_map)
     # check whether results are already stored in cache
     samples_string = (
         ",".join(light_model.config.samples)
-        if light_model is not None
+        if samples_merge_map is not None
         else ",".join(model.config.samples)
     )
     cached_results = _YIELD_STDEV_CACHE.get(
@@ -434,7 +435,7 @@ def yield_stdev(
         # attach another entry with the total model prediction (sum over all samples)
         # indices: sample, bin
         up_comb = np.vstack((up_comb, np.sum(up_comb, axis=0)))
-        if light_model is not None:
+        if samples_merge_map is not None:
             up_comb = _merge_sample_yields(
                 light_model, up_comb.tolist(), one_channel=True
             )
@@ -469,7 +470,7 @@ def yield_stdev(
         )
         # add total prediction (sum over samples)
         down_comb = np.vstack((down_comb, np.sum(down_comb, axis=0)))
-        if light_model is not None:
+        if samples_merge_map is not None:
             down_comb = _merge_sample_yields(
                 light_model, down_comb.tolist(), one_channel=True
             )
@@ -638,7 +639,7 @@ def prediction(
         param_values,
         param_uncertainty,
         corr_mat,
-        light_model=light_model if samples_merge_map is not None else None,
+        samples_merge_map=samples_merge_map,
     )
     return ModelPrediction(
         light_model,
