@@ -521,7 +521,7 @@ def _get_datastat_impacts_np_shift(
 
     Args:
         impacts_summary (Dict[str, Dict[str, float]]): The impacts summary
-        categorized by systematic and non-systematic sources
+            categorized by systematic and non-systematic sources
         model (pyhf.pdf.model): the model to be used in the fit
         data (List[float]): data (including auxdata) the model is fit to
         poi_index (int): index of the parameter of interest
@@ -574,7 +574,7 @@ def _get_datastat_impacts_quadruture(
 
     Args:
         impacts_summary (Dict[str, Dict[str, float]]): The impacts summary
-        categorized by systematic and non-systematic sources
+            categorized by systematic and non-systematic sources
         total_error (float): total error on the parameter of interest
 
     Returns:
@@ -633,96 +633,66 @@ def _get_datastat_impacts_quadruture(
 def _cov_impacts(
     model: pyhf.pdf.Model,
     poi_index: int,
+    impact_type: str,
+    parameter: str,
+    idxs: Tuple[int, int, int, int],
     fit_results: FitResults,
     prefit_unc: np.ndarray,
-    labels: List[str],
-) -> Tuple[Dict[str, Dict[str, List[float]]], Dict[str, Dict[str, float]]]:
+) -> float:
     """
     Computes the impact of nuisance parameters on a parameter of interest by using
     their correlation in the post-fit covariance matrix.
 
     Args:
         model (pyhf.pdf.Model): model used in fit
+        impact_type (str): type of impact to calculate (e.g., "prefit_impact_up")
+        parameter (str): name of the parameter to calculate the impact for
+        idxs (Tuple[int, int, int, int]): index of a parameter modifier,
+            the index of the modifier in the list of modifiers for the parameter,
+            the starting index of modifiers this parameter, and the index of the
+            auxdata corresponding to the parameter
         poi_index (int): index of the parameter of interest
         fit_results (FitResults): nominal fit results to use in impacts calculation
         prefit_unc (np.ndarray): pre-fit uncertainties of fit parameters
-        labels (List[str]): list of parameter names
 
     Returns:
-        Tuple[Dict[str, Dict[str, List[float]]], Dict[str, Dict[str, float]]]:
-            - A dictionary mapping modifier types to the computed impact values
-              of all parameters belonging to that type, categorized by
-              impact type (e.g., "prefit_impact_up", "postfit_impact_down").
-            - A summary dictionary of total impact contributions categorized into
-              systematic and non-systematic sources
+        float: impact of a nuisance parameter on the parameter of interest
     """
+    i_par = idxs[1]
     total_poi_error = fit_results.uncertainty[poi_index]
-    impacts_by_modifier_type: Dict[str, Dict[str, List[float]]] = defaultdict(
-        lambda: defaultdict(list)
-    )
-    i_global_par = 0
+    par_modifier = [
+        name_and_mod[1]
+        for name_and_mod in model.config.modifiers
+        if name_and_mod[0] == parameter
+    ][0]
 
-    for parameter in model.config.par_order:
-        par_modifier = [
-            name_and_mod[1]
-            for name_and_mod in model.config.modifiers
-            if name_and_mod[0] == parameter
-        ][0]
+    # We need the correlation of this parameter with the POI
+    corr_with_POI = fit_results.corr_mat[i_par][poi_index]
 
-        for i_sub_par in np.arange(model.config.param_set(parameter).n_parameters):
-            i_par = i_global_par + i_sub_par
-            label = model.config.par_names[i_par]
-            if i_par == poi_index:
-                i_par += model.config.param_set(parameter).n_parameters
-                continue  # do not calculate impact of POI on itself
-            log.info(f"calculating impact of {label} on {labels[poi_index]}")
+    if "prefit" in impact_type:
+        parameter_impact = 0.0
+    else:
+        parameter_error = fit_results.uncertainty[i_par]
+        if "down" in impact_type:
+            parameter_error *= -1
+        parameter_impact = parameter_error * corr_with_POI * total_poi_error
+        if par_modifier == "staterror":
+            prefit_parameter_error = prefit_unc[i_par]
+            parameter_impact /= prefit_parameter_error
 
-            # We need the correlation of this parameter with the POI
-            corr_with_POI = fit_results.corr_mat[i_par][poi_index]
-
-            for impact_type in [
-                "prefit_impact_up",
-                "prefit_impact_down",
-                "postfit_impact_up",
-                "postfit_impact_down",
-            ]:
-                if "prefit" in impact_type:
-                    parameter_impact = 0.0
-                else:
-                    parameter_error = fit_results.uncertainty[i_par]
-                    if "down" in impact_type:
-                        parameter_error *= -1
-                    parameter_impact = parameter_error * corr_with_POI * total_poi_error
-                    if par_modifier == "staterror":
-                        prefit_parameter_error = prefit_unc[i_par]
-                        # if "down" in impact_type:
-                        #    prefit_parameter_error *= -1
-                        parameter_impact /= prefit_parameter_error
-
-                impacts_by_modifier_type[par_modifier][impact_type].append(
-                    parameter_impact
-                )
-
-                # All impacts put together to be used for ranking
-                impacts_by_modifier_type["all"][impact_type].append(parameter_impact)
-
-        # update combined parameters index (e.g. staterrors)
-        i_global_par += model.config.param_set(parameter).n_parameters
-    impacts_summary = _get_impacts_summary(impacts_by_modifier_type)
-    impacts_summary = _get_datastat_impacts_quadruture(impacts_summary, total_poi_error)
-
-    return dict(impacts_by_modifier_type), impacts_summary
+    return parameter_impact
 
 
 def _np_impacts(
     model: pyhf.pdf.Model,
     data: List[float],
+    impact_type: str,
+    idxs: Tuple[int, int, int, int],
     poi_index: int,
     fit_results: FitResults,
     prefit_unc: np.ndarray,
-    labels: List[str],
     fit_kwargs: FitKwargs,
-) -> Tuple[Dict[str, Dict[str, List[float]]], Dict[str, Dict[str, float]]]:
+) -> float:
     """
     Computes the impact of nuisance parameters on the POI by shifting parameter
     values according to their pre/post fit uncertainties, fixing them, and
@@ -731,118 +701,78 @@ def _np_impacts(
     Args:
         model (pyhf.pdf.Model): model to be used in fits
         data (List[float]): data (including auxdata) the model is fit to
+        impact_type (str): type of impact to calculate (e.g., "prefit_impact_up")
+        idxs (Tuple[int, int, int]): index of a parameter modifier, the index of
+            the modifier in the list of modifiers for the parameter, the starting
+            index of modifiers this parameter, and the index of the auxdata
+            corresponding to the parameter
         poi_index (int): index of the parameter of interest
         fit_results (FitResults): nominal fit results to use in impacts calculation
         prefit_unc (np.ndarray): pre-fit uncertainties of parameters
-        labels (List[str]): list of parameter names
         fit_kwargs (FitKwargs): settings to be used in the fits.
 
     Returns:
-        Tuple[Dict[str, Dict[str, List[float]]], Dict[str, Dict[str, float]]]:
-            - A dictionary mapping modifier types to the computed impact values
-              of all parameters belonging to that type, categorized by
-              impact type (e.g., "prefit_impact_up", "postfit_impact_down").
-            - A summary dictionary of total impact contributions categorized into
-              systematic and non-systematic sources.
+        float: impact of a nuisance parameter on the parameter of interest
     """
     nominal_poi = fit_results.bestfit[poi_index]
-    impacts_by_modifier_type: Dict[str, Dict[str, List[float]]] = defaultdict(
-        lambda: defaultdict(list)
+    i_par = idxs[1]
+    label = model.config.par_names[i_par]
+    # hold current parameter constant
+    fix_pars_ranking = fit_kwargs["fix_pars"].copy()
+    fix_pars_ranking[i_par] = True
+
+    # calculate impacts
+    delta = (
+        prefit_unc[i_par] if "prefit" in impact_type else fit_results.uncertainty[i_par]
     )
-    i_global_par = 0
+    sign = 1 if "up" in impact_type else -1
+    np_val = fit_results.bestfit[i_par] + sign * delta
 
-    for parameter in model.config.par_order:
-        # Get modifier type for parameter
-        par_modifier = [
-            name_and_mod[1]
-            for name_and_mod in model.config.modifiers
-            if name_and_mod[0] == parameter
-        ][0]
-        for i_sub_par in np.arange(model.config.param_set(parameter).n_parameters):
-            i_par = i_global_par + i_sub_par
-            label = model.config.par_names[i_par]
-            if i_par == poi_index:
-                i_par += model.config.param_set(parameter).n_parameters
-                continue  # do not calculate impact of POI on itself
-            log.info(f"calculating impact of {label} on {labels[poi_index]}")
+    # can skip pre-fit calculation for unconstrained parameters (their
+    # pre-fit uncertainty is set to 0), and pre- and post-fit calculation
+    # for fixed parameters (both uncertainties set to 0 as well)
+    if np_val == fit_results.bestfit[i_par]:
+        parameter_impact = 0.0
+        log.debug(f"Parameter {label} has no impact since their uncertainty is 0.")
+    else:
+        init_pars_ranking = fit_kwargs["init_pars"].copy()
+        # value of current nuisance parameter
+        init_pars_ranking[i_par] = np_val
 
-            # hold current parameter constant
-            fix_pars_ranking = fit_kwargs["fix_pars"].copy()
-            fix_pars_ranking[i_par] = True
+        # removing init_pars and fix_pars from dict, cast it to FitKwargs
+        # type then update values in dict since casting re-introduces them.
+        updated_fit_kwargs = cast(
+            FitKwargs,
+            {k: v for k, v in fit_kwargs.items() if k not in ["init_pars", "fix_pars"]},
+        )
+        updated_fit_kwargs["init_pars"] = init_pars_ranking
+        updated_fit_kwargs["fix_pars"] = fix_pars_ranking
 
-            parameter_impacts = []
-            # calculate impacts: pre-fit up, pre-fit down, post-fit up, post-fit down
-            for i_np_val, np_val in enumerate(
-                [
-                    fit_results.bestfit[i_par] + prefit_unc[i_par],
-                    fit_results.bestfit[i_par] - prefit_unc[i_par],
-                    fit_results.bestfit[i_par] + fit_results.uncertainty[i_par],
-                    fit_results.bestfit[i_par] - fit_results.uncertainty[i_par],
-                ]
-            ):
-                # can skip pre-fit calculation for unconstrained parameters (their
-                # pre-fit uncertainty is set to 0), and pre- and post-fit calculation
-                # for fixed parameters (both uncertainties set to 0 as well)
-                if np_val == fit_results.bestfit[i_par]:
-                    log.debug(f"impact of {label} is zero, skipping fit")
-                    parameter_impacts.append(0.0)
-                else:
-                    init_pars_ranking = fit_kwargs["init_pars"].copy()
-                    # value of current nuisance parameter
-                    init_pars_ranking[i_par] = np_val
+        fit_results_ranking = _fit_model(
+            model,
+            data,
+            **updated_fit_kwargs,
+        )
+        poi_val = fit_results_ranking.bestfit[poi_index]
+        parameter_impact = poi_val - nominal_poi
+        log.debug(
+            f"POI is {poi_val:.6f}, difference to nominal is " f"{parameter_impact:.6f}"
+        )
 
-                    # removing init_pars and fix_pars from dict, cast it to FitKwargs
-                    # type then update values in dict since casting re-introduces them.
-                    updated_fit_kwargs = cast(
-                        FitKwargs,
-                        {
-                            k: v
-                            for k, v in fit_kwargs.items()
-                            if k not in ["init_pars", "fix_pars"]
-                        },
-                    )
-                    updated_fit_kwargs["init_pars"] = init_pars_ranking
-                    updated_fit_kwargs["fix_pars"] = fix_pars_ranking
-
-                    fit_results_ranking = _fit_model(
-                        model,
-                        data,
-                        **updated_fit_kwargs,
-                    )
-                    poi_val = fit_results_ranking.bestfit[poi_index]
-                    parameter_impact = poi_val - nominal_poi
-                    log.debug(
-                        f"POI is {poi_val:.6f}, difference to nominal is "
-                        f"{parameter_impact:.6f}"
-                    )
-                    impact_type = "prefit_impact" if i_np_val < 2 else "postfit_impact"
-                    impact_type += "_up" if i_np_val % 2 == 0 else "_down"
-                    impacts_by_modifier_type[par_modifier][impact_type].append(
-                        parameter_impact
-                    )
-                    impacts_by_modifier_type["all"][impact_type].append(
-                        parameter_impact
-                    )
-
-        # update combined parameters index (e.g. staterrors)
-        i_global_par += model.config.param_set(parameter).n_parameters
-    impacts_summary = _get_impacts_summary(impacts_by_modifier_type)
-    impacts_summary = _get_datastat_impacts_np_shift(
-        impacts_summary, model, data, poi_index, fit_results, fit_kwargs
-    )
-
-    return dict(impacts_by_modifier_type), impacts_summary
+    return parameter_impact
 
 
 def _auxdata_shift_impacts(
     model: pyhf.pdf.Model,
     data: List[float],
+    impact_type: str,
+    parameter: str,
+    idxs: Tuple[int, int, int, int],
     poi_index: int,
     fit_results: FitResults,
     prefit_unc: np.ndarray,
-    labels: List[str],
     fit_kwargs: FitKwargs,
-) -> Tuple[Dict[str, Dict[str, List[float]]], Dict[str, Dict[str, float]]]:
+) -> float:
     """
     Computes the impact of a parameter on the POI by shifting its associated
     auxiliary data values by its uncertainty and re-evaluating the fit with
@@ -851,93 +781,47 @@ def _auxdata_shift_impacts(
     Args:
         model (pyhf.pdf.Model): model to be used in fits
         data (List[float]): data (including auxdata) the model is fit to
+        impact_type (str): type of impact to calculate (e.g., "prefit_impact_up")
+        parameter (str): name of the parameter to calculate the impact for
+        idxs (Tuple[int, int, int]): index of a parameter modifier, the index of
+            the modifier in the list of modifiers for the parameter, the starting
+            index of modifiers this parameter, and the index of the auxdata
+            corresponding to the parameter
         poi_index (int): index of the parameter of interest
         fit_results (FitResults): nominal fit results to use in impacts calculation
         prefit_unc (np.ndarray): pre-fit uncertainties of parameters
-        labels (List[str]): list of parameter names
         fit_kwargs (FitKwargs): settings to be used in the fits.
 
     Returns:
-        Tuple[Dict[str, Dict[str, List[float]]], Dict[str, Dict[str, float]]]:
-            - A dictionary mapping modifier types to the computed impact values
-              of all parameters belonging to that type, categorized by
-              impact type (e.g., "prefit_impact_up", "postfit_impact_down").
-            - A summary dictionary of total impact contributions categorized into
-              systematic and non-systematic sources.
+        float: impact of a nuisance parameter on the parameter of interest
     """
     nominal_poi = fit_results.bestfit[poi_index]
-    total_poi_error = fit_results.uncertainty[poi_index]
     n_bins_total = sum(model.config.channel_nbins.values())
-    impacts_by_modifier_type: Dict[str, Dict[str, List[float]]] = defaultdict(
-        lambda: defaultdict(list)
-    )
-    i_global_par = 0
-    i_auxdata = 0
-    for parameter in model.config.par_order:
-        par_modifier = [
-            name_and_mod[1]
-            for name_and_mod in model.config.modifiers
-            if name_and_mod[0] == parameter
-        ][0]
-        n_params_per_param = model.config.param_set(parameter).n_parameters
-        # Method is not defined for unconstrained parameters
-        if par_modifier in ["normfactor", "shapefactor"]:
-            i_global_par += n_params_per_param
-            continue
+    i_sub_par, i_par, _, i_auxdata = idxs
 
-        for i_sub_par in np.arange(n_params_per_param):
-            i_par = i_global_par + i_sub_par
+    # compute impact
+    if "prefit" in impact_type:
+        parameter_impact = 0.0
+    else:
+        # auxdata for this parameter, indices = i_sub_par
+        auxdata_ranking = np.asarray(model.config.param_set(parameter).auxdata.copy())
+        # all data in the model, index of relevant auxdata
+        # for param is n_bins_total+i_auxdata
+        data_ranking = data.copy()
+        auxdata_ranking[i_sub_par] += (
+            prefit_unc[i_par] if "up" in impact_type else -1 * prefit_unc[i_par]
+        )
+        data_ranking[n_bins_total + i_auxdata] = auxdata_ranking[i_sub_par]
+        fit_results_ranking = _fit_model(
+            model,
+            data_ranking,
+            **fit_kwargs,
+        )
 
-            label = model.config.par_names[i_par]
-            if i_par == poi_index:
-                continue  # do not calculate impact of POI on itself
-            log.info(f"calculating impact of {label} on {labels[poi_index]}")
+        poi_val = fit_results_ranking.bestfit[poi_index]
+        parameter_impact = poi_val - nominal_poi
 
-            for impact_type in [
-                "prefit_impact_up",
-                "prefit_impact_down",
-                "postfit_impact_up",
-                "postfit_impact_down",
-            ]:
-                if "prefit" in impact_type:
-                    parameter_impact = 0.0
-                else:
-                    # auxdata for this parameter, indices = i_sub_par
-                    auxdata_ranking = np.asarray(
-                        model.config.param_set(parameter).auxdata.copy()
-                    )
-                    # all data in the model, index of relevant auxdata
-                    # for param is n_bins_total+i_auxdata
-                    data_ranking = data.copy()
-                    auxdata_ranking[i_sub_par] += (
-                        prefit_unc[i_par]
-                        if "up" in impact_type
-                        else -1 * prefit_unc[i_par]
-                    )
-                    data_ranking[n_bins_total + i_auxdata] = auxdata_ranking[i_sub_par]
-                    fit_results_ranking = _fit_model(
-                        model,
-                        data_ranking,
-                        **fit_kwargs,
-                    )
-
-                    poi_val = fit_results_ranking.bestfit[poi_index]
-                    parameter_impact = poi_val - nominal_poi
-
-                impacts_by_modifier_type[par_modifier][impact_type].append(
-                    parameter_impact
-                )
-
-                # All impacts put together to be used for ranking
-                impacts_by_modifier_type["all"][impact_type].append(parameter_impact)
-            i_auxdata += 1
-        # update combined parameters index (e.g. staterrors)
-        i_global_par += n_params_per_param
-
-    impacts_summary = _get_impacts_summary(impacts_by_modifier_type)
-    impacts_summary = _get_datastat_impacts_quadruture(impacts_summary, total_poi_error)
-
-    return dict(impacts_by_modifier_type), impacts_summary
+    return parameter_impact
 
 
 def fit(
@@ -1094,34 +978,106 @@ def ranking(
             "custom_fit": custom_fit,
         },
     )
-
-    if fit_results is None:
-        fit_results = _fit_model(model, data, **fit_settings)
-
-    labels = model.config.par_names
-    prefit_unc = model_utils.prefit_uncertainties(model)
-
     # use POI given by kwarg, fall back to POI specified in model
     poi_index = model_utils._poi_index(model, poi_name=poi_name)
     if poi_index is None:
         raise ValueError("no POI specified, cannot calculate ranking")
 
-    if impacts_method == "np_shift":
-        impacts_by_modifier, impacts_summary = _np_impacts(
-            model, data, poi_index, fit_results, prefit_unc, labels, fit_settings
-        )
-    elif impacts_method == "covariance":
-        impacts_by_modifier, impacts_summary = _cov_impacts(
-            model, poi_index, fit_results, prefit_unc, labels
-        )
-    elif impacts_method == "auxdata_shift":
-        impacts_by_modifier, impacts_summary = _auxdata_shift_impacts(
-            model, data, poi_index, fit_results, prefit_unc, labels, fit_settings
-        )
-    else:
+    if fit_results is None:
+        fit_results = _fit_model(model, data, **fit_settings)
+
+    prefit_unc = model_utils.prefit_uncertainties(model)
+    labels = model.config.par_names
+    if impacts_method not in ["np_shift", "covariance", "auxdata_shift"]:
         raise ValueError(
             f"The option {impacts_method} is not a valid method to compute impacts."
             + " Valid options are: (np_shift, covariance, auxdata_shift)"
+        )
+
+    i_global_par = 0
+    i_auxdata = 0
+    impacts_by_modifier: Dict[str, Dict[str, List[float]]] = defaultdict(
+        lambda: defaultdict(list)
+    )
+    for parameter in model.config.par_order:
+        par_modifier = [
+            name_and_mod[1]
+            for name_and_mod in model.config.modifiers
+            if name_and_mod[0] == parameter
+        ][0]
+        n_params_per_param = model.config.param_set(parameter).n_parameters
+        # Method is not defined for unconstrained parameters
+        if par_modifier in ["normfactor", "shapefactor"]:
+            i_global_par += n_params_per_param
+            continue
+
+        for i_sub_par in range(n_params_per_param):
+            i_par = i_global_par + i_sub_par
+            idxs = (i_sub_par, i_par, i_global_par, i_auxdata)
+            label = model.config.par_names[i_par]
+            if i_par == poi_index:
+                continue  # do not calculate impact of POI on itself
+            log.info(f"calculating impact of {label} on {labels[poi_index]}")
+
+            for impact_type in [
+                "prefit_impact_up",
+                "prefit_impact_down",
+                "postfit_impact_up",
+                "postfit_impact_down",
+            ]:
+                if impacts_method == "covariance":
+                    parameter_impact = _cov_impacts(
+                        model,
+                        poi_index,
+                        impact_type,
+                        parameter,
+                        idxs,
+                        fit_results,
+                        prefit_unc,
+                    )
+                elif impacts_method == "np_shift":
+                    parameter_impact = _np_impacts(
+                        model,
+                        data,
+                        impact_type,
+                        idxs,
+                        poi_index,
+                        fit_results,
+                        prefit_unc,
+                        fit_settings,
+                    )
+                else:
+                    parameter_impact = _auxdata_shift_impacts(
+                        model,
+                        data,
+                        impact_type,
+                        parameter,
+                        idxs,
+                        poi_index,
+                        fit_results,
+                        prefit_unc,
+                        fit_settings,
+                    )
+
+                impacts_by_modifier[par_modifier][impact_type].append(parameter_impact)
+
+                # All impacts put together to be used for ranking
+                impacts_by_modifier["all"][impact_type].append(parameter_impact)
+
+            i_auxdata += 1
+
+        # update combined parameters index (e.g. staterrors)
+        i_global_par += n_params_per_param
+
+    impacts_summary = _get_impacts_summary(impacts_by_modifier)
+    if impacts_method == "np_shift":
+        impacts_summary = _get_datastat_impacts_np_shift(
+            impacts_summary, model, data, poi_index, fit_results, fit_settings
+        )
+    else:
+        total_poi_error = fit_results.uncertainty[poi_index]
+        impacts_summary = _get_datastat_impacts_quadruture(
+            impacts_summary, total_poi_error
         )
 
     # Impacts of all parameters
