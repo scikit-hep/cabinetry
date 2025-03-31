@@ -1102,7 +1102,7 @@ def ranking(
     ]
     bestfit = np.asarray(fit_results.bestfit)[parameters_list_idxs]
     uncertainty = np.asarray(fit_results.uncertainty)[parameters_list_idxs]
-    labels = np.asarray(fit_results.labels)[parameters_list_idxs]
+    labels = np.asarray(fit_results.labels)[parameters_list_idxs].tolist()
 
     ranking_results = RankingResults(
         bestfit,

@@ -593,6 +593,14 @@ def test_fit(mock_fit, mock_print, mock_gof):
             np.asarray([[1.0, 0.1], [0.1, 1.0]]),
             0.0,
         ),
+        # ranking without reference results, with parameter (cov-based, 1 call)
+        fit.FitResults(
+            np.asarray([0.7, 0.9]),
+            np.asarray([0.1, 0.1]),
+            ["a", "b"],
+            np.asarray([[1.0, 0.1], [0.1, 1.0]]),
+            0.0,
+        ),
     ],
 )
 def test_ranking(mock_fit, example_spec):
@@ -849,6 +857,32 @@ def test_ranking(mock_fit, example_spec):
     assert np.allclose(ranking_results.prefit_down, [0.0])
     assert np.allclose(ranking_results.postfit_up, [0.1])
     assert np.allclose(ranking_results.postfit_down, [-0.1])
+
+    # # cov-based method with a parameters list
+    ranking_results = fit.ranking(
+        model,
+        data,
+        init_pars=[1.5, 1.0],
+        fix_pars=[False, False],
+        par_bounds=[(0, 15), (0.1, 10)],
+        strategy=2,
+        maxiter=100,
+        tolerance=0.01,
+        custom_fit=True,
+        impacts_method="covariance",
+        parameters_list=["non_existent"],
+    )
+    assert mock_fit.call_count == 19
+
+    assert np.allclose(ranking_results.bestfit, [])
+    assert np.allclose(ranking_results.uncertainty, [])
+    assert ranking_results.labels == []
+
+    # received correct results - new values
+    assert np.allclose(ranking_results.prefit_up, [])
+    assert np.allclose(ranking_results.prefit_down, [])
+    assert np.allclose(ranking_results.postfit_up, [])
+    assert np.allclose(ranking_results.postfit_down, [])
 
     # catch non-existent method
     with pytest.raises(
