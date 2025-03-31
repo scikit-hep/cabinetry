@@ -4,6 +4,7 @@ from collections import defaultdict
 import logging
 from typing import Any, cast, Dict, List, Literal, Optional, Tuple, TypedDict, Union
 
+from dask.distributed import Client, Future
 import iminuit
 import numpy as np
 import pyhf
@@ -692,6 +693,7 @@ def _np_impacts(
     fit_results: FitResults,
     prefit_unc: np.ndarray,
     fit_kwargs: FitKwargs,
+    client: Optional[Client] = None,
 ) -> float:
     """
     Computes the impact of nuisance parameters on the POI by shifting parameter
@@ -710,6 +712,8 @@ def _np_impacts(
         fit_results (FitResults): nominal fit results to use in impacts calculation
         prefit_unc (np.ndarray): pre-fit uncertainties of parameters
         fit_kwargs (FitKwargs): settings to be used in the fits.
+        client (Optional[Client], optional): Dask client to use for parallelization,
+            defaults to None (no parallelization)
 
     Returns:
         float: impact of a nuisance parameter on the parameter of interest
@@ -732,32 +736,43 @@ def _np_impacts(
     # pre-fit uncertainty is set to 0), and pre- and post-fit calculation
     # for fixed parameters (both uncertainties set to 0 as well)
     if np_val == fit_results.bestfit[i_par]:
-        parameter_impact = 0.0
+
         log.debug(f"Parameter {label} has no impact since their uncertainty is 0.")
-    else:
-        init_pars_ranking = fit_kwargs["init_pars"].copy()
-        # value of current nuisance parameter
-        init_pars_ranking[i_par] = np_val
+        return 0.0
 
-        # removing init_pars and fix_pars from dict, cast it to FitKwargs
-        # type then update values in dict since casting re-introduces them.
-        updated_fit_kwargs = cast(
-            FitKwargs,
-            {k: v for k, v in fit_kwargs.items() if k not in ["init_pars", "fix_pars"]},
-        )
-        updated_fit_kwargs["init_pars"] = init_pars_ranking
-        updated_fit_kwargs["fix_pars"] = fix_pars_ranking
+    init_pars_ranking = fit_kwargs["init_pars"].copy()
+    # value of current nuisance parameter
+    init_pars_ranking[i_par] = np_val
 
-        fit_results_ranking = _fit_model(
-            model,
+    # removing init_pars and fix_pars from dict, cast it to FitKwargs
+    # type then update values in dict since casting re-introduces them.
+    updated_fit_kwargs = cast(
+        FitKwargs,
+        {k: v for k, v in fit_kwargs.items() if k not in ["init_pars", "fix_pars"]},
+    )
+    updated_fit_kwargs["init_pars"] = init_pars_ranking
+    updated_fit_kwargs["fix_pars"] = fix_pars_ranking
+
+    if client:
+        return client.submit(
+            _impact_by_shift_fit_task,
+            model.spec,
             data,
-            **updated_fit_kwargs,
+            updated_fit_kwargs,
+            poi_index,
+            nominal_poi,
         )
-        poi_val = fit_results_ranking.bestfit[poi_index]
-        parameter_impact = poi_val - nominal_poi
-        log.debug(
-            f"POI is {poi_val:.6f}, difference to nominal is " f"{parameter_impact:.6f}"
-        )
+
+    fit_results_ranking = _fit_model(
+        model,
+        data,
+        **updated_fit_kwargs,
+    )
+    poi_val = fit_results_ranking.bestfit[poi_index]
+    parameter_impact = poi_val - nominal_poi
+    log.debug(
+        f"POI is {poi_val:.6f}, difference to nominal is " f"{parameter_impact:.6f}"
+    )
 
     return parameter_impact
 
@@ -772,7 +787,8 @@ def _auxdata_shift_impacts(
     fit_results: FitResults,
     prefit_unc: np.ndarray,
     fit_kwargs: FitKwargs,
-) -> float:
+    client: Optional[Client] = None,
+) -> Union[float, Future]:
     """
     Computes the impact of a parameter on the POI by shifting its associated
     auxiliary data values by its uncertainty and re-evaluating the fit with
@@ -791,6 +807,8 @@ def _auxdata_shift_impacts(
         fit_results (FitResults): nominal fit results to use in impacts calculation
         prefit_unc (np.ndarray): pre-fit uncertainties of parameters
         fit_kwargs (FitKwargs): settings to be used in the fits.
+        client (Optional[Client], optional): Dask client to use for parallelization,
+            defaults to None (no parallelization)
 
     Returns:
         float: impact of a nuisance parameter on the parameter of interest
@@ -801,25 +819,39 @@ def _auxdata_shift_impacts(
 
     # compute impact
     if "prefit" in impact_type:
-        parameter_impact = 0.0
-    else:
-        # auxdata for this parameter, indices = i_sub_par
-        auxdata_ranking = np.asarray(model.config.param_set(parameter).auxdata.copy())
-        # all data in the model, index of relevant auxdata
-        # for param is n_bins_total+i_auxdata
-        data_ranking = data.copy()
-        auxdata_ranking[i_sub_par] += (
-            prefit_unc[i_par] if "up" in impact_type else -1 * prefit_unc[i_par]
-        )
-        data_ranking[n_bins_total + i_auxdata] = auxdata_ranking[i_sub_par]
-        fit_results_ranking = _fit_model(
-            model,
+        return 0.0
+
+    # auxdata for this parameter, indices = i_sub_par
+    auxdata_ranking = np.asarray(model.config.param_set(parameter).auxdata.copy())
+    # all data in the model, index of relevant auxdata
+    # for param is n_bins_total+i_auxdata
+    data_ranking = data.copy()
+    auxdata_ranking[i_sub_par] += (
+        prefit_unc[i_par] if "up" in impact_type else -1 * prefit_unc[i_par]
+    )
+    data_ranking[n_bins_total + i_auxdata] = auxdata_ranking[i_sub_par]
+
+    if client:
+        return client.submit(
+            _impact_by_shift_fit_task,
+            model.spec,
             data_ranking,
-            **fit_kwargs,
+            fit_kwargs,
+            poi_index,
+            nominal_poi,
         )
 
-        poi_val = fit_results_ranking.bestfit[poi_index]
-        parameter_impact = poi_val - nominal_poi
+    fit_results_ranking = _fit_model(
+        model,
+        data_ranking,
+        **fit_kwargs,
+    )
+
+    poi_val = fit_results_ranking.bestfit[poi_index]
+    parameter_impact = poi_val - nominal_poi
+    log.debug(
+        f"POI is {poi_val:.6f}, difference to nominal is " f"{parameter_impact:.6f}"
+    )
 
     return parameter_impact
 
@@ -907,6 +939,18 @@ def fit(
     return fit_results
 
 
+def _impact_by_shift_fit_task(
+    model_spec: Dict[str, Any],
+    data: List[float],
+    fit_kwargs: FitKwargs,
+    poi_index: int,
+    nominal_poi: float,
+) -> float:
+    model = pyhf.Model(model_spec)
+    fit_result = _fit_model(model, data, **fit_kwargs)
+    return fit_result.bestfit[poi_index] - nominal_poi
+
+
 def ranking(
     model: pyhf.pdf.Model,
     data: List[float],
@@ -922,6 +966,7 @@ def ranking(
     custom_fit: bool = False,
     impacts_method: str = "covariance",
     parameters_list: Optional[List[str]] = None,
+    client: Optional[Client] = None,
 ) -> RankingResults:
     """Calculates the impact of nuisance parameters on the parameter of interest (POI).
 
@@ -1064,6 +1109,7 @@ def ranking(
                         fit_results,
                         prefit_unc,
                         fit_settings,
+                        client=client,
                     )
 
                 impacts_by_modifier[par_modifier][impact_type].append(parameter_impact)
@@ -1075,6 +1121,11 @@ def ranking(
 
         # update combined parameters index (e.g. staterrors)
         i_global_par += n_params_per_param
+
+    if client:
+        for impact_dict in impacts_by_modifier.values():
+            for key, val_list in impact_dict.items():
+                impact_dict[key] = client.gather(val_list)
 
     impacts_summary = _get_impacts_summary(impacts_by_modifier)
     if impacts_method == "np_shift":
