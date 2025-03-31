@@ -920,7 +920,8 @@ def ranking(
     maxiter: Optional[int] = None,
     tolerance: Optional[float] = None,
     custom_fit: bool = False,
-    impacts_method: str = "covariance",  # breaks tests
+    impacts_method: str = "covariance",
+    parameters_list: Optional[List[str]] = None,
 ) -> RankingResults:
     """Calculates the impact of nuisance parameters on the parameter of interest (POI).
 
@@ -988,6 +989,8 @@ def ranking(
 
     prefit_unc = model_utils.prefit_uncertainties(model)
     labels = model.config.par_names
+    if parameters_list is None:
+        parameters_list = labels
     if impacts_method not in ["np_shift", "covariance", "auxdata_shift"]:
         raise ValueError(
             f"The option {impacts_method} is not a valid method to compute impacts."
@@ -1014,9 +1017,13 @@ def ranking(
         for i_sub_par in range(n_params_per_param):
             i_par = i_global_par + i_sub_par
             idxs = (i_sub_par, i_par, i_global_par, i_auxdata)
-            label = model.config.par_names[i_par]
+            label = labels[i_par]
+            if label not in parameters_list:
+                i_auxdata += 1
+                continue
             if i_par == poi_index:
                 continue  # do not calculate impact of POI on itself
+
             log.info(f"calculating impact of {label} on {labels[poi_index]}")
 
             for impact_type in [
@@ -1088,9 +1095,14 @@ def ranking(
 
     # remove parameter of interest from bestfit / uncertainty / labels
     # such that their entries match the entries of the impacts
-    bestfit = np.delete(fit_results.bestfit, poi_index)
-    uncertainty = np.delete(fit_results.uncertainty, poi_index)
-    labels = np.delete(fit_results.labels, poi_index).tolist()
+    parameters_list_idxs = [
+        idx
+        for idx, par in enumerate(labels)
+        if par in parameters_list and idx != poi_index
+    ]
+    bestfit = np.asarray(fit_results.bestfit)[parameters_list_idxs]
+    uncertainty = np.asarray(fit_results.uncertainty)[parameters_list_idxs]
+    labels = np.asarray(fit_results.labels)[parameters_list_idxs]
 
     ranking_results = RankingResults(
         bestfit,
