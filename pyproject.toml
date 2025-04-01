@@ -49,6 +49,7 @@ dependencies = [
     "click",
     "scipy",
     "packaging",  # for version parsing
+    "dask",
 ]
 
 [project.scripts]
