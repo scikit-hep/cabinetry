@@ -761,7 +761,7 @@ def _np_impacts(
             updated_fit_kwargs,
             poi_index,
             nominal_poi,
-        )
+        )  # type: ignore[no-untyped-call]
 
     fit_results_ranking = _fit_model(
         model,
@@ -839,7 +839,7 @@ def _auxdata_shift_impacts(
             fit_kwargs,
             poi_index,
             nominal_poi,
-        )
+        )  # type: ignore[no-untyped-call]
 
     fit_results_ranking = _fit_model(
         model,
@@ -1044,7 +1044,7 @@ def ranking(
 
     i_global_par = 0
     i_auxdata = 0
-    impacts_by_modifier: Dict[str, Dict[str, List[float]]] = defaultdict(
+    impacts_by_modifier: Dict[str, Dict[str, List[Union[float, Future]]]] = defaultdict(
         lambda: defaultdict(list)
     )
     for parameter in model.config.par_order:
@@ -1078,7 +1078,7 @@ def ranking(
                 "postfit_impact_down",
             ]:
                 if impacts_method == "covariance":
-                    parameter_impact = _cov_impacts(
+                    parameter_impact: Union[float, Future] = _cov_impacts(
                         model,
                         poi_index,
                         impact_type,
@@ -1122,12 +1122,18 @@ def ranking(
         # update combined parameters index (e.g. staterrors)
         i_global_par += n_params_per_param
 
+    impacts_by_modifier_gathered = None
     if client:
         for impact_dict in impacts_by_modifier.values():
             for key, val_list in impact_dict.items():
-                impact_dict[key] = client.gather(val_list)
+                impact_dict[key] = client.gather(
+                    val_list
+                )  # type: ignore[no-untyped-call]
 
-    impacts_summary = _get_impacts_summary(impacts_by_modifier)
+    impacts_by_modifier_gathered = cast(
+        Dict[str, Dict[str, List[float]]], impacts_by_modifier
+    )
+    impacts_summary = _get_impacts_summary(impacts_by_modifier_gathered)
     if impacts_method == "np_shift":
         impacts_summary = _get_datastat_impacts_np_shift(
             impacts_summary, model, data, poi_index, fit_results, fit_settings
@@ -1139,10 +1145,12 @@ def ranking(
         )
 
     # Impacts of all parameters
-    prefit_up = np.asarray(impacts_by_modifier["all"]["prefit_impact_up"])
-    prefit_down = np.asarray(impacts_by_modifier["all"]["prefit_impact_down"])
-    postfit_up = np.asarray(impacts_by_modifier["all"]["postfit_impact_up"])
-    postfit_down = np.asarray(impacts_by_modifier["all"]["postfit_impact_down"])
+    prefit_up = np.asarray(impacts_by_modifier_gathered["all"]["prefit_impact_up"])
+    prefit_down = np.asarray(impacts_by_modifier_gathered["all"]["prefit_impact_down"])
+    postfit_up = np.asarray(impacts_by_modifier_gathered["all"]["postfit_impact_up"])
+    postfit_down = np.asarray(
+        impacts_by_modifier_gathered["all"]["postfit_impact_down"]
+    )
 
     # remove parameter of interest from bestfit / uncertainty / labels
     # such that their entries match the entries of the impacts

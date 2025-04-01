@@ -3,14 +3,14 @@ repos:
     rev: 25.1.0
     hooks:
     -   id: black
-      #-   repo: https://github.com/pre-commit/mirrors-mypy
-  #    rev: v1.15.0
-  #    hooks:
-  #    -   id: mypy
-  #        name: mypy with Python 3.12
-  #        files: src/cabinetry
-  #        additional_dependencies: ["numpy>=1.22", "boost-histogram>=1.0.1", "click>=8", "types-tabulate", "types-PyYAML", "hist>=2.3.0"]
-  #        args: ["--python-version=3.12"]
+-   repo: https://github.com/pre-commit/mirrors-mypy
+    rev: v1.15.0
+    hooks:
+    -   id: mypy
+        name: mypy with Python 3.12
+        files: src/cabinetry
+        additional_dependencies: ["numpy>=1.22", "boost-histogram>=1.0.1", "click>=8", "types-tabulate", "types-PyYAML", "hist>=2.3.0","dask[distributed]"]
+        args: ["--python-version=3.12"]
 -   repo: https://github.com/pycqa/flake8
     rev: 7.1.2
     hooks:
