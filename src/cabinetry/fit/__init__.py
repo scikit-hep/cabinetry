@@ -754,6 +754,7 @@ def _np_impacts(
     updated_fit_kwargs["fix_pars"] = fix_pars_ranking
 
     if client:
+        # if using Dask, submit a fit task to the client
         return client.submit(
             _impact_by_shift_fit_task,
             model.spec,
@@ -832,6 +833,7 @@ def _auxdata_shift_impacts(
     data_ranking[n_bins_total + i_auxdata] = auxdata_ranking[i_sub_par]
 
     if client:
+        # if using Dask, submit a fit task to the client
         return client.submit(
             _impact_by_shift_fit_task,
             model.spec,
@@ -1139,6 +1141,7 @@ def ranking(
 
     impacts_by_modifier_gathered = None
     if client:
+        # if using Dask, compute all impacts on cluster
         for impact_dict in impacts_by_modifier.values():
             for key, val_list in impact_dict.items():
                 impact_dict[key] = client.gather(
