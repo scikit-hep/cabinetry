@@ -946,6 +946,21 @@ def _impact_by_shift_fit_task(
     poi_index: int,
     nominal_poi: float,
 ) -> float:
+    """
+    Task to calculate the impact of a nuisance parameter on the parameter of interest
+    by performing an alternative fit and computing the change in the POI from its
+    nominal value.
+
+    Args:
+        model_spec (Dict[str, Any]): model specification to use in fit
+        data (List[float]): data (including auxdata) the model is fit to
+        fit_kwargs (FitKwargs): settings to be used in the fits
+        poi_index (int): index of the parameter of interest
+        nominal_poi (float): nominal value of the parameter of interest
+
+    Returns:
+        float: impact of a nuisance parameter on the parameter of interest
+    """
     model = pyhf.Model(model_spec)
     fit_result = _fit_model(model, data, **fit_kwargs)
     return fit_result.bestfit[poi_index] - nominal_poi
