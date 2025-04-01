@@ -81,7 +81,6 @@ test = [
     "types-PyYAML",
     "typeguard>=4.0.0",  # cabinetry#391
     "black",
-    "fsspec>=2024,<=2025.3.0; python_version <= '3.8'"
 ]
 docs = [
     "sphinx!=5.2.0.post0",  # broken due to version parsing in RTD theme
