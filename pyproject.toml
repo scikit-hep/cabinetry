@@ -49,7 +49,7 @@ dependencies = [
     "click",
     "scipy",
     "packaging",  # for version parsing
-    "dask",
+    "dask[distributed]",
 ]
 
 [project.scripts]
