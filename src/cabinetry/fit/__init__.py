@@ -1114,6 +1114,7 @@ def ranking(
                         fit_results,
                         prefit_unc,
                         fit_settings,
+                        client=client,
                     )
                 else:
                     parameter_impact = _auxdata_shift_impacts(
