@@ -37,6 +37,7 @@ classifiers = [
 ]
 dependencies = [
     "pyhf[minuit]~=0.7.0",  # model.config.suggested_fixed / .par_names API changes, set_poi(None)
+    "jacobi",
     "boost_histogram>=1.0.0",  # subclassing with family, 1.02 for stdev scaling fix (currently not needed)
     "hist>=2.5.0",  # hist.intervals.poisson_interval
     "tabulate>=0.8.1",  # multiline text

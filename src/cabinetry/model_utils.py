@@ -15,6 +15,8 @@ from typing import (
     Union,
 )
 
+import iminuit
+from jacobi import propagate  # type: ignore[import-untyped]
 import numpy as np
 import pyhf
 
@@ -235,6 +237,8 @@ def yield_stdev(
     parameters: np.ndarray,
     uncertainty: np.ndarray,
     corr_mat: np.ndarray,
+    model_unc_method: str = "linear",
+    minuit_obj: Optional[iminuit.Minuit] = None,
 ) -> Tuple[List[List[List[float]]], List[List[float]]]:
     """Calculates symmetrized model yield standard deviation per channel / sample / bin.
 
@@ -268,6 +272,7 @@ def yield_stdev(
             tuple(parameters),
             tuple(uncertainty),
             corr_mat.data.tobytes(),
+            model_unc_method,
         ),
         None,
     )
@@ -388,7 +393,6 @@ def yield_stdev(
 
     # get number of bins from model config
     n_bins = sum(model.config.channel_nbins.values())
-
     # convert to standard deviations per bin and per channel
     # add back outer channel dimension for per-bin uncertainty
     # indices: (channel, sample, bin)
@@ -396,6 +400,7 @@ def yield_stdev(
         np.sqrt(total_variance[:, :n_bins][:, model.config.channel_slices[ch]]).tolist()
         for ch in model.config.channels
     ]
+
     # per-channel: transpose to flip remaining dimensions (channel sums acted as
     # individual bins before)
     # indices: (channel, sample)
@@ -410,6 +415,90 @@ def yield_stdev(
     ]
     log.debug(f"total stdev per channel is {total_stdev_chan}")
 
+    def flat_per_sample_expected_data(parameter: float) -> np.ndarray:
+        """
+        Return the expected data per sample, flattened to 1D.
+        Required for use with jacobi.propagate.
+        """
+        return model.main_model.expected_data(parameter, return_by_sample=True).ravel()
+
+    if model_unc_method == "jacobi" and minuit_obj is not None:
+        # Step 1: propagate uncertainties via Jacobian method
+        y, ycov = propagate(
+            flat_per_sample_expected_data, minuit_obj.values, minuit_obj.covariance
+        )
+
+        # Step 2: reshape outputs to (n_samples, n_bins)
+        n_samples, n_bins = model.main_model.expected_data(
+            minuit_obj.values, return_by_sample=True
+        ).shape
+        y = y.reshape(n_samples, n_bins)
+        ycov = ycov.reshape((n_samples, n_bins, n_samples, n_bins))
+
+        # Step 3: extract per-sample bin-level variances
+        # (diagonal of the covariance blocks)
+        yvar_minuit = np.array(
+            [np.diag(ycov[i, :, i, :]) for i in range(n_samples)]
+        )  # shape: (n_samples, n_bins)
+
+        # Step 4: compute bin variances for the sum over all samples
+        yvar_sum_over_samples = np.array(
+            [np.sum(ycov[:, b, :, b]) for b in range(n_bins)]
+        )  # shape: (n_bins,)
+
+        # Step 5: append the sample-sum row to the per-sample bin variances
+        yvar_minuit = np.vstack(
+            [yvar_minuit, yvar_sum_over_samples]
+        )  # shape: (n_samples + 1, n_bins)
+
+        # Step 6: compute per-channel variances
+        # (summing full covariance across bins in each channel)
+        total_variance = []
+        for s in range(n_samples + 1):
+            row = yvar_minuit[s]  # per-bin variances for sample s (or sum row)
+            channel_vars = []
+            for ch in model.config.channels:
+                ch_bins = model.config.channel_slices[ch]
+                if s < n_samples:
+                    # Sample-specific: sum covariances
+                    # between bins for sample s
+                    cov_block = ycov[s][ch_bins][:, s][..., ch_bins]
+                else:
+                    # Sum-of-samples: full block of covariances across
+                    # all samples and bins
+                    cov_block = ycov[:, ch_bins, :, :][:, :, :, ch_bins]
+                channel_vars.append(np.sum(cov_block))
+            total_variance.append(np.concatenate([row, channel_vars]))
+
+        total_variance = np.array(
+            total_variance
+        )  # shape: (n_samples + 1, n_bins + n_channels)
+
+    # if model_unc_method == "bootstrap":
+    #     rng = np.random.default_rng(1)
+    #     par_b = rng.multivariate_normal(
+    #         minuit_obj.values, minuit_obj.covariance, size=50000
+    #     )
+    #     y_b = [model.expected_data(p, include_auxdata=False) for p in par_b]
+    #     yerr_boot = np.std(
+    #         y_b, axis=0
+    #     )  # axis 0 along the column (column == yield in a bin)
+
+    #     # Split array by channel
+    #     per_channel, default = [], []
+    #     for channel_idx, channel in enumerate(model.config.channels):
+    #         nbins = model.config.channel_nbins[channel]
+
+    #         nbins_prev = 0
+    #         if channel_idx > 0:
+    #             nbins_prev = model.config.channel_nbins[
+    #                 model.config.channels[channel_idx - 1]
+    #             ]
+
+    #         channel_arr = yerr_boot[nbins_prev : nbins_prev + nbins]
+    #         per_channel.append(channel_arr)
+    #         default.append(total_stdev_per_bin[channel_idx][-1])
+
     # save to cache
     _YIELD_STDEV_CACHE.update(
         {
@@ -418,6 +507,7 @@ def yield_stdev(
                 tuple(parameters),
                 tuple(uncertainty),
                 corr_mat.data.tobytes(),
+                model_unc_method,
             ): (total_stdev_per_bin, total_stdev_per_channel)
         }
     )
@@ -430,6 +520,7 @@ def prediction(
     *,
     fit_results: Optional[FitResults] = None,
     label: Optional[str] = None,
+    model_unc_method: str = "linear",
 ) -> ModelPrediction:
     """Returns model prediction, including model yields and uncertainties.
 
@@ -446,6 +537,8 @@ def prediction(
         label (Optional[str], optional): label to include in model prediction, defaults
             to None (then will use "pre-fit" if fit results are not included, and "post-
             fit" otherwise)
+        model_unc_method (str, optional): method to use for calculating the model
+            uncertainties, defaults to "linear" (other options: "jacobi", "bootstrap")
 
     Returns:
         ModelPrediction: model, yields and uncertainties per channel, sample, bin
@@ -479,11 +572,21 @@ def prediction(
         for ch in model.config.channels
     ]
 
+    if model_unc_method not in ["linear", "jacobi", "bootstrap"]:
+        raise ValueError(
+            f"model uncertainty method {model_unc_method} not supported, "
+            "use 'linear', 'jacobi' or 'bootstrap'"
+        )
     # calculate the total standard deviation of the model prediction
     # indices: (channel, sample, bin) for per-bin uncertainties,
     # (channel, sample) for per-channel
     total_stdev_model_bins, total_stdev_model_channels = yield_stdev(
-        model, param_values, param_uncertainty, corr_mat
+        model,
+        param_values,
+        param_uncertainty,
+        corr_mat,
+        model_unc_method=model_unc_method,
+        minuit_obj=fit_results.minuit_obj if fit_results else None,
     )
 
     return ModelPrediction(
