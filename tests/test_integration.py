@@ -200,8 +200,9 @@ def test_integration(tmp_path, ntuple_creator, caplog):
     _ = cabinetry.visualize.data_mc(prediction_postfit, data, close_figure=True)
 
     # nuisance parameter ranking
+    # with NP shifting
     ranking_results = cabinetry.fit.ranking(
-        model, data, fit_results=fit_results, custom_fit=True
+        model, data, fit_results=fit_results, custom_fit=True, impacts_method="np_shift"
     )
     assert np.allclose(
         ranking_results.prefit_up,
@@ -250,6 +251,82 @@ def test_integration(tmp_path, ntuple_creator, caplog):
             -0.14383307,
             0.10888311,
             0.05779505,
+        ],
+        atol=1e-4,
+    )
+
+    # with covariance-based method
+    ranking_results = cabinetry.fit.ranking(
+        model,
+        data,
+        fit_results=fit_results,
+        custom_fit=True,
+        impacts_method="covariance",
+    )
+    assert np.allclose(ranking_results.prefit_up, [0.0] * 7)
+
+    assert np.allclose(ranking_results.prefit_down, [0.0] * 7)
+    assert np.allclose(
+        ranking_results.postfit_up,
+        [
+            -0.48565867,
+            -0.5250071,
+            -0.15659875,
+            -0.10167499,
+            0.13321283,
+            -0.10301342,
+            -0.05424587,
+        ],
+        atol=1e-4,
+    )
+    assert np.allclose(
+        ranking_results.postfit_down,
+        [
+            0.48565867,
+            0.5250071,
+            0.15659875,
+            0.10167499,
+            -0.13321283,
+            0.10301342,
+            0.05424587,
+        ],
+        atol=1e-4,
+    )
+
+    # with auxdata-shift method
+    ranking_results = cabinetry.fit.ranking(
+        model,
+        data,
+        fit_results=fit_results,
+        custom_fit=True,
+        impacts_method="auxdata_shift",
+    )
+    assert np.allclose(ranking_results.prefit_up, [0.0] * 7)
+
+    assert np.allclose(ranking_results.prefit_down, [0.0] * 7)
+    assert np.allclose(
+        ranking_results.postfit_up,
+        [
+            -0.4066383330849914,
+            -0.5235501400932674,
+            -0.14998217628271582,
+            -0.10512196900377901,
+            0.13277107730416549,
+            -0.10722914376296089,
+            -0.05618853520069722,
+        ],
+        atol=1e-4,
+    )
+    assert np.allclose(
+        ranking_results.postfit_down,
+        [
+            0.46017986316480464,
+            0.518080117357183,
+            0.16996122399440639,
+            0.10402554538951692,
+            -0.14092283626065583,
+            0.10365234575759374,
+            0.05643610823611134,
         ],
         atol=1e-4,
     )

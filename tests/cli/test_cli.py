@@ -203,6 +203,7 @@ def test_fit(mock_utils, mock_fit, mock_pulls, mock_corrmat, tmp_path):
         np.asarray([[0.8]]),
         np.asarray([[1.1]]),
         np.asarray([[0.9]]),
+        impacts_method="np_shift",
     ),
     autospec=True,
 )
@@ -240,7 +241,10 @@ def test_ranking(mock_utils, mock_fit, mock_rank, mock_vis, tmp_path):
     assert mock_utils.call_args_list == [((workspace,), {"asimov": False})]
     assert mock_fit.call_args_list == [(("model", "data"), {})]
     assert mock_rank.call_args_list == [
-        (("model", "data"), {"fit_results": fit_results})
+        (
+            ("model", "data"),
+            {"fit_results": fit_results, "impacts_method": "covariance"},
+        )
     ]
     assert mock_vis.call_count == 1
     assert np.allclose(mock_vis.call_args[0][0].prefit_up, [[1.2]])
@@ -252,12 +256,24 @@ def test_ranking(mock_utils, mock_fit, mock_rank, mock_vis, tmp_path):
     # Asimov, maximum amount of parameters, custom folder
     result = runner.invoke(
         cli.ranking,
-        ["--asimov", "--max_pars", 3, "--figfolder", "folder", workspace_path],
+        [
+            "--impacts_method",
+            "np_shift",
+            "--asimov",
+            "--max_pars",
+            3,
+            "--figfolder",
+            "folder",
+            workspace_path,
+        ],
     )
     assert result.exit_code == 0
     assert mock_utils.call_args == ((workspace,), {"asimov": True})
     assert mock_fit.call_args == (("model", "data"), {})
-    assert mock_rank.call_args == (("model", "data"), {"fit_results": fit_results})
+    assert mock_rank.call_args == (
+        ("model", "data"),
+        {"fit_results": fit_results, "impacts_method": "np_shift"},
+    )
     assert mock_vis.call_args[1] == {"figure_folder": "folder", "max_pars": 3}
 
 
