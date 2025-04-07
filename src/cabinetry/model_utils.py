@@ -393,18 +393,31 @@ def yield_stdev(
 
     # get number of bins from model config
     n_bins = sum(model.config.channel_nbins.values())
+
     # convert to standard deviations per bin and per channel
     # add back outer channel dimension for per-bin uncertainty
     # indices: (channel, sample, bin)
-    total_stdev_per_bin = [
-        np.sqrt(total_variance[:, :n_bins][:, model.config.channel_slices[ch]]).tolist()
-        for ch in model.config.channels
-    ]
+    def get_stdev_per_bin(
+        model: pyhf.Model, total_variance: np.ndarray, n_bins: int
+    ) -> List[List[List[float]]]:
+        return [
+            np.sqrt(
+                total_variance[:, :n_bins][:, model.config.channel_slices[ch]]
+            ).tolist()
+            for ch in model.config.channels
+        ]
+
+    total_stdev_per_bin = get_stdev_per_bin(model, total_variance, n_bins)
 
     # per-channel: transpose to flip remaining dimensions (channel sums acted as
     # individual bins before)
     # indices: (channel, sample)
-    total_stdev_per_channel = np.sqrt(total_variance[:, n_bins:].T).tolist()
+    def get_stdev_per_channel(
+        total_variance: np.ndarray, n_bins: int
+    ) -> List[List[float]]:
+        return np.sqrt(total_variance[:, n_bins:].T).tolist()
+
+    total_stdev_per_channel = get_stdev_per_channel(total_variance, n_bins)
 
     # log total stdev per bin / channel (-1 index for sample sum)
     n_channels = len(model.config.channels)
@@ -415,7 +428,7 @@ def yield_stdev(
     ]
     log.debug(f"total stdev per channel is {total_stdev_chan}")
 
-    def flat_per_sample_expected_data(parameter: float) -> np.ndarray:
+    def flat_expected_data_per_sample(parameter: float) -> np.ndarray:
         """
         Return the expected data per sample, flattened to 1D.
         Required for use with jacobi.propagate.
@@ -425,7 +438,7 @@ def yield_stdev(
     if model_unc_method == "jacobi" and minuit_obj is not None:
         # Step 1: propagate uncertainties via Jacobian method
         y, ycov = propagate(
-            flat_per_sample_expected_data, minuit_obj.values, minuit_obj.covariance
+            flat_expected_data_per_sample, minuit_obj.values, minuit_obj.covariance
         )
 
         # Step 2: reshape outputs to (n_samples, n_bins)
@@ -473,6 +486,9 @@ def yield_stdev(
         total_variance = np.array(
             total_variance
         )  # shape: (n_samples + 1, n_bins + n_channels)
+
+        total_stdev_per_bin = get_stdev_per_bin(model, total_variance, n_bins)
+        total_stdev_per_channel = get_stdev_per_channel(total_variance, n_bins)
 
     # if model_unc_method == "bootstrap":
     #     rng = np.random.default_rng(1)
