@@ -248,6 +248,7 @@ def test_yield_stdev(example_spec, example_spec_multibin):
         tuple(parameters),
         tuple(uncertainty),
         corr_mat.tobytes(),
+        "linear",
     ]
     for i_reg in range(2):
         assert np.allclose(from_cache[0][i_reg], expected_stdev_bin[i_reg])
@@ -309,7 +310,12 @@ def test_prediction(
     assert np.allclose(
         mock_stdev.call_args_list[0][0][3], np.diagflat([1.0, 1.0, 1.0, 1.0])
     )
-    assert mock_stdev.call_args_list[0][1] == {}
+    assert mock_stdev.call_args_list[0][1] == {
+        "model_unc_method": "linear",
+        "minuit_obj": None,
+        "bootstrap_seed": 1,
+        "bootstrap_size": 1000,
+    }
 
     # post-fit prediction, single-channel model
     model = pyhf.Workspace(example_spec).model()
@@ -341,7 +347,12 @@ def test_prediction(
     assert np.allclose(
         mock_stdev.call_args_list[1][0][3], np.asarray([[1.0, 0.2], [0.2, 1.0]])
     )
-    assert mock_stdev.call_args_list[1][1] == {}
+    assert mock_stdev.call_args_list[1][1] == {
+        "model_unc_method": "linear",
+        "minuit_obj": None,
+        "bootstrap_seed": 1,
+        "bootstrap_size": 1000,
+    }
 
     caplog.clear()
 
