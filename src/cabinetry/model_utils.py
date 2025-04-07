@@ -239,6 +239,8 @@ def yield_stdev(
     corr_mat: np.ndarray,
     model_unc_method: str = "linear",
     minuit_obj: Optional[iminuit.Minuit] = None,
+    bootstrap_seed: int = 1,
+    bootstrap_size: int = 50000,
 ) -> Tuple[List[List[List[float]]], List[List[float]]]:
     """Calculates symmetrized model yield standard deviation per channel / sample / bin.
 
@@ -265,6 +267,9 @@ def yield_stdev(
               the standard deviations per sample (the last sample corresponds to a sum
               over all samples)
     """
+    if model_unc_method not in ["linear", "jacobi", "bootstrap"]:
+        raise ValueError("model_unc_method must be 'linear', 'jacobi' or 'bootstrap'")
+
     # check whether results are already stored in cache
     cached_results = _YIELD_STDEV_CACHE.get(
         (
@@ -279,117 +284,6 @@ def yield_stdev(
     if cached_results is not None:
         # return results from cache
         return cached_results
-
-    # the lists up_variations and down_variations will contain the model distributions
-    # with all parameters varied individually within uncertainties
-    # indices: variation, channel, sample, bin
-    # following the channels contained in the model, there are additional entries with
-    # yields summed per channel (internally treated like additional channels) to get the
-    # per-channel uncertainties
-    # in the same way, the total model prediction is following the list of individual
-    # samples (and then treated like an additional sample)
-    up_variations = []
-    down_variations = []
-
-    # calculate the model distribution for every parameter varied up and down
-    # within the respective uncertainties
-    for i_par in range(model.config.npars):
-        # central parameter values, but one parameter varied within uncertainties
-        up_pars = parameters.copy().astype(float)  # ensure float for correct addition
-        up_pars[i_par] += uncertainty[i_par]
-        down_pars = parameters.copy().astype(float)
-        down_pars[i_par] -= uncertainty[i_par]
-
-        # model distribution per sample with this parameter varied up
-        up_comb = pyhf.tensorlib.to_numpy(
-            model.main_model.expected_data(up_pars, return_by_sample=True)
-        )
-        # attach another entry with the total model prediction (sum over all samples)
-        # indices: sample, bin
-        up_comb = np.vstack((up_comb, np.sum(up_comb, axis=0)))
-        # turn into list of channels (keep all samples, select correct bins per channel)
-        # indices: channel, sample, bin
-        up_yields_per_channel = [
-            up_comb[:, model.config.channel_slices[ch]] for ch in model.config.channels
-        ]
-        # calculate list of yields summed per channel
-        up_yields_channel_sum = np.stack(
-            [
-                np.sum(chan_yields, axis=-1, keepdims=True)
-                for chan_yields in up_yields_per_channel
-            ]
-        )
-        # reshape to drop bin axis, transpose to turn channel axis into new bin axis
-        # (channel, sample, bin) -> (sample, bin) where "bin" becomes channel sums
-        up_yields_channel_sum = up_yields_channel_sum.reshape(
-            up_yields_channel_sum.shape[:-1]
-        ).T
-
-        # concatenate per-channel sums to up_comb (along bin axis)
-        up_yields = np.concatenate((up_comb, up_yields_channel_sum), axis=1)
-        # indices: variation, sample, bin
-        up_variations.append(up_yields.tolist())
-
-        # model distribution per sample with this parameter varied down
-        down_comb = pyhf.tensorlib.to_numpy(
-            model.main_model.expected_data(down_pars, return_by_sample=True)
-        )
-        # add total prediction (sum over samples)
-        down_comb = np.vstack((down_comb, np.sum(down_comb, axis=0)))
-        # turn into list of channels
-        down_yields_per_channel = [
-            down_comb[:, model.config.channel_slices[ch]]
-            for ch in model.config.channels
-        ]
-
-        # calculate list of yields summed per channel
-        down_yields_channel_sum = np.stack(
-            [
-                np.sum(chan_yields, axis=-1, keepdims=True)
-                for chan_yields in down_yields_per_channel
-            ]
-        )
-        down_yields_channel_sum = down_yields_channel_sum.reshape(
-            down_yields_channel_sum.shape[:-1]
-        ).T
-
-        down_yields = np.concatenate((down_comb, down_yields_channel_sum), axis=1)
-        down_variations.append(down_yields)
-
-    # convert to numpy arrays for further processing
-    up_variations_np = np.asarray(up_variations)
-    down_variations_np = np.asarray(down_variations)
-
-    # calculate symmetric uncertainties for all components
-    # indices: variation, channel (last entries sums), sample (last entry sum), bin
-    sym_uncs = (up_variations_np - down_variations_np) / 2
-
-    # calculate total variance, indexed by sample, bin (per-channel numbers act like
-    # additional channels with one bin each)
-    if np.count_nonzero(corr_mat - np.diagflat(np.ones_like(parameters))) == 0:
-        # no off-diagonal contributions from correlation matrix (e.g. pre-fit)
-        total_variance = np.sum(np.power(sym_uncs, 2), axis=0)
-    else:
-        # full calculation including off-diagonal contributions
-        # with v as vector of variations (each element contains yields under variation)
-        # and M as correlation matrix, calculate variance as follows:
-        # variance = sum_i sum_j v[i] * M[i, j] * v[j]
-        # where the product between elements of v again is elementwise (multiplying bin
-        # yields), and the final variance shape is the same as element of v (yield
-        # uncertainties per sample, bin)
-
-        # possible optimizations that could be considered here:
-        #   - skipping staterror-staterror terms for per-bin calculation (orthogonal)
-        #   - taking advantage of correlation matrix symmetry
-        #   - (optional) skipping combinations with correlations below threshold
-
-        # calculate M[i, j] * v[j] first
-        # indices: pars (i), pars (j), sample, bin
-        m_times_v = corr_mat[..., np.newaxis, np.newaxis] * sym_uncs[np.newaxis, ...]
-        # now multiply by v[i] as well, indices: pars(i), pars(j), sample, bin
-        v_times_m_times_v = sym_uncs[:, np.newaxis, ...] * m_times_v
-        # finally perform sums over i and j, remaining indices: sample, bin
-        total_variance = np.sum(np.sum(v_times_m_times_v, axis=1), axis=0)
 
     # get number of bins from model config
     n_bins = sum(model.config.channel_nbins.values())
@@ -407,8 +301,6 @@ def yield_stdev(
             for ch in model.config.channels
         ]
 
-    total_stdev_per_bin = get_stdev_per_bin(model, total_variance, n_bins)
-
     # per-channel: transpose to flip remaining dimensions (channel sums acted as
     # individual bins before)
     # indices: (channel, sample)
@@ -417,17 +309,6 @@ def yield_stdev(
     ) -> List[List[float]]:
         return np.sqrt(total_variance[:, n_bins:].T).tolist()
 
-    total_stdev_per_channel = get_stdev_per_channel(total_variance, n_bins)
-
-    # log total stdev per bin / channel (-1 index for sample sum)
-    n_channels = len(model.config.channels)
-    total_stdev_bin = [total_stdev_per_bin[i_chan][-1] for i_chan in range(n_channels)]
-    log.debug(f"total stdev is {total_stdev_bin}")
-    total_stdev_chan = [
-        total_stdev_per_channel[i_chan][-1] for i_chan in range(n_channels)
-    ]
-    log.debug(f"total stdev per channel is {total_stdev_chan}")
-
     def flat_expected_data_per_sample(parameter: float) -> np.ndarray:
         """
         Return the expected data per sample, flattened to 1D.
@@ -435,10 +316,132 @@ def yield_stdev(
         """
         return model.main_model.expected_data(parameter, return_by_sample=True).ravel()
 
-    if model_unc_method == "jacobi" and minuit_obj is not None:
+    total_variance = np.asarray([])
+    if model_unc_method == "linear":
+        # the lists up_variations and down_variations will contain the model
+        # distributions with all parameters varied individually within uncertainties
+        # indices: variation, channel, sample, bin
+        # following the channels contained in the model, there are additional entries
+        # with yields summed per channel (internally treated like additional channels)
+        # to get the per-channel uncertainties
+        # in the same way, the total model prediction is following the list of
+        # individual samples (and then treated like an additional sample)
+        up_variations = []
+        down_variations = []
+
+        # calculate the model distribution for every parameter varied up and down
+        # within the respective uncertainties
+        for i_par in range(model.config.npars):
+            # central parameter values, but one parameter varied within uncertainties
+            up_pars = parameters.copy().astype(
+                float
+            )  # ensure float for correct addition
+            up_pars[i_par] += uncertainty[i_par]
+            down_pars = parameters.copy().astype(float)
+            down_pars[i_par] -= uncertainty[i_par]
+
+            # model distribution per sample with this parameter varied up
+            up_comb = pyhf.tensorlib.to_numpy(
+                model.main_model.expected_data(up_pars, return_by_sample=True)
+            )
+            # attach another entry with the total model prediction (sum of samples)
+            # indices: sample, bin
+            up_comb = np.vstack((up_comb, np.sum(up_comb, axis=0)))
+            # turn into list of channels (keep all samples, select bins per channel)
+            # indices: channel, sample, bin
+            up_yields_per_channel = [
+                up_comb[:, model.config.channel_slices[ch]]
+                for ch in model.config.channels
+            ]
+            # calculate list of yields summed per channel
+            up_yields_channel_sum = np.stack(
+                [
+                    np.sum(chan_yields, axis=-1, keepdims=True)
+                    for chan_yields in up_yields_per_channel
+                ]
+            )
+            # reshape to drop bin axis, transpose to turn channel axis into new bin axis
+            # (channel, sample, bin) -> (sample, bin) where "bin" becomes channel sums
+            up_yields_channel_sum = up_yields_channel_sum.reshape(
+                up_yields_channel_sum.shape[:-1]
+            ).T
+
+            # concatenate per-channel sums to up_comb (along bin axis)
+            up_yields = np.concatenate((up_comb, up_yields_channel_sum), axis=1)
+            # indices: variation, sample, bin
+            up_variations.append(up_yields.tolist())
+
+            # model distribution per sample with this parameter varied down
+            down_comb = pyhf.tensorlib.to_numpy(
+                model.main_model.expected_data(down_pars, return_by_sample=True)
+            )
+            # add total prediction (sum over samples)
+            down_comb = np.vstack((down_comb, np.sum(down_comb, axis=0)))
+            # turn into list of channels
+            down_yields_per_channel = [
+                down_comb[:, model.config.channel_slices[ch]]
+                for ch in model.config.channels
+            ]
+
+            # calculate list of yields summed per channel
+            down_yields_channel_sum = np.stack(
+                [
+                    np.sum(chan_yields, axis=-1, keepdims=True)
+                    for chan_yields in down_yields_per_channel
+                ]
+            )
+            down_yields_channel_sum = down_yields_channel_sum.reshape(
+                down_yields_channel_sum.shape[:-1]
+            ).T
+
+            down_yields = np.concatenate((down_comb, down_yields_channel_sum), axis=1)
+            down_variations.append(down_yields)
+
+        # convert to numpy arrays for further processing
+        up_variations_np = np.asarray(up_variations)
+        down_variations_np = np.asarray(down_variations)
+
+        # calculate symmetric uncertainties for all components
+        # indices: variation, channel (last entries sums), sample (last entry sum), bin
+        sym_uncs = (up_variations_np - down_variations_np) / 2
+
+        # calculate total variance, indexed by sample, bin (per-channel numbers act like
+        # additional channels with one bin each)
+        if np.count_nonzero(corr_mat - np.diagflat(np.ones_like(parameters))) == 0:
+            # no off-diagonal contributions from correlation matrix (e.g. pre-fit)
+            total_variance = np.sum(np.power(sym_uncs, 2), axis=0)
+        else:
+            # full calculation including off-diagonal contributions
+            # with v as vector of variations (each element contains yields under
+            # variation) and M as correlation matrix, calculate variance as follows:
+            # variance = sum_i sum_j v[i] * M[i, j] * v[j]
+            # where the product between elements of v again is elementwise
+            # (multiplying bin yields), and the final variance shape is the same as
+            # element of v (yield uncertainties per sample, bin)
+
+            # possible optimizations that could be considered here:
+            #   - skip staterror-staterror terms for per-bin calculation (orthogonal)
+            #   - taking advantage of correlation matrix symmetry
+            #   - (optional) skipping combinations with correlations below threshold
+
+            # calculate M[i, j] * v[j] first
+            # indices: pars (i), pars (j), sample, bin
+            m_times_v = (
+                corr_mat[..., np.newaxis, np.newaxis] * sym_uncs[np.newaxis, ...]
+            )
+            # now multiply by v[i] as well, indices: pars(i), pars(j), sample, bin
+            v_times_m_times_v = sym_uncs[:, np.newaxis, ...] * m_times_v
+            # finally perform sums over i and j, remaining indices: sample, bin
+            total_variance = np.sum(np.sum(v_times_m_times_v, axis=1), axis=0)
+
+    elif model_unc_method == "jacobi":
+        if minuit_obj is None:
+            raise ValueError("model_unc_method 'jacobi' requires a Minuit object")
         # Step 1: propagate uncertainties via Jacobian method
         y, ycov = propagate(
-            flat_expected_data_per_sample, minuit_obj.values, minuit_obj.covariance
+            flat_expected_data_per_sample,
+            minuit_obj.values,
+            minuit_obj.covariance,
         )
 
         # Step 2: reshape outputs to (n_samples, n_bins)
@@ -466,7 +469,6 @@ def yield_stdev(
 
         # Step 6: compute per-channel variances
         # (summing full covariance across bins in each channel)
-        total_variance = []
         for s in range(n_samples + 1):
             row = yvar_minuit[s]  # per-bin variances for sample s (or sum row)
             channel_vars = []
@@ -481,40 +483,84 @@ def yield_stdev(
                     # all samples and bins
                     cov_block = ycov[:, ch_bins, :, :][:, :, :, ch_bins]
                 channel_vars.append(np.sum(cov_block))
-            total_variance.append(np.concatenate([row, channel_vars]))
+            # shape: (n_samples + 1, n_bins + n_channels)
+            np.append(
+                total_variance,
+                np.concatenate([row, channel_vars]),
+            )
 
-        total_variance = np.array(
-            total_variance
-        )  # shape: (n_samples + 1, n_bins + n_channels)
+    else:
+        if minuit_obj is None:
+            raise ValueError("model_unc_method 'jacobi' requires a Minuit object")
+        random_number_gen = np.random.default_rng(bootstrap_seed)
+        # Step 1: draw N samples of M-parameters from an M-dimensional
+        # Gaussian distribution where M is the number of model parameters,
+        # with the Gaussian mean equal to the best-fit parameters and
+        # the spread is given by the covariance matrix
+        boot_params = random_number_gen.multivariate_normal(
+            minuit_obj.values, minuit_obj.covariance, size=bootstrap_size
+        )
+        # Step 2: Get predictions with return_by_sample=True
+        # shape: (n_bootstrap, n_samples, n_bins)
+        boot_preds = np.array(
+            [
+                model.main_model.expected_data(p, return_by_sample=True)
+                for p in boot_params
+            ]
+        )
 
-        total_stdev_per_bin = get_stdev_per_bin(model, total_variance, n_bins)
-        total_stdev_per_channel = get_stdev_per_channel(total_variance, n_bins)
+        # Step 3: Add total prediction as extra sample (sum over all samples)
+        # shape: (n_bootstrap, 1, n_bins)
+        total_preds = boot_preds.sum(axis=1, keepdims=True)
+        # shape: (n_bootstrap, n_samples+1, n_bins)
+        boot_preds = np.concatenate([boot_preds, total_preds], axis=1)
 
-    # if model_unc_method == "bootstrap":
-    #     rng = np.random.default_rng(1)
-    #     par_b = rng.multivariate_normal(
-    #         minuit_obj.values, minuit_obj.covariance, size=50000
-    #     )
-    #     y_b = [model.expected_data(p, include_auxdata=False) for p in par_b]
-    #     yerr_boot = np.std(
-    #         y_b, axis=0
-    #     )  # axis 0 along the column (column == yield in a bin)
+        # Step 4: Convert to shape:
+        # (n_bootstrap, n_samples, per_channel_bins + channel_sums)
+        # shape in each: (n_bootstrap, n_samples, bins_in_ch)
+        preds_per_channel = [
+            boot_preds[:, :, model.config.channel_slices[ch]]
+            for ch in model.config.channels
+        ]
 
-    #     # Split array by channel
-    #     per_channel, default = [], []
-    #     for channel_idx, channel in enumerate(model.config.channels):
-    #         nbins = model.config.channel_nbins[channel]
+        # Step 5: Sum over bins to get total yield per sample, per channel
+        # shape: (n_bootstrap, n_samples, 1, n_channels)
+        summed_per_channel = np.stack(
+            [
+                # (n_bootstrap, n_samples, 1)
+                np.sum(chan_pred, axis=-1, keepdims=True)
+                for chan_pred in preds_per_channel
+            ],
+            axis=-1,
+        )
+        # shape: (n_bootstrap, n_samples, n_channels)
+        summed_per_channel = np.squeeze(summed_per_channel, axis=2)
 
-    #         nbins_prev = 0
-    #         if channel_idx > 0:
-    #             nbins_prev = model.config.channel_nbins[
-    #                 model.config.channels[channel_idx - 1]
-    #             ]
+        # Step 6: Concatenate per-channel sums to main prediction (on axis=2)
+        all_preds = np.concatenate(
+            [
+                boot_preds,
+                np.transpose(summed_per_channel, (0, 1, 2)),
+            ],  # make sure axis match
+            axis=2,  # bin axis
+        )  # final shape: (n_bootstrap, n_samples, n_bins + n_channels)
 
-    #         channel_arr = yerr_boot[nbins_prev : nbins_prev + nbins]
-    #         per_channel.append(channel_arr)
-    #         default.append(total_stdev_per_bin[channel_idx][-1])
+        # Step 7: Compute std dev across bootstrap replicates (axis=0)
+        total_variance = np.power(
+            np.std(all_preds, axis=0), 2
+        )  # shape: (n_samples, n_bins + n_channels)
 
+    total_stdev_per_bin = get_stdev_per_bin(model, total_variance, n_bins)
+    total_stdev_per_channel = get_stdev_per_channel(total_variance, n_bins)
+
+    # log total stdev per bin / channel (-1 index for sample sum)
+    n_channels = len(model.config.channels)
+    total_stdev_bin = [total_stdev_per_bin[i_chan][-1] for i_chan in range(n_channels)]
+    log.debug(f"total stdev is {total_stdev_bin}")
+    total_stdev_chan = [
+        total_stdev_per_channel[i_chan][-1] for i_chan in range(n_channels)
+    ]
+    log.debug(f"total stdev per channel is {total_stdev_chan}")
     # save to cache
     _YIELD_STDEV_CACHE.update(
         {
@@ -537,6 +583,8 @@ def prediction(
     fit_results: Optional[FitResults] = None,
     label: Optional[str] = None,
     model_unc_method: str = "linear",
+    bootstrap_seed: int = 1,
+    bootstrap_size: int = 1000,
 ) -> ModelPrediction:
     """Returns model prediction, including model yields and uncertainties.
 
@@ -603,6 +651,8 @@ def prediction(
         corr_mat,
         model_unc_method=model_unc_method,
         minuit_obj=fit_results.minuit_obj if fit_results else None,
+        bootstrap_seed=bootstrap_seed,
+        bootstrap_size=bootstrap_size,
     )
 
     return ModelPrediction(
