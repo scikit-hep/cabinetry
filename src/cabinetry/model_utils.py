@@ -267,7 +267,10 @@ def yield_stdev(
               over all samples)
     """
     if model_unc_method not in ["linear", "jacobi", "bootstrap"]:
-        raise ValueError("model_unc_method must be 'linear', 'jacobi' or 'bootstrap'")
+        raise ValueError(
+            f"model uncertainty method {model_unc_method} not supported, "
+            "use 'linear', 'jacobi' or 'bootstrap'"
+        )
     # check whether results are already stored in cache
     cached_results = _YIELD_STDEV_CACHE.get(
         (
