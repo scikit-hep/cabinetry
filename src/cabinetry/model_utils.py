@@ -15,7 +15,6 @@ from typing import (
     Union,
 )
 
-import iminuit
 from jacobi import propagate  # type: ignore[import-untyped]
 import numpy as np
 import pyhf
@@ -238,7 +237,7 @@ def yield_stdev(
     uncertainty: np.ndarray,
     corr_mat: np.ndarray,
     model_unc_method: str = "linear",
-    minuit_obj: Optional[iminuit.Minuit] = None,
+    covariances: Optional[np.ndarray] = None,
     bootstrap_seed: int = 1,
     bootstrap_size: int = 50000,
 ) -> Tuple[List[List[List[float]]], List[List[float]]]:
@@ -269,7 +268,6 @@ def yield_stdev(
     """
     if model_unc_method not in ["linear", "jacobi", "bootstrap"]:
         raise ValueError("model_unc_method must be 'linear', 'jacobi' or 'bootstrap'")
-
     # check whether results are already stored in cache
     cached_results = _YIELD_STDEV_CACHE.get(
         (
@@ -309,12 +307,12 @@ def yield_stdev(
     ) -> List[List[float]]:
         return np.sqrt(total_variance[:, n_bins:].T).tolist()
 
-    def flat_expected_data_per_sample(parameter: float) -> np.ndarray:
+    def flat_expected_data_per_sample(parameters: np.ndarray) -> np.ndarray:
         """
         Return the expected data per sample, flattened to 1D.
         Required for use with jacobi.propagate.
         """
-        return model.main_model.expected_data(parameter, return_by_sample=True).ravel()
+        return model.main_model.expected_data(parameters, return_by_sample=True).ravel()
 
     total_variance = np.asarray([])
     if model_unc_method == "linear":
@@ -435,18 +433,18 @@ def yield_stdev(
             total_variance = np.sum(np.sum(v_times_m_times_v, axis=1), axis=0)
 
     elif model_unc_method == "jacobi":
-        if minuit_obj is None:
-            raise ValueError("model_unc_method 'jacobi' requires a Minuit object")
+        if covariances is None:
+            raise ValueError("model_unc_method 'jacobi' requires a covariances array")
+
         # Step 1: propagate uncertainties via Jacobian method
         y, ycov = propagate(
             flat_expected_data_per_sample,
-            minuit_obj.values,
-            minuit_obj.covariance,
+            parameters,
+            covariances,
         )
-
         # Step 2: reshape outputs to (n_samples, n_bins)
         n_samples, n_bins = model.main_model.expected_data(
-            minuit_obj.values, return_by_sample=True
+            parameters, return_by_sample=True
         ).shape
         y = y.reshape(n_samples, n_bins)
         ycov = ycov.reshape((n_samples, n_bins, n_samples, n_bins))
@@ -469,6 +467,7 @@ def yield_stdev(
 
         # Step 6: compute per-channel variances
         # (summing full covariance across bins in each channel)
+        rows = []
         for s in range(n_samples + 1):
             row = yvar_minuit[s]  # per-bin variances for sample s (or sum row)
             channel_vars = []
@@ -484,21 +483,22 @@ def yield_stdev(
                     cov_block = ycov[:, ch_bins, :, :][:, :, :, ch_bins]
                 channel_vars.append(np.sum(cov_block))
             # shape: (n_samples + 1, n_bins + n_channels)
-            np.append(
-                total_variance,
-                np.concatenate([row, channel_vars]),
-            )
+            rows.append(np.concatenate([row, channel_vars]))
+
+        total_variance = np.stack(rows)
 
     else:
-        if minuit_obj is None:
-            raise ValueError("model_unc_method 'jacobi' requires a Minuit object")
+        if covariances is None:
+            raise ValueError(
+                "model_unc_method 'bootstrap' requires a covariances array"
+            )
         random_number_gen = np.random.default_rng(bootstrap_seed)
         # Step 1: draw N samples of M-parameters from an M-dimensional
         # Gaussian distribution where M is the number of model parameters,
         # with the Gaussian mean equal to the best-fit parameters and
         # the spread is given by the covariance matrix
         boot_params = random_number_gen.multivariate_normal(
-            minuit_obj.values, minuit_obj.covariance, size=bootstrap_size
+            parameters, covariances, size=bootstrap_size
         )
         # Step 2: Get predictions with return_by_sample=True
         # shape: (n_bootstrap, n_samples, n_bins)
@@ -577,6 +577,30 @@ def yield_stdev(
     return total_stdev_per_bin, total_stdev_per_channel
 
 
+def _get_cov_from_corr(
+    corr_mat: np.ndarray, param_uncertainty: np.ndarray
+) -> np.ndarray:
+    """
+    Get the covariance matrix from the correlation matrix and
+    parameter uncertainties.
+
+    Args:
+        corr_mat (np.ndarray): correlation matrix
+        param_uncertainty (np.ndarray): parameter uncertainties
+    Returns:
+        np.ndarray: covariance matrix
+    """
+    n_pars = len(param_uncertainty)
+    covariances = np.zeros((n_pars, n_pars))
+    for i in range(n_pars):
+        for j in range(n_pars):
+            sigma_i = param_uncertainty[i]
+            sigma_j = param_uncertainty[j]
+            rho_ij = corr_mat[i, j]
+            covariances[i, j] = rho_ij * sigma_i * sigma_j
+    return covariances
+
+
 def prediction(
     model: pyhf.pdf.Model,
     *,
@@ -615,6 +639,10 @@ def prediction(
         param_uncertainty = fit_results.uncertainty
         corr_mat = fit_results.corr_mat
         label = "post-fit" if label is None else label
+        if fit_results.minuit_obj is None:
+            covariances = _get_cov_from_corr(corr_mat, param_uncertainty)
+        else:
+            covariances = fit_results.minuit_obj.covariance
 
     else:
         # no fit results specified, generate pre-fit parameter values, uncertainties,
@@ -623,6 +651,8 @@ def prediction(
         param_uncertainty = prefit_uncertainties(model)
         corr_mat = np.zeros(shape=(len(param_values), len(param_values)))
         np.fill_diagonal(corr_mat, 1.0)
+        # compute covariances from correlations
+        covariances = _get_cov_from_corr(corr_mat, param_uncertainty)
         label = "pre-fit" if label is None else label
 
     yields_combined = pyhf.tensorlib.to_numpy(
@@ -641,6 +671,7 @@ def prediction(
             f"model uncertainty method {model_unc_method} not supported, "
             "use 'linear', 'jacobi' or 'bootstrap'"
         )
+
     # calculate the total standard deviation of the model prediction
     # indices: (channel, sample, bin) for per-bin uncertainties,
     # (channel, sample) for per-channel
@@ -650,7 +681,7 @@ def prediction(
         param_uncertainty,
         corr_mat,
         model_unc_method=model_unc_method,
-        minuit_obj=fit_results.minuit_obj if fit_results else None,
+        covariances=covariances,
         bootstrap_seed=bootstrap_seed,
         bootstrap_size=bootstrap_size,
     )
