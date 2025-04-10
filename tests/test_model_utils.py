@@ -418,6 +418,10 @@ def test_yield_stdev(example_spec, example_spec_multibin):
         ),
         ([[[0.3], [0.3]]], [[0.3, 0.3]]),
         ([[[0.3], [0.3]]], [[0.3, 0.3]]),
+        ([[[0.3], [0.3]]], [[0.3, 0.3]]),
+        ([[[0.3], [0.3]]], [[0.3, 0.3]]),
+        ([[[0.3], [0.3]]], [[0.3, 0.3]]),
+        ([[[0.3], [0.3]]], [[0.3, 0.3]]),
     ],
 )
 @mock.patch(
@@ -476,42 +480,94 @@ def test_prediction(
 
     # post-fit prediction, single-channel model
     model = pyhf.Workspace(example_spec).model()
+
+    # Test when we have a minuit object stored in fit results
+    mock_minuit_instance = mock.MagicMock()
+    mock_minuit_instance.covariances = [[0.01, 0.0006], [0.0006, 0.0009]]
+    with mock.patch("iminuit.Minuit", return_value=mock_minuit_instance):
+        fit_results = FitResults(
+            np.asarray([1.1, 1.01]),
+            np.asarray([0.1, 0.03]),
+            ["Signal strength", "staterror_Signal-Region[0]"],
+            np.asarray([[1.0, 0.2], [0.2, 1.0]]),
+            0.0,
+            minuit_obj=mock_minuit_instance,
+        )
+        model_pred = model_utils.prediction(model, fit_results=fit_results)
+        assert model_pred.model == model
+        assert np.allclose(model_pred.model_yields, [[[57.54980000]]])  # new par value
+        assert model_pred.total_stdev_model_bins == [[[0.3], [0.3]]]  # from mock
+        assert model_pred.total_stdev_model_channels == [[0.3, 0.3]]  # from mock
+        assert model_pred.label == "post-fit"
+        assert "parameter names in fit results and model do not match" not in [
+            rec.message for rec in caplog.records
+        ]
+
+        assert mock_asimov.call_count == 1  # no new call
+        assert mock_unc.call_count == 1  # no new call
+
+        # call to stdev calculation with fit_results propagated
+        assert mock_stdev.call_count == 2
+        assert mock_stdev.call_args_list[1][0][0] == model
+        assert np.allclose(mock_stdev.call_args_list[1][0][1], [1.1, 1.01])
+        assert np.allclose(mock_stdev.call_args_list[1][0][2], [0.1, 0.03])
+        assert np.allclose(
+            mock_stdev.call_args_list[1][0][3], np.asarray([[1.0, 0.2], [0.2, 1.0]])
+        )
+
+        call_args = mock_stdev.call_args_list[1][1]
+        assert call_args["model_unc_method"] == "linear"
+        assert call_args["bootstrap_seed"] == 1
+        assert call_args["bootstrap_size"] == 1000
+        np.allclose(call_args["covariances"], mock_minuit_instance.covariance)
+        caplog.clear()
+
+    # Test when we don't have a minuit object stored in fit results
+    # tests covariance calculation
     fit_results = FitResults(
         np.asarray([1.1, 1.01]),
         np.asarray([0.1, 0.03]),
         ["Signal strength", "staterror_Signal-Region[0]"],
         np.asarray([[1.0, 0.2], [0.2, 1.0]]),
         0.0,
+        minuit_obj=None,
     )
     covariances = [[0.01, 0.0006], [0.0006, 0.0009]]
     model_pred = model_utils.prediction(model, fit_results=fit_results)
-    assert model_pred.model == model
-    assert np.allclose(model_pred.model_yields, [[[57.54980000]]])  # new par value
-    assert model_pred.total_stdev_model_bins == [[[0.3], [0.3]]]  # from mock
-    assert model_pred.total_stdev_model_channels == [[0.3, 0.3]]  # from mock
-    assert model_pred.label == "post-fit"
-    assert "parameter names in fit results and model do not match" not in [
-        rec.message for rec in caplog.records
-    ]
-
-    assert mock_asimov.call_count == 1  # no new call
-    assert mock_unc.call_count == 1  # no new call
-
-    # call to stdev calculation with fit_results propagated
-    assert mock_stdev.call_count == 2
-    assert mock_stdev.call_args_list[1][0][0] == model
-    assert np.allclose(mock_stdev.call_args_list[1][0][1], [1.1, 1.01])
-    assert np.allclose(mock_stdev.call_args_list[1][0][2], [0.1, 0.03])
-    assert np.allclose(
-        mock_stdev.call_args_list[1][0][3], np.asarray([[1.0, 0.2], [0.2, 1.0]])
-    )
-
-    call_args = mock_stdev.call_args_list[1][1]
-    assert call_args["model_unc_method"] == "linear"
-    assert call_args["bootstrap_seed"] == 1
-    assert call_args["bootstrap_size"] == 1000
-    # Compare array key separately
+    assert mock_stdev.call_count == 3
+    call_args = mock_stdev.call_args_list[2][1]
     np.allclose(call_args["covariances"], covariances)
+
+    model_pred = model_utils.prediction(
+        model, fit_results=fit_results, model_unc_method="jacobi"
+    )
+    assert mock_stdev.call_count == 4
+    call_args = mock_stdev.call_args_list[3][1]
+    call_args["model_unc_method"] = "jacobi"
+
+    # bootstrap uncertainty method with default params
+    model_pred = model_utils.prediction(
+        model, fit_results=fit_results, model_unc_method="bootstrap"
+    )
+    assert mock_stdev.call_count == 5
+    call_args = mock_stdev.call_args_list[4][1]
+    call_args["model_unc_method"] = "bootstrap"
+    call_args["bootstrap_seed"] = 1
+    call_args["bootstrap_size"] = 1000
+
+    # bootstrap uncertainty method with custom params
+    model_pred = model_utils.prediction(
+        model,
+        fit_results=fit_results,
+        model_unc_method="bootstrap",
+        bootstrap_seed=2,
+        bootstrap_size=2000,
+    )
+    assert mock_stdev.call_count == 6
+    call_args = mock_stdev.call_args_list[5][1]
+    call_args["model_unc_method"] = "bootstrap"
+    call_args["bootstrap_seed"] = 2
+    call_args["bootstrap_size"] = 2000
 
     caplog.clear()
 
@@ -528,7 +584,17 @@ def test_prediction(
         rec.message for rec in caplog.records
     ]
     assert model_pred.label == "abc"
+    assert mock_stdev.call_count == 7
     caplog.clear()
+
+    with pytest.raises(
+        ValueError,
+        match="model uncertainty method abc not supported, "
+        + "use 'linear', 'jacobi' or 'bootstrap'",
+    ):
+        model_utils.prediction(model, fit_results=fit_results, model_unc_method="abc")
+
+    assert mock_stdev.call_count == 7
 
 
 def test_unconstrained_parameter_count(example_spec, example_spec_shapefactor):
