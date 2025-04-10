@@ -194,22 +194,82 @@ def test_yield_stdev(example_spec, example_spec_multibin):
     parameters = np.asarray([0.95, 1.05])
     uncertainty = np.asarray([0.1, 0.1])
     corr_mat = np.asarray([[1.0, 0.2], [0.2, 1.0]])
+    covariances = np.asarray([[0.01, 0.002], [0.002, 0.01]])
 
     total_stdev_bin, total_stdev_chan = model_utils.yield_stdev(
-        model, parameters, uncertainty, corr_mat
+        model, parameters, uncertainty, corr_mat, covariances=covariances
     )
+
     assert np.allclose(total_stdev_bin, [[[8.03150606], [8.03150606]]])
     assert np.allclose(total_stdev_chan, [[8.03150606, 8.03150606]])
+
+    total_stdev_bin, total_stdev_chan = model_utils.yield_stdev(
+        model,
+        parameters,
+        uncertainty,
+        corr_mat,
+        covariances=covariances,
+        model_unc_method="jacobi",
+    )
+
+    assert np.allclose(total_stdev_bin, [[[8.03150606], [8.03150606]]])
+    assert np.allclose(total_stdev_chan, [[8.03150606, 8.03150606]])
+
+    total_stdev_bin, total_stdev_chan = model_utils.yield_stdev(
+        model,
+        parameters,
+        uncertainty,
+        corr_mat,
+        covariances=covariances,
+        model_unc_method="bootstrap",
+        bootstrap_seed=1,
+        bootstrap_size=1000,
+    )
+
+    assert np.allclose(total_stdev_bin, [[[7.996767219922332], [7.996767219922332]]])
+    assert np.allclose(total_stdev_chan, [[7.996767219922332, 7.996767219922332]])
 
     # pre-fit
     parameters = np.asarray([1.0, 1.0])
     uncertainty = np.asarray([0.0, 0.0495665682])
     diag_corr_mat = np.diagflat([1.0, 1.0])
+    covariances = np.diagflat(uncertainty**2)
+
     total_stdev_bin, total_stdev_chan = model_utils.yield_stdev(
-        model, parameters, uncertainty, diag_corr_mat
+        model,
+        parameters,
+        uncertainty,
+        diag_corr_mat,
+        covariances=covariances,
     )
     assert np.allclose(total_stdev_bin, [[[2.56754823], [2.56754823]]])  # the staterror
     assert np.allclose(total_stdev_chan, [[2.56754823, 2.56754823]])
+
+    total_stdev_bin, total_stdev_chan = model_utils.yield_stdev(
+        model,
+        parameters,
+        uncertainty,
+        diag_corr_mat,
+        covariances=covariances,
+        model_unc_method="jacobi",
+    )
+    assert np.allclose(total_stdev_bin, [[[2.56754823], [2.56754823]]])  # the staterror
+    assert np.allclose(total_stdev_chan, [[2.56754823, 2.56754823]])
+
+    total_stdev_bin, total_stdev_chan = model_utils.yield_stdev(
+        model,
+        parameters,
+        uncertainty,
+        diag_corr_mat,
+        covariances=covariances,
+        model_unc_method="bootstrap",
+        bootstrap_seed=1,
+        bootstrap_size=1000,
+    )
+    assert np.allclose(
+        total_stdev_bin, [[[2.5615394737023074], [2.5615394737023074]]]
+    )  # the staterror
+    assert np.allclose(total_stdev_chan, [[2.5615394737023074, 2.5615394737023074]])
 
     # multiple channels, bins, staterrors
     model = pyhf.Workspace(example_spec_multibin).model()
@@ -223,35 +283,130 @@ def test_yield_stdev(example_spec, example_spec_multibin):
             [0.3, 0.1, 0.3, 1.0],
         ]
     )
-    total_stdev_bin, total_stdev_chan = model_utils.yield_stdev(
-        model, parameters, uncertainty, corr_mat
+    covariances = np.asarray(
+        [
+            [0.09, 0.006, 0.003, 0.009],
+            [0.006, 0.01, 0.0005, 0.001],
+            [0.003, 0.0005, 0.0025, 0.0015],
+            [0.009, 0.001, 0.0015, 0.01],
+        ]
     )
-    expected_stdev_bin = [
+    total_stdev_bin, total_stdev_chan = model_utils.yield_stdev(
+        model,
+        parameters,
+        uncertainty,
+        corr_mat,
+        covariances=covariances,
+    )
+    expected_stdev_bin_lin = [
         [[8.056054, 1.670629], [8.056054, 1.670629]],
         [[2.775377], [2.775377]],
     ]
-    expected_stdev_chan = [[9.596340, 9.596340], [2.775377, 2.775377]]
+    expected_stdev_chan_lin = [[9.596340, 9.596340], [2.775377, 2.775377]]
     for i_reg in range(2):  # two channels
-        assert np.allclose(total_stdev_bin[i_reg], expected_stdev_bin[i_reg])
-        assert np.allclose(total_stdev_chan[i_reg], expected_stdev_chan[i_reg])
+        assert np.allclose(total_stdev_bin[i_reg], expected_stdev_bin_lin[i_reg])
+        assert np.allclose(total_stdev_chan[i_reg], expected_stdev_chan_lin[i_reg])
+
+    # test with jacobi method
+    total_stdev_bin, total_stdev_chan = model_utils.yield_stdev(
+        model,
+        parameters,
+        uncertainty,
+        corr_mat,
+        covariances=covariances,
+        model_unc_method="jacobi",
+    )
+    expected_stdev_bin_jacobi = [
+        [[8.056054, 1.670629], [8.056054, 1.670629]],
+        [[2.775377], [2.775377]],
+    ]
+    expected_stdev_chan_jacobi = [[9.596340, 9.596340], [2.775377, 2.775377]]
+    for i_reg in range(2):  # two channels
+        assert np.allclose(total_stdev_bin[i_reg], expected_stdev_bin_jacobi[i_reg])
+        assert np.allclose(total_stdev_chan[i_reg], expected_stdev_chan_jacobi[i_reg])
+
+    # test with bootstrap method
+    total_stdev_bin, total_stdev_chan = model_utils.yield_stdev(
+        model,
+        parameters,
+        uncertainty,
+        corr_mat,
+        covariances=covariances,
+        model_unc_method="bootstrap",
+        bootstrap_seed=1,
+        bootstrap_size=1000,
+    )
+
+    expected_stdev_bin_bootstrap = [
+        [[8.069878, 1.678723], [8.069878, 1.678723]],
+        [[2.803640], [2.803640]],
+    ]
+    expected_stdev_chan_bootstrap = [[9.619977, 9.619977], [2.803640, 2.803640]]
+    for i_reg in range(2):  # two channels
+        assert np.allclose(total_stdev_bin[i_reg], expected_stdev_bin_bootstrap[i_reg])
+        assert np.allclose(
+            total_stdev_chan[i_reg], expected_stdev_chan_bootstrap[i_reg]
+        )
 
     # test caching by calling again with same arguments
     total_stdev_bin, total_stdev_chan = model_utils.yield_stdev(
         model, parameters, uncertainty, corr_mat
     )
     for i_reg in range(2):
-        assert np.allclose(total_stdev_bin[i_reg], expected_stdev_bin[i_reg])
-        assert np.allclose(total_stdev_chan[i_reg], expected_stdev_chan[i_reg])
+        assert np.allclose(total_stdev_bin[i_reg], expected_stdev_bin_lin[i_reg])
+        assert np.allclose(total_stdev_chan[i_reg], expected_stdev_chan_lin[i_reg])
     # also look up cache directly
     from_cache = model_utils._YIELD_STDEV_CACHE[
         model_utils._hashable_model_key(model),
         tuple(parameters),
         tuple(uncertainty),
         corr_mat.tobytes(),
+        "linear",
     ]
     for i_reg in range(2):
-        assert np.allclose(from_cache[0][i_reg], expected_stdev_bin[i_reg])
-        assert np.allclose(from_cache[1][i_reg], expected_stdev_chan[i_reg])
+        assert np.allclose(from_cache[0][i_reg], expected_stdev_bin_lin[i_reg])
+        assert np.allclose(from_cache[1][i_reg], expected_stdev_chan_lin[i_reg])
+
+    model_utils._YIELD_STDEV_CACHE.clear()
+
+    with pytest.raises(
+        ValueError,
+        match="model uncertainty method abc not supported, "
+        + "use 'linear', 'jacobi' or 'bootstrap'",
+    ):
+        model_utils.yield_stdev(
+            model,
+            parameters,
+            uncertainty,
+            corr_mat,
+            covariances=covariances,
+            model_unc_method="abc",
+        )
+
+    with pytest.raises(
+        ValueError,
+        match="model_unc_method 'jacobi' requires a covariances array",
+    ):
+        model_utils.yield_stdev(
+            model,
+            parameters,
+            uncertainty,
+            corr_mat,
+            model_unc_method="jacobi",
+        )
+    with pytest.raises(
+        ValueError,
+        match="model_unc_method 'bootstrap' requires a covariances array",
+    ):
+        model_utils.yield_stdev(
+            model,
+            parameters,
+            uncertainty,
+            corr_mat,
+            model_unc_method="bootstrap",
+        )
+
+    # test with different covariance matrix
 
 
 @mock.patch(
@@ -261,6 +416,10 @@ def test_yield_stdev(example_spec, example_spec_multibin):
             [[[5.0, 2.0], [5.0, 2.0]], [[1.0], [1.0]]],
             [[5.38516481, 5.38516481], [1.0, 1.0]],
         ),
+        ([[[0.3], [0.3]]], [[0.3, 0.3]]),
+        ([[[0.3], [0.3]]], [[0.3, 0.3]]),
+        ([[[0.3], [0.3]]], [[0.3, 0.3]]),
+        ([[[0.3], [0.3]]], [[0.3, 0.3]]),
         ([[[0.3], [0.3]]], [[0.3, 0.3]]),
         ([[[0.3], [0.3]]], [[0.3, 0.3]]),
     ],
@@ -285,6 +444,8 @@ def test_prediction(
 
     # pre-fit prediction, multi-channel model
     model_pred = model_utils.prediction(model)
+    covariances = np.diagflat(np.asarray([0.0, 0.2, 0.4, 0.125]) ** 2)
+
     assert model_pred.model == model
     # yields from pyhf expected_data call, per-bin / per-channel uncertainty from mock
     assert model_pred.model_yields == [[[25.0, 5.0]], [[8.0]]]
@@ -309,39 +470,104 @@ def test_prediction(
     assert np.allclose(
         mock_stdev.call_args_list[0][0][3], np.diagflat([1.0, 1.0, 1.0, 1.0])
     )
-    assert mock_stdev.call_args_list[0][1] == {}
+
+    call_args = mock_stdev.call_args_list[0][1]
+    assert call_args["model_unc_method"] == "linear"
+    assert call_args["bootstrap_seed"] == 1
+    assert call_args["bootstrap_size"] == 1000
+    # Compare array key separately
+    np.allclose(call_args["covariances"], covariances)
 
     # post-fit prediction, single-channel model
     model = pyhf.Workspace(example_spec).model()
+
+    # Test when we have a minuit object stored in fit results
+    mock_minuit_instance = mock.MagicMock()
+    mock_minuit_instance.covariances = [[0.01, 0.0006], [0.0006, 0.0009]]
+    with mock.patch("iminuit.Minuit", return_value=mock_minuit_instance):
+        fit_results = FitResults(
+            np.asarray([1.1, 1.01]),
+            np.asarray([0.1, 0.03]),
+            ["Signal strength", "staterror_Signal-Region[0]"],
+            np.asarray([[1.0, 0.2], [0.2, 1.0]]),
+            0.0,
+            minuit_obj=mock_minuit_instance,
+        )
+        model_pred = model_utils.prediction(model, fit_results=fit_results)
+        assert model_pred.model == model
+        assert np.allclose(model_pred.model_yields, [[[57.54980000]]])  # new par value
+        assert model_pred.total_stdev_model_bins == [[[0.3], [0.3]]]  # from mock
+        assert model_pred.total_stdev_model_channels == [[0.3, 0.3]]  # from mock
+        assert model_pred.label == "post-fit"
+        assert "parameter names in fit results and model do not match" not in [
+            rec.message for rec in caplog.records
+        ]
+
+        assert mock_asimov.call_count == 1  # no new call
+        assert mock_unc.call_count == 1  # no new call
+
+        # call to stdev calculation with fit_results propagated
+        assert mock_stdev.call_count == 2
+        assert mock_stdev.call_args_list[1][0][0] == model
+        assert np.allclose(mock_stdev.call_args_list[1][0][1], [1.1, 1.01])
+        assert np.allclose(mock_stdev.call_args_list[1][0][2], [0.1, 0.03])
+        assert np.allclose(
+            mock_stdev.call_args_list[1][0][3], np.asarray([[1.0, 0.2], [0.2, 1.0]])
+        )
+
+        call_args = mock_stdev.call_args_list[1][1]
+        assert call_args["model_unc_method"] == "linear"
+        assert call_args["bootstrap_seed"] == 1
+        assert call_args["bootstrap_size"] == 1000
+        np.allclose(call_args["covariances"], mock_minuit_instance.covariance)
+        caplog.clear()
+
+    # Test when we don't have a minuit object stored in fit results
+    # tests covariance calculation
     fit_results = FitResults(
         np.asarray([1.1, 1.01]),
         np.asarray([0.1, 0.03]),
         ["Signal strength", "staterror_Signal-Region[0]"],
         np.asarray([[1.0, 0.2], [0.2, 1.0]]),
         0.0,
+        minuit_obj=None,
     )
+    covariances = [[0.01, 0.0006], [0.0006, 0.0009]]
     model_pred = model_utils.prediction(model, fit_results=fit_results)
-    assert model_pred.model == model
-    assert np.allclose(model_pred.model_yields, [[[57.54980000]]])  # new par value
-    assert model_pred.total_stdev_model_bins == [[[0.3], [0.3]]]  # from mock
-    assert model_pred.total_stdev_model_channels == [[0.3, 0.3]]  # from mock
-    assert model_pred.label == "post-fit"
-    assert "parameter names in fit results and model do not match" not in [
-        rec.message for rec in caplog.records
-    ]
+    assert mock_stdev.call_count == 3
+    call_args = mock_stdev.call_args_list[2][1]
+    np.allclose(call_args["covariances"], covariances)
 
-    assert mock_asimov.call_count == 1  # no new call
-    assert mock_unc.call_count == 1  # no new call
-
-    # call to stdev calculation with fit_results propagated
-    assert mock_stdev.call_count == 2
-    assert mock_stdev.call_args_list[1][0][0] == model
-    assert np.allclose(mock_stdev.call_args_list[1][0][1], [1.1, 1.01])
-    assert np.allclose(mock_stdev.call_args_list[1][0][2], [0.1, 0.03])
-    assert np.allclose(
-        mock_stdev.call_args_list[1][0][3], np.asarray([[1.0, 0.2], [0.2, 1.0]])
+    model_pred = model_utils.prediction(
+        model, fit_results=fit_results, model_unc_method="jacobi"
     )
-    assert mock_stdev.call_args_list[1][1] == {}
+    assert mock_stdev.call_count == 4
+    call_args = mock_stdev.call_args_list[3][1]
+    call_args["model_unc_method"] = "jacobi"
+
+    # bootstrap uncertainty method with default params
+    model_pred = model_utils.prediction(
+        model, fit_results=fit_results, model_unc_method="bootstrap"
+    )
+    assert mock_stdev.call_count == 5
+    call_args = mock_stdev.call_args_list[4][1]
+    call_args["model_unc_method"] = "bootstrap"
+    call_args["bootstrap_seed"] = 1
+    call_args["bootstrap_size"] = 1000
+
+    # bootstrap uncertainty method with custom params
+    model_pred = model_utils.prediction(
+        model,
+        fit_results=fit_results,
+        model_unc_method="bootstrap",
+        bootstrap_seed=2,
+        bootstrap_size=2000,
+    )
+    assert mock_stdev.call_count == 6
+    call_args = mock_stdev.call_args_list[5][1]
+    call_args["model_unc_method"] = "bootstrap"
+    call_args["bootstrap_seed"] = 2
+    call_args["bootstrap_size"] = 2000
 
     caplog.clear()
 
@@ -358,7 +584,17 @@ def test_prediction(
         rec.message for rec in caplog.records
     ]
     assert model_pred.label == "abc"
+    assert mock_stdev.call_count == 7
     caplog.clear()
+
+    with pytest.raises(
+        ValueError,
+        match="model uncertainty method abc not supported, "
+        + "use 'linear', 'jacobi' or 'bootstrap'",
+    ):
+        model_utils.prediction(model, fit_results=fit_results, model_unc_method="abc")
+
+    assert mock_stdev.call_count == 7
 
 
 def test_unconstrained_parameter_count(example_spec, example_spec_shapefactor):
