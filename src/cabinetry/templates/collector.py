@@ -54,6 +54,7 @@ def _histo_path(
     sample_path = sample.get("SamplePath", None)
 
     # check whether a systematic is being processed
+    variation_override = None
     if template is not None:
         # determine whether the template has an override for SamplePath specified
         sample_override = utils._check_for_override(systematic, template, "SamplePath")
@@ -96,11 +97,12 @@ def _histo_path(
 
     # handle variation-specific setting (variation_path is always specified via function
     # argument and possibly also via override)
-    if "{VariationPath}" not in path:
+    if "{VariationPath}" not in path and variation_override:
         log.warning(
-            "variation override specified, but {VariationPath} not found in default "
-            "path"
+            "variation override specified, but {VariationPath} not found in "
+            "default path"
         )
+
     path = path.replace("{VariationPath}", variation_path)
 
     # check for presence of colon to distinguish path to file and location within file
