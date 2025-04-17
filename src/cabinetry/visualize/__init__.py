@@ -566,7 +566,11 @@ def ranking(
         matplotlib.figure.Figure: the ranking figure
     """
     # path is None if figure should not be saved
-    figure_path = pathlib.Path(figure_folder) / "ranking.pdf" if save_figure else None
+    figure_path = (
+        pathlib.Path(figure_folder) / f"ranking_{ranking_results.impacts_method}.pdf"
+        if save_figure
+        else None
+    )
 
     # sort parameters by decreasing maximum post-fit impact
     max_postfit_impact = np.maximum(
@@ -603,6 +607,7 @@ def ranking(
         postfit_down,
         figure_path=figure_path,
         close_figure=close_figure,
+        impacts_method=ranking_results.impacts_method,
     )
     return fig
 

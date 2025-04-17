@@ -46,6 +46,7 @@ class RankingResults(NamedTuple):
         prefit_down (np.ndarray): pre-fit impact in "down" direction
         postfit_up (np.ndarray): post-fit impact in "up" direction
         postfit_down (np.ndarray): post-fit impact in "down" direction
+        impacts_method (str): the method used to compute parameter impacts
     """
 
     bestfit: np.ndarray
@@ -55,6 +56,7 @@ class RankingResults(NamedTuple):
     prefit_down: np.ndarray
     postfit_up: np.ndarray
     postfit_down: np.ndarray
+    impacts_method: str
 
 
 class ScanResults(NamedTuple):
