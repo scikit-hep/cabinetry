@@ -36,9 +36,22 @@ def test_cabinetry():
 
 
 # using autospec to catch changes in public API
+@mock.patch("cabinetry.templates.collect", autospec=True)
 @mock.patch("cabinetry.templates.build", autospec=True)
+@mock.patch(
+    "cabinetry.configuration._input_is_ntuple",
+    side_effect=[True, False],
+    autospec=True,
+)
 @mock.patch("cabinetry.configuration.validate", autospec=True)
-def test_templates(mock_validate, mock_create_histograms, cli_helpers, tmp_path):
+def test_templates(
+    mock_validate,
+    mock_is_ntuple,
+    mock_create_histograms,
+    mock_collect_histograms,
+    cli_helpers,
+    tmp_path,
+):
     config = {"General": {"Measurement": "test_config"}}
 
     config_path = str(tmp_path / "config.yml")
@@ -50,12 +63,21 @@ def test_templates(mock_validate, mock_create_histograms, cli_helpers, tmp_path)
     result = runner.invoke(cli.templates, [config_path])
     assert result.exit_code == 0
     assert mock_validate.call_args_list == [((config,), {})]
+    assert mock_is_ntuple.call_args_list == [((config,), {})]
     assert mock_create_histograms.call_args_list == [((config,), {"method": "uproot"})]
+    assert mock_collect_histograms.call_count == 0
 
-    # different method
+    # different method, histogram input via side effect
     result = runner.invoke(cli.templates, ["--method", "unknown", config_path])
     assert result.exit_code == 0
-    assert mock_create_histograms.call_args == ((config,), {"method": "unknown"})
+    assert mock_create_histograms.call_count == 1  # no new call
+    assert mock_collect_histograms.call_args == ((config,), {"method": "unknown"})
+
+    # input type specified
+    result = runner.invoke(cli.templates, ["--input_type", "ntuple", config_path])
+    assert mock_is_ntuple.call_count == 2  # no new call
+    assert mock_create_histograms.call_count == 2
+    assert mock_collect_histograms.call_count == 1  # no new call
 
 
 @mock.patch("cabinetry.templates.postprocess", autospec=True)
