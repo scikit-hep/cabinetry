@@ -36,19 +36,19 @@ def test_cabinetry():
 
 
 # using autospec to catch changes in public API
+@mock.patch("cabinetry.templates.collect", autospec=True)
+@mock.patch("cabinetry.templates.build", autospec=True)
 @mock.patch(
     "cabinetry.configuration._input_is_ntuple",
     side_effect=[True, False],
     autospec=True,
 )
-@mock.patch("cabinetry.templates.collect", autospec=True)
-@mock.patch("cabinetry.templates.build", autospec=True)
 @mock.patch("cabinetry.configuration.validate", autospec=True)
 def test_templates(
     mock_validate,
+    mock_is_ntuple,
     mock_create_histograms,
     mock_collect_histograms,
-    mock_is_ntuple,
     cli_helpers,
     tmp_path,
 ):
