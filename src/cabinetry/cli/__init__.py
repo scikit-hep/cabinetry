@@ -67,13 +67,12 @@ def templates(
     cabinetry_configuration.validate(cabinetry_config)
 
     if input_type is None:
-        # automatic detection: "Tree" property of samples is required for ntuple inputs
-        if all(
-            [sample.get("Tree") is not None for sample in cabinetry_config["Samples"]]
-        ):
-            input_type = "ntuple"
-        else:
-            input_type = "histogram"
+        # detect input type
+        input_type = (
+            "ntuple"
+            if cabinetry_configuration._input_is_ntuple(cabinetry_config)
+            else "histogram"
+        )
 
     if input_type == "ntuple":
         cabinetry_templates.build(cabinetry_config, method=method)
