@@ -76,7 +76,7 @@ def templates(
 
     if input_type == "ntuple":
         cabinetry_templates.build(cabinetry_config, method=method)
-    elif input_type == "histogram":
+    else:
         cabinetry_templates.collect(cabinetry_config, method=method)
 
 
