@@ -51,7 +51,7 @@ def cabinetry() -> None:
 @click.option(
     "--input_type",
     type=click.Choice(["ntuple", "histogram"]),
-    help="format of input files (overrides automatic detection)",
+    help="type of input files (overrides automatic detection)",
 )
 def templates(
     config: io.TextIOWrapper,
