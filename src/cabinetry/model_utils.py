@@ -34,6 +34,17 @@ class LightConfig:
         model: pyhf.pdf.Model,
         samples_merge_map: Optional[Dict[str, List[str]]] = None,
     ):
+        """
+        Light-weight version of the pyhf model configuration object. This is used to
+        to manipulate elements of the model that affect representations of results,
+        but not the results itself.
+
+        Args:
+            model (pyhf.pdf.Model): pyhf model to base the light model on
+            samples_merge_map (Optional[Dict[str, List[str]]], optional): a map
+                specifying how to merge samples (values) into one sample (key).
+                Defaults to None.
+        """
         self.samples = model.config.samples
         self.channels = model.config.channels
         self.channel_slices = model.config.channel_slices
@@ -45,6 +56,15 @@ class LightConfig:
             self._update_samples(samples_merge_map)
 
     def _update_samples(self, samples_merge_map: Dict[str, List[str]]) -> None:
+        """
+        Updates the samples in the model configuration to reflect the samples that are
+        merged into one sample. The samples that are merged are removed from the
+        configuration, and the new sample is added to the end of the list.
+
+        Args:
+            samples_merge_map (Dict[str, List[str]]): a map specifying how to merge
+                samples (values) into one sample (key).
+        """
         # Delete samples being merged from config
         # Flatten all merged samples into a set for O(1) lookups
         merged_samples_set = {
@@ -79,6 +99,17 @@ class LightModel:
         model: pyhf.pdf.Model,
         samples_merge_map: Optional[Dict[str, List[str]]] = None,
     ):
+        """
+        Light-weight version of the pyhf model object. This is used to
+        to manipulate elements of the model that affect representations of results,
+        but not the results itself.
+
+        Args:
+            model (pyhf.pdf.Model): pyhf model to base the light model on
+            samples_merge_map (Optional[Dict[str, List[str]]], optional): a map
+                specifying how to merge samples (values) into one sample (key).
+                Defaults to None.
+        """
         self.config = LightConfig(model, samples_merge_map)
         self.spec = model.spec
 
@@ -88,6 +119,23 @@ def _merge_sample_yields(
     old_yields: Union[List[List[List[float]]], List[List[float]]],
     one_channel: Optional[bool] = False,
 ) -> np.ndarray:
+    """
+    Merges the yields of samples specified in the samples_merge_map of the model
+    configuration. The samples are merged into one sample, and the yields are summed
+    together. The merged sample is added to the end of the list of samples.
+
+    Args:
+        model (LightModel): LightModel object containing the model configuration
+        old_yields (Union[List[List[List[float]]], List[List[float]]]): yields to be
+            merged, either per channel (list of lists of lists) or for one channel
+            (list of lists)
+        one_channel (Optional[bool], optional): whether the yields are for one channel
+            (True) or for multiple channels (False). Defaults to False.
+
+    Returns:
+        np.ndarray: merged yields, either per channel (list of lists of lists) or for
+            one channel (list of lists)
+    """
 
     samples_merge_map = model.config.samples_merge_map
 
