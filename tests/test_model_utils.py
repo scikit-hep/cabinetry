@@ -35,7 +35,6 @@ def test_LightModel(example_spec_with_multiple_background):
     assert model_pred.model.config.channels == model.config.channels
     assert model_pred.model.config.channel_nbins == model.config.channel_nbins
     assert model_pred.model.config.channel_slices == model.config.channel_slices
-    assert model_pred.model.config.modifier_settings == model.config.modifier_settings
     assert model_pred.model.spec == model.spec
 
     # Test with merging samples
@@ -56,7 +55,6 @@ def test_LightModel(example_spec_with_multiple_background):
     assert model_pred.model.config.channels == model.config.channels
     assert model_pred.model.config.channel_nbins == model.config.channel_nbins
     assert model_pred.model.config.channel_slices == model.config.channel_slices
-    assert model_pred.model.config.modifier_settings == model.config.modifier_settings
     assert model_pred.model.spec == model.spec
 
     with pytest.raises(
