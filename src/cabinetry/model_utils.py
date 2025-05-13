@@ -29,15 +29,17 @@ _YIELD_STDEV_CACHE: Dict[Any, Tuple[List[List[List[float]]], List[List[float]]]]
 
 
 class LightConfig:
+    """Light-weight version of the pyhf model configuration object."""
+
     def __init__(
         self,
         model: pyhf.pdf.Model,
         samples_merge_map: Optional[Dict[str, List[str]]] = None,
     ):
-        """
-        Light-weight version of the pyhf model configuration object. This is used to
-        to manipulate elements of the model that affect representations of results,
-        but not the results itself.
+        """Creates an instance of the light-weight model configuration object.
+
+        This is used to to manipulate elements of the model that affect representations
+        of results, but not the results itself.
 
         Args:
             model (pyhf.pdf.Model): pyhf model to base the light model on
@@ -56,10 +58,7 @@ class LightConfig:
             self._update_samples(samples_merge_map)
 
     def _update_samples(self, samples_merge_map: Dict[str, List[str]]) -> None:
-        """
-        Updates the samples in the model configuration to reflect the samples that are
-        merged into one sample. The samples that are merged are removed from the
-        configuration, and the new sample is added to the end of the list.
+        """Updates samples list after merging samples into one.
 
         Args:
             samples_merge_map (Dict[str, List[str]]): a map specifying how to merge
@@ -94,15 +93,17 @@ class LightConfig:
 
 
 class LightModel:
+    """Light-weight version of the pyhf model object."""
+
     def __init__(
         self,
         model: pyhf.pdf.Model,
         samples_merge_map: Optional[Dict[str, List[str]]] = None,
     ):
-        """
-        Light-weight version of the pyhf model object. This is used to
-        to manipulate elements of the model that affect representations of results,
-        but not the results itself.
+        """Create an instance of the light-weight model object.
+
+        This is used to to manipulate elements of the model that affect
+        representations of results, but not the results itself.
 
         Args:
             model (pyhf.pdf.Model): pyhf model to base the light model on
@@ -119,10 +120,9 @@ def _merge_sample_yields(
     old_yields: Union[List[List[List[float]]], List[List[float]]],
     one_channel: Optional[bool] = False,
 ) -> np.ndarray:
-    """
-    Merges the yields of samples specified in the samples_merge_map of the model
-    configuration. The samples are merged into one sample, and the yields are summed
-    together. The merged sample is added to the end of the list of samples.
+    """Merges the yields of samples specified in the samples_merge_map.
+
+    The merged sample is added to the end of the list of samples.
 
     Args:
         model (LightModel): LightModel object containing the model configuration
