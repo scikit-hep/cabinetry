@@ -42,23 +42,52 @@ def test__fit_model_pyhf(mock_minos, example_spec, example_spec_multibin):
     pyhf.set_backend("numpy", "scipy")
     model, data = model_utils.model_and_data(example_spec)
     fit_results = fit._fit_model_pyhf(model, data)
+    assert fit_results.minuit_obj is not None
     assert np.allclose(fit_results.bestfit, [8.33624084, 1.1])
+    assert np.allclose(fit_results.minuit_obj.values, [8.33624084, 1.1])
     assert np.allclose(fit_results.uncertainty, [0.38182003, 0.0])
+    assert np.allclose(
+        np.where(fit_results.minuit_obj.fixed, 0.0, fit_results.minuit_obj.errors),
+        [0.38182003, 0.0],
+    )
     assert fit_results.labels == ["Signal strength", "staterror_Signal-Region[0]"]
+    assert fit_results.minuit_obj.parameters == (
+        "Signal strength",
+        "staterror_Signal-Region[0]",
+    )
     assert np.allclose(fit_results.best_twice_nll, 7.82495235)
+    assert np.allclose(fit_results.minuit_obj.fval, 7.82495235)
     assert np.allclose(fit_results.corr_mat, [[1.0, 0.0], [0.0, 0.0]])
+    assert np.allclose(
+        fit_results.minuit_obj.covariance.correlation(), [[1.0, 0.0], [0.0, 0.0]]
+    )
+
     assert pyhf.get_backend()[1].name == "scipy"  # optimizer was reset
 
     # Asimov fit, with fixed gamma (fixed not to Asimov MLE)
     model, data = model_utils.model_and_data(example_spec, asimov=True)
     fit_results = fit._fit_model_pyhf(model, data)
+    assert fit_results.minuit_obj is not None
     # the gamma factor is multiplicative and fixed to 1.1, so the
     # signal strength needs to be 1/1.1 to compensate
     assert np.allclose(fit_results.bestfit, [0.90917877, 1.1])
+    assert np.allclose(fit_results.minuit_obj.values, [0.90917877, 1.1])
     assert np.allclose(fit_results.uncertainty, [0.12628017, 0.0])
+    assert np.allclose(
+        np.where(fit_results.minuit_obj.fixed, 0.0, fit_results.minuit_obj.errors),
+        [0.12628017, 0.0],
+    )
     assert fit_results.labels == ["Signal strength", "staterror_Signal-Region[0]"]
+    assert fit_results.minuit_obj.parameters == (
+        "Signal strength",
+        "staterror_Signal-Region[0]",
+    )
     assert np.allclose(fit_results.best_twice_nll, 5.61189476)
+    assert np.allclose(fit_results.minuit_obj.fval, 5.61189476)
     assert np.allclose(fit_results.corr_mat, [[1.0, 0.0], [0.0, 0.0]])
+    assert np.allclose(
+        fit_results.minuit_obj.covariance.correlation(), [[1.0, 0.0], [0.0, 0.0]]
+    )
 
     # parameters held constant via keyword argument
     model, data = model_utils.model_and_data(example_spec_multibin)
@@ -71,15 +100,26 @@ def test__fit_model_pyhf(mock_minos, example_spec, example_spec_multibin):
     fit_results = fit._fit_model_pyhf(
         model, data, init_pars=init_pars, fix_pars=fix_pars
     )
+    assert fit_results.minuit_obj is not None
     assert np.allclose(fit_results.bestfit, [1.48041923, 0.9, 1.1, 0.97511112])
+    assert np.allclose(
+        fit_results.minuit_obj.values, [1.48041923, 0.9, 1.1, 0.97511112]
+    )
     assert np.allclose(fit_results.uncertainty, [0.20694409, 0.0, 0.0, 0.11792805])
+    assert np.allclose(
+        np.where(fit_results.minuit_obj.fixed, 0.0, fit_results.minuit_obj.errors),
+        [0.20694409, 0.0, 0.0, 0.11792805],
+    )
     assert np.allclose(fit_results.best_twice_nll, 10.4531891)
+    assert np.allclose(fit_results.minuit_obj.fval, 10.4531891)
 
     # custom parameter bounds
     model, data = model_utils.model_and_data(example_spec)
     par_bounds = [(0, 5), (0.1, 2)]
     fit_results = fit._fit_model_pyhf(model, data, par_bounds=par_bounds)
+    assert fit_results.minuit_obj is not None
     assert np.allclose(fit_results.bestfit, [5.0, 1.1])
+    assert np.allclose(fit_results.minuit_obj.values, [5.0, 1.1])
 
     # propagation of strategy, max iterations, tolerance
     model, data = model_utils.model_and_data(example_spec)
@@ -122,23 +162,51 @@ def test__fit_model_custom(mock_minos, example_spec, example_spec_multibin):
     pyhf.set_backend("numpy", "scipy")
     model, data = model_utils.model_and_data(example_spec)
     fit_results = fit._fit_model_custom(model, data)
+    assert fit_results.minuit_obj is not None
     assert np.allclose(fit_results.bestfit, [8.33625071, 1.1])
+    assert np.allclose(fit_results.minuit_obj.values, [8.33625071, 1.1])
     assert np.allclose(fit_results.uncertainty, [0.38182151, 0.0])
+    assert np.allclose(
+        np.where(fit_results.minuit_obj.fixed, 0.0, fit_results.minuit_obj.errors),
+        [0.38182151, 0.0],
+    )
     assert fit_results.labels == ["Signal strength", "staterror_Signal-Region[0]"]
+    assert fit_results.minuit_obj.parameters == (
+        "Signal strength",
+        "staterror_Signal-Region[0]",
+    )
     assert np.allclose(fit_results.best_twice_nll, 7.82495235)
+    assert np.allclose(fit_results.minuit_obj.fval, 7.82495235)
     assert np.allclose(fit_results.corr_mat, [[1.0, 0.0], [0.0, 0.0]])
+    assert np.allclose(
+        fit_results.minuit_obj.covariance.correlation(), [[1.0, 0.0], [0.0, 0.0]]
+    )
     assert pyhf.get_backend()[1].name == "scipy"  # optimizer was reset
 
     # Asimov fit, with fixed gamma (fixed not to Asimov MLE)
     model, data = model_utils.model_and_data(example_spec, asimov=True)
     fit_results = fit._fit_model_custom(model, data)
+    assert fit_results.minuit_obj is not None
     # the gamma factor is multiplicative and fixed to 1.1, so the
     # signal strength needs to be 1/1.1 to compensate
     assert np.allclose(fit_results.bestfit, [0.90917877, 1.1])
+    assert np.allclose(fit_results.minuit_obj.values, [0.90917877, 1.1])
     assert np.allclose(fit_results.uncertainty, [0.12628023, 0.0])
+    assert np.allclose(
+        np.where(fit_results.minuit_obj.fixed, 0.0, fit_results.minuit_obj.errors),
+        [0.12628023, 0.0],
+    )
     assert fit_results.labels == ["Signal strength", "staterror_Signal-Region[0]"]
+    assert fit_results.minuit_obj.parameters == (
+        "Signal strength",
+        "staterror_Signal-Region[0]",
+    )
     assert np.allclose(fit_results.best_twice_nll, 5.61189476)
+    assert np.allclose(fit_results.minuit_obj.fval, 5.61189476)
     assert np.allclose(fit_results.corr_mat, [[1.0, 0.0], [0.0, 0.0]])
+    assert np.allclose(
+        fit_results.minuit_obj.covariance.correlation(), [[1.0, 0.0], [0.0, 0.0]]
+    )
 
     # parameters held constant via keyword argument
     model, data = model_utils.model_and_data(example_spec_multibin)
@@ -151,15 +219,26 @@ def test__fit_model_custom(mock_minos, example_spec, example_spec_multibin):
     fit_results = fit._fit_model_custom(
         model, data, init_pars=init_pars, fix_pars=fix_pars
     )
+    assert fit_results.minuit_obj is not None
     assert np.allclose(fit_results.bestfit, [1.48041923, 0.9, 1.1, 0.97511112])
+    assert np.allclose(
+        fit_results.minuit_obj.values, [1.48041923, 0.9, 1.1, 0.97511112]
+    )
     assert np.allclose(fit_results.uncertainty, [0.20694409, 0.0, 0.0, 0.11792805])
+    assert np.allclose(
+        np.where(fit_results.minuit_obj.fixed, 0.0, fit_results.minuit_obj.errors),
+        [0.20694409, 0.0, 0.0, 0.11792805],
+    )
     assert np.allclose(fit_results.best_twice_nll, 10.45318909)
+    assert np.allclose(fit_results.minuit_obj.fval, 10.45318909)
 
     # custom parameter bounds
     model, data = model_utils.model_and_data(example_spec)
     par_bounds = [(0, 5), (0.1, 2)]
     fit_results = fit._fit_model_custom(model, data, par_bounds=par_bounds)
+    assert fit_results.minuit_obj is not None
     assert np.allclose(fit_results.bestfit, [5.0, 1.1])
+    assert np.allclose(fit_results.minuit_obj.values, [5.0, 1.1])
 
     # propagation of strategy, max iterations, tolerance
     model, data = model_utils.model_and_data(example_spec)
@@ -436,7 +515,7 @@ def test_fit(mock_fit, mock_print, mock_gof):
     assert mock_print.call_args[0][0].uncertainty == [0.1]
     assert mock_print.call_args[0][0].labels == ["par"]
     assert mock_gof.call_count == 0
-    assert fit_results.bestfit == [1.0]
+    assert np.allclose(fit_results.bestfit, [1.0])
 
     # custom fit, init/fix pars, par bounds, strategy/maxiter/tolerance
     init_pars = [2.0]
@@ -470,7 +549,7 @@ def test_fit(mock_fit, mock_print, mock_gof):
     )
     assert mock_print.call_args[0][0].bestfit == [1.0]
     assert mock_print.call_args[0][0].uncertainty == [0.1]
-    assert fit_results.bestfit == [1.0]
+    assert np.allclose(fit_results.bestfit, [1.0])
 
     # parameters for MINOS
     fit_results = fit.fit(model, data, minos=["abc"], minos_cl=0.95)
@@ -486,7 +565,9 @@ def test_fit(mock_fit, mock_print, mock_gof):
         "tolerance": None,
         "custom_fit": False,
     }
-    assert fit_results.bestfit == [1.0]
+    assert np.allclose(fit_results.bestfit, [1.0])
+
+    # custom fit
     fit_results = fit.fit(model, data, minos="abc", minos_cl=0.95, custom_fit=True)
     assert mock_fit.call_count == 4
     assert mock_fit.call_args[1] == {
@@ -500,7 +581,7 @@ def test_fit(mock_fit, mock_print, mock_gof):
         "tolerance": None,
         "custom_fit": True,
     }
-    assert fit_results.bestfit == [1.0]
+    assert np.allclose(fit_results.bestfit, [1.0])
 
     # goodness-of-fit test
     fit_results_gof = fit.fit(model, data, goodness_of_fit=True, fix_pars=fix_pars)
