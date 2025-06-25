@@ -21,7 +21,7 @@ def test_LightModel(example_spec_with_multiple_backgrounds):
         0.0,
     )
     model_pred = model_utils.prediction(
-        model, fit_results=fit_results, samples_merge_map=None
+        model, fit_results=fit_results, sample_update_map=None
     )
 
     assert model_pred.model.config.samples == ["Background", "Background 2", "Signal"]
@@ -41,7 +41,7 @@ def test_LightModel(example_spec_with_multiple_backgrounds):
     model_pred = model_utils.prediction(
         model,
         fit_results=fit_results,
-        samples_merge_map={"Total Background": ["Background", "Background 2"]},
+        sample_update_map={"Total Background": ["Background", "Background 2"]},
     )
 
     assert model_pred.model.config.samples == ["Total Background", "Signal"]
@@ -71,8 +71,8 @@ def test_LightModel(example_spec_with_multiple_backgrounds):
 
 def test__merge_sample_yields(example_spec_with_multiple_backgrounds):
     model = pyhf.Workspace(example_spec_with_multiple_backgrounds).model()
-    samples_merge_map = {"Total Background": ["Background", "Background 2"]}
-    light_model = model_utils.LightModel(model, samples_merge_map)
+    sample_update_map = {"Total Background": ["Background", "Background 2"]}
+    light_model = model_utils.LightModel(model, sample_update_map)
     # per-channel
     yields = [[10.0], [20.0], [30.0]]
     merged_yields = model_utils._merge_sample_yields(
@@ -345,7 +345,7 @@ def test_yield_stdev(
         assert np.allclose(from_cache[1][i_reg], expected_stdev_chan[i_reg])
 
     # Multiple backgrounds with sample merging
-    samples_merge_map = {"Total Background": ["Background", "Background 2"]}
+    sample_update_map = {"Total Background": ["Background", "Background 2"]}
     # post-fit
     model = pyhf.Workspace(example_spec_with_multiple_backgrounds).model()
     parameters = np.asarray([1.1, 1.01, 1.2])
@@ -357,7 +357,7 @@ def test_yield_stdev(
         parameters,
         uncertainty,
         corr_mat,
-        samples_merge_map=samples_merge_map,
+        sample_update_map=sample_update_map,
     )
     assert np.allclose(
         total_stdev_bin,
@@ -376,7 +376,7 @@ def test_yield_stdev(
         parameters,
         uncertainty,
         diag_corr_mat,
-        samples_merge_map=samples_merge_map,
+        sample_update_map=sample_update_map,
     )
     assert np.allclose(
         total_stdev_bin,
@@ -459,7 +459,7 @@ def test_prediction(
     assert np.allclose(
         mock_stdev.call_args_list[0][0][3], np.diagflat([1.0, 1.0, 1.0, 1.0])
     )
-    assert mock_stdev.call_args_list[0][1] == {"samples_merge_map": None}
+    assert mock_stdev.call_args_list[0][1] == {"sample_update_map": None}
 
     # post-fit prediction, single-channel model
     model = pyhf.Workspace(example_spec).model()
@@ -492,7 +492,7 @@ def test_prediction(
     assert np.allclose(
         mock_stdev.call_args_list[1][0][3], np.asarray([[1.0, 0.2], [0.2, 1.0]])
     )
-    assert mock_stdev.call_args_list[1][1] == {"samples_merge_map": None}
+    assert mock_stdev.call_args_list[1][1] == {"sample_update_map": None}
 
     caplog.clear()
 
@@ -512,10 +512,10 @@ def test_prediction(
     caplog.clear()
 
     # Multiple backgrounds with sample merging
-    samples_merge_map = {"Total Background": ["Background", "Background 2"]}
+    sample_update_map = {"Total Background": ["Background", "Background 2"]}
     model = pyhf.Workspace(example_spec_with_multiple_backgrounds).model()
     # pre-fit prediction, merged samples
-    model_pred = model_utils.prediction(model, samples_merge_map=samples_merge_map)
+    model_pred = model_utils.prediction(model, sample_update_map=sample_update_map)
     assert len(model_pred.model.config.samples) == len(model.config.samples) - 1
     assert model_pred.model.spec == model.spec
     # yields from pyhf expected_data call, per-bin / per-channel uncertainty from mock
@@ -533,7 +533,7 @@ def test_prediction(
 
     # call to stdev calculation
     assert mock_stdev.call_count == 4
-    assert mock_stdev.call_args_list[3][1] == {"samples_merge_map": samples_merge_map}
+    assert mock_stdev.call_args_list[3][1] == {"sample_update_map": sample_update_map}
 
     # post-fit
     fit_results = FitResults(
@@ -546,7 +546,7 @@ def test_prediction(
     model_pred = model_utils.prediction(
         model,
         fit_results=fit_results,
-        samples_merge_map={"Total Background": ["Background", "Background 2"]},
+        sample_update_map={"Total Background": ["Background", "Background 2"]},
     )
     assert len(model_pred.model.config.samples) == len(model.config.samples) - 1
     assert model_pred.model.spec == model.spec
@@ -565,7 +565,7 @@ def test_prediction(
     # call to stdev calculation
     assert mock_stdev.call_count == 5
     assert mock_stdev.call_args_list[4][1] == {
-        "samples_merge_map": {"Total Background": ["Background", "Background 2"]}
+        "sample_update_map": {"Total Background": ["Background", "Background 2"]}
     }
 
     caplog.clear()
