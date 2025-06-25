@@ -422,11 +422,7 @@ def yield_stdev(
     """
     light_model = LightModel(model, samples_merge_map)
     # check whether results are already stored in cache
-    samples_string = (
-        ",".join(light_model.config.samples)
-        if samples_merge_map is not None
-        else ",".join(model.config.samples)
-    )
+    samples_string = ",".join(light_model.config.samples)
     cached_results = _YIELD_STDEV_CACHE.get(
         (
             _hashable_model_key(model),
