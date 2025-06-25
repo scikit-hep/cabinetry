@@ -235,7 +235,7 @@ def example_spec_with_background():
 
 
 @pytest.fixture
-def example_spec_with_multiple_background():
+def example_spec_with_multiple_backgrounds():
     spec = {
         "channels": [
             {

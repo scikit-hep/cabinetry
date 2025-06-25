@@ -10,9 +10,9 @@ from cabinetry import model_utils
 from cabinetry.fit.results_containers import FitResults
 
 
-def test_LightModel(example_spec_with_multiple_background):
+def test_LightModel(example_spec_with_multiple_backgrounds):
     # Test without merging samples
-    model = pyhf.Workspace(example_spec_with_multiple_background).model()
+    model = pyhf.Workspace(example_spec_with_multiple_backgrounds).model()
     fit_results = FitResults(
         np.asarray([1.0, 1.0, 1.0]),
         np.asarray([0.1, 0.03, 0.07]),
@@ -69,8 +69,8 @@ def test_LightModel(example_spec_with_multiple_background):
         model_pred.model.NonExistent
 
 
-def test__merge_sample_yields(example_spec_with_multiple_background):
-    model = pyhf.Workspace(example_spec_with_multiple_background).model()
+def test__merge_sample_yields(example_spec_with_multiple_backgrounds):
+    model = pyhf.Workspace(example_spec_with_multiple_backgrounds).model()
     samples_merge_map = {"Total Background": ["Background", "Background 2"]}
     light_model = model_utils.LightModel(model, samples_merge_map)
     # per-channel
@@ -278,7 +278,7 @@ def test__hashable_model_key(example_spec):
 
 
 def test_yield_stdev(
-    example_spec, example_spec_multibin, example_spec_with_multiple_background
+    example_spec, example_spec_multibin, example_spec_with_multiple_backgrounds
 ):
     model = pyhf.Workspace(example_spec).model()
     parameters = np.asarray([0.95, 1.05])
@@ -347,7 +347,7 @@ def test_yield_stdev(
     # Multiple backgrounds with sample merging
     samples_merge_map = {"Total Background": ["Background", "Background 2"]}
     # post-fit
-    model = pyhf.Workspace(example_spec_with_multiple_background).model()
+    model = pyhf.Workspace(example_spec_with_multiple_backgrounds).model()
     parameters = np.asarray([1.1, 1.01, 1.2])
     uncertainty = np.asarray([0.1, 0.03, 0.07])
     corr_mat = np.asarray([[1.0, 0.2, 0.1], [0.2, 1.0, 0.3], [0.1, 0.3, 1.0]])
@@ -426,7 +426,7 @@ def test_prediction(
     mock_stdev,
     example_spec_multibin,
     example_spec,
-    example_spec_with_multiple_background,
+    example_spec_with_multiple_backgrounds,
     caplog,
 ):
     caplog.set_level(logging.DEBUG)
@@ -513,7 +513,7 @@ def test_prediction(
 
     # Multiple backgrounds with sample merging
     samples_merge_map = {"Total Background": ["Background", "Background 2"]}
-    model = pyhf.Workspace(example_spec_with_multiple_background).model()
+    model = pyhf.Workspace(example_spec_with_multiple_backgrounds).model()
     # pre-fit prediction, merged samples
     model_pred = model_utils.prediction(model, samples_merge_map=samples_merge_map)
     assert len(model_pred.model.config.samples) == len(model.config.samples) - 1
