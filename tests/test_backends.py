@@ -54,12 +54,7 @@ def test_backend_integration(backend, reset_backend):
     param_uncertainty = cabinetry.model_utils.prefit_uncertainties(model)
     corr_mat = np.zeros(shape=(len(param_values), len(param_values)))
     np.fill_diagonal(corr_mat, 1.0)
-    cabinetry.model_utils.yield_stdev(
-        model,
-        param_values,
-        param_uncertainty,
-        corr_mat,
-    )
+    cabinetry.model_utils.yield_stdev(model, param_values, param_uncertainty, corr_mat)
 
 
 def test_backend_reset():
