@@ -28,11 +28,167 @@ log = logging.getLogger(__name__)
 _YIELD_STDEV_CACHE: Dict[Any, Tuple[List[List[List[float]]], List[List[float]]]] = {}
 
 
+class LightConfig:
+    """Light-weight version of the pyhf model configuration object."""
+
+    def __init__(
+        self,
+        model: pyhf.pdf.Model,
+        sample_update_map: Optional[Dict[str, List[str]]] = None,
+    ):
+        """Creates an instance of the light-weight model configuration object.
+
+        This is used to to manipulate elements of the model that affect representations
+        of results, but not the results itself.
+
+        Args:
+            model (pyhf.pdf.Model): pyhf model to base the light model on
+            sample_update_map (Optional[Dict[str, List[str]]], optional): a map
+                specifying how to merge samples (values) into one sample (key).
+                Defaults to None.
+        """
+        self.samples = model.config.samples
+        self.channels = model.config.channels
+        self.channel_slices = model.config.channel_slices
+        self.channel_nbins = model.config.channel_nbins
+        self.npars = model.config.npars
+        self.sample_update_map = sample_update_map
+        self.merged_samples_indices: np.ndarray = np.zeros(0)
+        if sample_update_map is not None:
+            self._update_samples(sample_update_map)
+
+    def _update_samples(self, sample_update_map: Dict[str, List[str]]) -> None:
+        """Updates samples list after merging samples into one.
+
+        Args:
+            sample_update_map (Dict[str, List[str]]): a map specifying how to merge
+                samples (values) into one sample (key).
+        """
+        # Delete samples being merged from config
+        # Flatten all merged samples into a set for O(1) lookups
+        merged_samples_set = {
+            merged_sample
+            for merged_samples_list in sample_update_map.values()
+            for merged_sample in merged_samples_list
+        }
+        merged_samples_indices = [
+            idx
+            for idx, sample in enumerate(self.samples)
+            if sample in merged_samples_set
+        ]
+        self.merged_samples_indices = np.asarray(merged_samples_indices)
+        self.samples = cast(
+            List[str], np.delete(self.samples, merged_samples_indices).tolist()
+        )
+        # Add new samples at the bottom of stack
+        self.samples = cast(
+            List[str],
+            np.insert(
+                np.asarray(self.samples, dtype=object),
+                np.arange(len(sample_update_map)),
+                list(sample_update_map.keys()),
+                axis=0,
+            ).tolist(),
+        )
+
+
+class LightModel:
+    """Light-weight version of the pyhf model object."""
+
+    def __init__(
+        self,
+        model: pyhf.pdf.Model,
+        sample_update_map: Optional[Dict[str, List[str]]] = None,
+    ):
+        """Create an instance of the light-weight model object.
+
+        This is used to to manipulate elements of the model that affect
+        representations of results, but not the results itself.
+
+        Args:
+            model (pyhf.pdf.Model): pyhf model to base the light model on
+            sample_update_map (Optional[Dict[str, List[str]]], optional): a map
+                specifying how to merge samples (values) into one sample (key).
+                Defaults to None.
+        """
+        self.config = LightConfig(model, sample_update_map)
+        self.spec = model.spec
+
+
+def _merge_sample_yields(
+    model: LightModel,
+    old_yields: Union[List[List[List[float]]], List[List[float]]],
+    one_channel: Optional[bool] = False,
+) -> np.ndarray:
+    """Merges the yields of samples specified in the sample_update_map.
+
+    The merged sample is added to the end of the list of samples.
+
+    Args:
+        model (LightModel): LightModel object containing the model configuration
+        old_yields (Union[List[List[List[float]]], List[List[float]]]): yields to be
+            merged, either per channel (list of lists of lists) or for one channel
+            (list of lists)
+        one_channel (Optional[bool], optional): whether the yields are for one channel
+            (True) or for multiple channels (False). Defaults to False.
+
+    Returns:
+        np.ndarray: merged yields, either per channel (list of lists of lists) or for
+            one channel (list of lists)
+    """
+
+    sample_update_map = model.config.sample_update_map
+
+    def _sum_per_channel(i_ch: Optional[int] = None) -> np.ndarray:
+        # mypy not able to tell that map cannot be None-typed
+        # so we have to check
+        if sample_update_map is None:
+            raise ValueError(
+                "Something has gone wrong in merging samples."
+                + " Report this to the dev team."
+            )
+        # explicit type casting because mypy worries that old_yield
+        # will be list(list(float)) or list(float)
+        # but this will never happen because of the if condition
+        if i_ch is not None:
+            old_yield = cast(List[List[float]], old_yields[i_ch])
+        else:
+            old_yield = cast(List[List[float]], old_yields)
+        # for each channel, sum together the desired samples
+        summed_sample = np.sum(
+            np.asarray(old_yield)[model.config.merged_samples_indices], axis=0
+        )
+        # build set of remaining samples and remove the ones already summed
+        remaining_samples: np.ndarray = np.delete(
+            old_yield, model.config.merged_samples_indices, axis=0
+        )
+
+        model_yields_one_channel = np.insert(
+            remaining_samples,
+            np.arange(len(sample_update_map.keys())),
+            summed_sample,
+            axis=0,
+        )
+
+        return model_yields_one_channel
+
+    new_yields = []
+    if not one_channel:
+        for i_ch in range(len(model.config.channels)):
+            new_yields.append(_sum_per_channel(i_ch=i_ch))
+    else:
+        new_yields = [_sum_per_channel()]  # wrap in list for consistent type
+
+    return_yields = np.asarray(new_yields[0]) if one_channel else np.asarray(new_yields)
+    return return_yields
+
+
 class ModelPrediction(NamedTuple):
     """Model prediction with yields and total uncertainties per bin and channel.
 
     Args:
-        model (pyhf.pdf.Model): model to which prediction corresponds to
+        model Union[LightModel, pyhf.pdf.Model]: model (or a light-weight version of
+            pyhf.pdf.Model) to which prediction corresponds to
         model_yields (List[List[List[float]]]): yields per channel, sample and bin,
             indices: channel, sample, bin
         total_stdev_model_bins (List[List[List[float]]]): total yield uncertainty per
@@ -43,7 +199,7 @@ class ModelPrediction(NamedTuple):
         label (str): label for the prediction, e.g. "pre-fit" or "post-fit"
     """
 
-    model: pyhf.pdf.Model
+    model: Union[LightModel, pyhf.pdf.Model]
     model_yields: List[List[List[float]]]
     total_stdev_model_bins: List[List[List[float]]]
     total_stdev_model_channels: List[List[float]]
@@ -81,7 +237,7 @@ def model_and_data(
 
 
 def asimov_data(
-    model: pyhf.Model,
+    model: pyhf.pdf.Model,
     *,
     fit_results: Optional[FitResults] = None,
     poi_name: Optional[str] = None,
@@ -98,7 +254,7 @@ def asimov_data(
     fitted again.
 
     Args:
-        model (pyhf.Model): the model from which to construct the dataset
+        model (pyhf.pdf.Model): the model from which to construct the dataset
         fit_results (Optional[FitResults], optional): parameter configuration to use
             when building the Asimov dataset (using the best-fit result), defaults to
             None (then a pre-fit Asimov dataset is built)
@@ -235,6 +391,7 @@ def yield_stdev(
     parameters: np.ndarray,
     uncertainty: np.ndarray,
     corr_mat: np.ndarray,
+    sample_update_map: Optional[Dict[str, List[str]]] = None,
 ) -> Tuple[List[List[List[float]]], List[List[float]]]:
     """Calculates symmetrized model yield standard deviation per channel / sample / bin.
 
@@ -251,6 +408,8 @@ def yield_stdev(
         parameters (np.ndarray): central values of model parameters
         uncertainty (np.ndarray): uncertainty of model parameters
         corr_mat (np.ndarray): correlation matrix
+        sample_update_map (Optional[Dict[str, List[str]]], optional): a map specifying
+        how to merge samples, defaults to None
 
     Returns:
         Tuple[List[List[List[float]]], List[List[float]]]:
@@ -261,13 +420,16 @@ def yield_stdev(
               the standard deviations per sample (the last sample corresponds to a sum
               over all samples)
     """
+    light_model = LightModel(model, sample_update_map)
     # check whether results are already stored in cache
+    samples_string = ",".join(light_model.config.samples)
     cached_results = _YIELD_STDEV_CACHE.get(
         (
             _hashable_model_key(model),
             tuple(parameters),
             tuple(uncertainty),
             corr_mat.data.tobytes(),
+            samples_string,
         ),
         None,
     )
@@ -302,6 +464,11 @@ def yield_stdev(
         # attach another entry with the total model prediction (sum over all samples)
         # indices: sample, bin
         up_comb = np.vstack((up_comb, np.sum(up_comb, axis=0)))
+        if sample_update_map is not None:
+            up_comb = _merge_sample_yields(
+                light_model, up_comb.tolist(), one_channel=True
+            )
+
         # turn into list of channels (keep all samples, select correct bins per channel)
         # indices: channel, sample, bin
         up_yields_per_channel = [
@@ -314,6 +481,7 @@ def yield_stdev(
                 for chan_yields in up_yields_per_channel
             ]
         )
+
         # reshape to drop bin axis, transpose to turn channel axis into new bin axis
         # (channel, sample, bin) -> (sample, bin) where "bin" becomes channel sums
         up_yields_channel_sum = up_yields_channel_sum.reshape(
@@ -323,7 +491,7 @@ def yield_stdev(
         # concatenate per-channel sums to up_comb (along bin axis)
         up_yields = np.concatenate((up_comb, up_yields_channel_sum), axis=1)
         # indices: variation, sample, bin
-        up_variations.append(up_yields.tolist())
+        up_variations.append(up_yields)
 
         # model distribution per sample with this parameter varied down
         down_comb = pyhf.tensorlib.to_numpy(
@@ -331,6 +499,11 @@ def yield_stdev(
         )
         # add total prediction (sum over samples)
         down_comb = np.vstack((down_comb, np.sum(down_comb, axis=0)))
+        if sample_update_map is not None:
+            down_comb = _merge_sample_yields(
+                light_model, down_comb.tolist(), one_channel=True
+            )
+
         # turn into list of channels
         down_yields_per_channel = [
             down_comb[:, model.config.channel_slices[ch]]
@@ -354,7 +527,6 @@ def yield_stdev(
     # convert to numpy arrays for further processing
     up_variations_np = np.asarray(up_variations)
     down_variations_np = np.asarray(down_variations)
-
     # calculate symmetric uncertainties for all components
     # indices: variation, channel (last entries sums), sample (last entry sum), bin
     sym_uncs = (up_variations_np - down_variations_np) / 2
@@ -418,6 +590,7 @@ def yield_stdev(
                 tuple(parameters),
                 tuple(uncertainty),
                 corr_mat.data.tobytes(),
+                samples_string,
             ): (total_stdev_per_bin, total_stdev_per_channel)
         }
     )
@@ -430,6 +603,7 @@ def prediction(
     *,
     fit_results: Optional[FitResults] = None,
     label: Optional[str] = None,
+    sample_update_map: Optional[Dict[str, List[str]]] = None,
 ) -> ModelPrediction:
     """Returns model prediction, including model yields and uncertainties.
 
@@ -450,6 +624,7 @@ def prediction(
     Returns:
         ModelPrediction: model, yields and uncertainties per channel, sample, bin
     """
+    light_model = LightModel(model, sample_update_map)
     if fit_results is not None:
         if fit_results.labels != model.config.par_names:
             log.warning("parameter names in fit results and model do not match")
@@ -479,15 +654,28 @@ def prediction(
         for ch in model.config.channels
     ]
 
+    if sample_update_map is not None:
+        model_yields = cast(
+            List[List[List[float]]],
+            _merge_sample_yields(light_model, model_yields).tolist(),
+        )
+
     # calculate the total standard deviation of the model prediction
     # indices: (channel, sample, bin) for per-bin uncertainties,
     # (channel, sample) for per-channel
     total_stdev_model_bins, total_stdev_model_channels = yield_stdev(
-        model, param_values, param_uncertainty, corr_mat
+        model,
+        param_values,
+        param_uncertainty,
+        corr_mat,
+        sample_update_map=sample_update_map,
     )
-
     return ModelPrediction(
-        model, model_yields, total_stdev_model_bins, total_stdev_model_channels, label
+        light_model,
+        model_yields,
+        total_stdev_model_bins,
+        total_stdev_model_channels,
+        label,
     )
 
 
@@ -580,11 +768,13 @@ def _poi_index(
     return poi_index
 
 
-def _strip_auxdata(model: pyhf.pdf.Model, data: List[float]) -> List[float]:
+def _strip_auxdata(
+    model: Union[pyhf.pdf.Model, LightModel], data: List[float]
+) -> List[float]:
     """Always returns observed yields, no matter whether data includes auxdata.
 
     Args:
-        model (pyhf.pdf.Model): model to which data corresponds to
+        model (Union[pyhf.pdf.Model, LightModel]): model to which data corresponds to
         data (List[float]): data, either including auxdata which is then stripped off or
             only observed yields
 
@@ -598,11 +788,13 @@ def _strip_auxdata(model: pyhf.pdf.Model, data: List[float]) -> List[float]:
     return data
 
 
-def _data_per_channel(model: pyhf.pdf.Model, data: List[float]) -> List[List[float]]:
+def _data_per_channel(
+    model: Union[pyhf.pdf.Model, LightModel], data: List[float]
+) -> List[List[float]]:
     """Returns data split per channel, and strips off auxiliary data if included.
 
     Args:
-        model (pyhf.pdf.Model): model to which data corresponds to
+        model (Union[pyhf.pdf.Model, LightModel]): model to which data corresponds to
         data (List[float]): data (not split by channel), can either include auxdata
             which is then stripped off, or only observed yields
 
@@ -620,12 +812,12 @@ def _data_per_channel(model: pyhf.pdf.Model, data: List[float]) -> List[List[flo
 
 
 def _filter_channels(
-    model: pyhf.pdf.Model, channels: Optional[Union[str, List[str]]]
+    model: Union[pyhf.pdf.Model, LightModel], channels: Optional[Union[str, List[str]]]
 ) -> List[str]:
     """Returns a list of channels in a model after applying filtering.
 
     Args:
-        model (pyhf.pdf.Model): model from which to extract channels
+        model (Union[pyhf.pdf.Model, LightModel]): model from which to extract channels
         channels (Optional[Union[str, List[str]]]): name of channel or list of channels
             to filter, only including those channels provided via this argument in the
             return of the function
