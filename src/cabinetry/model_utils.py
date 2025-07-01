@@ -214,7 +214,7 @@ def _hashable_model_key(
     parameter bounds, etc.).
 
     Args:
-        model (pyhf.model.Model): model to generate a key for
+        model (pyhf.pdf.Model): model to generate a key for
 
     Returns:
         Tuple[str, Tuple[Tuple[str, str], ...]]: a key that identifies the model
