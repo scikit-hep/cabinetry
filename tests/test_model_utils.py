@@ -271,7 +271,6 @@ def test__hashable_model_key(example_spec):
             "histosys": {"interpcode": "code0"},
         }
     )
-
     assert model_utils._hashable_model_key(model_1) != model_utils._hashable_model_key(
         model_new_interpcode
     )
