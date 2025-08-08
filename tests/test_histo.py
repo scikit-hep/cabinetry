@@ -180,7 +180,7 @@ def test_Histogram_save(tmp_path, example_histograms, histogram_helpers):
 
 
 def test_Histogram_validate(caplog, example_histograms):
-    caplog.set_level(logging.DEBUG)
+    caplog.set_level(logging.INFO)
     name = "test_histo"
 
     # should cause no warnings
