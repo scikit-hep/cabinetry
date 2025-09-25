@@ -551,6 +551,9 @@ def ranking(
     maxiter: Optional[int] = None,
     tolerance: Optional[float] = None,
     custom_fit: bool = False,
+    minos: Optional[Union[List[str], Tuple[str, ...]]] = None,
+    minos_cl: Optional[float] = None,
+    vary_within_bounds: bool = False,
 ) -> RankingResults:
     """Calculates the impact of nuisance parameters on the parameter of interest (POI).
 
@@ -582,6 +585,17 @@ def ranking(
             None (use ``iminuit`` default of 0.1)
         custom_fit (bool, optional): whether to use the ``pyhf.infer`` API or
             ``iminuit``, defaults to False (using ``pyhf.infer``)
+        minos (Optional[Union[List[str], Tuple[str, ...]]], optional): runs the MINOS
+            algorithm for all parameters specified, defaults to None (does not run
+            MINOS). Used only if fit_results is not provided.
+        minos_cl (Optional[float]), optional): confidence level for the MINOS confidence
+            interval, defaults to None (use ``iminuit`` default of 68.27%). Used only
+            if fit_results is not provided.
+        vary_within_bounds (bool, optional): if parameter bounds are not specified,
+            this option specifies that the ``pyhf`` suggested parameter bounds should
+            be used to limit values of the parameters during ranking. Useful if one
+            of the ranking fits is failing. If some parameter bounds are specified,
+            the suggested bound will not be used. Default is False.
 
     Raises:
         ValueError: if no POI is found
@@ -600,6 +614,8 @@ def ranking(
             maxiter=maxiter,
             tolerance=tolerance,
             custom_fit=custom_fit,
+            minos=minos,
+            minos_cl=minos_cl,
         )
 
     labels = model.config.par_names
@@ -618,6 +634,27 @@ def ranking(
     init_pars = init_pars or model.config.suggested_init()
     fix_pars = fix_pars or model.config.suggested_fixed()
 
+    if par_bounds is None and vary_within_bounds:
+        log.info(
+            "No parameter bounds specified. Falling back to suggested bounds from pyhf."
+        )
+        par_bounds = model.config.suggested_bounds()
+    elif par_bounds is None and not vary_within_bounds:
+        log.warning(
+            "No parameter bounds specified and suggested bounds are disabled."
+            + " Ranking fits might be unstable."
+        )
+    else:
+        if (shape_par := np.asarray(par_bounds).shape) != (
+            shape_suggested := np.asarray(model.config.suggested_bounds()).shape
+        ):
+            raise ValueError(
+                f"Number of parameter bounds provided ({shape_par}) "
+                + f"does not match number of parameters ({shape_suggested})."
+            )
+        else:
+            log.info("Parameter bounds are specified and will be used for ranking.")
+
     all_impacts = []
     for i_par, label in enumerate(labels):
         if i_par == poi_index:
@@ -628,14 +665,26 @@ def ranking(
         fix_pars_ranking = fix_pars.copy()
         fix_pars_ranking[i_par] = True
 
+        # Get post-fit uncertainty from MINOS if available
+        postfit_unc_up = fit_results.uncertainty[i_par]
+        postfit_unc_do = -1 * fit_results.uncertainty[i_par]
+        # walrus assignment to avoid multiple lookups
+        if minos_unc := fit_results.minos_uncertainty.get(label):
+            postfit_unc_up = minos_unc[1]
+            postfit_unc_do = minos_unc[0]
+
         parameter_impacts = []
         # calculate impacts: pre-fit up, pre-fit down, post-fit up, post-fit down
-        for np_val in [
-            fit_results.bestfit[i_par] + prefit_unc[i_par],
-            fit_results.bestfit[i_par] - prefit_unc[i_par],
-            fit_results.bestfit[i_par] + fit_results.uncertainty[i_par],
-            fit_results.bestfit[i_par] - fit_results.uncertainty[i_par],
-        ]:
+        fit_labels = ["pre-fit up", "pre-fit down", "post-fit up", "post-fit down"]
+        for fit_idx, np_val in enumerate(
+            [
+                fit_results.bestfit[i_par] + prefit_unc[i_par],
+                fit_results.bestfit[i_par] - prefit_unc[i_par],
+                fit_results.bestfit[i_par] + postfit_unc_up,
+                fit_results.bestfit[i_par] + postfit_unc_do,
+            ]
+        ):
+            fit_label = fit_labels[fit_idx]
             # can skip pre-fit calculation for unconstrained parameters (their
             # pre-fit uncertainty is set to 0), and pre- and post-fit calculation
             # for fixed parameters (both uncertainties set to 0 as well)
@@ -643,6 +692,15 @@ def ranking(
                 log.debug(f"impact of {label} is zero, skipping fit")
                 parameter_impacts.append(0.0)
             else:
+                if par_bounds is not None:
+                    if not par_bounds[i_par][0] <= np_val <= par_bounds[i_par][1]:
+                        log.info(
+                            f"Parameter {label} value is out of bounds in the"
+                            + f" {fit_label} fit. Fixing it to its boundary."
+                        )
+                        np_val = min(
+                            max(np_val, par_bounds[i_par][0]), par_bounds[i_par][1]
+                        )
                 init_pars_ranking = init_pars.copy()
                 init_pars_ranking[i_par] = np_val  # value of current nuisance parameter
                 fit_results_ranking = _fit_model(
