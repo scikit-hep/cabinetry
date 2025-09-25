@@ -200,8 +200,9 @@ def test_integration(tmp_path, ntuple_creator, caplog):
     _ = cabinetry.visualize.data_mc(prediction_postfit, data, close_figure=True)
 
     # nuisance parameter ranking
+    # with NP shifting
     ranking_results = cabinetry.fit.ranking(
-        model, data, fit_results=fit_results, custom_fit=True
+        model, data, fit_results=fit_results, custom_fit=True, impacts_method="np_shift"
     )
     assert np.allclose(
         ranking_results.prefit_up,
@@ -250,6 +251,44 @@ def test_integration(tmp_path, ntuple_creator, caplog):
             -0.14383307,
             0.10888311,
             0.05779505,
+        ],
+        atol=1e-4,
+    )
+
+    # with covariance-based method
+    ranking_results = cabinetry.fit.ranking(
+        model,
+        data,
+        fit_results=fit_results,
+        custom_fit=True,
+        impacts_method="covariance",
+    )
+    assert np.allclose(ranking_results.prefit_up, [0.0] * 7)
+
+    assert np.allclose(ranking_results.prefit_down, [0.0] * 7)
+    assert np.allclose(
+        ranking_results.postfit_up,
+        [
+            -0.48565867,
+            -0.5250071,
+            -0.15659875,
+            -0.10167499,
+            0.13321283,
+            -0.10301342,
+            -0.05424587,
+        ],
+        atol=1e-4,
+    )
+    assert np.allclose(
+        ranking_results.postfit_down,
+        [
+            0.48565867,
+            0.5250071,
+            0.15659875,
+            0.10167499,
+            -0.13321283,
+            0.10301342,
+            0.05424587,
         ],
         atol=1e-4,
     )

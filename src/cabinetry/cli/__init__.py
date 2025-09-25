@@ -154,8 +154,17 @@ def fit(
     default="figures",
     help='folder to save figures to (default: "figures")',
 )
+@click.option(
+    "--impacts_method",
+    default="covariance",
+    help="The method to be used for computing impacts",
+)
 def ranking(
-    ws_spec: io.TextIOWrapper, asimov: bool, max_pars: int, figfolder: str
+    ws_spec: io.TextIOWrapper,
+    asimov: bool,
+    max_pars: int,
+    figfolder: str,
+    impacts_method: str,
 ) -> None:
     """Ranks nuisance parameters and visualizes the result.
 
@@ -165,9 +174,13 @@ def ranking(
     ws = json.load(ws_spec)
     model, data = cabinetry_model_utils.model_and_data(ws, asimov=asimov)
     fit_results = cabinetry_fit.fit(model, data)
-    ranking_results = cabinetry_fit.ranking(model, data, fit_results=fit_results)
+    ranking_results = cabinetry_fit.ranking(
+        model, data, fit_results=fit_results, impacts_method=impacts_method
+    )
     cabinetry_visualize.ranking(
-        ranking_results, figure_folder=figfolder, max_pars=max_pars
+        ranking_results,
+        figure_folder=figfolder,
+        max_pars=max_pars,
     )
 
 

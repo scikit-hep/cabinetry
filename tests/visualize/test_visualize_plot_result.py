@@ -70,6 +70,10 @@ def test_pulls(tmp_path):
     plt.close("all")
 
 
+@pytest.mark.xfail(
+    sys.version_info <= (3, 9),
+    reason="legend positioning in Python 3.8 with older matplotlib, see cabinetry#476",
+)
 def test_ranking(tmp_path):
     fname = tmp_path / "fig.png"
     bestfit = np.asarray([0.3, -0.1])
@@ -89,17 +93,49 @@ def test_ranking(tmp_path):
         impact_postfit_up,
         impact_postfit_down,
         figure_path=fname,
+        impacts_method="np_shift",
     )
     # large tolerance needed here, possibly related to lack of set_tight_layout usage
     assert (
-        compare_images("tests/visualize/reference/ranking.png", str(fname), 50) is None
+        compare_images("tests/visualize/reference/ranking_np_shift.png", str(fname), 50)
+        is None
     )
 
     # compare figure returned by function
     fname = tmp_path / "fig_from_return.png"
     fig.savefig(fname)
     assert (
-        compare_images("tests/visualize/reference/ranking.png", str(fname), 50) is None
+        compare_images("tests/visualize/reference/ranking_np_shift.png", str(fname), 50)
+        is None
+    )
+
+    cov_ranking_comparisons = []
+    fname = tmp_path / "fig_cov.png"
+    fig = plot_result.ranking(
+        bestfit,
+        uncertainty,
+        labels,
+        impact_prefit_up,
+        impact_prefit_down,
+        impact_postfit_up,
+        impact_postfit_down,
+        figure_path=fname,
+        impacts_method="covariance",
+    )
+    # large tolerance needed here, possibly related to lack of set_tight_layout usage
+    cov_ranking_comparisons.append(
+        compare_images(
+            "tests/visualize/reference/ranking_covariance.png", str(fname), 50
+        )
+    )
+
+    # compare figure returned by function
+    fname = tmp_path / "fig_cov_from_return.png"
+    fig.savefig(fname)
+    cov_ranking_comparisons.append(
+        compare_images(
+            "tests/visualize/reference/ranking_covariance.png", str(fname), 50
+        )
     )
 
     # do not save figure, but close it
@@ -115,6 +151,43 @@ def test_ranking(tmp_path):
             close_figure=True,
         )
         assert mock_close_safe.call_args_list == [((fig, None, True), {})]
+
+    with pytest.raises(
+        ValueError,
+        match="The impacts method wrong_method provided is not supported."
+        + " Valid options are \\(np_shift, covariance, auxdata_shift\\)",
+    ):
+        plot_result.ranking(
+            bestfit,
+            uncertainty,
+            labels,
+            impact_prefit_up,
+            impact_prefit_down,
+            impact_postfit_up,
+            impact_postfit_down,
+            close_figure=True,
+            impacts_method="wrong_method",
+        )
+
+    with pytest.raises(
+        NotImplementedError,
+        match="Plotting impacts computed by shifting auxiliary data is not "
+        + "supported yet.",
+    ):
+        plot_result.ranking(
+            bestfit,
+            uncertainty,
+            labels,
+            impact_prefit_up,
+            impact_prefit_down,
+            impact_postfit_up,
+            impact_postfit_down,
+            close_figure=True,
+            impacts_method="auxdata_shift",
+        )
+
+    for cov_ranking_comparison in cov_ranking_comparisons:
+        assert cov_ranking_comparison is None
 
     plt.close("all")
 
