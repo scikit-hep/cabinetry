@@ -794,6 +794,7 @@ def test_scan(mock_fit, example_spec):
 
     # parameter range specified, custom fit, init/fixed pars, par bounds,
     # strategy/maxiter/tolerance
+    fix_pars = [False, False]
     scan_results = fit.scan(
         model,
         data,
@@ -801,7 +802,7 @@ def test_scan(mock_fit, example_spec):
         par_range=(1.0, 1.5),
         n_steps=5,
         init_pars=[1.0, 1.0],
-        fix_pars=[False, False],
+        fix_pars=fix_pars,
         par_bounds=[(0, 5), (0.1, 10)],
         strategy=2,
         maxiter=100,
@@ -820,6 +821,7 @@ def test_scan(mock_fit, example_spec):
         "tolerance": 0.01,
         "custom_fit": True,
     }
+    assert fix_pars == [False, False]  # ensure that argument is unchanged (issue #545)
 
     # unknown parameter
     with pytest.raises(ValueError, match="parameter abc not found in model"):
