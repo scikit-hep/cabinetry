@@ -91,12 +91,16 @@ class WorkspaceBuilder:
                 )
         return modifiers
 
-    @staticmethod
-    def normalization_modifier(systematic: Dict[str, Any]) -> Dict[str, Any]:
+    # @staticmethod -- VK: had to disable that to pass self
+    def normalization_modifier(
+        self, region: Dict[str, Any], sample: Dict[str, Any], systematic: Dict[str, Any]
+    ) -> Dict[str, Any]:
         """Returns a normalization modifier (OverallSys in `HistFactory`).
 
         Args:
-            systematic (Dict[str, Any]): systematic for which modifier is constructed
+            region (Dict[str, Any]): region the systematic variation acts in
+            sample (Dict[str, Any]): sample the systematic variation acts on
+            systematic (Dict[str, Any]): the systematic variation under consideration
 
         Returns:
             Dict[str, Any]: single `normsys` modifier for ``pyhf`` workspace
@@ -107,14 +111,66 @@ class WorkspaceBuilder:
         modifier = {}
         modifier.update({"name": modifier_name})
         modifier.update({"type": "normsys"})
+        
+        # VK: need to add a check agains Up/Down type agreement -- maybe at the level of the config file creation/validation
+        if systematic.get("Up").get("Normalization"):
+            if systematic.get("Up").get("Symmetrize"):
+                raise NotImplementedError("Symmetrization should happen on the Down variation.")
+            elif systematic.get("Down").get("Symmetrize"):
+                norm_effect_up = 1 + systematic["Up"]["Normalization"]
+                norm_effect_down = 1 - systematic["Up"]["Normalization"]
+            else:
+                norm_effect_up = 1 + systematic["Up"]["Normalization"]
+                norm_effect_down = 1 + systematic["Down"]["Normalization"]
+        else:
+            # need to calculate the normalisation factor from the histograms
+            if systematic.get("Up").get("Symmetrize"):
+                raise NotImplementedError("Symmetrization should happen on the Down variation.")
+            # load the up systematic variation histogram
+            histogram_up = histo.Histogram.from_config(
+                self.histogram_folder,
+                region,
+                sample,
+                systematic,
+                template="Up",
+                modified=True,
+            )
+            # also need the nominal histogram
+            histogram_nominal = histo.Histogram.from_config(
+                self.histogram_folder, region, sample, {}, modified=True
+            )
+
+            if systematic.get("Down").get("Symmetrize"):
+                # symmetrization according to "method 1" from issue #26:
+                # first normalization, then symmetrization
+
+                # normalize the variation to the same yield as nominal
+                norm_effect = histogram_up.normalize_to_yield(histogram_nominal)
+                norm_effect_up = norm_effect
+                norm_effect_down = 2 - norm_effect
+            else:
+                histogram_down = histo.Histogram.from_config(
+                    self.histogram_folder,
+                    region,
+                    sample,
+                    systematic,
+                    template="Down",
+                    modified=True,
+                )
+                
+                norm_effect_up = sum(histogram_up.yields) / sum(histogram_nominal.yields)
+                norm_effect_down = sum(histogram_down.yields) / sum(histogram_nominal.yields)
+        
+        # update the modifier data
         modifier.update(
             {
                 "data": {
-                    "hi": 1 + systematic["Up"]["Normalization"],
-                    "lo": 1 + systematic["Down"]["Normalization"],
+                    "hi": norm_effect_up,
+                    "lo": norm_effect_down,
                 }
             }
         )
+
         return modifier
 
     def normplusshape_modifiers(
@@ -249,7 +305,7 @@ class WorkspaceBuilder:
                         f"adding OverallSys {systematic['Name']} to sample"
                         f" {sample['Name']} in region {region['Name']}"
                     )
-                    modifiers.append(self.normalization_modifier(systematic))
+                    modifiers.append(self.normalization_modifier(region, sample, systematic))
                 elif systematic["Type"] == "NormPlusShape":
                     # two modifiers are needed - an OverallSys for the norm effect,
                     # and a HistoSys for the shape variation

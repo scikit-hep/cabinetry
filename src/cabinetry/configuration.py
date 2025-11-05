@@ -231,10 +231,10 @@ def histogram_is_needed(
         else:
             # handle non-nominal, non-data histograms
             # this assumes that the systematic dict satisfies config schema requirements
-            if systematic["Type"] == "Normalization":
+            if systematic[template] == "Normalization":
                 # no histogram needed for normalization variation
                 histo_needed = False
-            elif systematic["Type"] == "NormPlusShape":
+            elif systematic["Type"] == "NormPlusShape" or systematic["Type"] == "Normalization":
                 # for a variation defined via a template, a histogram is needed (if
                 # sample is affected in region)
                 histo_needed = region_contains_modifier(region, systematic)
