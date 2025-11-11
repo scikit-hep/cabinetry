@@ -73,19 +73,25 @@ def correlation_matrix(
 
 
 def pulls(
-    bestfit: np.ndarray,
-    uncertainty: np.ndarray,
-    labels: Union[List[str], np.ndarray],
+    bestfit: List[np.ndarray],
+    uncertainty: List[np.ndarray],
+    labels: List[np.ndarray],  # TODO: this also supported list of strings before
+    fit_labels: Optional[List[str]],
     *,
     figure_path: Optional[pathlib.Path] = None,
     close_figure: bool = False,
 ) -> mpl.figure.Figure:
-    """Draws a pull plot.
+    """Draws a pull plot for one or multiple fits.
+
+    Parameters are sorted alphabetically.
 
     Args:
-        bestfit (np.ndarray): best-fit parameter results
-        uncertainty (np.ndarray): parameter uncertainties
-        labels (Union[List[str], np.ndarray]): parameter names
+        bestfit (List[np.ndarray]): list of best-fit parameter results per fit
+        uncertainty (List[np.ndarray]): list of parameter uncertainties per fit
+        labels (List[np.ndarray]): list of parameter names per fit
+        fit_labels (Optional[List[str]]): list or fit labels, or None if
+            no labels are given (only supported for a single fit input, no check for
+            that performed)
         figure_path (Optional[pathlib.Path], optional): path where figure should be
             saved, or None to not save it, defaults to None
         close_figure (bool, optional): whether to close each figure immediately after
@@ -95,23 +101,57 @@ def pulls(
     Returns:
         matplotlib.figure.Figure: the pull figure
     """
-    num_pars = len(bestfit)
-    y_positions = np.arange(num_pars)[::-1]
-    fig, ax = plt.subplots(figsize=(6, 1 + num_pars / 4), dpi=100, layout="constrained")
-    ax.errorbar(bestfit, y_positions, xerr=uncertainty, fmt="o", color="black")
+    # get the union of all parameters in the input
+    unique_labels = sorted(set.union(*[set(lab) for lab in labels]))
 
-    ax.fill_between([-2, 2], -0.5, len(bestfit) - 0.5, color="yellow")
-    ax.fill_between([-1, 1], -0.5, len(bestfit) - 0.5, color="limegreen")
-    ax.vlines(0, -0.5, len(bestfit) - 0.5, linestyles="dotted", color="black")
+    num_pars = len(unique_labels)
+    y_positions = np.arange(num_pars)[::-1]
+    # TODO: increase figure size if legend at top is used
+    fig, ax = plt.subplots(figsize=(6, 1 + num_pars / 4), dpi=100, layout="constrained")
+
+    # https://matplotlib.org/stable/gallery/color/named_colors.html#sphx-glr-gallery-color-named-colors-py
+    colors = ["black", "crimson", "mediumblue"]
+
+    for i_fit, (bests, uncs, labs) in enumerate(zip(bestfit, uncertainty, labels)):
+        # for all labels in this specific fit results instance, find how they correspond
+        # to the sorted union that is used on the axis to get proper vertical positions
+        y_pos_reordered = []
+        for lab in labs:
+            idx = num_pars - unique_labels.index(lab) - 1
+            y_pos_reordered.append(
+                idx - 0.2 + i_fit * 0.2
+            )  # TODO: customize depending on number of fits plotted
+        ax.errorbar(bests, y_pos_reordered, xerr=uncs, fmt="o", color=colors[i_fit])
+
+    ax.fill_between([-2, 2], -0.5, num_pars - 0.5, color="yellow")
+    ax.fill_between([-1, 1], -0.5, num_pars - 0.5, color="limegreen")
+    ax.vlines(0, -0.5, num_pars - 0.5, linestyles="dotted", color="black")
 
     ax.set_xlim([-3, 3])
     ax.set_xlabel(r"$\left(\hat{\theta} - \theta_0\right) / \Delta \theta$")
     ax.set_ylim([-0.5, num_pars - 0.5])
     ax.set_yticks(y_positions)
-    ax.set_yticklabels(labels)
+    ax.set_yticklabels(unique_labels)
     ax.xaxis.set_minor_locator(mpl.ticker.AutoMinorLocator())  # minor ticks
     ax.tick_params(axis="both", which="major", pad=8)
     ax.tick_params(direction="in", top=True, right=True, which="both")
+
+    # legend
+    if fit_labels is not None:
+        custom_lines = [
+            mpl.lines.Line2D([0], [0], color=colors[i_fit], marker="o")
+            for i_fit in range(len(fit_labels))
+        ]
+        # https://matplotlib.org/stable/tutorials/intermediate/legend_guide.html#legend-location
+        ax.legend(
+            custom_lines,
+            fit_labels,
+            frameon=False,
+            ncols=3,
+            bbox_to_anchor=(0.0, 1.0, 1.0, 0.05),  # TODO: center legend for <3 inputs?
+            mode="expand",
+            bbox_transform=fig.transFigure,
+        )
 
     utils._save_and_close(fig, figure_path, close_figure)
     return fig
