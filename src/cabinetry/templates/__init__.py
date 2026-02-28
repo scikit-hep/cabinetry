@@ -2,7 +2,7 @@
 
 import logging
 import pathlib
-from typing import Any, Dict, Optional
+from typing import Any, Dict, List, Optional
 
 from cabinetry import route
 from cabinetry.templates import builder
@@ -18,6 +18,7 @@ def build(
     *,
     method: str = "uproot",
     router: Optional[route.Router] = None,
+    template_list: Optional[List[route.TemplateHistogramInformation]] = None,
 ) -> None:
     """Produces all required histograms specified by the configuration file.
 
@@ -31,6 +32,8 @@ def build(
             "uproot"
         router (Optional[route.Router], optional): instance of cabinetry.route.Router
             that contains user-defined overrides, defaults to None
+        template_list (Optional[List[route.TemplateHistogramInformation]]): list of
+            information for templates to process, defaults to None (all templates)
     """
     # create an instance of the class doing the template building
     histogram_folder = pathlib.Path(config["General"]["HistogramFolder"])
@@ -44,12 +47,21 @@ def build(
         # get a function that can be queried to return a user-defined template builder
         match_func = router._find_template_builder_match
 
-    route.apply_to_all_templates(
-        config, template_builder._create_histogram, match_func=match_func
+    # get list of required templates to process if not provided already
+    if template_list is None:
+        template_list = route.required_templates(config)
+
+    route.apply_to_templates(
+        template_builder._create_histogram, template_list, match_func=match_func
     )
 
 
-def collect(config: Dict[str, Any], *, method: str = "uproot") -> None:
+def collect(
+    config: Dict[str, Any],
+    *,
+    method: str = "uproot",
+    template_list: Optional[List[route.TemplateHistogramInformation]] = None,
+) -> None:
     """Collects all required histograms specified by the configuration file.
 
     Histograms must already exist, and this collects and saves them in the format used
@@ -60,6 +72,8 @@ def collect(config: Dict[str, Any], *, method: str = "uproot") -> None:
         config (Dict[str, Any]): cabinetry configuration
         method (str, optional): backend to use for histogram production, defaults to
             "uproot"
+        template_list (Optional[List[route.TemplateHistogramInformation]]): list of
+            information for templates to process, defaults to None (all templates)
     """
     histogram_folder = pathlib.Path(config["General"]["HistogramFolder"])
     general_path = config["General"]["InputPath"]
@@ -71,15 +85,30 @@ def collect(config: Dict[str, Any], *, method: str = "uproot") -> None:
     processor = collector._collector(
         histogram_folder, general_path, variation_path, method
     )
-    route.apply_to_all_templates(config, processor)
+
+    # get list of required templates to process if not provided already
+    if template_list is None:
+        template_list = route.required_templates(config)
+
+    route.apply_to_templates(processor, template_list)
 
 
-def postprocess(config: Dict[str, Any]) -> None:
+def postprocess(
+    config: Dict[str, Any],
+    template_list: Optional[List[route.TemplateHistogramInformation]] = None,
+) -> None:
     """Applies postprocessing to all histograms.
 
     Args:
         config (Dict[str, Any]): cabinetry configuration
+        template_list (Optional[List[route.TemplateHistogramInformation]]): list of
+            information for templates to process, defaults to None (all templates)
     """
     histogram_folder = pathlib.Path(config["General"]["HistogramFolder"])
     processor = postprocessor._postprocessor(histogram_folder)
-    route.apply_to_all_templates(config, processor)
+
+    # get list of required templates to process if not provided already
+    if template_list is None:
+        template_list = route.required_templates(config)
+
+    route.apply_to_templates(processor, template_list)
