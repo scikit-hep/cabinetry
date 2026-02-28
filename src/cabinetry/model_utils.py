@@ -49,7 +49,7 @@ class LightConfig:
         """Updates samples list after merging samples into one.
 
         Args:
-            sample_update_map (Dict[str, List[str]]): a map specifying how to merge
+            sample_update_map (dict[str, list[str]]): a map specifying how to merge
                 samples (values) into one sample (key)
         """
         # Delete samples being merged from config
@@ -113,9 +113,9 @@ def _merge_sample_yields(
 
     Args:
         model (LightModel): LightModel object containing the model configuration
-        old_yields (Union[List[List[List[float]]], List[List[float]]]): yields to be
-            merged, either per channel (list of lists of lists) or for one channel
-            (list of lists)
+        old_yields (list[list[list[float]]] | list[list[float]]): yields to be merged,
+            either per channel (list of lists of lists) or for one channel (list of
+            lists)
         one_channel (bool | None, optional): whether the yields are for one channel
             (True) or for multiple channels (False), defaults to False
 
@@ -173,19 +173,19 @@ class ModelPrediction(NamedTuple):
     """Model prediction with yields and total uncertainties per bin and channel.
 
     Args:
-        model Union[LightModel, pyhf.pdf.Model]: model (or a light-weight version of
+        model (pyhf.pdf.Model | LightModel): model (or a light-weight version of
             pyhf.pdf.Model) to which prediction corresponds to
-        model_yields (List[List[List[float]]]): yields per channel, sample and bin,
+        model_yields (list[list[list[float]]]): yields per channel, sample and bin,
             indices: channel, sample, bin
-        total_stdev_model_bins (List[List[List[float]]]): total yield uncertainty per
+        total_stdev_model_bins (list[list[list[float]]]): total yield uncertainty per
             channel, sample and bin, indices: channel, sample, bin (last sample: sum
             over samples)
-        total_stdev_model_channels (List[List[float]]): total yield uncertainty per
+        total_stdev_model_channels (list[list[float]]): total yield uncertainty per
             channel and sample, indices: channel, sample (last sample: sum over samples)
         label (str): label for the prediction, e.g. "pre-fit" or "post-fit"
     """
 
-    model: LightModel | pyhf.pdf.Model
+    model: pyhf.pdf.Model | LightModel
     model_yields: list[list[list[float]]]
     total_stdev_model_bins: list[list[list[float]]]
     total_stdev_model_channels: list[list[float]]
@@ -198,15 +198,14 @@ def model_and_data(
     """Returns model and data for a ``pyhf`` workspace specification.
 
     Args:
-        spec (Dict[str, Any]): a ``pyhf`` workspace specification
+        spec (dict[str, Any]): a ``pyhf`` workspace specification
         asimov (bool, optional): whether to return the Asimov dataset, defaults to False
         include_auxdata (bool, optional): whether to also return auxdata, defaults to
             True
 
     Returns:
-        Tuple[pyhf.pdf.Model, List[float]]:
-            - a HistFactory-style model in ``pyhf`` format
-            - the data (plus auxdata if requested) for the model
+        tuple[pyhf.pdf.Model, list[float]]: tuple containing a HistFactory-style model
+        in ``pyhf`` format and the data (plus auxdata if requested) for the model
     """
     workspace = pyhf.Workspace(spec)
     model = workspace.model(
@@ -252,7 +251,7 @@ def asimov_data(
             True
 
     Returns:
-        List[float]: the Asimov dataset
+        list[float]: the Asimov dataset
     """
     if fit_results is None:
         # pre-fit Asimov by default
@@ -359,7 +358,7 @@ def _hashable_model_key(
         model (pyhf.pdf.Model): model to generate a key for
 
     Returns:
-        Tuple[str, Tuple[Tuple[str, str], ...]]: a key that identifies the model
+        tuple[str, tuple[tuple[str, str], ...]]: a key that identifies the model
         by its spec and interpcodes
     """
     interpcodes = []
@@ -398,7 +397,7 @@ def yield_stdev(
             to merge samples, defaults to None
 
     Returns:
-        Tuple[List[List[List[float]]], List[List[float]]]:
+        tuple[list[list[list[float]]], list[list[float]]]:
             - list of channels, each channel is a list of samples, and each sample a
               list of standard deviations per bin (the last sample corresponds to a sum
               over all samples)
@@ -706,8 +705,8 @@ def _parameter_index(par_name: str, labels: list[str] | tuple[str, ...]) -> int 
 
     Args:
         par_name (str): name of parameter to find in list
-        labels (Union[List[str], Tuple[str, ...]]): list or tuple with all parameter
-            names in the model
+        labels (list[str] | tuple[str, ...]): list or tuple with all parameter names in
+            the model
 
     Returns:
         int | None: index of parameter, or None if parameter was not found
@@ -756,12 +755,12 @@ def _strip_auxdata(
     """Always returns observed yields, no matter whether data includes auxdata.
 
     Args:
-        model (Union[pyhf.pdf.Model, LightModel]): model to which data corresponds to
-        data (List[float]): data, either including auxdata which is then stripped off or
+        model (pyhf.pdf.Model | LightModel): model to which data corresponds to
+        data (list[float]): data, either including auxdata which is then stripped off or
             only observed yields
 
     Returns:
-        List[float]: observed data yields
+        list[float]: observed data yields
     """
     n_bins_total = sum(model.config.channel_nbins.values())
     if len(data) != n_bins_total:
@@ -776,12 +775,12 @@ def _data_per_channel(
     """Returns data split per channel, and strips off auxiliary data if included.
 
     Args:
-        model (Union[pyhf.pdf.Model, LightModel]): model to which data corresponds to
-        data (List[float]): data (not split by channel), can either include auxdata
+        model (pyhf.pdf.Model | LightModel): model to which data corresponds to
+        data (list[float]): data (not split by channel), can either include auxdata
             which is then stripped off, or only observed yields
 
     Returns:
-        List[List[float]]: data per channel and per bin
+        list[list[float]]: data per channel and per bin
     """
     # strip off auxiliary data
     data_combined = _strip_auxdata(model, data)
@@ -799,13 +798,13 @@ def _filter_channels(
     """Returns a list of channels in a model after applying filtering.
 
     Args:
-        model (Union[pyhf.pdf.Model, LightModel]): model from which to extract channels
+        model (pyhf.pdf.Model | LightModel): model from which to extract channels
         channels (str | list[str] | None): name of channel or list of channels to
             filter, only including those channels provided via this argument in the
             return of the function
 
     Returns:
-        List[str]: list of channels after filtering
+        list[str]: list of channels after filtering
     """
     # channels included in model
     filtered_channels = model.config.channels
@@ -924,11 +923,11 @@ def _parameters_maximizing_constraint_term(
 
     Args:
         model (pyhf.pdf.Model): model to use for constraint term evaluation
-        aux_data (List[float]): auxiliary data for which the constraint term should be
+        aux_data (list[float]): auxiliary data for which the constraint term should be
             maximized
 
     Returns:
-        List[float]: parameters maximizing the model constraint term
+        list[float]: parameters maximizing the model constraint term
     """
     best_pars: list[float] = []  # parameters maximizing constraint term
     i_aux = 0  # current position in auxiliary data list

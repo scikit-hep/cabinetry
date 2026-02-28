@@ -60,9 +60,9 @@ def _smoothing_algorithm(
     """Returns name of algorithm to use for smoothing, or None otherwise.
 
     Args:
-        region (Dict[str, Any]): containing all region information
-        sample (Dict[str, Any]): containing all sample information
-        systematic (Dict[str, Any]): containing all systematic information
+        region (dict[str, Any]): containing all region information
+        sample (dict[str, Any]): containing all sample information
+        systematic (dict[str, Any]): containing all systematic information
 
     Returns:
         str | None: name of smoothing algorithm or None
@@ -145,9 +145,9 @@ def _postprocessor(histogram_folder: pathlib.Path) -> route.ProcessorFunc:
         """Applies post-processing to a single histogram.
 
         Args:
-            region (Dict[str, Any]): containing all region information
-            sample (Dict[str, Any]): containing all sample information
-            systematic (Dict[str, Any]): containing all systematic information
+            region (dict[str, Any]): containing all region information
+            sample (dict[str, Any]): containing all sample information
+            systematic (dict[str, Any]): containing all systematic information
             template (Literal["Up", "Down"] | None): template considered: "Up", "Down",
                 or None for nominal
         """

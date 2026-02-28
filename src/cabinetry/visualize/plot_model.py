@@ -39,7 +39,7 @@ def data_mc(
     interval as provided by ``hist`` via ``hist.intervals.poisson_interval``.
 
     Args:
-        histogram_dict_list (List[Dict[str, Any]]): list of samples (with info stored in
+        histogram_dict_list (list[dict[str, Any]]): list of samples (with info stored in
             one dict per sample)
         total_model_unc (np.ndarray): total model uncertainty
         bin_edges (np.ndarray): bin edges of histogram
@@ -277,11 +277,11 @@ def templates(
     If a variation template is an empty dict, it is not drawn.
 
     Args:
-        nominal_histo (Dict[str, np.ndarray]): the nominal template
-        up_histo_orig (Dict[str, np.ndarray]): original "up" variation
-        down_histo_orig (Dict[str, np.ndarray]): original "down" variation
-        up_histo_mod (Dict[str, np.ndarray]): "up" variation after post-processing
-        down_histo_mod (Dict[str, np.ndarray]): "down" variation after post-processing
+        nominal_histo (dict[str, np.ndarray]): the nominal template
+        up_histo_orig (dict[str, np.ndarray]): original "up" variation
+        down_histo_orig (dict[str, np.ndarray]): original "down" variation
+        up_histo_mod (dict[str, np.ndarray]): "up" variation after post-processing
+        down_histo_mod (dict[str, np.ndarray]): "down" variation after post-processing
         bin_edges (np.ndarray): bin edges of histogram
         variable (str): variable name for the horizontal axis
         figure_path (pathlib.Path | None, optional): path where figure should be saved,
@@ -449,10 +449,10 @@ def modifier_grid(
     """Draws a grid of modifiers per channel, sample and parameter.
 
     Args:
-        grid_list (List[np.ndarray]): list of 2d grids with modifier information
-        axis_labels (List[List[str]]): list with axis labels for the three axes in order
+        grid_list (list[np.ndarray]): list of 2d grids with modifier information
+        axis_labels (list[list[str]]): list with axis labels for the three axes in order
             (first axis is grid label, second and third are axes per grid)
-        category_map (Dict[int, str]): translation of integer values in grid to labels
+        category_map (dict[int, str]): translation of integer values in grid to labels
         figure_path (pathlib.Path | None, optional): path where figure should be saved,
             or None to not save it, defaults to None
         close_figure (bool, optional): whether to close each figure immediately after

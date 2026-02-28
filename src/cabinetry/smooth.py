@@ -16,7 +16,7 @@ def _medians_353(zz: list[float] | np.ndarray, nbins: int) -> None:
     """Applies running median smoothing with window sizes 3, 5, 3 to input.
 
     Args:
-        zz (Union[List[float], np.ndarray]): array to smooth
+        zz (list[float] | np.ndarray): array to smooth
         nbins (int): number of bins in array
     """
     for i_median in range(3):
@@ -50,10 +50,10 @@ def smooth_353qh_twice(hist: T) -> T:
     the ROOT implementation.
 
     Args:
-        hist (Union[list, np.ndarray]): array to smooth
+        hist (list[float], np.ndarray): array to smooth
 
     Returns:
-        Union[list, np.ndarray]: smooth version of input
+        list[float], np.ndarray: smooth version of input
     """
     nbins = len(hist)
     if nbins < 3:

@@ -40,7 +40,7 @@ def _total_yield_uncertainty(stdev_list: list[np.ndarray]) -> np.ndarray:
     """Calculates the absolute statistical uncertainty of a stack of MC.
 
     Args:
-        stdev_list (List[np.ndarray]): list of absolute stat. uncertainty per sample
+        stdev_list (list[np.ndarray]): list of absolute stat. uncertainty per sample
 
     Returns:
         np.ndarray: absolute stat. uncertainty of stack of samples
@@ -65,9 +65,9 @@ def data_mc_from_histograms(
     The uncertainty band drawn includes only statistical uncertainties.
 
     Args:
-        config (Dict[str, Any]): cabinetry configuration
-        figure_folder (Union[str, pathlib.Path], optional): path to the folder to save
-            figures in, defaults to "figures"
+        config (dict[str, Any]): cabinetry configuration
+        figure_folder (str | pathlib.Path, optional): path to the folder to save figures
+            in, defaults to "figures"
         log_scale (bool | None, optional): whether to use logarithmic vertical axis,
             defaults to None (automatically determine whether to use linear/log scale)
         log_scale_x (bool, optional): whether to use logarithmic horizontal axis,
@@ -85,7 +85,7 @@ def data_mc_from_histograms(
         ValueError: if color specification is incomplete
 
     Returns:
-        List[Dict[str, Any]]: list of dictionaries, where each dictionary contains a
+        list[dict[str, Any]]: list of dictionaries, where each dictionary contains a
             figure and the associated region name
     """
     log.info("visualizing histogram")
@@ -173,13 +173,13 @@ def data_mc(
 
     Args:
         model_prediction (model_utils.ModelPrediction): model prediction to show
-        data (List[float]): data to include in visualization, can either include auxdata
+        data (list[float]): data to include in visualization, can either include auxdata
             (the auxdata is then stripped internally) or only observed yields
         config (dict[str, Any] | None, optional): cabinetry configuration needed for
             binning and axis labels, defaults to None (uses a default binning and labels
             then)
-        figure_folder (Union[str, pathlib.Path], optional): path to the folder to save
-            figures in, defaults to "figures"
+        figure_folder (str | pathlib.Path, optional): path to the folder to save figures
+            in, defaults to "figures"
         log_scale (bool | None, optional): whether to use logarithmic vertical axis,
             defaults to None (automatically determine whether to use linear/log scale)
         log_scale_x (bool, optional): whether to use logarithmic horizontal axis,
@@ -301,16 +301,16 @@ def templates(
     is also included in the visualization.
 
     Args:
-        config (Dict[str, Any]): cabinetry configuration
-        figure_folder (Union[str, pathlib.Path], optional): path to the folder to save
-            figures in, defaults to "figures"
+        config (dict[str, Any]): cabinetry configuration
+        figure_folder (str | pathlib.Path, optional): path to the folder to save figures
+            in, defaults to "figures"
         close_figure (bool, optional): whether to close each figure, defaults to False
             (enable when producing many figures to avoid memory issues, prevents
             automatic rendering in notebooks)
         save_figure (bool, optional): whether to save figures, defaults to True
 
     Returns:
-        List[Dict[str, Any]]: list of dictionaries, where each dictionary contains a
+        list[dict[str, Any]]: list of dictionaries, where each dictionary contains a
             figure and the associated region / sample / systematic names
     """
     log.info("visualizing systematic templates")
@@ -436,8 +436,8 @@ def correlation_matrix(
     Args:
         fit_results (fit.FitResults): fit results, including correlation matrix and
             parameter labels
-        figure_folder (Union[str, pathlib.Path], optional): path to the folder to save
-            figures in, defaults to "figures"
+        figure_folder (str | pathlib.Path, optional): path to the folder to save figures
+            in, defaults to "figures"
         pruning_threshold (float, optional): minimum correlation for a parameter to
             have with any other parameters to not get pruned, defaults to 0.0
         close_figure (bool, optional): whether to close figure, defaults to True
@@ -491,8 +491,8 @@ def pulls(
     Args:
         fit_results (fit.FitResults): fit results, including correlation matrix and
             parameter labels
-        figure_folder (Union[str, pathlib.Path], optional): path to the folder to save
-            figures in, defaults to "figures"
+        figure_folder (str | pathlib.Path, optional): path to the folder to save figures
+            in, defaults to "figures"
         exclude (str | list[str] | tuple[str, ...] | None, optional): parameter or
             parameters to exclude from plot, defaults to None (nothing excluded)
         close_figure (bool, optional): whether to close figure, defaults to True
@@ -554,8 +554,8 @@ def ranking(
 
     Args:
         ranking_results (fit.RankingResults): fit results, and pre- and post-fit impacts
-        figure_folder (Union[str, pathlib.Path], optional): path to the folder to save
-            figures in, defaults to "figures"
+        figure_folder (str | pathlib.Path, optional): path to the folder to save figures
+            in, defaults to "figures"
         max_pars (int | None, optional): number of parameters to include, defaults to
             None (which means all parameters are included)
         close_figure (bool, optional): whether to close figure, defaults to True
@@ -617,8 +617,8 @@ def scan(
 
     Args:
         scan_results (fit.ScanResults): results of a likelihood scan
-        figure_folder (Union[str, pathlib.Path], optional): path to the folder to save
-            figures in, defaults to "figures"
+        figure_folder (str | pathlib.Path, optional): path to the folder to save figures
+            in, defaults to "figures"
         close_figure (bool, optional): whether to close figure, defaults to True
         save_figure (bool, optional): whether to save figure, defaults to True
 
@@ -655,8 +655,8 @@ def limit(
 
     Args:
         limit_results (fit.LimitResults): results of upper limit determination
-        figure_folder (Union[str, pathlib.Path], optional): path to the folder to save
-            figures in, defaults to "figures"
+        figure_folder (str | pathlib.Path, optional): path to the folder to save figures
+            in, defaults to "figures"
         close_figure (bool, optional): whether to close figure, defaults to True
         save_figure (bool, optional): whether to save figure, defaults to True
 
@@ -689,8 +689,8 @@ def modifier_grid(
 
     Args:
         model (pyhf.pdf.Model): model to visualize
-        figure_folder (Union[str, pathlib.Path], optional): path to the folder to save
-            figures in, defaults to "figures"
+        figure_folder (str | pathlib.Path, optional): path to the folder to save figures
+            in, defaults to "figures"
         split_by_sample (bool, optional): whether to use (channel, parameter) grids
             for each sample, defaults to False (if enabled, uses (sample, parameter)
             grids for each channel)

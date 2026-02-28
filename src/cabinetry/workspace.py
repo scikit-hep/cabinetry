@@ -20,7 +20,7 @@ class WorkspaceBuilder:
         """Creates a workspace corresponding to a cabinetry configuration.
 
         Args:
-            config (Dict[str, Any]): ``cabinetry`` configuration
+            config (dict[str, Any]): ``cabinetry`` configuration
         """
         self.config = config
         self.histogram_folder = pathlib.Path(config["General"]["HistogramFolder"])
@@ -29,7 +29,7 @@ class WorkspaceBuilder:
         """Returns the data sample dictionary.
 
         Returns:
-            Dict[str, Any]: the data sample dictionary
+            dict[str, Any]: the data sample dictionary
         """
         data_samples = [
             sample for sample in self.config["Samples"] if sample.get("Data", False)
@@ -69,11 +69,11 @@ class WorkspaceBuilder:
         """Returns the list of NormFactor modifiers acting on a sample in a region.
 
         Args:
-            region (Dict[str, Any]): specific region to get NormFactor modifiers for
-            sample (Dict[str, Any]): specific sample to get NormFactor modifiers for
+            region (dict[str, Any]): specific region to get NormFactor modifiers for
+            sample (dict[str, Any]): specific sample to get NormFactor modifiers for
 
         Returns:
-            List[Dict[str, Any]]: NormFactor modifiers for sample
+            list[dict[str, Any]]: NormFactor modifiers for sample
         """
         modifiers = []
         for norm_factor in self.config["NormFactors"]:
@@ -95,10 +95,10 @@ class WorkspaceBuilder:
         """Returns a normalization modifier (OverallSys in `HistFactory`).
 
         Args:
-            systematic (Dict[str, Any]): systematic for which modifier is constructed
+            systematic (dict[str, Any]): systematic for which modifier is constructed
 
         Returns:
-            Dict[str, Any]: single `normsys` modifier for ``pyhf`` workspace
+            dict[str, Any]: single `normsys` modifier for ``pyhf`` workspace
         """
         # take name of modifier from ModifierName if set, default to systematic name
         modifier_name = systematic.get("ModifierName", systematic["Name"])
@@ -130,15 +130,15 @@ class WorkspaceBuilder:
         handled by the `normsys` modifier already).
 
         Args:
-            region (Dict[str, Any]): region the systematic variation acts in
-            sample (Dict[str, Any]): sample the systematic variation acts on
-            systematic (Dict[str, Any]): the systematic variation under consideration
+            region (dict[str, Any]): region the systematic variation acts in
+            sample (dict[str, Any]): sample the systematic variation acts on
+            systematic (dict[str, Any]): the systematic variation under consideration
 
         Raises:
             ValueError: when both up and down variation specify symmetrization
 
         Returns:
-            List[Dict[str, Any]]: a list with a ``pyhf`` `normsys` modifier and a
+            list[dict[str, Any]]: a list with a ``pyhf`` `normsys` modifier and a
             `histosys` modifier
         """
         # ensure that not both up and down variations are built by symmetrization
@@ -227,14 +227,14 @@ class WorkspaceBuilder:
         """Returns the list of all systematic modifiers acting on a sample in a region.
 
         Args:
-            region (Dict[str, Any]): region considered
-            sample (Dict[str, Any]): specific sample to get modifiers for
+            region (dict[str, Any]): region considered
+            sample (dict[str, Any]): specific sample to get modifiers for
 
         Raises:
             NotImplementedError: when unsupported modifiers act on sample
 
         Returns:
-            List[Dict[str, Any]]: modifiers for ``pyhf`` workspace
+            list[dict[str, Any]]: modifiers for ``pyhf`` workspace
         """
         modifiers = []
         for systematic in self.config.get("Systematics", []):
@@ -269,7 +269,7 @@ class WorkspaceBuilder:
         """Returns the channel information: yields per sample and modifiers.
 
         Returns:
-            List[Dict[str, Any]]: channels for ``pyhf`` workspace
+            list[dict[str, Any]]: channels for ``pyhf`` workspace
         """
         channels = []
         for region in self.config["Regions"]:
@@ -331,7 +331,7 @@ class WorkspaceBuilder:
         so far.
 
         Returns:
-            List[Dict[str, Any]]: measurements for ``pyhf`` workspace
+            list[dict[str, Any]]: measurements for ``pyhf`` workspace
         """
         measurements = []
         measurement = {}
@@ -384,7 +384,7 @@ class WorkspaceBuilder:
         """Returns the observations object (with data yields) for the workspace.
 
         Returns:
-            List[Dict[str, Any]]: observations for ``pyhf`` workspace
+            list[dict[str, Any]]: observations for ``pyhf`` workspace
         """
         data_sample = self._data_sample()
         observations = []
@@ -402,7 +402,7 @@ class WorkspaceBuilder:
         """Constructs a `HistFactory` workspace in ``pyhf`` format.
 
         Returns:
-            Dict[str, Any]: ``pyhf``-compatible `HistFactory` workspace
+            dict[str, Any]: ``pyhf``-compatible `HistFactory` workspace
         """
         ws: dict[str, Any] = {}  # the workspace
 
@@ -428,12 +428,12 @@ def build(config: dict[str, Any], *, with_validation: bool = True) -> dict[str, 
     """Returns a `HistFactory` workspace in ``pyhf`` format.
 
     Args:
-        config (Dict[str, Any]): cabinetry configuration
+        config (dict[str, Any]): cabinetry configuration
         with_validation (bool, optional): validate workspace validity with pyhf,
             defaults to True
 
     Returns:
-        Dict[str, Any]: ``pyhf``-compatible `HistFactory` workspace
+        dict[str, Any]: ``pyhf``-compatible `HistFactory` workspace
     """
     log.info("building workspace")
 
@@ -449,7 +449,7 @@ def validate(ws: dict[str, Any]) -> None:
     """Validates a workspace with ``pyhf``.
 
     Args:
-        ws (Dict[str, Any]): the workspace to validate
+        ws (dict[str, Any]): the workspace to validate
     """
     pyhf.Workspace(ws)
 
@@ -458,9 +458,8 @@ def save(ws: dict[str, Any], file_path_string: str | pathlib.Path) -> None:
     """Serializes a workspace to a file.
 
     Args:
-        ws (Dict[str, Any]): ``pyhf``-compatible `HistFactory` workspace
-        file_path_string (Union[str, pathlib.Path]): path to the file to save the
-            workspace in
+        ws (dict[str, Any]): ``pyhf``-compatible `HistFactory` workspace
+        file_path_string (str | pathlib.Path): path to the file to save the workspace in
     """
     file_path = pathlib.Path(file_path_string)
     log.debug(f"saving workspace to {file_path}")
@@ -474,11 +473,11 @@ def load(file_path_string: str | pathlib.Path) -> dict[str, Any]:
     """Loads a workspace from a file.
 
     Args:
-        file_path_string (Union[str, pathlib.Path]): path to the file to load the
-            workspace from
+        file_path_string (str | pathlib.Path): path to the file to load the workspace
+            from
 
     Returns:
-        Dict[str, Any]: ``pyhf``-compatible `HistFactory` workspace
+        dict[str, Any]: ``pyhf``-compatible `HistFactory` workspace
     """
     file_path = pathlib.Path(file_path_string)
     ws = json.loads(file_path.read_text())
@@ -497,7 +496,7 @@ def _symmetrized_templates_and_norm(
         reference (histo.Histogram): reference nominal histogram
 
     Returns:
-        Tuple[List[float], List[float], float, float]: yields for variation, symmetrized
+        tuple[list[float], list[float], float, float]: yields for variation, symmetrized
         variation, normalization factor for variation, and symmetrized version of the
         normalization factor
     """

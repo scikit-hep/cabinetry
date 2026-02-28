@@ -62,7 +62,7 @@ def _fit_model_pyhf(
 
     Args:
         model (pyhf.pdf.Model): the model to use in the fit
-        data (List[float]): the data to fit the model to
+        data (list[float]): the data to fit the model to
         minos (list[str] | tuple[str, ...] | None, optional): runs the MINOS algorithm
             for all parameters specified, defaults to None (does not run MINOS)
         minos_cl (float | None, optional): confidence level for the MINOS confidence
@@ -158,7 +158,7 @@ def _fit_model_custom(
 
     Args:
         model (pyhf.pdf.Model): the model to use in the fit
-        data (List[float]): the data to fit the model to
+        data (list[float]): the data to fit the model to
         minos (list[str] | tuple[str, ...] | None, optional): runs the MINOS algorithm
             for all parameters specified, defaults to None (does not run MINOS)
         minos_cl (float | None, optional): confidence level for the MINOS confidence
@@ -278,7 +278,7 @@ def _fit_model(
 
     Args:
         model (pyhf.pdf.Model): the model to use in the fit
-        data (List[float]): the data to fit the model to
+        data (list[float]): the data to fit the model to
         minos (list[str] | tuple[str, ...] | None, optional): runs the MINOS algorithm
             for all parameters specified, defaults to None (does not run MINOS)
         minos_cl (float | None, optional): confidence level for the MINOS confidence
@@ -346,13 +346,13 @@ def _run_minos(
     Args:
         minuit_obj (iminuit.Minuit): Minuit instance to use
         minos (list[str] | tuple[str, ...]): parameters for which MINOS is run
-        labels (List[str]]): names of all parameters known to ``iminuit``, these names
+        labels (list[str]]): names of all parameters known to ``iminuit``, these names
             are used in output (may be the same as the names under which ``iminiuit``
             knows parameters)
         minos_cl (float | None): confidence level for the confidence interval
 
     Returns:
-        Dict[str, Tuple[float, float]]: uncertainties indexed by parameter name
+        dict[str, tuple[float, float]]: uncertainties indexed by parameter name
     """
     for par_name in minos:
         if par_name not in minuit_obj.parameters:
@@ -395,7 +395,7 @@ def _goodness_of_fit(
     Args:
         model (pyhf.pdf.Model): model used in the fit for which goodness-of-fit should
             be calculated
-        data (List[float]): the observed data
+        data (list[float]): the observed data
         best_twice_nll (float): best-fit -2 log(likelihood) of fit for which goodness-
             of-fit should be calculated
         fix_pars (list[bool] | None, optional): list of booleans specifying which
@@ -472,7 +472,7 @@ def fit(
 
     Args:
         model (pyhf.pdf.Model): model to use in fit
-        data (List[float]): data (including auxdata) the model is fit to
+        data (list[float]): data (including auxdata) the model is fit to
         minos (str | list[str] | tuple[str, ...] | None, optional): runs the MINOS
             algorithm for all parameters specified, defaults to None (does not run
             MINOS)
@@ -556,7 +556,7 @@ def ranking(
 
     Args:
         model (pyhf.pdf.Model): model to use in fits
-        data (List[float]): data (including auxdata) the model is fit to
+        data (list[float]): data (including auxdata) the model is fit to
         fit_results (FitResults | None, optional): nominal fit results to use for
             ranking, if not specified will repeat nominal fit, defaults to None
         poi_name (str | None, optional): impact is calculated with respect to this
@@ -702,7 +702,7 @@ def scan(
 
     Args:
         model (pyhf.pdf.Model): model to use in fits
-        data (List[float]): data (including auxdata) the model is fit to
+        data (list[float]): data (including auxdata) the model is fit to
         par_name (str): name of parameter to scan over
         par_range (tuple[float, float] | None, optional): upper and lower bounds of
             parameter in scan, defaults to None (automatically determine bounds)
@@ -824,7 +824,7 @@ def limit(
 
     Args:
         model (pyhf.pdf.Model): model to use in fits
-        data (List[float]): data (including auxdata) the model is fit to
+        data (list[float]): data (including auxdata) the model is fit to
         bracket (list[float] | tuple[float, float] | None, optional): the two POI values
             used to start the observed limit determination, the limit must lie between
             these values and the values must not be the same, defaults to None (then
@@ -929,7 +929,7 @@ def limit(
         Args:
             poi_val (float): value for parameter of interest
             model (pyhf.pdf.Model): model to use in fits
-            data (List[float]): data (including auxdata) the model is fit to
+            data (list[float]): data (including auxdata) the model is fit to
             cls_target (float): target CLs value to find by varying POI
             which_limit (int): which limit to run, 0: observed, 1: expected -2 sigma, 2:
                 expected -1 sigma, 3: expected, 4: expected +1 sigma, 5: expected +2
@@ -1098,7 +1098,7 @@ def significance(
 
     Args:
         model (pyhf.pdf.Model): model to use in fits
-        data (List[float]): data (including auxdata) the model is fit to
+        data (list[float]): data (including auxdata) the model is fit to
         poi_name (str | None, optional): significance is calculated for this parameter,
             defaults to None (use POI specified in workspace)
         init_pars (list[float] | None, optional): list of initial parameter settings,

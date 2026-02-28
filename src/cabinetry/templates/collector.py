@@ -33,9 +33,9 @@ def _histo_path(
         general_path (str): path specified in general settings, with sections that can
             be overridden by region / sample / systematic settings
         variation_path (str): default for VariationPath setting
-        region (Dict[str, Any]): containing all region information
-        sample (Dict[str, Any]): containing all sample information
-        systematic (Dict[str, Any]): containing all systematic information
+        region (dict[str, Any]): containing all region information
+        sample (dict[str, Any]): containing all sample information
+        systematic (dict[str, Any]): containing all systematic information
         template (Literal["Up", "Down"] | None): template considered: "Up", "Down", or
             None for nominal
 
@@ -142,9 +142,9 @@ def _collector(
         """Collects a histogram and writes it to a file.
 
         Args:
-            region (Dict[str, Any]): containing all region information
-            sample (Dict[str, Any]): containing all sample information
-            systematic (Dict[str, Any]): containing all systematic information
+            region (dict[str, Any]): containing all region information
+            sample (dict[str, Any]): containing all sample information
+            systematic (dict[str, Any]): containing all systematic information
             template (Literal["Up", "Down"] | None): template considered: "Up", "Down",
                 or None for nominal
         """

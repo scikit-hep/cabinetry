@@ -25,7 +25,7 @@ def build(
     ``router``.
 
     Args:
-        config (Dict[str, Any]): cabinetry configuration
+        config (dict[str, Any]): cabinetry configuration
         method (str, optional): backend to use for histogram production, defaults to
             "uproot"
         router (route.Router | None, optional): instance of route.Router that contains
@@ -56,7 +56,7 @@ def collect(config: dict[str, Any], *, method: str = "uproot") -> None:
     settings, it defaults to an empty string.
 
     Args:
-        config (Dict[str, Any]): cabinetry configuration
+        config (dict[str, Any]): cabinetry configuration
         method (str, optional): backend to use for histogram production, defaults to
             "uproot"
     """
@@ -77,7 +77,7 @@ def postprocess(config: dict[str, Any]) -> None:
     """Applies postprocessing to all histograms.
 
     Args:
-        config (Dict[str, Any]): cabinetry configuration
+        config (dict[str, Any]): cabinetry configuration
     """
     histogram_folder = pathlib.Path(config["General"]["HistogramFolder"])
     processor = postprocessor._postprocessor(histogram_folder)

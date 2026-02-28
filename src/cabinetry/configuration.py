@@ -16,10 +16,10 @@ def load(file_path_string: str | pathlib.Path) -> dict[str, Any]:
     """Loads, validates, and returns a config file from the provided path.
 
     Args:
-        file_path_string (Union[str, pathlib.Path]): path to config file
+        file_path_string (str | pathlib.Path): path to config file
 
     Returns:
-        Dict[str, Any]: cabinetry configuration
+        dict[str, Any]: cabinetry configuration
     """
     file_path = pathlib.Path(file_path_string)
     log.info(f"opening config file {file_path}")
@@ -35,7 +35,7 @@ def validate(config: dict[str, Any]) -> bool:
     validate the config further.
 
     Args:
-        config (Dict[str, Any]): cabinetry configuration
+        config (dict[str, Any]): cabinetry configuration
 
     Raises:
         NotImplementedError: when more than one data sample is found
@@ -86,7 +86,7 @@ def print_overview(config: dict[str, Any]) -> None:
     """Prints a compact summary of a config file.
 
     Args:
-        config (Dict[str, Any]): cabinetry configuration
+        config (dict[str, Any]): cabinetry configuration
     """
     log.info("the config contains:")
     log.info(f"  {len(config['Samples'])} Sample(s)")
@@ -105,10 +105,10 @@ def _setting_to_list(setting: str | list[str]) -> list[str]:
     converted to a list.
 
     Args:
-        setting (Union[str, List[str]]): name of single setting value or list of values
+        setting (str | list[str]): name of single setting value or list of values
 
     Returns:
-        list: name(s) of sample(s)
+        list[str]: name(s) of sample(s)
     """
     if not isinstance(setting, list):
         setting = [setting]
@@ -123,9 +123,9 @@ def _x_contains_y(x: dict[str, Any], y: dict[str, Any], y_key: str) -> bool:
     ``x`` is identified by its "Name" property, which must exist.
 
     Args:
-        x (Dict[str, Any]): containing all relevant information: region or sample, must
+        x (dict[str, Any]): containing all relevant information: region or sample, must
             have a "Name" property
-        y (Dict[str, Any]): containing all relevant information: sample or modifier
+        y (dict[str, Any]): containing all relevant information: sample or modifier
         y_key (str): property of ``y`` to check
 
     Returns:
@@ -146,8 +146,8 @@ def region_contains_sample(region: dict[str, Any], sample: dict[str, Any]) -> bo
     specify a single region or list of regions that contain the sample.
 
     Args:
-        region (Dict[str, Any]): containing all region information
-        sample (Dict[str, Any]): containing all sample information
+        region (dict[str, Any]): containing all region information
+        sample (dict[str, Any]): containing all sample information
 
     Returns:
         bool: True if region contains sample, False otherwise
@@ -163,8 +163,8 @@ def region_contains_modifier(region: dict[str, Any], modifier: dict[str, Any]) -
     check whether the modifier only acts on samples which the region does not contain.
 
     Args:
-        region (Dict[str, Any]): containing all region information
-        modifier (Dict[str, Any]): containing all modifier information (a Systematic or
+        region (dict[str, Any]): containing all region information
+        modifier (dict[str, Any]): containing all modifier information (a Systematic or
             a NormFactor)
 
     Returns:
@@ -180,8 +180,8 @@ def sample_contains_modifier(sample: dict[str, Any], modifier: dict[str, Any]) -
     specify a single sample or list of samples on which the modifier acts.
 
     Args:
-        sample (Dict[str, Any]): containing all sample information
-        modifier (Dict[str, Any]): containing all modifier information (a Systematic or
+        sample (dict[str, Any]): containing all sample information
+        modifier (dict[str, Any]): containing all modifier information (a Systematic or
             a NormFactor)
 
     Returns:
@@ -202,15 +202,14 @@ def histogram_is_needed(
     "Down", None for nominal).
 
     Args:
-        region (Dict[str, Any]): containing all region information
-        sample (Dict[str, Any]): containing all sample information
-        systematic (Dict[str, Any]): containing all systematic information
+        region (dict[str, Any]): containing all region information
+        sample (dict[str, Any]): containing all sample information
+        systematic (dict[str, Any]): containing all systematic information
         template (Literal["Up", "Down"] | None): which template to consider: "Up",
             "Down", None for the nominal case
 
     Raises:
-        NotImplementedError: non-supported systematic variations based on histograms are
-            requested
+        ValueError: if unsupported systematic variation is requested
 
     Returns:
         bool: whether a histogram is needed
@@ -253,14 +252,14 @@ def region_dict(config: dict[str, Any], region_name: str) -> dict[str, Any]:
     """Returns the dictionary for a region with the given name.
 
     Args:
-        config (Dict[str, Any]): cabinetry configuration file
+        config (dict[str, Any]): cabinetry configuration file
         region_name (str): name of region
 
     Raises:
         ValueError: when region is not found in config
 
     Returns:
-        Dict[str, Any]: dictionary describing region
+        dict[str, Any]: dictionary describing region
     """
     regions = [reg for reg in config["Regions"] if reg["Name"] == region_name]
     if len(regions) == 0:

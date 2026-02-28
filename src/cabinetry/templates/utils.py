@@ -16,7 +16,7 @@ def _check_for_override(
     Return the override if it exists, otherwise return None.
 
     Args:
-        systematic (Dict[str, Any]): containing all systematic information
+        systematic (dict[str, Any]): containing all systematic information
         template (Literal["Up", "Down"]): template considered: "Up" or "Down"
         option (str): the option for which the presence of an override is checked
 
@@ -39,9 +39,9 @@ def _name_and_save(
     Args:
         histogram_folder (pathlib.Path): folder to save the histograms to
         histogram (histo.Histogram): histogram to save
-        region (Dict[str, Any]): containing all region information
-        sample (Dict[str, Any]): containing all sample information
-        systematic (Dict[str, Any]): containing all systematic information
+        region (dict[str, Any]): containing all region information
+        sample (dict[str, Any]): containing all sample information
+        systematic (dict[str, Any]): containing all systematic information
         template (Literal["Up", "Down"] | None): template considered: "Up", "Down", or
             None for nominal
     """

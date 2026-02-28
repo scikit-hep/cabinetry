@@ -31,10 +31,9 @@ class Histogram(bh.Histogram, family=cabinetry):
         The input can be lists of ints or floats, or numpy.ndarrays.
 
         Args:
-            bins (Union[List[float], np.ndarray]): edges of histogram bins
-            yields (Union[List[float], np.ndarray]): yield per histogram bin
-            stdev (Union[List[float], np.ndarray]): statistical uncertainty of yield per
-                bin
+            bins (list[float] | np.ndarray): edges of histogram bins
+            yields (list[float] | np.ndarray): yield per histogram bin
+            stdev (list[float] | np.ndarray): statistical uncertainty of yield per bin
 
         Raises:
             ValueError: when amount of bins specified via bin edges and bin contents do
@@ -42,7 +41,7 @@ class Histogram(bh.Histogram, family=cabinetry):
             ValueError: when length of yields and stdev do not match
 
         Returns:
-            cabinetry.histo.Histogram: the histogram instance
+            Histogram: the histogram instance
         """
         if len(bins) != len(yields) + 1:
             raise ValueError("bin edges need one more entry than yields")
@@ -73,7 +72,7 @@ class Histogram(bh.Histogram, family=cabinetry):
                 post-processing), defaults to True
 
         Returns:
-            cabinetry.histo.Histogram: the loaded histogram
+            Histogram: the loaded histogram
         """
         if modified:
             histo_path_modified = histo_path.parent / (histo_path.name + "_modified")
@@ -108,17 +107,17 @@ class Histogram(bh.Histogram, family=cabinetry):
         template.
 
         Args:
-            histo_folder (Union[str, patlib.Path]): folder containing all histograms
-            region (Dict[str, Any]): containing all region information
-            sample (Dict[str, Any]): containing all sample information
-            systematic (Dict[str, Any]): containing all systematic information
+            histo_folder (str | pathlib.Path): folder containing all histograms
+            region (dict[str, Any]): containing all region information
+            sample (dict[str, Any]): containing all sample information
+            systematic (dict[str, Any]): containing all systematic information
             template (Literal["Up", "Down"] | None, optional): which template to
                 consider: "Up", "Down", None for the nominal case, defaults to None
             modified (bool, optional): whether to load the modified histogram (after
                 post-processing), defaults to True
 
         Returns:
-            cabinetry.histo.Histogram: the loaded histogram
+            Histogram: the loaded histogram
         """
         # find the histogram name given config information, and then load the histogram
         histo_name = name(region, sample, systematic, template=template)
@@ -224,7 +223,7 @@ class Histogram(bh.Histogram, family=cabinetry):
         Returns the normalization factor used to normalize the histogram.
 
         Args:
-            reference_histogram (histo.Histogram): reference histogram to normalize to
+            reference_histogram (Histogram): reference histogram to normalize to
 
         Returns:
             float: the yield ratio: un-normalized yield / normalized yield
@@ -250,9 +249,9 @@ def name(
     as long as it follows the config schema).
 
     Args:
-        region (Dict[str, Any]): containing all region information
-        sample (Dict[str, Any]): containing all sample information
-        systematic (Dict[str, Any]): containing all systematic information
+        region (dict[str, Any]): containing all region information
+        sample (dict[str, Any]): containing all sample information
+        systematic (dict[str, Any]): containing all systematic information
         template (Literal["Up", "Down"] | None, optional): which template to consider:
             "Up", "Down", None for the nominal case, defaults to None
 

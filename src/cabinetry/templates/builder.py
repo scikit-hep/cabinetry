@@ -35,9 +35,9 @@ def _ntuple_paths(
     Args:
         general_path (str): path specified in general settings, with sections that can
             be overridden by region / sample / systematic settings
-        region (Dict[str, Any]): containing all region information
-        sample (Dict[str, Any]): containing all sample information
-        systematic (Dict[str, Any]): containing all systematic information
+        region (dict[str, Any]): containing all region information
+        sample (dict[str, Any]): containing all sample information
+        systematic (dict[str, Any]): containing all systematic information
         template (Literal["Up", "Down"] | None): template considered: "Up", "Down", or
             None for nominal
 
@@ -48,7 +48,7 @@ def _ntuple_paths(
             specified
 
     Returns:
-        List[pathlib.Path]: list of paths to ntuples
+        list[pathlib.Path]: list of paths to ntuples
     """
     # obtain region and sample paths, if they are defined
     region_path = region.get("RegionPath", None)
@@ -111,9 +111,9 @@ def _variable(
     specified for the template.
 
     Args:
-        region (Dict[str, Any]): containing all region information
-        sample (Dict[str, Any]): containing all sample information
-        systematic (Dict[str, Any]): containing all systematic information
+        region (dict[str, Any]): containing all region information
+        sample (dict[str, Any]): containing all sample information
+        systematic (dict[str, Any]): containing all systematic information
         template (Literal["Up", "Down"] | None): template considered: "Up", "Down", or
             None for nominal
 
@@ -146,9 +146,9 @@ def _filter(
     the sample-specific filter if both are provided.
 
     Args:
-        region (Dict[str, Any]): containing all region information
-        sample (Dict[str, Any]): containing all sample information
-        systematic (Dict[str, Any]): containing all systematic information
+        region (dict[str, Any]): containing all region information
+        sample (dict[str, Any]): containing all sample information
+        systematic (dict[str, Any]): containing all systematic information
         template (Literal["Up", "Down"] | None): template considered: "Up", "Down", or
             None for nominal
 
@@ -185,9 +185,9 @@ def _weight(
     specified for the template.
 
     Args:
-        region (Dict[str, Any]): containing all region information
-        sample (Dict[str, Any]): containing all sample information
-        systematic (Dict[str, Any]): containing all systematic information
+        region (dict[str, Any]): containing all region information
+        sample (dict[str, Any]): containing all sample information
+        systematic (dict[str, Any]): containing all systematic information
         template (Literal["Up", "Down"] | None): template considered: "Up", "Down", or
             None for nominal
 
@@ -216,8 +216,8 @@ def _position_in_file(
     specified for the template.
 
     Args:
-        sample (Dict[str, Any]): containing all sample information
-        systematic (Dict[str, Any]): containing all systematic information
+        sample (dict[str, Any]): containing all sample information
+        systematic (dict[str, Any]): containing all systematic information
         template (Literal["Up", "Down"] | None): template considered: "Up", "Down", or
             None for nominal
 
@@ -241,7 +241,7 @@ def _binning(region: dict[str, Any]) -> np.ndarray:
     bins and the range to bin in.
 
     Args:
-        region (Dict[str, Any]): containing all region information
+        region (dict[str, Any]): containing all region information
 
     Raises:
         NotImplementedError: when the binning is not explicitly defined
@@ -285,9 +285,9 @@ class _Builder:
         the argument.
 
         Args:
-            region (Dict[str, Any]): containing all region information
-            sample (Dict[str, Any]): containing all sample information
-            systematic (Dict[str, Any]): containing all systematic information
+            region (dict[str, Any]): containing all region information
+            sample (dict[str, Any]): containing all sample information
+            systematic (dict[str, Any]): containing all systematic information
             template (Literal["Up", "Down"] | None): template considered: "Up", "Down",
                 or None for nominal
 
@@ -360,9 +360,9 @@ class _Builder:
             wrapped with this.
 
             Args:
-                region (Dict[str, Any]): containing all region information
-                sample (Dict[str, Any]): containing all sample information
-                systematic (Dict[str, Any]): containing all systematic information
+                region (dict[str, Any]): containing all region information
+                sample (dict[str, Any]): containing all sample information
+                systematic (dict[str, Any]): containing all systematic information
                 template (Literal["Up", "Down"] | None): template considered: "Up",
                     "Down", or None for nominal
             """

@@ -24,7 +24,7 @@ def with_uproot(
     The paths may contain wildcards.
 
     Args:
-        ntuple_paths (List[pathlib.Path]): list of paths to ntuples
+        ntuple_paths (list[pathlib.Path]): list of paths to ntuples
         pos_in_file (str): name of tree within ntuple
         variable (str): variable to bin histogram in
         bins (np.ndarray): bin edges for histogram

@@ -13,11 +13,11 @@ class FitResults(NamedTuple):
         bestfit (np.ndarray): best-fit results of parameters
         uncertainty (np.ndarray): uncertainties of best-fit parameter results, evaluated
             with Hessian
-        labels (List[str]): parameter labels
+        labels (list[str]): parameter labels
         corr_mat (np.ndarray): parameter correlation matrix
         best_twice_nll (float): -2 log(likelihood) at best-fit point
         goodness_of_fit (float, optional): goodness-of-fit p-value, defaults to -1
-        minos_uncertainty (Dict[str, Tuple[float, float]]): uncertainties of best-fit
+        minos_uncertainty (dict[str, tuple[float, float]]): uncertainties of best-fit
             parameter results indexed by parameter name, calculated with MINOS
         minuit_obj (iminuit.Minuit, optional): underlying minimizer
     """
@@ -41,7 +41,7 @@ class RankingResults(NamedTuple):
     Args:
         bestfit (np.ndarray): best-fit results of parameters
         uncertainty (np.ndarray): uncertainties of best-fit parameter results
-        labels (List[str]): parameter labels
+        labels (list[str]): parameter labels
         prefit_up (np.ndarray): pre-fit impact in "up" direction
         prefit_down (np.ndarray): pre-fit impact in "down" direction
         postfit_up (np.ndarray): post-fit impact in "up" direction

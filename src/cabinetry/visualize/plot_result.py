@@ -33,7 +33,7 @@ def correlation_matrix(
 
     Args:
         corr_mat (np.ndarray): the correlation matrix to plot
-        labels (Union[List[str], np.ndarray]): names of parameters in the correlation
+        labels (list[str] | np.ndarray): names of parameters in the correlation
             matrix
         figure_path (pathlib.Path | None, optional): path where figure should be saved,
             or None to not save it, defaults to None
@@ -83,7 +83,7 @@ def pulls(
     Args:
         bestfit (np.ndarray): best-fit parameter results
         uncertainty (np.ndarray): parameter uncertainties
-        labels (Union[List[str], np.ndarray]): parameter names
+        labels (list[str] | np.ndarray): parameter names
         figure_path (pathlib.Path | None, optional): path where figure should be saved,
             or None to not save it, defaults to None
         close_figure (bool, optional): whether to close each figure immediately after
@@ -132,7 +132,7 @@ def ranking(
     Args:
         bestfit (np.ndarray): best-fit parameter results
         uncertainty (np.ndarray): parameter uncertainties
-        labels (Union[List[str], np.ndarray]): parameter labels
+        labels (list[str] | np.ndarray): parameter labels
         impact_prefit_up (np.ndarray): pre-fit impact in "up" direction per parameter
         impact_prefit_down (np.ndarray): pre-fit impact in "down" direction per
             parameter

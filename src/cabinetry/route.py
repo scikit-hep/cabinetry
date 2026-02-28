@@ -46,7 +46,7 @@ class Router:
     template.
 
     Attributes:
-        template_builders (List[Dict[str, Any]]): user-defined processors for template
+        template_builders (list[dict[str, Any]]): user-defined processors for template
             building
         template_builder_wrapper (WrapperFunc | None): wrapper to apply on user-defined
             template builders
@@ -163,7 +163,7 @@ class Router:
         for other types of functions by extending the return type accordingly.
 
         Args:
-            processor_list (List[Dict[str, Any]]): list of processors to search in
+            processor_list (list[dict[str, Any]]): list of processors to search in
             region_name (str): region name
             sample_name (str): sample name
             systematic_name (str): systematic name (can use empty string for nominal)
@@ -277,7 +277,7 @@ def apply_to_all_templates(
     one is found for a given template, it is used instead of the default.
 
     Args:
-        config (Dict[str, Any]): cabinetry configuration
+        config (dict[str, Any]): cabinetry configuration
         default_func (ProcessorFunc): function to be called for every template by
             default
         match_func: (MatchFunc | None, optional): function that returns user-defined
