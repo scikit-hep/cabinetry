@@ -3,7 +3,7 @@
 from collections.abc import Callable
 import fnmatch
 import logging
-from typing import Any, Literal, Optional
+from typing import Any, Literal
 
 import boost_histogram as bh
 
@@ -16,7 +16,7 @@ log = logging.getLogger(__name__)
 # returns None
 # template can be "Up" / "Down" for variations, or None for nominal
 ProcessorFunc = Callable[
-    [dict[str, Any], dict[str, Any], dict[str, Any], Optional[Literal["Up", "Down"]]],
+    [dict[str, Any], dict[str, Any], dict[str, Any], Literal["Up", "Down"] | None],
     None,
 ]
 
@@ -24,14 +24,14 @@ ProcessorFunc = Callable[
 # systematic-template, returns a boost_histogram.Histogram
 # template can be any string (to match "Up" / "Down"), or None / "*" to match nominal
 UserTemplateFunc = Callable[
-    [dict[str, Any], dict[str, Any], dict[str, Any], Optional[str]], bh.Histogram
+    [dict[str, Any], dict[str, Any], dict[str, Any], str | None], bh.Histogram
 ]
 
 # type of a function called with names of region-sample-systematic-template,
 # which returns either a ProcessorFunc or None (in case of no match)
 # the template argument is None for the nominal case, and "Up" / "Down" otherwise
 MatchFunc = Callable[
-    [str, str, str, Optional[Literal["Up", "Down"]]], Optional[ProcessorFunc]
+    [str, str, str, Literal["Up", "Down"] | None], ProcessorFunc | None
 ]
 
 # type of wrapper function that that turns a user-defined template processing function

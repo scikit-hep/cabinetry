@@ -3,7 +3,7 @@
 from collections import defaultdict
 import json
 import logging
-from typing import Any, cast, DefaultDict, NamedTuple
+from typing import Any, cast, NamedTuple
 
 import numpy as np
 import pyhf
@@ -896,7 +896,7 @@ def match_fit_results(model: pyhf.pdf.Model, fit_results: FitResults) -> FitResu
 
 def _modifier_map(
     model: pyhf.pdf.Model,
-) -> DefaultDict[tuple[str, str, str], list[str]]:
+) -> defaultdict[tuple[str, str, str], list[str]]:
     """Creates a map for modifier lists per (channel, sample, parameter).
 
     Args:
