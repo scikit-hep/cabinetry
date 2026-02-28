@@ -90,17 +90,16 @@ def read_file(file_name):
     weights = []
     labels = []
     with uproot.open(file_name) as f:
-        all_trees = f.keys(filter_classname="TTree", recursive=True)
-        for tree in all_trees:
-            distributions.append(f[tree]["jet_pt"].array(library="np"))
-            weights.append(f[tree]["weight"].array(library="np"))
+        for tree in f.keys():
+            distributions.append(f[tree]["jet_pt"].array().to_numpy())
+            weights.append(f[tree]["weight"].array().to_numpy())
             labels.append(f[tree].name)
     return distributions, weights, labels
 
 
 def read_file_pseudodata(file_name):
     with uproot.open(file_name) as f:
-        distribution = f["pseudodata"]["jet_pt"].array(library="np")
+        distribution = f["pseudodata"]["jet_pt"].array().to_numpy()
     return distribution
 
 
