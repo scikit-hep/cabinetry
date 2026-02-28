@@ -21,7 +21,9 @@ class Utils:
     @staticmethod
     def create_ntuple(fname, treename, varname, var_array, weightname, weight_array):
         with uproot.recreate(fname) as f:
-            f[treename] = {varname: var_array, weightname: weight_array}
+            arr = {varname: var_array, weightname: weight_array}
+            f.mktree(treename, {k: v.dtype for k, v in arr.items()})
+            f[treename].extend(arr)
 
     @staticmethod
     def create_histogram(fname, histname, bins, yields, stdev):
