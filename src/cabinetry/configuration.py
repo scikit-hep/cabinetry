@@ -4,7 +4,7 @@ import json
 import logging
 import pathlib
 import pkgutil
-from typing import Any, Dict, List, Literal, Optional, Union
+from typing import Any, Literal
 
 import jsonschema
 import yaml
@@ -12,7 +12,7 @@ import yaml
 log = logging.getLogger(__name__)
 
 
-def load(file_path_string: Union[str, pathlib.Path]) -> Dict[str, Any]:
+def load(file_path_string: str | pathlib.Path) -> dict[str, Any]:
     """Loads, validates, and returns a config file from the provided path.
 
     Args:
@@ -28,7 +28,7 @@ def load(file_path_string: Union[str, pathlib.Path]) -> Dict[str, Any]:
     return config
 
 
-def validate(config: Dict[str, Any]) -> bool:
+def validate(config: dict[str, Any]) -> bool:
     """Returns True if the config file is validated, otherwise raises exceptions.
 
     Checks that the config satisfies the json schema, and performs additional checks to
@@ -82,7 +82,7 @@ def validate(config: Dict[str, Any]) -> bool:
     return True
 
 
-def print_overview(config: Dict[str, Any]) -> None:
+def print_overview(config: dict[str, Any]) -> None:
     """Prints a compact summary of a config file.
 
     Args:
@@ -96,7 +96,7 @@ def print_overview(config: Dict[str, Any]) -> None:
         log.info(f"  {len(config['Systematics'])} Systematic(s)")
 
 
-def _setting_to_list(setting: Union[str, List[str]]) -> List[str]:
+def _setting_to_list(setting: str | list[str]) -> list[str]:
     """Converts a configuration setting to a list.
 
     The config allows for two ways of specifying some settings, for example samples. A
@@ -115,7 +115,7 @@ def _setting_to_list(setting: Union[str, List[str]]) -> List[str]:
     return setting
 
 
-def _x_contains_y(x: Dict[str, Any], y: Dict[str, Any], y_key: str) -> bool:
+def _x_contains_y(x: dict[str, Any], y: dict[str, Any], y_key: str) -> bool:
     """Checks if object ``x`` contains ``y`` using property ``y_key`` of ``y``.
 
     If ``y_key`` is not specified, ``x`` is assumed to contain ``y`` by default. Used
@@ -139,7 +139,7 @@ def _x_contains_y(x: Dict[str, Any], y: Dict[str, Any], y_key: str) -> bool:
     return True
 
 
-def region_contains_sample(region: Dict[str, Any], sample: Dict[str, Any]) -> bool:
+def region_contains_sample(region: dict[str, Any], sample: dict[str, Any]) -> bool:
     """Checks if a region contains a given sample.
 
     A sample enters all regions by default, and its "Regions" property can be used to
@@ -155,7 +155,7 @@ def region_contains_sample(region: Dict[str, Any], sample: Dict[str, Any]) -> bo
     return _x_contains_y(region, sample, "Regions")
 
 
-def region_contains_modifier(region: Dict[str, Any], modifier: Dict[str, Any]) -> bool:
+def region_contains_modifier(region: dict[str, Any], modifier: dict[str, Any]) -> bool:
     """Checks if a region contains a given modifier (Systematic, NormFactor).
 
     A modifier affects all regions by default, and its "Regions" property can be used to
@@ -173,7 +173,7 @@ def region_contains_modifier(region: Dict[str, Any], modifier: Dict[str, Any]) -
     return _x_contains_y(region, modifier, "Regions")
 
 
-def sample_contains_modifier(sample: Dict[str, Any], modifier: Dict[str, Any]) -> bool:
+def sample_contains_modifier(sample: dict[str, Any], modifier: dict[str, Any]) -> bool:
     """Checks if a sample is affected by a given modifier (Systematic, NormFactor).
 
     A modifier affects all samples by default, and its "Samples" property can be used to
@@ -191,10 +191,10 @@ def sample_contains_modifier(sample: Dict[str, Any], modifier: Dict[str, Any]) -
 
 
 def histogram_is_needed(
-    region: Dict[str, Any],
-    sample: Dict[str, Any],
-    systematic: Dict[str, Any],
-    template: Optional[Literal["Up", "Down"]],
+    region: dict[str, Any],
+    sample: dict[str, Any],
+    systematic: dict[str, Any],
+    template: Literal["Up", "Down"] | None,
 ) -> bool:
     """Determines whether a histogram is needed for a specific configuration.
 
@@ -249,7 +249,7 @@ def histogram_is_needed(
     return histo_needed
 
 
-def region_dict(config: Dict[str, Any], region_name: str) -> Dict[str, Any]:
+def region_dict(config: dict[str, Any], region_name: str) -> dict[str, Any]:
     """Returns the dictionary for a region with the given name.
 
     Args:

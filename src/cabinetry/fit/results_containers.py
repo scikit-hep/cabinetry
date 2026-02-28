@@ -1,6 +1,6 @@
 """Provides containers for inference results."""
 
-from typing import Dict, List, NamedTuple, Optional, Tuple
+from typing import NamedTuple
 
 import iminuit
 import numpy as np
@@ -24,12 +24,12 @@ class FitResults(NamedTuple):
 
     bestfit: np.ndarray
     uncertainty: np.ndarray
-    labels: List[str]
+    labels: list[str]
     corr_mat: np.ndarray
     best_twice_nll: float
     goodness_of_fit: float = -1
-    minos_uncertainty: Dict[str, Tuple[float, float]] = {}
-    minuit_obj: Optional[iminuit.Minuit] = None
+    minos_uncertainty: dict[str, tuple[float, float]] = {}
+    minuit_obj: iminuit.Minuit | None = None
 
 
 class RankingResults(NamedTuple):
@@ -50,7 +50,7 @@ class RankingResults(NamedTuple):
 
     bestfit: np.ndarray
     uncertainty: np.ndarray
-    labels: List[str]
+    labels: list[str]
     prefit_up: np.ndarray
     prefit_down: np.ndarray
     postfit_up: np.ndarray

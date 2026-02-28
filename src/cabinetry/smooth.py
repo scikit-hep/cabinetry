@@ -2,17 +2,17 @@
 
 import logging
 import statistics
-from typing import List, TypeVar, Union
+from typing import TypeVar
 
 import numpy as np
 
 log = logging.getLogger(__name__)
 
 
-T = TypeVar("T", List[float], np.ndarray)
+T = TypeVar("T", list[float], np.ndarray)
 
 
-def _medians_353(zz: Union[List[float], np.ndarray], nbins: int) -> None:
+def _medians_353(zz: list[float] | np.ndarray, nbins: int) -> None:
     """Applies running median smoothing with window sizes 3, 5, 3 to input.
 
     Args:

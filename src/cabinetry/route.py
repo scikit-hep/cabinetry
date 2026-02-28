@@ -1,8 +1,9 @@
 """Provides features to apply functions to template histograms."""
 
+from collections.abc import Callable
 import fnmatch
 import logging
-from typing import Any, Callable, Dict, List, Literal, Optional
+from typing import Any, Literal, Optional
 
 import boost_histogram as bh
 
@@ -15,7 +16,7 @@ log = logging.getLogger(__name__)
 # returns None
 # template can be "Up" / "Down" for variations, or None for nominal
 ProcessorFunc = Callable[
-    [Dict[str, Any], Dict[str, Any], Dict[str, Any], Optional[Literal["Up", "Down"]]],
+    [dict[str, Any], dict[str, Any], dict[str, Any], Optional[Literal["Up", "Down"]]],
     None,
 ]
 
@@ -23,7 +24,7 @@ ProcessorFunc = Callable[
 # systematic-template, returns a boost_histogram.Histogram
 # template can be any string (to match "Up" / "Down"), or None / "*" to match nominal
 UserTemplateFunc = Callable[
-    [Dict[str, Any], Dict[str, Any], Dict[str, Any], Optional[str]], bh.Histogram
+    [dict[str, Any], dict[str, Any], dict[str, Any], Optional[str]], bh.Histogram
 ]
 
 # type of a function called with names of region-sample-systematic-template,
@@ -54,21 +55,21 @@ class Router:
     def __init__(self) -> None:
         """Initialize a Router instance, with no processors or wrappers defined."""
         # initialize all lists of processor types the user can specify
-        self.template_builders: List[Dict[str, Any]] = []
+        self.template_builders: list[dict[str, Any]] = []
 
         # initialize the wrapper to be used for template building to turn the user-
         # defined function (which returns a histogram) into one that saves the histogram
         # this wrapper needs to be set before using _find_template_builder_match to
         # properly handle the user-defined template builder
-        self.template_builder_wrapper: Optional[WrapperFunc] = None
+        self.template_builder_wrapper: WrapperFunc | None = None
 
     @staticmethod
     def _register_processor(
-        processor_list: List[Dict[str, Any]],
+        processor_list: list[dict[str, Any]],
         region_name: str,
         sample_name: str,
         systematic_name: str,
-        template: Optional[str],
+        template: str | None,
     ) -> Callable[[UserTemplateFunc], UserTemplateFunc]:
         """Decorator for registering a custom processor function.
 
@@ -122,7 +123,7 @@ class Router:
         region_name: str = "*",
         sample_name: str = "*",
         systematic_name: str = "*",
-        template: Optional[str] = "*",
+        template: str | None = "*",
     ) -> Callable[[UserTemplateFunc], UserTemplateFunc]:
         """Decorator for registering a template builder function.
 
@@ -150,12 +151,12 @@ class Router:
 
     @staticmethod
     def _find_match(
-        processor_list: List[Dict[str, Any]],
+        processor_list: list[dict[str, Any]],
         region_name: str,
         sample_name: str,
         systematic_name: str,
-        template: Optional[Literal["Up", "Down"]],
-    ) -> Optional[UserTemplateFunc]:
+        template: Literal["Up", "Down"] | None,
+    ) -> UserTemplateFunc | None:
         """Returns a function matching the provided specification.
 
         This is currently only used for template builder functions, but could be used
@@ -220,8 +221,8 @@ class Router:
         region_name: str,
         sample_name: str,
         systematic_name: str,
-        template: Optional[Literal["Up", "Down"]],
-    ) -> Optional[ProcessorFunc]:
+        template: Literal["Up", "Down"] | None,
+    ) -> ProcessorFunc | None:
         """Returns wrapped template builder function matching provided specification.
 
         If no matches are found, returns None. Wraps the user-defined function in the
@@ -257,10 +258,10 @@ class Router:
 
 
 def apply_to_all_templates(
-    config: Dict[str, Any],
+    config: dict[str, Any],
     default_func: ProcessorFunc,
     *,
-    match_func: Optional[MatchFunc] = None,
+    match_func: MatchFunc | None = None,
 ) -> None:
     """Applies the supplied function ``default_func`` to all templates.
 
@@ -293,7 +294,7 @@ def apply_to_all_templates(
             # loop over nominal templates and all existing systematics
             for systematic in [{}] + config.get("Systematics", []):
                 # determine how many templates need to be considered
-                templates: List[Optional[Literal["Up", "Down"]]]
+                templates: list[Literal["Up", "Down"] | None]
                 if systematic == {}:
                     # only nominal template is needed
                     templates = [None]

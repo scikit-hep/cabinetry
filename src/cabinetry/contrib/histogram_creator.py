@@ -2,7 +2,6 @@
 
 import logging
 import pathlib
-from typing import List, Optional
 
 import boost_histogram as bh
 import numpy as np
@@ -12,13 +11,13 @@ log = logging.getLogger(__name__)
 
 
 def with_uproot(
-    ntuple_paths: List[pathlib.Path],
+    ntuple_paths: list[pathlib.Path],
     pos_in_file: str,
     variable: str,
     bins: np.ndarray,
     *,
-    weight: Optional[str] = None,
-    selection_filter: Optional[str] = None,
+    weight: str | None = None,
+    selection_filter: str | None = None,
 ) -> bh.Histogram:
     """Reads an ntuple with uproot, fills and returns a histogram with the observable.
 

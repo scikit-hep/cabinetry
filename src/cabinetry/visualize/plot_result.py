@@ -3,7 +3,6 @@
 import logging
 import math
 import pathlib
-from typing import List, Optional, Union
 
 import matplotlib as mpl
 import matplotlib.pyplot as plt
@@ -25,9 +24,9 @@ else:
 
 def correlation_matrix(
     corr_mat: np.ndarray,
-    labels: Union[List[str], np.ndarray],
+    labels: list[str] | np.ndarray,
     *,
-    figure_path: Optional[pathlib.Path] = None,
+    figure_path: pathlib.Path | None = None,
     close_figure: bool = False,
 ) -> mpl.figure.Figure:
     """Draws a correlation matrix.
@@ -74,9 +73,9 @@ def correlation_matrix(
 def pulls(
     bestfit: np.ndarray,
     uncertainty: np.ndarray,
-    labels: Union[List[str], np.ndarray],
+    labels: list[str] | np.ndarray,
     *,
-    figure_path: Optional[pathlib.Path] = None,
+    figure_path: pathlib.Path | None = None,
     close_figure: bool = False,
 ) -> mpl.figure.Figure:
     """Draws a pull plot.
@@ -119,13 +118,13 @@ def pulls(
 def ranking(
     bestfit: np.ndarray,
     uncertainty: np.ndarray,
-    labels: Union[List[str], np.ndarray],
+    labels: list[str] | np.ndarray,
     impact_prefit_up: np.ndarray,
     impact_prefit_down: np.ndarray,
     impact_postfit_up: np.ndarray,
     impact_postfit_down: np.ndarray,
     *,
-    figure_path: Optional[pathlib.Path] = None,
+    figure_path: pathlib.Path | None = None,
     close_figure: bool = False,
 ) -> mpl.figure.Figure:
     """Draws a ranking plot.
@@ -272,7 +271,7 @@ def scan(
     par_vals: np.ndarray,
     par_nlls: np.ndarray,
     *,
-    figure_path: Optional[pathlib.Path] = None,
+    figure_path: pathlib.Path | None = None,
     close_figure: bool = False,
 ) -> mpl.figure.Figure:
     """Draws a figure showing the results of a likelihood scan.
@@ -347,7 +346,7 @@ def limit(
     poi_values: np.ndarray,
     cls_target: float,
     *,
-    figure_path: Optional[pathlib.Path] = None,
+    figure_path: pathlib.Path | None = None,
     close_figure: bool = False,
 ) -> mpl.figure.Figure:
     """Draws observed and expected CLs values as function of the parameter of interest.

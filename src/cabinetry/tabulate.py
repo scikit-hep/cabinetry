@@ -2,7 +2,7 @@
 
 import logging
 import pathlib
-from typing import Any, Dict, List, Optional, Union
+from typing import Any
 
 import numpy as np
 import pyhf
@@ -36,7 +36,7 @@ def _header_name(channel_name: str, i_bin: int, *, unique: bool = True) -> str:
 
 
 def _save_tables(
-    table_dict: Dict[str, List[Dict[str, Any]]],
+    table_dict: dict[str, list[dict[str, Any]]],
     table_folder: pathlib.Path,
     table_label: str,
     table_format: str,
@@ -84,12 +84,12 @@ def _save_tables(
 
 def _yields_per_bin(
     model: pyhf.pdf.Model,
-    model_yields: List[List[List[float]]],
-    total_stdev_model: List[List[List[float]]],
-    data: List[List[float]],
-    channels: List[str],
+    model_yields: list[list[list[float]]],
+    total_stdev_model: list[list[list[float]]],
+    data: list[list[float]],
+    channels: list[str],
     label: str,
-) -> List[Dict[str, Any]]:
+) -> list[dict[str, Any]]:
     """Outputs and returns a yield table with predicted and observed yields per bin.
 
     Args:
@@ -155,12 +155,12 @@ def _yields_per_bin(
 
 def _yields_per_channel(
     model: pyhf.pdf.Model,
-    model_yields: List[List[float]],
-    total_stdev_model: List[List[float]],
-    data: List[float],
-    channels: List[str],
+    model_yields: list[list[float]],
+    total_stdev_model: list[list[float]],
+    data: list[float],
+    channels: list[str],
     label: str,
-) -> List[Dict[str, Any]]:
+) -> list[dict[str, Any]]:
     """Outputs and returns a yield table with predicted and observed yields per channel.
 
     Args:
@@ -215,15 +215,15 @@ def _yields_per_channel(
 
 def yields(
     model_prediction: model_utils.ModelPrediction,
-    data: List[float],
+    data: list[float],
     *,
-    channels: Optional[Union[str, List[str]]] = None,
+    channels: str | list[str] | None = None,
     per_bin: bool = True,
     per_channel: bool = False,
-    table_folder: Union[str, pathlib.Path] = "tables",
+    table_folder: str | pathlib.Path = "tables",
     table_format: str = "simple",
     save_tables: bool = True,
-) -> Dict[str, List[Dict[str, Any]]]:
+) -> dict[str, list[dict[str, Any]]]:
     """Generates yield tables, showing model prediction and data.
 
     Channels can be filtered via the optional ``channels`` argument. Either yields per
@@ -251,7 +251,7 @@ def yields(
         Dict[str, List[Dict[str, Any]]]: dictionary with yield tables for use with the
         ``tabulate`` package
     """
-    table_dict: Dict[str, List[Dict[str, Any]]] = {}
+    table_dict: dict[str, list[dict[str, Any]]] = {}
 
     if not (per_bin or per_channel):
         log.warning(

@@ -3,7 +3,7 @@
 import functools
 import logging
 import pathlib
-from typing import Any, Dict, List, Literal, Optional
+from typing import Any, Literal
 
 import boost_histogram as bh
 import numpy as np
@@ -18,11 +18,11 @@ log = logging.getLogger(__name__)
 
 def _ntuple_paths(
     general_path: str,
-    region: Dict[str, Any],
-    sample: Dict[str, Any],
-    systematic: Dict[str, Any],
-    template: Optional[Literal["Up", "Down"]],
-) -> List[pathlib.Path]:
+    region: dict[str, Any],
+    sample: dict[str, Any],
+    systematic: dict[str, Any],
+    template: Literal["Up", "Down"] | None,
+) -> list[pathlib.Path]:
     """Returns the paths to ntuples for a region-sample-systematic-template.
 
     A path is built starting from the path specified in the general options in the
@@ -100,10 +100,10 @@ def _ntuple_paths(
 
 
 def _variable(
-    region: Dict[str, Any],
-    sample: Dict[str, Any],
-    systematic: Dict[str, Any],
-    template: Optional[Literal["Up", "Down"]],
+    region: dict[str, Any],
+    sample: dict[str, Any],
+    systematic: dict[str, Any],
+    template: Literal["Up", "Down"] | None,
 ) -> str:
     """Returns the variable the histogram will be binned in.
 
@@ -133,11 +133,11 @@ def _variable(
 
 
 def _filter(
-    region: Dict[str, Any],
-    sample: Dict[str, Any],
-    systematic: Dict[str, Any],
-    template: Optional[Literal["Up", "Down"]],
-) -> Optional[str]:
+    region: dict[str, Any],
+    sample: dict[str, Any],
+    systematic: dict[str, Any],
+    template: Literal["Up", "Down"] | None,
+) -> str | None:
     """Returns the filter to be applied for event selection.
 
     Overrides the (optional) filter provided at the region level by a sample-specific
@@ -174,11 +174,11 @@ def _filter(
 
 
 def _weight(
-    region: Dict[str, Any],
-    sample: Dict[str, Any],
-    systematic: Dict[str, Any],
-    template: Optional[Literal["Up", "Down"]],
-) -> Optional[str]:
+    region: dict[str, Any],
+    sample: dict[str, Any],
+    systematic: dict[str, Any],
+    template: Literal["Up", "Down"] | None,
+) -> str | None:
     """Returns the weight to be used for events in histograms.
 
     For non-nominal templates, overrides the nominal weight if an alternative is
@@ -206,9 +206,9 @@ def _weight(
 
 
 def _position_in_file(
-    sample: Dict[str, Any],
-    systematic: Dict[str, Any],
-    template: Optional[Literal["Up", "Down"]],
+    sample: dict[str, Any],
+    systematic: dict[str, Any],
+    template: Literal["Up", "Down"] | None,
 ) -> str:
     """Returns the location of data within a file (e.g. a tree name).
 
@@ -234,7 +234,7 @@ def _position_in_file(
     return position
 
 
-def _binning(region: Dict[str, Any]) -> np.ndarray:
+def _binning(region: dict[str, Any]) -> np.ndarray:
     """Returns the binning to be used in a region.
 
     Should eventually also support other ways of specifying bins, such as the amount of
@@ -274,10 +274,10 @@ class _Builder:
 
     def _create_histogram(
         self,
-        region: Dict[str, Any],
-        sample: Dict[str, Any],
-        systematic: Dict[str, Any],
-        template: Optional[Literal["Up", "Down"]],
+        region: dict[str, Any],
+        sample: dict[str, Any],
+        systematic: dict[str, Any],
+        template: Literal["Up", "Down"] | None,
     ) -> None:
         """Creates a histogram and writes it to a file.
 
@@ -349,10 +349,10 @@ class _Builder:
         # different (the return value becomes None)
         @functools.wraps(func)
         def wrapper(
-            region: Dict[str, Any],
-            sample: Dict[str, Any],
-            systematic: Dict[str, Any],
-            template: Optional[Literal["Up", "Down"]],
+            region: dict[str, Any],
+            sample: dict[str, Any],
+            systematic: dict[str, Any],
+            template: Literal["Up", "Down"] | None,
         ) -> None:
             """Executes a user-defined function that returns a histogram and saves it.
 

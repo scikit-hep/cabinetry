@@ -2,7 +2,7 @@
 
 import logging
 import pathlib
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 import hist.intervals
 import matplotlib as mpl
@@ -22,15 +22,15 @@ else:
 
 
 def data_mc(
-    histogram_dict_list: List[Dict[str, Any]],
+    histogram_dict_list: list[dict[str, Any]],
     total_model_unc: np.ndarray,
     bin_edges: np.ndarray,
     *,
-    figure_path: Optional[pathlib.Path] = None,
-    log_scale: Optional[bool] = None,
+    figure_path: pathlib.Path | None = None,
+    log_scale: bool | None = None,
     log_scale_x: bool = False,
     label: str = "",
-    colors: Optional[Dict[str, str]] = None,
+    colors: dict[str, str] | None = None,
     close_figure: bool = False,
 ) -> mpl.figure.Figure:
     """Draws a data/MC histogram with uncertainty bands and ratio panel.
@@ -261,15 +261,15 @@ def data_mc(
 
 
 def templates(
-    nominal_histo: Dict[str, np.ndarray],
-    up_histo_orig: Dict[str, np.ndarray],
-    down_histo_orig: Dict[str, np.ndarray],
-    up_histo_mod: Dict[str, np.ndarray],
-    down_histo_mod: Dict[str, np.ndarray],
+    nominal_histo: dict[str, np.ndarray],
+    up_histo_orig: dict[str, np.ndarray],
+    down_histo_orig: dict[str, np.ndarray],
+    up_histo_mod: dict[str, np.ndarray],
+    down_histo_mod: dict[str, np.ndarray],
     bin_edges: np.ndarray,
     variable: str,
     *,
-    figure_path: Optional[pathlib.Path] = None,
+    figure_path: pathlib.Path | None = None,
     label: str = "",
     close_figure: bool = False,
 ) -> mpl.figure.Figure:
@@ -441,10 +441,10 @@ def templates(
 
 
 def modifier_grid(
-    grid_list: List[np.ndarray],
-    axis_labels: List[List[str]],
-    category_map: Dict[int, str],
-    figure_path: Optional[pathlib.Path] = None,
+    grid_list: list[np.ndarray],
+    axis_labels: list[list[str]],
+    category_map: dict[int, str],
+    figure_path: pathlib.Path | None = None,
     close_figure: bool = False,
 ) -> mpl.figure.Figure:
     """Draws a grid of modifiers per channel, sample and parameter.

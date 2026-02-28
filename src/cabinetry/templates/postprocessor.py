@@ -3,7 +3,7 @@
 import copy
 import logging
 import pathlib
-from typing import Any, Dict, Literal, Optional
+from typing import Any, Literal
 
 import numpy as np
 
@@ -55,8 +55,8 @@ def _apply_353qh_twice(
 
 
 def _smoothing_algorithm(
-    region: Dict[str, Any], sample: Dict[str, Any], systematic: Dict[str, Any]
-) -> Optional[str]:
+    region: dict[str, Any], sample: dict[str, Any], systematic: dict[str, Any]
+) -> str | None:
     """Returns name of algorithm to use for smoothing, or None otherwise.
 
     Args:
@@ -90,8 +90,8 @@ def apply_postprocessing(
     histogram: histo.Histogram,
     name: str,
     *,
-    smoothing_algorithm: Optional[str] = None,
-    nominal_histogram: Optional[histo.Histogram] = None,
+    smoothing_algorithm: str | None = None,
+    nominal_histogram: histo.Histogram | None = None,
 ) -> histo.Histogram:
     """Returns a new histogram with post-processing applied.
 
@@ -137,10 +137,10 @@ def _postprocessor(histogram_folder: pathlib.Path) -> route.ProcessorFunc:
     """
 
     def process_template(
-        region: Dict[str, Any],
-        sample: Dict[str, Any],
-        systematic: Dict[str, Any],
-        template: Optional[Literal["Up", "Down"]],
+        region: dict[str, Any],
+        sample: dict[str, Any],
+        systematic: dict[str, Any],
+        template: Literal["Up", "Down"] | None,
     ) -> None:
         """Applies post-processing to a single histogram.
 

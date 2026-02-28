@@ -2,7 +2,7 @@
 
 import logging
 import pathlib
-from typing import Any, cast, Dict, Literal, Optional
+from typing import Any, cast, Literal
 
 from cabinetry import histo
 from cabinetry import route
@@ -14,10 +14,10 @@ log = logging.getLogger(__name__)
 def _histo_path(
     general_path: str,
     variation_path: str,
-    region: Dict[str, Any],
-    sample: Dict[str, Any],
-    systematic: Dict[str, Any],
-    template: Optional[Literal["Up", "Down"]],
+    region: dict[str, Any],
+    sample: dict[str, Any],
+    systematic: dict[str, Any],
+    template: Literal["Up", "Down"] | None,
 ) -> str:
     """Returns the paths to a histogram for a region-sample-systematic-template.
 
@@ -134,10 +134,10 @@ def _collector(
     """
 
     def collect_template(
-        region: Dict[str, Any],
-        sample: Dict[str, Any],
-        systematic: Dict[str, Any],
-        template: Optional[Literal["Up", "Down"]],
+        region: dict[str, Any],
+        sample: dict[str, Any],
+        systematic: dict[str, Any],
+        template: Literal["Up", "Down"] | None,
     ) -> None:
         """Collects a histogram and writes it to a file.
 

@@ -1,7 +1,6 @@
 """The cabinetry library."""
 
 import logging
-from typing import List
 
 import cabinetry.configuration as configuration  # noqa: F401
 import cabinetry.fit as fit  # noqa: F401
@@ -30,7 +29,7 @@ __all__ = [
 ]
 
 
-def __dir__() -> List[str]:
+def __dir__() -> list[str]:
     return __all__
 
 

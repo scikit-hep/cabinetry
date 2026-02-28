@@ -3,7 +3,7 @@
 import glob
 import logging
 import pathlib
-from typing import Any, Dict, List, Optional, Tuple, Union
+from typing import Any
 
 import matplotlib as mpl
 import numpy as np
@@ -36,7 +36,7 @@ def _figure_name(region_name: str, label: str) -> str:
     return figure_name
 
 
-def _total_yield_uncertainty(stdev_list: List[np.ndarray]) -> np.ndarray:
+def _total_yield_uncertainty(stdev_list: list[np.ndarray]) -> np.ndarray:
     """Calculates the absolute statistical uncertainty of a stack of MC.
 
     Args:
@@ -50,16 +50,16 @@ def _total_yield_uncertainty(stdev_list: List[np.ndarray]) -> np.ndarray:
 
 
 def data_mc_from_histograms(
-    config: Dict[str, Any],
+    config: dict[str, Any],
     *,
-    figure_folder: Union[str, pathlib.Path] = "figures",
-    log_scale: Optional[bool] = None,
+    figure_folder: str | pathlib.Path = "figures",
+    log_scale: bool | None = None,
     log_scale_x: bool = False,
-    channels: Optional[Union[str, List[str]]] = None,
-    colors: Optional[Dict[str, str]] = None,
+    channels: str | list[str] | None = None,
+    colors: dict[str, str] | None = None,
     close_figure: bool = False,
     save_figure: bool = True,
-) -> List[Dict[str, Any]]:
+) -> list[dict[str, Any]]:
     """Draws pre-fit data/MC histograms, using histograms created by cabinetry.
 
     The uncertainty band drawn includes only statistical uncertainties.
@@ -153,17 +153,17 @@ def data_mc_from_histograms(
 
 def data_mc(
     model_prediction: model_utils.ModelPrediction,
-    data: List[float],
+    data: list[float],
     *,
-    config: Optional[Dict[str, Any]] = None,
-    figure_folder: Union[str, pathlib.Path] = "figures",
-    log_scale: Optional[bool] = None,
+    config: dict[str, Any] | None = None,
+    figure_folder: str | pathlib.Path = "figures",
+    log_scale: bool | None = None,
     log_scale_x: bool = False,
-    channels: Optional[Union[str, List[str]]] = None,
-    colors: Optional[Dict[str, str]] = None,
+    channels: str | list[str] | None = None,
+    colors: dict[str, str] | None = None,
     close_figure: bool = False,
     save_figure: bool = True,
-) -> Optional[List[Dict[str, Any]]]:
+) -> list[dict[str, Any]] | None:
     """Draws pre- and post-fit data/MC histograms for a ``pyhf`` model and data.
 
     The ``config`` argument is optional, but required to determine correct axis labels
@@ -289,12 +289,12 @@ def data_mc(
 
 
 def templates(
-    config: Dict[str, Any],
+    config: dict[str, Any],
     *,
-    figure_folder: Union[str, pathlib.Path] = "figures",
+    figure_folder: str | pathlib.Path = "figures",
     close_figure: bool = False,
     save_figure: bool = True,
-) -> List[Dict[str, Any]]:
+) -> list[dict[str, Any]]:
     """Visualizes template histograms (after post-processing) for systematic variations.
 
     The original template histogram for systematic variations (before post-processing)
@@ -426,7 +426,7 @@ def templates(
 def correlation_matrix(
     fit_results: fit.FitResults,
     *,
-    figure_folder: Union[str, pathlib.Path] = "figures",
+    figure_folder: str | pathlib.Path = "figures",
     pruning_threshold: float = 0.0,
     close_figure: bool = True,
     save_figure: bool = True,
@@ -481,8 +481,8 @@ def correlation_matrix(
 def pulls(
     fit_results: fit.FitResults,
     *,
-    figure_folder: Union[str, pathlib.Path] = "figures",
-    exclude: Optional[Union[str, List[str], Tuple[str, ...]]] = None,
+    figure_folder: str | pathlib.Path = "figures",
+    exclude: str | list[str] | tuple[str, ...] | None = None,
     close_figure: bool = True,
     save_figure: bool = True,
 ) -> mpl.figure.Figure:
@@ -543,8 +543,8 @@ def pulls(
 def ranking(
     ranking_results: fit.RankingResults,
     *,
-    figure_folder: Union[str, pathlib.Path] = "figures",
-    max_pars: Optional[int] = None,
+    figure_folder: str | pathlib.Path = "figures",
+    max_pars: int | None = None,
     close_figure: bool = True,
     save_figure: bool = True,
 ) -> mpl.figure.Figure:
@@ -609,7 +609,7 @@ def ranking(
 def scan(
     scan_results: fit.ScanResults,
     *,
-    figure_folder: Union[str, pathlib.Path] = "figures",
+    figure_folder: str | pathlib.Path = "figures",
     close_figure: bool = True,
     save_figure: bool = True,
 ) -> mpl.figure.Figure:
@@ -647,7 +647,7 @@ def scan(
 def limit(
     limit_results: fit.LimitResults,
     *,
-    figure_folder: Union[str, pathlib.Path] = "figures",
+    figure_folder: str | pathlib.Path = "figures",
     close_figure: bool = True,
     save_figure: bool = True,
 ) -> mpl.figure.Figure:
@@ -680,7 +680,7 @@ def limit(
 def modifier_grid(
     model: pyhf.pdf.Model,
     *,
-    figure_folder: Union[str, pathlib.Path] = "figures",
+    figure_folder: str | pathlib.Path = "figures",
     split_by_sample: bool = False,
     close_figure: bool = True,
     save_figure: bool = True,

@@ -2,7 +2,6 @@
 
 import logging
 import pathlib
-from typing import Optional
 
 import matplotlib as mpl
 import matplotlib.pyplot as plt
@@ -11,7 +10,7 @@ log = logging.getLogger(__name__)
 
 
 def _save_and_close(
-    fig: mpl.figure.Figure, path: Optional[pathlib.Path], close_figure: bool
+    fig: mpl.figure.Figure, path: pathlib.Path | None, close_figure: bool
 ) -> None:
     """Saves a figure at a given location if path is provided and optionally closes it.
 
@@ -29,7 +28,7 @@ def _save_and_close(
         plt.close(fig)
 
 
-def _log_figure_path(path: Optional[pathlib.Path]) -> Optional[pathlib.Path]:
+def _log_figure_path(path: pathlib.Path | None) -> pathlib.Path | None:
     """Adds a suffix to a figure path to indicate the use of a logarithmic axis.
 
     If the path is None (since figure should not be saved), it will stay None.

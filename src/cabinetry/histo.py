@@ -3,7 +3,7 @@
 import logging
 import os
 import pathlib
-from typing import Any, Dict, List, Literal, Optional, Type, TypeVar, Union
+from typing import Any, Literal, TypeVar
 
 import boost_histogram as bh
 import numpy as np
@@ -21,10 +21,10 @@ class Histogram(bh.Histogram, family=cabinetry):
 
     @classmethod
     def from_arrays(
-        cls: Type[H],
-        bins: Union[List[float], np.ndarray],
-        yields: Union[List[float], np.ndarray],
-        stdev: Union[List[float], np.ndarray],
+        cls: type[H],
+        bins: list[float] | np.ndarray,
+        yields: list[float] | np.ndarray,
+        stdev: list[float] | np.ndarray,
     ) -> H:
         """Constructs a histogram from arrays of yields and uncertainties.
 
@@ -60,7 +60,7 @@ class Histogram(bh.Histogram, family=cabinetry):
 
     @classmethod
     def from_path(
-        cls: Type[H], histo_path: pathlib.Path, *, modified: bool = True
+        cls: type[H], histo_path: pathlib.Path, *, modified: bool = True
     ) -> H:
         """Builds a histogram from disk.
 
@@ -92,13 +92,13 @@ class Histogram(bh.Histogram, family=cabinetry):
 
     @classmethod
     def from_config(
-        cls: Type[H],
-        histo_folder: Union[str, pathlib.Path],
-        region: Dict[str, Any],
-        sample: Dict[str, Any],
-        systematic: Dict[str, Any],
+        cls: type[H],
+        histo_folder: str | pathlib.Path,
+        region: dict[str, Any],
+        sample: dict[str, Any],
+        systematic: dict[str, Any],
         *,
-        template: Optional[Literal["Up", "Down"]] = None,
+        template: Literal["Up", "Down"] | None = None,
         modified: bool = True,
     ) -> H:
         """Loads a histogram, using information specified in the configuration file.
@@ -239,11 +239,11 @@ class Histogram(bh.Histogram, family=cabinetry):
 
 
 def name(
-    region: Dict[str, Any],
-    sample: Dict[str, Any],
-    systematic: Dict[str, Any],
+    region: dict[str, Any],
+    sample: dict[str, Any],
+    systematic: dict[str, Any],
     *,
-    template: Optional[Literal["Up", "Down"]] = None,
+    template: Literal["Up", "Down"] | None = None,
 ) -> str:
     """Returns a unique name for each histogram.
 

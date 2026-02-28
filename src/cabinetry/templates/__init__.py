@@ -2,7 +2,7 @@
 
 import logging
 import pathlib
-from typing import Any, Dict, Optional
+from typing import Any
 
 from cabinetry import route
 from cabinetry.templates import builder
@@ -13,10 +13,10 @@ log = logging.getLogger(__name__)
 
 
 def build(
-    config: Dict[str, Any],
+    config: dict[str, Any],
     *,
     method: str = "uproot",
-    router: Optional[route.Router] = None,
+    router: route.Router | None = None,
 ) -> None:
     """Produces all required histograms specified by the configuration file.
 
@@ -36,7 +36,7 @@ def build(
     general_path = config["General"]["InputPath"]
     template_builder = builder._Builder(histogram_folder, general_path, method)
 
-    match_func: Optional[route.MatchFunc] = None
+    match_func: route.MatchFunc | None = None
     if router is not None:
         # specify the wrapper for user-defined functions
         router.template_builder_wrapper = template_builder._wrap_custom_template_builder
@@ -48,7 +48,7 @@ def build(
     )
 
 
-def collect(config: Dict[str, Any], *, method: str = "uproot") -> None:
+def collect(config: dict[str, Any], *, method: str = "uproot") -> None:
     """Collects all required histograms specified by the configuration file.
 
     Histograms must already exist, and this collects and saves them in the format used
@@ -73,7 +73,7 @@ def collect(config: Dict[str, Any], *, method: str = "uproot") -> None:
     route.apply_to_all_templates(config, processor)
 
 
-def postprocess(config: Dict[str, Any]) -> None:
+def postprocess(config: dict[str, Any]) -> None:
     """Applies postprocessing to all histograms.
 
     Args:

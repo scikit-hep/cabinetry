@@ -3,7 +3,7 @@
 import json
 import logging
 import pathlib
-from typing import Any, cast, Dict, List, Optional, Tuple, Union
+from typing import Any, cast
 
 import pyhf
 
@@ -16,7 +16,7 @@ log = logging.getLogger(__name__)
 class WorkspaceBuilder:
     """Collects functionality to build a ``pyhf`` workspace."""
 
-    def __init__(self, config: Dict[str, Any]) -> None:
+    def __init__(self, config: dict[str, Any]) -> None:
         """Creates a workspace corresponding to a cabinetry configuration.
 
         Args:
@@ -25,7 +25,7 @@ class WorkspaceBuilder:
         self.config = config
         self.histogram_folder = pathlib.Path(config["General"]["HistogramFolder"])
 
-    def _data_sample(self) -> Dict[str, Any]:
+    def _data_sample(self) -> dict[str, Any]:
         """Returns the data sample dictionary.
 
         Returns:
@@ -38,7 +38,7 @@ class WorkspaceBuilder:
             raise ValueError("did not find exactly one data sample")
         return data_samples[0]
 
-    def _constant_parameter_setting(self, par_name: str) -> Optional[float]:
+    def _constant_parameter_setting(self, par_name: str) -> float | None:
         """Determines whether a parameter should be set to constant, and to which value.
 
         For a given parameter, determines if it is supposed to be set to constant. If
@@ -64,8 +64,8 @@ class WorkspaceBuilder:
         return fixed_value
 
     def normfactor_modifiers(
-        self, region: Dict[str, Any], sample: Dict[str, Any]
-    ) -> List[Dict[str, Any]]:
+        self, region: dict[str, Any], sample: dict[str, Any]
+    ) -> list[dict[str, Any]]:
         """Returns the list of NormFactor modifiers acting on a sample in a region.
 
         Args:
@@ -91,7 +91,7 @@ class WorkspaceBuilder:
         return modifiers
 
     @staticmethod
-    def normalization_modifier(systematic: Dict[str, Any]) -> Dict[str, Any]:
+    def normalization_modifier(systematic: dict[str, Any]) -> dict[str, Any]:
         """Returns a normalization modifier (OverallSys in `HistFactory`).
 
         Args:
@@ -117,8 +117,8 @@ class WorkspaceBuilder:
         return modifier
 
     def normplusshape_modifiers(
-        self, region: Dict[str, Any], sample: Dict[str, Any], systematic: Dict[str, Any]
-    ) -> List[Dict[str, Any]]:
+        self, region: dict[str, Any], sample: dict[str, Any], systematic: dict[str, Any]
+    ) -> list[dict[str, Any]]:
         """Returns modifiers for a correlated shape + normalization effect.
 
         For a variation including a correlated shape + normalization effect, this
@@ -189,8 +189,8 @@ class WorkspaceBuilder:
             norm_effect_up = histogram_up.normalize_to_yield(histogram_nominal)
             norm_effect_down = histogram_down.normalize_to_yield(histogram_nominal)
             # manually cast due to https://github.com/numpy/numpy/issues/27944
-            histo_yield_up = cast(List[float], histogram_up.yields.tolist())
-            histo_yield_down = cast(List[float], histogram_down.yields.tolist())
+            histo_yield_up = cast(list[float], histogram_up.yields.tolist())
+            histo_yield_down = cast(list[float], histogram_down.yields.tolist())
 
         log.debug(
             f"normalization impact of systematic {systematic['Name']} on sample "
@@ -222,8 +222,8 @@ class WorkspaceBuilder:
         return modifiers
 
     def sys_modifiers(
-        self, region: Dict[str, Any], sample: Dict[str, Any]
-    ) -> List[Dict[str, Any]]:
+        self, region: dict[str, Any], sample: dict[str, Any]
+    ) -> list[dict[str, Any]]:
         """Returns the list of all systematic modifiers acting on a sample in a region.
 
         Args:
@@ -265,7 +265,7 @@ class WorkspaceBuilder:
                     )
         return modifiers
 
-    def channels(self) -> List[Dict[str, Any]]:
+    def channels(self) -> list[dict[str, Any]]:
         """Returns the channel information: yields per sample and modifiers.
 
         Returns:
@@ -323,7 +323,7 @@ class WorkspaceBuilder:
             channels.append(channel)
         return channels
 
-    def measurements(self) -> List[Dict[str, Any]]:
+    def measurements(self) -> list[dict[str, Any]]:
         """Returns the measurements object for the workspace.
 
         Constructs the measurements, including POI setting and parameter bounds, initial
@@ -380,7 +380,7 @@ class WorkspaceBuilder:
         measurements.append(measurement)
         return measurements
 
-    def observations(self) -> List[Dict[str, Any]]:
+    def observations(self) -> list[dict[str, Any]]:
         """Returns the observations object (with data yields) for the workspace.
 
         Returns:
@@ -398,13 +398,13 @@ class WorkspaceBuilder:
             observations.append(observation)
         return observations
 
-    def build(self) -> Dict[str, Any]:
+    def build(self) -> dict[str, Any]:
         """Constructs a `HistFactory` workspace in ``pyhf`` format.
 
         Returns:
             Dict[str, Any]: ``pyhf``-compatible `HistFactory` workspace
         """
-        ws: Dict[str, Any] = {}  # the workspace
+        ws: dict[str, Any] = {}  # the workspace
 
         # channels
         channels = self.channels()
@@ -424,7 +424,7 @@ class WorkspaceBuilder:
         return ws
 
 
-def build(config: Dict[str, Any], *, with_validation: bool = True) -> Dict[str, Any]:
+def build(config: dict[str, Any], *, with_validation: bool = True) -> dict[str, Any]:
     """Returns a `HistFactory` workspace in ``pyhf`` format.
 
     Args:
@@ -445,7 +445,7 @@ def build(config: Dict[str, Any], *, with_validation: bool = True) -> Dict[str, 
     return ws
 
 
-def validate(ws: Dict[str, Any]) -> None:
+def validate(ws: dict[str, Any]) -> None:
     """Validates a workspace with ``pyhf``.
 
     Args:
@@ -454,7 +454,7 @@ def validate(ws: Dict[str, Any]) -> None:
     pyhf.Workspace(ws)
 
 
-def save(ws: Dict[str, Any], file_path_string: Union[str, pathlib.Path]) -> None:
+def save(ws: dict[str, Any], file_path_string: str | pathlib.Path) -> None:
     """Serializes a workspace to a file.
 
     Args:
@@ -470,7 +470,7 @@ def save(ws: Dict[str, Any], file_path_string: Union[str, pathlib.Path]) -> None
     file_path.write_text(json.dumps(ws, sort_keys=True, indent=4))
 
 
-def load(file_path_string: Union[str, pathlib.Path]) -> Dict[str, Any]:
+def load(file_path_string: str | pathlib.Path) -> dict[str, Any]:
     """Loads a workspace from a file.
 
     Args:
@@ -487,7 +487,7 @@ def load(file_path_string: Union[str, pathlib.Path]) -> Dict[str, Any]:
 
 def _symmetrized_templates_and_norm(
     variation: histo.Histogram, reference: histo.Histogram
-) -> Tuple[List[float], List[float], float, float]:
+) -> tuple[list[float], list[float], float, float]:
     """Returns symmetrized normalized templates and normalization factors.
 
     The ``variation`` input will be normalized in the process.
@@ -509,11 +509,11 @@ def _symmetrized_templates_and_norm(
     norm_effect_var = variation.normalize_to_yield(reference)
     norm_effect_sym = 2 - norm_effect_var
     # manually cast due to https://github.com/numpy/numpy/issues/27944
-    histo_yield_var = cast(List[float], variation.yields.tolist())
+    histo_yield_var = cast(list[float], variation.yields.tolist())
     # need another histogram that corresponds to the symmetrized variation,
     # which is 2*nominal - variation
     histo_yield_sym = cast(
-        List[float], (2 * reference.yields - variation.yields).tolist()
+        list[float], (2 * reference.yields - variation.yields).tolist()
     )
 
     return histo_yield_var, histo_yield_sym, norm_effect_var, norm_effect_sym
