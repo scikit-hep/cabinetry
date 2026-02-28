@@ -5,7 +5,6 @@ import logging
 import boost_histogram as bh
 import uproot
 
-
 log = logging.getLogger(__name__)
 
 

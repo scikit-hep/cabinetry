@@ -10,7 +10,6 @@ import tabulate
 
 from cabinetry import model_utils
 
-
 log = logging.getLogger(__name__)
 
 

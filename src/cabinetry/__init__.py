@@ -14,7 +14,6 @@ import cabinetry.templates as templates  # noqa: F401
 import cabinetry.visualize as visualize  # noqa: F401
 import cabinetry.workspace as workspace  # noqa: F401
 
-
 __all__ = [
     "__version__",
     "set_logging",

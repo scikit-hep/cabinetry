@@ -20,7 +20,6 @@ import pyhf
 
 from cabinetry.fit.results_containers import FitResults
 
-
 log = logging.getLogger(__name__)
 
 
@@ -409,7 +408,7 @@ def yield_stdev(
         uncertainty (np.ndarray): uncertainty of model parameters
         corr_mat (np.ndarray): correlation matrix
         sample_update_map (Optional[Dict[str, List[str]]], optional): a map specifying
-        how to merge samples, defaults to None
+            how to merge samples, defaults to None
 
     Returns:
         Tuple[List[List[List[float]]], List[List[float]]]:
@@ -680,9 +679,7 @@ def prediction(
 
 
 def unconstrained_parameter_count(
-    model: pyhf.pdf.Model,
-    *,
-    fix_pars: Optional[List[bool]] = None,
+    model: pyhf.pdf.Model, *, fix_pars: Optional[List[bool]] = None
 ) -> int:
     """Returns the number of unconstrained, non-constant parameters in a model.
 

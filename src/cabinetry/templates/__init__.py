@@ -9,7 +9,6 @@ from cabinetry.templates import builder
 from cabinetry.templates import collector
 from cabinetry.templates import postprocessor
 
-
 log = logging.getLogger(__name__)
 
 

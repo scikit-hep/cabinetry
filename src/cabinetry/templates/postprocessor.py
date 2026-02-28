@@ -12,7 +12,6 @@ from cabinetry import histo
 from cabinetry import route
 from cabinetry import smooth
 
-
 log = logging.getLogger(__name__)
 
 

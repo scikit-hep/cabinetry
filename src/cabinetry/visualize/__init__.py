@@ -17,7 +17,6 @@ from cabinetry.templates import builder
 from cabinetry.visualize import plot_model
 from cabinetry.visualize import plot_result
 
-
 log = logging.getLogger(__name__)
 
 

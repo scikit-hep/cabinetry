@@ -58,13 +58,11 @@ def test_LightModel(example_spec_with_multiple_backgrounds):
     assert model_pred.model.spec == model.spec
 
     with pytest.raises(
-        AttributeError,
-        match="'LightConfig' object has no attribute 'NonExistent'",
+        AttributeError, match="'LightConfig' object has no attribute 'NonExistent'"
     ):
         model_pred.model.config.NonExistent
     with pytest.raises(
-        AttributeError,
-        match="'LightModel' object has no attribute 'NonExistent'",
+        AttributeError, match="'LightModel' object has no attribute 'NonExistent'"
     ):
         model_pred.model.NonExistent
 
@@ -352,11 +350,7 @@ def test_yield_stdev(
     corr_mat = np.asarray([[1.0, 0.2, 0.1], [0.2, 1.0, 0.3], [0.1, 0.3, 1.0]])
 
     total_stdev_bin, total_stdev_chan = model_utils.yield_stdev(
-        model,
-        parameters,
-        uncertainty,
-        corr_mat,
-        sample_update_map=sample_update_map,
+        model, parameters, uncertainty, corr_mat, sample_update_map=sample_update_map
     )
     assert np.allclose(
         total_stdev_bin,
@@ -414,10 +408,7 @@ def test_yield_stdev(
 )
 @mock.patch(
     "cabinetry.model_utils.asimov_parameters",
-    side_effect=[
-        np.asarray([1.0, 1.0, 1.0, 1.0]),
-        np.asarray([1.0, 1.0, 1.0]),
-    ],
+    side_effect=[np.asarray([1.0, 1.0, 1.0, 1.0]), np.asarray([1.0, 1.0, 1.0])],
 )
 def test_prediction(
     mock_asimov,
