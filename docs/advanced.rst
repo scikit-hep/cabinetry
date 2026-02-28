@@ -48,7 +48,7 @@ When no user-defined function matches a given histogram that has to be produced,
     # define a custom template builder function that is executed for data samples
     @my_router.register_template_builder(sample_name="ttbar")
     def build_data_hist(
-        region: dict, sample: dict, systematic: dict, template: Optional[str]
+        region: dict, sample: dict, systematic: dict, template: str | None
     ) -> bh.Histogram:
         hist = bh.Histogram(
             bh.axis.Variable(region["Binning"], underflow=False, overflow=False),

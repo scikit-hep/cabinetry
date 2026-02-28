@@ -49,8 +49,8 @@ class WorkspaceBuilder:
             par_name (str): name of parameter to check
 
         Returns:
-            Optional[float]: returns None if parameter is not supposed to be held
-            constant, or the value it has to be fixed to
+            float | None: returns None if parameter is not supposed to be held constant,
+            or the value it has to be fixed to
         """
         fixed_parameters = self.config["General"].get("Fixed", [])
         fixed_value = next(

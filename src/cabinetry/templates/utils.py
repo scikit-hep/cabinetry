@@ -21,8 +21,7 @@ def _check_for_override(
         option (str): the option for which the presence of an override is checked
 
     Returns:
-        Optional[Union[str, List[str]]]: either None if no override exists, or the
-        override
+        str | list[str] | None: either None if no override exists, or the override
     """
     return systematic.get(template, {}).get(option, None)
 
@@ -43,8 +42,8 @@ def _name_and_save(
         region (Dict[str, Any]): containing all region information
         sample (Dict[str, Any]): containing all sample information
         systematic (Dict[str, Any]): containing all systematic
-        template (Optional[Literal["Up", "Down"]]): template considered: "Up",
-            "Down", or None for nominal
+        template (Literal["Up", "Down"] | None): template considered: "Up", "Down", or
+            None for nominal
     """
     # generate a name for the histogram
     histogram_name = histo.name(region, sample, systematic, template=template)

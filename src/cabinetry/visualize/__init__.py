@@ -68,14 +68,14 @@ def data_mc_from_histograms(
         config (Dict[str, Any]): cabinetry configuration
         figure_folder (Union[str, pathlib.Path], optional): path to the folder to save
             figures in, defaults to "figures"
-        log_scale (Optional[bool], optional): whether to use logarithmic vertical axis,
+        log_scale (bool | None, optional): whether to use logarithmic vertical axis,
             defaults to None (automatically determine whether to use linear/log scale)
         log_scale_x (bool, optional): whether to use logarithmic horizontal axis,
             defaults to False
-        channels (Optional[Union[str, List[str]]], optional): name of channel to show,
-            or list of names to include, defaults to None (uses all channels)
-        colors (Optional[Dict[str, str]], optional): map of sample names and colors to
-            use in plot, defaults to None (uses default colors)
+        channels (str | list[str] | None, optional): name of channel to show, or list of
+            names to include, defaults to None (uses all channels)
+        colors (dict[str, str] | None, optional): map of sample names and colors to use
+            in plot, defaults to None (uses default colors)
         close_figure (bool, optional): whether to close each figure, defaults to False
             (enable when producing many figures to avoid memory issues, prevents
             automatic rendering in notebooks)
@@ -175,19 +175,19 @@ def data_mc(
         model_prediction (model_utils.ModelPrediction): model prediction to show
         data (List[float]): data to include in visualization, can either include auxdata
             (the auxdata is then stripped internally) or only observed yields
-        config (Optional[Dict[str, Any]], optional): cabinetry configuration needed for
+        config (dict[str, Any] | None, optional): cabinetry configuration needed for
             binning and axis labels, defaults to None (uses a default binning and labels
             then)
         figure_folder (Union[str, pathlib.Path], optional): path to the folder to save
             figures in, defaults to "figures"
-        log_scale (Optional[bool], optional): whether to use logarithmic vertical axis,
+        log_scale (bool | None, optional): whether to use logarithmic vertical axis,
             defaults to None (automatically determine whether to use linear/log scale)
         log_scale_x (bool, optional): whether to use logarithmic horizontal axis,
             defaults to False
-        channels (Optional[Union[str, List[str]]], optional): name of channel to show,
-            or list of names to include, defaults to None (uses all channels)
-        colors (Optional[Dict[str, str]], optional): map of sample names and colors to
-            use in plot, defaults to None (uses default colors)
+        channels (str | list[str] | None, optional): name of channel to show, or list of
+            names to include, defaults to None (uses all channels)
+        colors (dict[str, str] | None, optional): map of sample names and colors to use
+            in plot, defaults to None (uses default colors)
         close_figure (bool, optional): whether to close each figure, defaults to False
             (enable when producing many figures to avoid memory issues, prevents
             automatic rendering in notebooks)
@@ -197,7 +197,7 @@ def data_mc(
         ValueError: if color specification is incomplete
 
     Returns:
-        Optional[List[Dict[str, Any]]]: list of dictionaries, where each dictionary
+        list[dict[str, Any]] | None: list of dictionaries, where each dictionary
             contains a figure and the associated region name, or None if no figure was
             produced
     """
@@ -493,8 +493,8 @@ def pulls(
             parameter labels
         figure_folder (Union[str, pathlib.Path], optional): path to the folder to save
             figures in, defaults to "figures"
-        exclude (Optional[Union[str, List[str], Tuple[str, ...]]], optional): parameter
-            or parameters to exclude from plot, defaults to None (nothing excluded)
+        exclude (str | list[str] | tuple[str, ...] | None, optional): parameter or
+            parameters to exclude from plot, defaults to None (nothing excluded)
         close_figure (bool, optional): whether to close figure, defaults to True
         save_figure (bool, optional): whether to save figure, defaults to True
 
@@ -556,7 +556,7 @@ def ranking(
         ranking_results (fit.RankingResults): fit results, and pre- and post-fit impacts
         figure_folder (Union[str, pathlib.Path], optional): path to the folder to save
             figures in, defaults to "figures"
-        max_pars (Optional[int], optional): number of parameters to include, defaults to
+        max_pars (int | None, optional): number of parameters to include, defaults to
             None (which means all parameters are included)
         close_figure (bool, optional): whether to close figure, defaults to True
         save_figure (bool, optional): whether to save figure, defaults to True

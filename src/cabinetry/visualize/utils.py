@@ -16,7 +16,7 @@ def _save_and_close(
 
     Args:
         fig (matplotlib.figure.Figure): figure to save
-        path (Optional[pathlib.Path]): path where figure should be saved, or None to not
+        path (pathlib.Path | None): path where figure should be saved, or None to not
             save it
         close_figure (bool): whether to close figure after saving
     """
@@ -34,11 +34,11 @@ def _log_figure_path(path: pathlib.Path | None) -> pathlib.Path | None:
     If the path is None (since figure should not be saved), it will stay None.
 
     Args:
-        path (Optional[pathlib.Path]): original path to figure, or None if figure should
+        path (pathlib.Path | None): original path to figure, or None if figure should
             not be saved
 
     Returns:
-        Optional[pathlib.Path]: new path to figure including _log suffix, or None if
+        pathlib.Path | None: new path to figure including _log suffix, or None if
             original path is None
     """
     if path is not None:

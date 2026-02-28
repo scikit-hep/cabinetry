@@ -48,8 +48,8 @@ class Router:
     Attributes:
         template_builders (List[Dict[str, Any]]): user-defined processors for template
             building
-        template_builder_wrapper (Optional[WrapperFunc]): wrapper to apply on user-
-            defined template builders
+        template_builder_wrapper (WrapperFunc | None): wrapper to apply on user-defined
+            template builders
     """
 
     def __init__(self) -> None:
@@ -85,8 +85,8 @@ class Router:
                 apply to all samples
             systematic_name (str): name of the systematic to apply the function to, or
                "*" to apply to all systematics
-            template (Optional[str]): name of the template to apply the function to, "*"
-                to apply to all templates, or None to apply to nominal only
+            template (str | None): name of the template to apply the function to, "*" to
+                apply to all templates, or None to apply to nominal only
 
         Returns:
             Callable[[UserTemplateFunc], UserTemplateFunc]: the function to
@@ -137,8 +137,8 @@ class Router:
                 defaults to "*" (apply to all samples)
             systematic_name (str, optional): name of the systematic to apply the
                 function to, defaults to "*" (apply to all systematics)
-            template (Optional[str], optional): name of the template to apply the
-                function to (e.g. "Up" or "Down"), or None to apply to nominal only,
+            template (str | None, optional): name of the template to apply the function
+                to (e.g. "Up" or "Down"), or None to apply to nominal only,
                 defaults to "*" (apply to all templates, including nominal)
 
         Returns:
@@ -167,12 +167,12 @@ class Router:
             region_name (str): region name
             sample_name (str): sample name
             systematic_name (str): systematic name (can use empty string for nominal)
-            template (Optional[Literal["Up", "Down"]]): template name ("Up", "Down"), or
+            template (Literal["Up", "Down"] | None): template name ("Up", "Down"), or
                 None for nominal
 
         Returns:
-            Optional[UserTemplateFunc]: processor function matching the description,
-            or None if no matches are found
+            UserTemplateFunc | None: processor function matching the description, or
+            None if no matches are found
         """
         matches = []
         for processor in processor_list:
@@ -232,14 +232,14 @@ class Router:
             region_name (str): region name
             sample_name (str): sample name
             systematic_name (str): systematic name (can use empty string for nominal)
-            template (Optional[Literal["Up", "Down"]]): template name ("Up", "Down"), or
+            template (Literal["Up", "Down"] | None): template name ("Up", "Down"), or
                 None for nominal
 
         Raises:
             ValueError: when no template wrapper is set
 
         Returns:
-            Optional[ProcessorFunc]: wrapped template builder function matching the
+            ProcessorFunc | None: wrapped template builder function matching the
             description, or None if no matches are found
         """
         if self.template_builder_wrapper is None:
@@ -280,7 +280,7 @@ def apply_to_all_templates(
         config (Dict[str, Any]): cabinetry configuration
         default_func (ProcessorFunc): function to be called for every template by
             default
-        match_func: (Optional[MatchFunc], optional): function that returns user-defined
+        match_func: (MatchFunc | None, optional): function that returns user-defined
             functions to override the call to ``default_func``, defaults to None (then
             it is not used)
     """

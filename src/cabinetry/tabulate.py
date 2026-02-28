@@ -234,8 +234,8 @@ def yields(
             table
         data (List[float]): data to include in table, can either include auxdata (the
             auxdata is then stripped internally) or only observed yields
-        channels (Optional[Union[str, List[str]]], optional): name of channel to show,
-            or list of names to include, defaults to None (uses all channels)
+        channels (str | list[str] | None, optional): name of channel to show, or list of
+            names to include, defaults to None (uses all channels)
         per_bin (bool, optional): whether to show a table with yields per bin, defaults
             to True
         per_channel (bool, optional): whether to show a table with yields per channel,

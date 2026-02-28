@@ -32,9 +32,8 @@ class LightConfig:
 
         Args:
             model (pyhf.pdf.Model): pyhf model to base the light model on
-            sample_update_map (Optional[Dict[str, List[str]]], optional): a map
-                specifying how to merge samples (values) into one sample (key).
-                Defaults to None.
+            sample_update_map (dict[str, list[str]] | None, optional): a map specifying
+                how to merge samples (values) into one sample (key), defaults to None
         """
         self.samples = model.config.samples
         self.channels = model.config.channels
@@ -51,7 +50,7 @@ class LightConfig:
 
         Args:
             sample_update_map (Dict[str, List[str]]): a map specifying how to merge
-                samples (values) into one sample (key).
+                samples (values) into one sample (key)
         """
         # Delete samples being merged from config
         # Flatten all merged samples into a set for O(1) lookups
@@ -96,9 +95,8 @@ class LightModel:
 
         Args:
             model (pyhf.pdf.Model): pyhf model to base the light model on
-            sample_update_map (Optional[Dict[str, List[str]]], optional): a map
-                specifying how to merge samples (values) into one sample (key).
-                Defaults to None.
+            sample_update_map (dict[str, list[str]] | None, optional): a map specifying
+                how to merge samples (values) into one sample (key), defaults to None
         """
         self.config = LightConfig(model, sample_update_map)
         self.spec = model.spec
@@ -118,8 +116,8 @@ def _merge_sample_yields(
         old_yields (Union[List[List[List[float]]], List[List[float]]]): yields to be
             merged, either per channel (list of lists of lists) or for one channel
             (list of lists)
-        one_channel (Optional[bool], optional): whether the yields are for one channel
-            (True) or for multiple channels (False). Defaults to False.
+        one_channel (bool | None, optional): whether the yields are for one channel
+            (True) or for multiple channels (False), defaults to False
 
     Returns:
         np.ndarray: merged yields, either per channel (list of lists of lists) or for
@@ -244,12 +242,12 @@ def asimov_data(
 
     Args:
         model (pyhf.pdf.Model): the model from which to construct the dataset
-        fit_results (Optional[FitResults], optional): parameter configuration to use
-            when building the Asimov dataset (using the best-fit result), defaults to
-            None (then a pre-fit Asimov dataset is built)
-        poi_name (Optional[str], optional): name of parameter to set to a custom value
+        fit_results (FitResults | None, optional): parameter configuration to use when
+            building the Asimov dataset (using the best-fit result), defaults to None
+            (then a pre-fit Asimov dataset is built)
+        poi_name (str | None, optional): name of parameter to set to a custom value
             via poi_value, defaults to None (use POI specified in workspace)
-        poi_value (Optional[float], optional): custom value to set POI specified via
+        poi_value (float | None, optional): custom value to set POI specified via
             poi_name to, defaults to None (no custom value set)
         include_auxdata (bool, optional): whether to also return auxdata, defaults to
             True
@@ -397,8 +395,8 @@ def yield_stdev(
         parameters (np.ndarray): central values of model parameters
         uncertainty (np.ndarray): uncertainty of model parameters
         corr_mat (np.ndarray): correlation matrix
-        sample_update_map (Optional[Dict[str, List[str]]], optional): a map specifying
-            how to merge samples, defaults to None
+        sample_update_map (dict[str, list[str]] | None, optional): a map specifying how
+            to merge samples, defaults to None
 
     Returns:
         Tuple[List[List[List[float]]], List[List[float]]]:
@@ -603,12 +601,14 @@ def prediction(
 
     Args:
         model (pyhf.pdf.Model): model to evaluate yield prediction for
-        fit_results (Optional[FitResults], optional): parameter configuration to use,
+        fit_results (FitResults | None, optional): parameter configuration to use,
             includes best-fit settings and uncertainties, as well as correlation matrix,
             defaults to None (then the pre-fit configuration is used)
-        label (Optional[str], optional): label to include in model prediction, defaults
+        label (str | None, optional): label to include in model prediction, defaults
             to None (then will use "pre-fit" if fit results are not included, and "post-
             fit" otherwise)
+        sample_update_map (dict[str, list[str]] | None, optional): a map specifying how
+            to merge samples, defaults to None
 
     Returns:
         ModelPrediction: model, yields and uncertainties per channel, sample, bin
@@ -679,7 +679,7 @@ def unconstrained_parameter_count(
 
     Args:
         model (pyhf.pdf.Model): model to count parameters for
-        fix_pars (Optional[List[bool]], optional): list of booleans specifying which
+        fix_pars (list[bool] | None, optional): list of booleans specifying which
             parameters are held constant, defaults to None (use ``pyhf`` suggestion)
 
     Returns:
@@ -711,7 +711,7 @@ def _parameter_index(par_name: str, labels: list[str] | tuple[str, ...]) -> int 
             names in the model
 
     Returns:
-        Optional[int]: index of parameter, or None if parameter was not found
+        int | None: index of parameter, or None if parameter was not found
     """
     par_index = next((i for i, label in enumerate(labels) if label == par_name), None)
     if par_index is None:
@@ -728,13 +728,13 @@ def _poi_index(model: pyhf.pdf.Model, *, poi_name: str | None = None) -> int | N
 
     Args:
         model (pyhf.pdf.Model): model for which to find the POI index
-        poi_name (Optional[str], optional): name of the POI, defaults to None
+        poi_name (str | None, optional): name of the POI, defaults to None
 
     Raises:
         ValueError: if the specified POI name cannot be found in the model
 
     Returns:
-        Optional[int]: POI index, or None if no POI could be found
+        int | None: POI index, or None if no POI could be found
     """
     if poi_name is not None:
         # use POI given by kwarg if specified
@@ -801,8 +801,8 @@ def _filter_channels(
 
     Args:
         model (Union[pyhf.pdf.Model, LightModel]): model from which to extract channels
-        channels (Optional[Union[str, List[str]]]): name of channel or list of channels
-            to filter, only including those channels provided via this argument in the
+        channels (str | list[str] | None): name of channel or list of channels to
+            filter, only including those channels provided via this argument in the
             return of the function
 
     Returns:
@@ -904,7 +904,7 @@ def _modifier_map(
 
     Returns:
         Dict[Tuple[str, str, str], List[str]]: map to extract modifier lists for each
-        (channel, sample, parameter).
+        (channel, sample, parameter)
     """
     modifier_map = defaultdict(list)
     for channel in model.spec["channels"]:

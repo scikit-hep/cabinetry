@@ -112,7 +112,7 @@ class Histogram(bh.Histogram, family=cabinetry):
             region (Dict[str, Any]): containing all region information
             sample (Dict[str, Any]): containing all sample information
             systematic (Dict[str, Any]): containing all systematic information
-            template (Optional[Literal["Up", "Down"]], optional): which template to
+            template (Literal["Up", "Down"] | None, optional): which template to
                 consider: "Up", "Down", None for the nominal case, defaults to None
             modified (bool, optional): whether to load the modified histogram (after
                 post-processing), defaults to True
@@ -224,8 +224,7 @@ class Histogram(bh.Histogram, family=cabinetry):
         Returns the normalization factor used to normalize the histogram.
 
         Args:
-            reference_histogram (cabinetry.histo.Histogram): reference histogram to
-                normalize to
+            reference_histogram (histo.Histogram): reference histogram to normalize to
 
         Returns:
             float: the yield ratio: un-normalized yield / normalized yield
@@ -254,8 +253,8 @@ def name(
         region (Dict[str, Any]): containing all region information
         sample (Dict[str, Any]): containing all sample information
         systematic (Dict[str, Any]): containing all systematic information
-        template (Optional[Literal["Up", "Down"]], optional): which template to
-            consider: "Up", "Down", None for the nominal case, defaults to None
+        template (Literal["Up", "Down"] | None, optional): which template to consider:
+            "Up", "Down", None for the nominal case, defaults to None
 
     Returns:
         str: unique name for the histogram

@@ -35,8 +35,8 @@ def correlation_matrix(
         corr_mat (np.ndarray): the correlation matrix to plot
         labels (Union[List[str], np.ndarray]): names of parameters in the correlation
             matrix
-        figure_path (Optional[pathlib.Path], optional): path where figure should be
-            saved, or None to not save it, defaults to None
+        figure_path (pathlib.Path | None, optional): path where figure should be saved,
+            or None to not save it, defaults to None
         close_figure (bool, optional): whether to close each figure immediately after
             saving it, defaults to False (enable when producing many figures to avoid
             memory issues, prevents rendering in notebooks)
@@ -84,8 +84,8 @@ def pulls(
         bestfit (np.ndarray): best-fit parameter results
         uncertainty (np.ndarray): parameter uncertainties
         labels (Union[List[str], np.ndarray]): parameter names
-        figure_path (Optional[pathlib.Path], optional): path where figure should be
-            saved, or None to not save it, defaults to None
+        figure_path (pathlib.Path | None, optional): path where figure should be saved,
+            or None to not save it, defaults to None
         close_figure (bool, optional): whether to close each figure immediately after
             saving it, defaults to False (enable when producing many figures to avoid
             memory issues, prevents rendering in notebooks)
@@ -139,8 +139,8 @@ def ranking(
         impact_postfit_up (np.ndarray): post-fit impact in "up" direction per parameter
         impact_postfit_down (np.ndarray): post-fit impact in "down" direction per
             parameter
-        figure_path (Optional[pathlib.Path], optional): path where figure should be
-            saved, or None to not save it, defaults to None
+        figure_path (pathlib.Path | None, optional): path where figure should be saved,
+            or None to not save it, defaults to None
         close_figure (bool, optional): whether to close each figure immediately after
             saving it, defaults to False (enable when producing many figures to avoid
             memory issues, prevents rendering in notebooks)
@@ -282,8 +282,8 @@ def scan(
         par_unc (float): best-fit parameter uncertainty
         par_vals (np.ndarray): values used in scan over parameter
         par_nlls (np.ndarray): -2 log(L) offset at each scan point
-        figure_path (Optional[pathlib.Path], optional): path where figure should be
-            saved, or None to not save it, defaults to None
+        figure_path (pathlib.Path | None, optional): path where figure should be saved,
+            or None to not save it, defaults to None
         close_figure (bool, optional): whether to close each figure immediately after
             saving it, defaults to False (enable when producing many figures to avoid
             memory issues, prevents rendering in notebooks)
@@ -356,8 +356,8 @@ def limit(
         expected_CLs (np.ndarray): expected CLs values, including 1 and 2 sigma bands
         poi_values (np.ndarray): parameter of interest values used in scan
         cls_target (float): target CLs value to visualize as horizontal line
-        figure_path (Optional[pathlib.Path], optional): path where figure should be
-            saved, or None to not save it, defaults to None
+        figure_path (pathlib.Path | None, optional): path where figure should be saved,
+            or None to not save it, defaults to None
         close_figure (bool, optional): whether to close each figure immediately after
             saving it, defaults to False (enable when producing many figures to avoid
             memory issues, prevents rendering in notebooks)

@@ -44,16 +44,16 @@ def data_mc(
         total_model_unc (np.ndarray): total model uncertainty, if specified this is used
             instead of calculating it via sum in quadrature, defaults to None
         bin_edges (np.ndarray): bin edges of histogram
-        figure_path (Optional[pathlib.Path], optional): path where figure should be
+        figure_path (pathlib.Path | None, optional): path where figure should be
             saved, or None to not save it, defaults to None
-        log_scale (Optional[bool], optional): whether to use a logarithmic vertical
-            axis, defaults to None (automatically determine whether to use linear or log
+        log_scale (bool | None, optional): whether to use a logarithmic vertical axis,
+            defaults to None (automatically determine whether to use linear or log
             scale)
         log_scale_x (bool, optional): whether to use logarithmic horizontal axis,
             defaults to False
         label (str, optional): label written on the figure, defaults to ""
-        colors (Optional[Dict[str, str]], optional): map of sample names and colors to
-            use in plot, defaults to None (uses default colors)
+        colors (dict[str, str] | None, optional): map of sample names and colors to use
+            in plot, defaults to None (uses default colors)
         close_figure (bool, optional): whether to close each figure immediately after
             saving it, defaults to False (enable when producing many figures to avoid
             memory issues, prevents rendering in notebooks)
@@ -285,8 +285,8 @@ def templates(
         down_histo_mod (Dict[str, np.ndarray]): "down" variation after post-processing
         bin_edges (np.ndarray): bin edges of histogram
         variable (str): variable name for the horizontal axis
-        figure_path (Optional[pathlib.Path], optional): path where figure should be
-            saved, or None to not save it, defaults to None
+        figure_path (pathlib.Path | None, optional): path where figure should be saved,
+            or None to not save it, defaults to None
         label (str, optional): label written on the figure, defaults to ""
         close_figure (bool, optional): whether to close each figure immediately after
             saving it, defaults to False (enable when producing many figures to avoid
@@ -454,8 +454,8 @@ def modifier_grid(
         axis_labels (List[List[str]]): list with axis labels for the three axes in order
             (first axis is grid label, second and third are axes per grid)
         category_map (Dict[int, str]): translation of integer values in grid to labels
-        figure_path (Optional[pathlib.Path], optional): path where figure should be
-            saved, or None to not save it, defaults to None
+        figure_path (pathlib.Path | None, optional): path where figure should be saved,
+            or None to not save it, defaults to None
         close_figure (bool, optional): whether to close each figure immediately after
             saving it, defaults to False (enable when producing many figures to avoid
             memory issues, prevents rendering in notebooks)

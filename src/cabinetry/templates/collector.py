@@ -36,8 +36,8 @@ def _histo_path(
         region (Dict[str, Any]): containing all region information
         sample (Dict[str, Any]): containing all sample information
         systematic (Dict[str, Any]): containing all systematic information
-        template (Optional[Literal["Up", "Down"]]): template considered: "Up", "Down",
-            or None for nominal
+        template (Literal["Up", "Down"] | None): template considered: "Up", "Down", or
+            None for nominal
 
     Raises:
         ValueError: when ``RegionPath`` placeholder is used, but region setting is not
@@ -65,8 +65,8 @@ def _histo_path(
             systematic, template, "VariationPath"
         )
         if variation_override is not None:
-            # _check_for_override should return Optional[str] for VariationPath, but
-            # mypy cannot know that it will not be a list, so explicitly cast to str
+            # _check_for_override should return str | None for VariationPath, but mypy
+            # cannot know that it will not be a list, so explicitly cast to str
             variation_path = cast(str, variation_override)
 
     # create a new string for path handling, with placeholders replaced subsequently
@@ -116,7 +116,7 @@ def _collector(
 ) -> route.ProcessorFunc:
     """Returns the histogram-collecting function to be applied to template histograms.
 
-    Needed by ``cabinetry.route.apply_to_all_templates``. Could alternatively create a
+    Needed by ``route.apply_to_all_templates``. Could alternatively create a
     ``Collector`` class that contains processors (see ``builder._Builder`` for an
     example).
 
@@ -145,8 +145,8 @@ def _collector(
             region (Dict[str, Any]): containing all region information
             sample (Dict[str, Any]): containing all sample information
             systematic (Dict[str, Any]): containing all systematic information
-            template (Optional[Literal["Up", "Down"]]): template considered: "Up",
-                "Down", or None for nominal
+            template (Literal["Up", "Down"] | None): template considered: "Up", "Down",
+                or None for nominal
         """
         histo_path = _histo_path(
             general_path, variation_path, region, sample, systematic, template

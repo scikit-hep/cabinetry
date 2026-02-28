@@ -21,7 +21,7 @@ def _fix_stat_unc(histogram: histo.Histogram, name: str) -> None:
     Modifies the histogram handed over in the argument.
 
     Args:
-        histogram (cabinetry.histo.Histogram): the histogram to fix
+        histogram (histo.Histogram): the histogram to fix
         name (str): histogram name for logging
     """
     nan_pos = np.where(np.isnan(histogram.stdev))[0]
@@ -65,7 +65,7 @@ def _smoothing_algorithm(
         systematic (Dict[str, Any]): containing all systematic information
 
     Returns:
-        Optional[str]: name of smoothing algorithm or None
+        str | None: name of smoothing algorithm or None
     """
     smoothing = systematic.get("Smoothing", None)
     if smoothing is None:
@@ -100,15 +100,15 @@ def apply_postprocessing(
     for NaN statistical uncertainties and optional smoothing.
 
     Args:
-        histogram (cabinetry.histo.Histogram): the histogram to postprocess
+        histogram (histo.Histogram): the histogram to postprocess
         name (str): histogram name for logging
-        smoothing_algorithm (Optional[str]): name of smoothing algorithm to apply,
-            defaults to None (no smoothing done)
-        nominal_histogram (Optional[cabinetry.histo.Histogram]): nominal histogram
-            (needed for smoothing), defaults to None
+        smoothing_algorithm (str | None): name of smoothing algorithm to apply, defaults
+            to None (no smoothing done)
+        nominal_histogram (histo.Histogram | None): nominal histogram (needed for
+            smoothing), defaults to None
 
     Returns:
-        cabinetry.histo.Histogram: the histogram with post-processing applied
+        histo.Histogram: the histogram with post-processing applied
     """
     # copy histogram to new object to leave it unchanged
     modified_histogram = copy.deepcopy(histogram)
@@ -126,7 +126,7 @@ def apply_postprocessing(
 def _postprocessor(histogram_folder: pathlib.Path) -> route.ProcessorFunc:
     """Returns the post-processing function to be applied to template histograms.
 
-    Needed by ``cabinetry.route.apply_to_all_templates``. Could alternatively create a
+    Needed by ``route.apply_to_all_templates``. Could alternatively create a
     ``Postprocessor`` class that contains processors.
 
     Args:
@@ -148,8 +148,8 @@ def _postprocessor(histogram_folder: pathlib.Path) -> route.ProcessorFunc:
             region (Dict[str, Any]): containing all region information
             sample (Dict[str, Any]): containing all sample information
             systematic (Dict[str, Any]): containing all systematic information
-            template (Optional[Literal["Up", "Down"]]): template considered: "Up",
-                "Down", or None for nominal
+            template (Literal["Up", "Down"] | None): template considered: "Up", "Down",
+                or None for nominal
         """
         histogram = histo.Histogram.from_config(
             histogram_folder,

@@ -28,8 +28,8 @@ def build(
         config (Dict[str, Any]): cabinetry configuration
         method (str, optional): backend to use for histogram production, defaults to
             "uproot"
-        router (Optional[route.Router], optional): instance of cabinetry.route.Router
-            that contains user-defined overrides, defaults to None
+        router (route.Router | None, optional): instance of route.Router that contains
+            user-defined overrides, defaults to None
     """
     # create an instance of the class doing the template building
     histogram_folder = pathlib.Path(config["General"]["HistogramFolder"])
