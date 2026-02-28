@@ -62,7 +62,7 @@ def create_file(file_name, distributions, weights, labels, *, extra_weights=None
         for i, label in enumerate(labels):
             lep_charge = create_lepton_charge(n_events)
             if label == "background":
-                f[label] = {
+                arr = {
                     "jet_pt": distributions[i],
                     "weight": weights[i],
                     "lep_charge": lep_charge,
@@ -70,11 +70,13 @@ def create_file(file_name, distributions, weights, labels, *, extra_weights=None
                     "weight_down": extra_weights[1],
                 }
             else:
-                f[label] = {
+                arr = {
                     "jet_pt": distributions[i],
                     "weight": weights[i],
                     "lep_charge": lep_charge,
                 }
+            f.mktree(label, {k: v.dtype for k, v in arr.items()})
+            f[label].extend(arr)
 
 
 def create_file_pseudodata(file_name, pseudodata):
@@ -82,7 +84,9 @@ def create_file_pseudodata(file_name, pseudodata):
     with uproot.recreate(file_name) as f:
         # write pseudodata
         lep_charge = create_lepton_charge(n_events)
-        f["pseudodata"] = {"jet_pt": pseudodata, "lep_charge": lep_charge}
+        arr = {"jet_pt": pseudodata, "lep_charge": lep_charge}
+        f.mktree("pseudodata", {k: v.dtype for k, v in arr.items()})
+        f["pseudodata"].extend(arr)
 
 
 def read_file(file_name):
@@ -90,17 +94,16 @@ def read_file(file_name):
     weights = []
     labels = []
     with uproot.open(file_name) as f:
-        all_trees = f.keys(filter_classname="TTree", recursive=True)
-        for tree in all_trees:
-            distributions.append(f[tree]["jet_pt"].array(library="np"))
-            weights.append(f[tree]["weight"].array(library="np"))
+        for tree in f.keys():
+            distributions.append(f[tree]["jet_pt"].array().to_numpy())
+            weights.append(f[tree]["weight"].array().to_numpy())
             labels.append(f[tree].name)
     return distributions, weights, labels
 
 
 def read_file_pseudodata(file_name):
     with uproot.open(file_name) as f:
-        distribution = f["pseudodata"]["jet_pt"].array(library="np")
+        distribution = f["pseudodata"]["jet_pt"].array().to_numpy()
     return distribution
 
 
