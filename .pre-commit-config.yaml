@@ -7,10 +7,10 @@ repos:
     rev: v1.19.1
     hooks:
     -   id: mypy
-        name: mypy with Python 3.13
+        name: mypy with Python 3.14
         files: src/cabinetry
         additional_dependencies: ["numpy>=2.3.0", "boost-histogram>=1.0.1", "click>=8", "types-tabulate", "types-PyYAML", "hist>=2.3.0"]
-        args: ["--python-version=3.13"]
+        args: ["--python-version=3.14"]
 -   repo: https://github.com/pycqa/flake8
     rev: 7.3.0
     hooks:
@@ -20,7 +20,7 @@ repos:
     rev: v3.21.2
     hooks:
     -   id: pyupgrade
-        args: ["--py38-plus"]
+        args: ["--py310-plus"]
 -   repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v6.0.0
     hooks:
