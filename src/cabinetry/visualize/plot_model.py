@@ -41,8 +41,7 @@ def data_mc(
     Args:
         histogram_dict_list (List[Dict[str, Any]]): list of samples (with info stored in
             one dict per sample)
-        total_model_unc (np.ndarray): total model uncertainty, if specified this is used
-            instead of calculating it via sum in quadrature, defaults to None
+        total_model_unc (np.ndarray): total model uncertainty
         bin_edges (np.ndarray): bin edges of histogram
         figure_path (pathlib.Path | None, optional): path where figure should be
             saved, or None to not save it, defaults to None

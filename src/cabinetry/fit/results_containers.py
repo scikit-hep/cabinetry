@@ -16,7 +16,7 @@ class FitResults(NamedTuple):
         labels (List[str]): parameter labels
         corr_mat (np.ndarray): parameter correlation matrix
         best_twice_nll (float): -2 log(likelihood) at best-fit point
-        goodess_of_fit (float, optional): goodness-of-fit p-value, defaults to -1
+        goodness_of_fit (float, optional): goodness-of-fit p-value, defaults to -1
         minos_uncertainty (Dict[str, Tuple[float, float]]): uncertainties of best-fit
             parameter results indexed by parameter name, calculated with MINOS
         minuit_obj (iminuit.Minuit, optional): underlying minimizer

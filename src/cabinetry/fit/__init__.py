@@ -268,7 +268,6 @@ def _fit_model(
     maxiter: int | None = None,
     tolerance: float | None = None,
     custom_fit: bool = False,
-    cl: float | None = None,
 ) -> FitResults:
     """Interface for maximum likelihood fits through ``pyhf.infer`` API or ``iminuit``.
 
@@ -707,7 +706,7 @@ def scan(
         par_name (str): name of parameter to scan over
         par_range (tuple[float, float] | None, optional): upper and lower bounds of
             parameter in scan, defaults to None (automatically determine bounds)
-        n_steps (int, optional): number of steps in scan, defaults to 10
+        n_steps (int, optional): number of steps in scan, defaults to 11
         init_pars (list[float] | None, optional): list of initial parameter settings,
             defaults to None (use ``pyhf`` suggested inits)
         fix_pars (list[bool] | None, optional): list of booleans specifying which

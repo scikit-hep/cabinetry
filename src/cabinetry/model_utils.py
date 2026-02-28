@@ -902,8 +902,8 @@ def _modifier_map(
         model (pyhf.pdf.Model): model for which to create the map
 
     Returns:
-        Dict[Tuple[str, str, str], List[str]]: map to extract modifier lists for each
-        (channel, sample, parameter)
+        defaultdict[tuple[str, str, str], list[str]]: map to extract modifier lists for
+        each (channel, sample, parameter)
     """
     modifier_map = defaultdict(list)
     for channel in model.spec["channels"]:
