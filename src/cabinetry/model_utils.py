@@ -123,7 +123,6 @@ def _merge_sample_yields(
         np.ndarray: merged yields, either per channel (list of lists of lists) or for
             one channel (list of lists)
     """
-
     sample_update_map = model.config.sample_update_map
 
     def _sum_per_channel(i_ch: int | None = None) -> np.ndarray:
