@@ -18,7 +18,6 @@ from cabinetry.fit.results_containers import (
     SignificanceResults,
 )
 
-
 log = logging.getLogger(__name__)
 
 

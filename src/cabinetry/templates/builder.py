@@ -13,7 +13,6 @@ from cabinetry import histo
 from cabinetry import route
 from cabinetry.templates import utils
 
-
 log = logging.getLogger(__name__)
 
 

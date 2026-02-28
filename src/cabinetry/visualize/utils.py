@@ -7,7 +7,6 @@ from typing import Optional
 import matplotlib as mpl
 import matplotlib.pyplot as plt
 
-
 log = logging.getLogger(__name__)
 
 

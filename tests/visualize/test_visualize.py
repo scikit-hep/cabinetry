@@ -13,7 +13,6 @@ from cabinetry import fit
 from cabinetry import model_utils
 from cabinetry import visualize
 
-
 MockHistogram = namedtuple("MockHistogram", ["bins", "yields", "stdev"])
 
 

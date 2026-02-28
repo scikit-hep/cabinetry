@@ -10,7 +10,6 @@ import numpy as np
 
 import cabinetry
 
-
 log = logging.getLogger(__name__)
 
 

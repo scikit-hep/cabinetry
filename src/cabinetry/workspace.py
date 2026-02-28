@@ -10,7 +10,6 @@ import pyhf
 from cabinetry import configuration
 from cabinetry import histo
 
-
 log = logging.getLogger(__name__)
 
 

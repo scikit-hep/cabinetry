@@ -2,7 +2,6 @@ import os
 
 import cabinetry
 
-
 if __name__ == "__main__":
     # set up customized log formatting
     cabinetry.set_logging()

@@ -9,7 +9,6 @@ from typing import Any, Dict, List, Literal, Optional, Union
 import jsonschema
 import yaml
 
-
 log = logging.getLogger(__name__)
 
 

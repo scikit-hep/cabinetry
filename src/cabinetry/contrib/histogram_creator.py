@@ -8,7 +8,6 @@ import boost_histogram as bh
 import numpy as np
 import uproot
 
-
 log = logging.getLogger(__name__)
 
 

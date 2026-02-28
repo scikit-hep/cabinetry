@@ -8,7 +8,6 @@ import boost_histogram as bh
 
 from cabinetry import configuration
 
-
 log = logging.getLogger(__name__)
 
 
