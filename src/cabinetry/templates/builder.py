@@ -115,7 +115,7 @@ def _variable(
         sample (Dict[str, Any]): containing all sample information
         systematic (Dict[str, Any]): containing all systematic information
         template (Literal["Up", "Down"] | None): template considered: "Up", "Down", or
-            or None for nominal
+            None for nominal
 
     Returns:
         str: name of variable to bin histogram in
@@ -150,7 +150,7 @@ def _filter(
         sample (Dict[str, Any]): containing all sample information
         systematic (Dict[str, Any]): containing all systematic information
         template (Literal["Up", "Down"] | None): template considered: "Up", "Down", or
-            or None for nominal
+            None for nominal
 
     Returns:
         str | None: expression for the filter to be used, or None for no filtering
@@ -189,7 +189,7 @@ def _weight(
         sample (Dict[str, Any]): containing all sample information
         systematic (Dict[str, Any]): containing all systematic information
         template (Literal["Up", "Down"] | None): template considered: "Up", "Down", or
-            or None for nominal
+            None for nominal
 
     Returns:
         str | None: weight used for events when filled into histograms, or None for no
@@ -219,7 +219,7 @@ def _position_in_file(
         sample (Dict[str, Any]): containing all sample information
         systematic (Dict[str, Any]): containing all systematic information
         template (Literal["Up", "Down"] | None): template considered: "Up", "Down", or
-            or None for nominal
+            None for nominal
 
     Returns:
         str: where in the file to find the data (the name of a tree)
