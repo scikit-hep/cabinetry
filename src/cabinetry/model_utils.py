@@ -27,8 +27,8 @@ class LightConfig:
     ):
         """Creates an instance of the light-weight model configuration object.
 
-        This is used to to manipulate elements of the model that affect representations
-        of results, but not the results itself.
+        This is used to manipulate elements of the model that affect representations of
+        results, but not the results itself.
 
         Args:
             model (pyhf.pdf.Model): pyhf model to base the light model on
@@ -90,8 +90,8 @@ class LightModel:
     ):
         """Create an instance of the light-weight model object.
 
-        This is used to to manipulate elements of the model that affect
-        representations of results, but not the results itself.
+        This is used to manipulate elements of the model that affect representations of
+        results, but not the results itself.
 
         Args:
             model (pyhf.pdf.Model): pyhf model to base the light model on

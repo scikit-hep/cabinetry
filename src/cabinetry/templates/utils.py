@@ -41,7 +41,7 @@ def _name_and_save(
         histogram (histo.Histogram): histogram to save
         region (Dict[str, Any]): containing all region information
         sample (Dict[str, Any]): containing all sample information
-        systematic (Dict[str, Any]): containing all systematic
+        systematic (Dict[str, Any]): containing all systematic information
         template (Literal["Up", "Down"] | None): template considered: "Up", "Down", or
             None for nominal
     """
