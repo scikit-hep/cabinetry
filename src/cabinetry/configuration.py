@@ -267,3 +267,19 @@ def region_dict(config: dict[str, Any], region_name: str) -> dict[str, Any]:
     if len(regions) > 1:
         log.error(f"found more than one region with name {region_name}")
     return regions[0]
+
+
+def _input_is_ntuple(config: dict[str, Any]) -> bool:
+    """Checks if input files for given config are ntuples or histograms.
+
+    This relies on the "Tree" property of samples, which is required for ntuple inputs.
+    In case this property is used for histogram inputs (where it does nothing), this
+    function will mistakenly identify this as ntuple input type.
+
+    Args:
+        config (dict[str, Any]): cabinetry configuration file
+
+    Returns:
+        bool: whether inputs are of ntuple type
+    """
+    return all([sample.get("Tree") is not None for sample in config["Samples"]])
