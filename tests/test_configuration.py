@@ -295,3 +295,11 @@ def test_region_dict(caplog):
 
     with pytest.raises(ValueError, match="region abc not found in config"):
         configuration.region_dict(config, "abc")
+
+
+def test__input_is_ntuple():
+    config_ntuple = {"Samples": [{"Name": "", "Tree": ""}]}
+    config_histogram = {"Samples": [{"Name": ""}]}
+
+    assert configuration._input_is_ntuple(config_ntuple) is True
+    assert configuration._input_is_ntuple(config_histogram) is False

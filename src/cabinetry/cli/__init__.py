@@ -4,7 +4,7 @@ import io
 import json
 import logging
 import pathlib
-from typing import Any
+from typing import Any, Literal
 
 import click
 import yaml
@@ -48,7 +48,16 @@ def cabinetry() -> None:
     default="uproot",
     help="backend for histogram production (default: uproot)",
 )
-def templates(config: io.TextIOWrapper, method: str) -> None:
+@click.option(
+    "--input_type",
+    type=click.Choice(["ntuple", "histogram"]),
+    help="type of input files (overrides automatic detection)",
+)
+def templates(
+    config: io.TextIOWrapper,
+    method: str,
+    input_type: Literal["ntuple", "histogram"] | None,
+) -> None:
     """Produces template histograms.
 
     CONFIG: path to cabinetry configuration file
@@ -56,7 +65,19 @@ def templates(config: io.TextIOWrapper, method: str) -> None:
     _set_logging()
     cabinetry_config = yaml.safe_load(config)
     cabinetry_configuration.validate(cabinetry_config)
-    cabinetry_templates.build(cabinetry_config, method=method)
+
+    if input_type is None:
+        # detect input type
+        input_type = (
+            "ntuple"
+            if cabinetry_configuration._input_is_ntuple(cabinetry_config)
+            else "histogram"
+        )
+
+    if input_type == "ntuple":
+        cabinetry_templates.build(cabinetry_config, method=method)
+    else:
+        cabinetry_templates.collect(cabinetry_config, method=method)
 
 
 @click.command()
