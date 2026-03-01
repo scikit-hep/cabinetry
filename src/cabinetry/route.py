@@ -79,6 +79,8 @@ class Router:
         accordingly.
 
         Args:
+            processor_list (list[dict[str, Any]]): list of processors to add the
+                function to
             region_name (str): name of the region to apply the function to, or "*" to
                 apply to all regions
             sample_name (str): name of the sample to apply the function to, or "*" to
