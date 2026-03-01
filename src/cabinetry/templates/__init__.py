@@ -2,7 +2,7 @@
 
 import logging
 import pathlib
-from typing import Any, Dict, Optional
+from typing import Any
 
 from cabinetry import route
 from cabinetry.templates import builder
@@ -13,10 +13,10 @@ log = logging.getLogger(__name__)
 
 
 def build(
-    config: Dict[str, Any],
+    config: dict[str, Any],
     *,
     method: str = "uproot",
-    router: Optional[route.Router] = None,
+    router: route.Router | None = None,
 ) -> None:
     """Produces all required histograms specified by the configuration file.
 
@@ -25,18 +25,18 @@ def build(
     ``router``.
 
     Args:
-        config (Dict[str, Any]): cabinetry configuration
+        config (dict[str, Any]): cabinetry configuration
         method (str, optional): backend to use for histogram production, defaults to
             "uproot"
-        router (Optional[route.Router], optional): instance of cabinetry.route.Router
-            that contains user-defined overrides, defaults to None
+        router (route.Router | None, optional): instance of route.Router that contains
+            user-defined overrides, defaults to None
     """
     # create an instance of the class doing the template building
     histogram_folder = pathlib.Path(config["General"]["HistogramFolder"])
     general_path = config["General"]["InputPath"]
     template_builder = builder._Builder(histogram_folder, general_path, method)
 
-    match_func: Optional[route.MatchFunc] = None
+    match_func: route.MatchFunc | None = None
     if router is not None:
         # specify the wrapper for user-defined functions
         router.template_builder_wrapper = template_builder._wrap_custom_template_builder
@@ -48,7 +48,7 @@ def build(
     )
 
 
-def collect(config: Dict[str, Any], *, method: str = "uproot") -> None:
+def collect(config: dict[str, Any], *, method: str = "uproot") -> None:
     """Collects all required histograms specified by the configuration file.
 
     Histograms must already exist, and this collects and saves them in the format used
@@ -56,7 +56,7 @@ def collect(config: Dict[str, Any], *, method: str = "uproot") -> None:
     settings, it defaults to an empty string.
 
     Args:
-        config (Dict[str, Any]): cabinetry configuration
+        config (dict[str, Any]): cabinetry configuration
         method (str, optional): backend to use for histogram production, defaults to
             "uproot"
     """
@@ -73,11 +73,11 @@ def collect(config: Dict[str, Any], *, method: str = "uproot") -> None:
     route.apply_to_all_templates(config, processor)
 
 
-def postprocess(config: Dict[str, Any]) -> None:
+def postprocess(config: dict[str, Any]) -> None:
     """Applies postprocessing to all histograms.
 
     Args:
-        config (Dict[str, Any]): cabinetry configuration
+        config (dict[str, Any]): cabinetry configuration
     """
     histogram_folder = pathlib.Path(config["General"]["HistogramFolder"])
     processor = postprocessor._postprocessor(histogram_folder)

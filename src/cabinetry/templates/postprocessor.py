@@ -3,7 +3,7 @@
 import copy
 import logging
 import pathlib
-from typing import Any, Dict, Literal, Optional
+from typing import Any, Literal
 
 import numpy as np
 
@@ -21,7 +21,7 @@ def _fix_stat_unc(histogram: histo.Histogram, name: str) -> None:
     Modifies the histogram handed over in the argument.
 
     Args:
-        histogram (cabinetry.histo.Histogram): the histogram to fix
+        histogram (histo.Histogram): the histogram to fix
         name (str): histogram name for logging
     """
     nan_pos = np.where(np.isnan(histogram.stdev))[0]
@@ -55,17 +55,17 @@ def _apply_353qh_twice(
 
 
 def _smoothing_algorithm(
-    region: Dict[str, Any], sample: Dict[str, Any], systematic: Dict[str, Any]
-) -> Optional[str]:
+    region: dict[str, Any], sample: dict[str, Any], systematic: dict[str, Any]
+) -> str | None:
     """Returns name of algorithm to use for smoothing, or None otherwise.
 
     Args:
-        region (Dict[str, Any]): containing all region information
-        sample (Dict[str, Any]): containing all sample information
-        systematic (Dict[str, Any]): containing all systematic information
+        region (dict[str, Any]): containing all region information
+        sample (dict[str, Any]): containing all sample information
+        systematic (dict[str, Any]): containing all systematic information
 
     Returns:
-        Optional[str]: name of smoothing algorithm or None
+        str | None: name of smoothing algorithm or None
     """
     smoothing = systematic.get("Smoothing", None)
     if smoothing is None:
@@ -90,8 +90,8 @@ def apply_postprocessing(
     histogram: histo.Histogram,
     name: str,
     *,
-    smoothing_algorithm: Optional[str] = None,
-    nominal_histogram: Optional[histo.Histogram] = None,
+    smoothing_algorithm: str | None = None,
+    nominal_histogram: histo.Histogram | None = None,
 ) -> histo.Histogram:
     """Returns a new histogram with post-processing applied.
 
@@ -100,15 +100,15 @@ def apply_postprocessing(
     for NaN statistical uncertainties and optional smoothing.
 
     Args:
-        histogram (cabinetry.histo.Histogram): the histogram to postprocess
+        histogram (histo.Histogram): the histogram to postprocess
         name (str): histogram name for logging
-        smoothing_algorithm (Optional[str]): name of smoothing algorithm to apply,
-            defaults to None (no smoothing done)
-        nominal_histogram (Optional[cabinetry.histo.Histogram]): nominal histogram
-            (needed for smoothing), defaults to None
+        smoothing_algorithm (str | None): name of smoothing algorithm to apply, defaults
+            to None (no smoothing done)
+        nominal_histogram (histo.Histogram | None): nominal histogram (needed for
+            smoothing), defaults to None
 
     Returns:
-        cabinetry.histo.Histogram: the histogram with post-processing applied
+        histo.Histogram: the histogram with post-processing applied
     """
     # copy histogram to new object to leave it unchanged
     modified_histogram = copy.deepcopy(histogram)
@@ -126,7 +126,7 @@ def apply_postprocessing(
 def _postprocessor(histogram_folder: pathlib.Path) -> route.ProcessorFunc:
     """Returns the post-processing function to be applied to template histograms.
 
-    Needed by ``cabinetry.route.apply_to_all_templates``. Could alternatively create a
+    Needed by ``route.apply_to_all_templates``. Could alternatively create a
     ``Postprocessor`` class that contains processors.
 
     Args:
@@ -137,19 +137,19 @@ def _postprocessor(histogram_folder: pathlib.Path) -> route.ProcessorFunc:
     """
 
     def process_template(
-        region: Dict[str, Any],
-        sample: Dict[str, Any],
-        systematic: Dict[str, Any],
-        template: Optional[Literal["Up", "Down"]],
+        region: dict[str, Any],
+        sample: dict[str, Any],
+        systematic: dict[str, Any],
+        template: Literal["Up", "Down"] | None,
     ) -> None:
         """Applies post-processing to a single histogram.
 
         Args:
-            region (Dict[str, Any]): containing all region information
-            sample (Dict[str, Any]): containing all sample information
-            systematic (Dict[str, Any]): containing all systematic information
-            template (Optional[Literal["Up", "Down"]]): template considered: "Up",
-                "Down", or None for nominal
+            region (dict[str, Any]): containing all region information
+            sample (dict[str, Any]): containing all sample information
+            systematic (dict[str, Any]): containing all systematic information
+            template (Literal["Up", "Down"] | None): template considered: "Up", "Down",
+                or None for nominal
         """
         histogram = histo.Histogram.from_config(
             histogram_folder,

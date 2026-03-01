@@ -3,17 +3,7 @@
 from collections import defaultdict
 import json
 import logging
-from typing import (
-    Any,
-    cast,
-    DefaultDict,
-    Dict,
-    List,
-    NamedTuple,
-    Optional,
-    Tuple,
-    Union,
-)
+from typing import Any, cast, NamedTuple
 
 import numpy as np
 import pyhf
@@ -24,7 +14,7 @@ log = logging.getLogger(__name__)
 
 
 # cache holding results from yield uncertainty calculations
-_YIELD_STDEV_CACHE: Dict[Any, Tuple[List[List[List[float]]], List[List[float]]]] = {}
+_YIELD_STDEV_CACHE: dict[Any, tuple[list[list[list[float]]], list[list[float]]]] = {}
 
 
 class LightConfig:
@@ -33,18 +23,17 @@ class LightConfig:
     def __init__(
         self,
         model: pyhf.pdf.Model,
-        sample_update_map: Optional[Dict[str, List[str]]] = None,
-    ):
+        sample_update_map: dict[str, list[str]] | None = None,
+    ) -> None:
         """Creates an instance of the light-weight model configuration object.
 
-        This is used to to manipulate elements of the model that affect representations
-        of results, but not the results itself.
+        This is used to manipulate elements of the model that affect representations of
+        results, but not the results itself.
 
         Args:
             model (pyhf.pdf.Model): pyhf model to base the light model on
-            sample_update_map (Optional[Dict[str, List[str]]], optional): a map
-                specifying how to merge samples (values) into one sample (key).
-                Defaults to None.
+            sample_update_map (dict[str, list[str]] | None, optional): a map specifying
+                how to merge samples (values) into one sample (key), defaults to None
         """
         self.samples = model.config.samples
         self.channels = model.config.channels
@@ -56,12 +45,12 @@ class LightConfig:
         if sample_update_map is not None:
             self._update_samples(sample_update_map)
 
-    def _update_samples(self, sample_update_map: Dict[str, List[str]]) -> None:
+    def _update_samples(self, sample_update_map: dict[str, list[str]]) -> None:
         """Updates samples list after merging samples into one.
 
         Args:
-            sample_update_map (Dict[str, List[str]]): a map specifying how to merge
-                samples (values) into one sample (key).
+            sample_update_map (dict[str, list[str]]): a map specifying how to merge
+                samples (values) into one sample (key)
         """
         # Delete samples being merged from config
         # Flatten all merged samples into a set for O(1) lookups
@@ -77,11 +66,11 @@ class LightConfig:
         ]
         self.merged_samples_indices = np.asarray(merged_samples_indices)
         self.samples = cast(
-            List[str], np.delete(self.samples, merged_samples_indices).tolist()
+            list[str], np.delete(self.samples, merged_samples_indices).tolist()
         )
         # Add new samples at the bottom of stack
         self.samples = cast(
-            List[str],
+            list[str],
             np.insert(
                 np.asarray(self.samples, dtype=object),
                 np.arange(len(sample_update_map)),
@@ -97,18 +86,17 @@ class LightModel:
     def __init__(
         self,
         model: pyhf.pdf.Model,
-        sample_update_map: Optional[Dict[str, List[str]]] = None,
-    ):
+        sample_update_map: dict[str, list[str]] | None = None,
+    ) -> None:
         """Create an instance of the light-weight model object.
 
-        This is used to to manipulate elements of the model that affect
-        representations of results, but not the results itself.
+        This is used to manipulate elements of the model that affect representations of
+        results, but not the results itself.
 
         Args:
             model (pyhf.pdf.Model): pyhf model to base the light model on
-            sample_update_map (Optional[Dict[str, List[str]]], optional): a map
-                specifying how to merge samples (values) into one sample (key).
-                Defaults to None.
+            sample_update_map (dict[str, list[str]] | None, optional): a map specifying
+                how to merge samples (values) into one sample (key), defaults to None
         """
         self.config = LightConfig(model, sample_update_map)
         self.spec = model.spec
@@ -116,8 +104,8 @@ class LightModel:
 
 def _merge_sample_yields(
     model: LightModel,
-    old_yields: Union[List[List[List[float]]], List[List[float]]],
-    one_channel: Optional[bool] = False,
+    old_yields: list[list[list[float]]] | list[list[float]],
+    one_channel: bool | None = False,
 ) -> np.ndarray:
     """Merges the yields of samples specified in the sample_update_map.
 
@@ -125,20 +113,19 @@ def _merge_sample_yields(
 
     Args:
         model (LightModel): LightModel object containing the model configuration
-        old_yields (Union[List[List[List[float]]], List[List[float]]]): yields to be
-            merged, either per channel (list of lists of lists) or for one channel
-            (list of lists)
-        one_channel (Optional[bool], optional): whether the yields are for one channel
-            (True) or for multiple channels (False). Defaults to False.
+        old_yields (list[list[list[float]]] | list[list[float]]): yields to be merged,
+            either per channel (list of lists of lists) or for one channel (list of
+            lists)
+        one_channel (bool | None, optional): whether the yields are for one channel
+            (True) or for multiple channels (False), defaults to False
 
     Returns:
         np.ndarray: merged yields, either per channel (list of lists of lists) or for
             one channel (list of lists)
     """
-
     sample_update_map = model.config.sample_update_map
 
-    def _sum_per_channel(i_ch: Optional[int] = None) -> np.ndarray:
+    def _sum_per_channel(i_ch: int | None = None) -> np.ndarray:
         # mypy not able to tell that map cannot be None-typed
         # so we have to check
         if sample_update_map is None:
@@ -150,9 +137,9 @@ def _merge_sample_yields(
         # will be list(list(float)) or list(float)
         # but this will never happen because of the if condition
         if i_ch is not None:
-            old_yield = cast(List[List[float]], old_yields[i_ch])
+            old_yield = cast(list[list[float]], old_yields[i_ch])
         else:
-            old_yield = cast(List[List[float]], old_yields)
+            old_yield = cast(list[list[float]], old_yields)
         # for each channel, sum together the desired samples
         summed_sample = np.sum(
             np.asarray(old_yield)[model.config.merged_samples_indices], axis=0
@@ -186,40 +173,39 @@ class ModelPrediction(NamedTuple):
     """Model prediction with yields and total uncertainties per bin and channel.
 
     Args:
-        model Union[LightModel, pyhf.pdf.Model]: model (or a light-weight version of
+        model (pyhf.pdf.Model | LightModel): model (or a light-weight version of
             pyhf.pdf.Model) to which prediction corresponds to
-        model_yields (List[List[List[float]]]): yields per channel, sample and bin,
+        model_yields (list[list[list[float]]]): yields per channel, sample and bin,
             indices: channel, sample, bin
-        total_stdev_model_bins (List[List[List[float]]]): total yield uncertainty per
+        total_stdev_model_bins (list[list[list[float]]]): total yield uncertainty per
             channel, sample and bin, indices: channel, sample, bin (last sample: sum
             over samples)
-        total_stdev_model_channels (List[List[float]]): total yield uncertainty per
+        total_stdev_model_channels (list[list[float]]): total yield uncertainty per
             channel and sample, indices: channel, sample (last sample: sum over samples)
         label (str): label for the prediction, e.g. "pre-fit" or "post-fit"
     """
 
-    model: Union[LightModel, pyhf.pdf.Model]
-    model_yields: List[List[List[float]]]
-    total_stdev_model_bins: List[List[List[float]]]
-    total_stdev_model_channels: List[List[float]]
+    model: pyhf.pdf.Model | LightModel
+    model_yields: list[list[list[float]]]
+    total_stdev_model_bins: list[list[list[float]]]
+    total_stdev_model_channels: list[list[float]]
     label: str
 
 
 def model_and_data(
-    spec: Dict[str, Any], *, asimov: bool = False, include_auxdata: bool = True
-) -> Tuple[pyhf.pdf.Model, List[float]]:
+    spec: dict[str, Any], *, asimov: bool = False, include_auxdata: bool = True
+) -> tuple[pyhf.pdf.Model, list[float]]:
     """Returns model and data for a ``pyhf`` workspace specification.
 
     Args:
-        spec (Dict[str, Any]): a ``pyhf`` workspace specification
+        spec (dict[str, Any]): a ``pyhf`` workspace specification
         asimov (bool, optional): whether to return the Asimov dataset, defaults to False
         include_auxdata (bool, optional): whether to also return auxdata, defaults to
             True
 
     Returns:
-        Tuple[pyhf.pdf.Model, List[float]]:
-            - a HistFactory-style model in ``pyhf`` format
-            - the data (plus auxdata if requested) for the model
+        tuple[pyhf.pdf.Model, list[float]]: tuple containing a HistFactory-style model
+        in ``pyhf`` format and the data (plus auxdata if requested) for the model
     """
     workspace = pyhf.Workspace(spec)
     model = workspace.model(
@@ -238,11 +224,11 @@ def model_and_data(
 def asimov_data(
     model: pyhf.pdf.Model,
     *,
-    fit_results: Optional[FitResults] = None,
-    poi_name: Optional[str] = None,
-    poi_value: Optional[float] = None,
+    fit_results: FitResults | None = None,
+    poi_name: str | None = None,
+    poi_value: float | None = None,
     include_auxdata: bool = True,
-) -> List[float]:
+) -> list[float]:
     """Returns the Asimov dataset (optionally with auxdata) for a model.
 
     Initial parameter settings for normalization factors in the workspace are treated as
@@ -254,18 +240,18 @@ def asimov_data(
 
     Args:
         model (pyhf.pdf.Model): the model from which to construct the dataset
-        fit_results (Optional[FitResults], optional): parameter configuration to use
-            when building the Asimov dataset (using the best-fit result), defaults to
-            None (then a pre-fit Asimov dataset is built)
-        poi_name (Optional[str], optional): name of parameter to set to a custom value
+        fit_results (FitResults | None, optional): parameter configuration to use when
+            building the Asimov dataset (using the best-fit result), defaults to None
+            (then a pre-fit Asimov dataset is built)
+        poi_name (str | None, optional): name of parameter to set to a custom value
             via poi_value, defaults to None (use POI specified in workspace)
-        poi_value (Optional[float], optional): custom value to set POI specified via
+        poi_value (float | None, optional): custom value to set POI specified via
             poi_name to, defaults to None (no custom value set)
         include_auxdata (bool, optional): whether to also return auxdata, defaults to
             True
 
     Returns:
-        List[float]: the Asimov dataset
+        list[float]: the Asimov dataset
     """
     if fit_results is None:
         # pre-fit Asimov by default
@@ -356,7 +342,7 @@ def prefit_uncertainties(model: pyhf.pdf.Model) -> np.ndarray:
 
 def _hashable_model_key(
     model: pyhf.pdf.Model,
-) -> Tuple[str, Tuple[Tuple[str, str], ...]]:
+) -> tuple[str, tuple[tuple[str, str], ...]]:
     """Compute a hashable representation of the values that uniquely identify a model.
 
     The ``pyhf.pdf.Model`` type is already hashable, but it uses the ``__hash__``
@@ -372,7 +358,7 @@ def _hashable_model_key(
         model (pyhf.pdf.Model): model to generate a key for
 
     Returns:
-        Tuple[str, Tuple[Tuple[str, str], ...]]: a key that identifies the model
+        tuple[str, tuple[tuple[str, str], ...]]: a key that identifies the model
         by its spec and interpcodes
     """
     interpcodes = []
@@ -390,8 +376,8 @@ def yield_stdev(
     parameters: np.ndarray,
     uncertainty: np.ndarray,
     corr_mat: np.ndarray,
-    sample_update_map: Optional[Dict[str, List[str]]] = None,
-) -> Tuple[List[List[List[float]]], List[List[float]]]:
+    sample_update_map: dict[str, list[str]] | None = None,
+) -> tuple[list[list[list[float]]], list[list[float]]]:
     """Calculates symmetrized model yield standard deviation per channel / sample / bin.
 
     Returns both the uncertainties per bin (in a list of channels and samples), and the
@@ -407,11 +393,11 @@ def yield_stdev(
         parameters (np.ndarray): central values of model parameters
         uncertainty (np.ndarray): uncertainty of model parameters
         corr_mat (np.ndarray): correlation matrix
-        sample_update_map (Optional[Dict[str, List[str]]], optional): a map specifying
-            how to merge samples, defaults to None
+        sample_update_map (dict[str, list[str]] | None, optional): a map specifying how
+            to merge samples, defaults to None
 
     Returns:
-        Tuple[List[List[List[float]]], List[List[float]]]:
+        tuple[list[list[list[float]]], list[list[float]]]:
             - list of channels, each channel is a list of samples, and each sample a
               list of standard deviations per bin (the last sample corresponds to a sum
               over all samples)
@@ -600,9 +586,9 @@ def yield_stdev(
 def prediction(
     model: pyhf.pdf.Model,
     *,
-    fit_results: Optional[FitResults] = None,
-    label: Optional[str] = None,
-    sample_update_map: Optional[Dict[str, List[str]]] = None,
+    fit_results: FitResults | None = None,
+    label: str | None = None,
+    sample_update_map: dict[str, list[str]] | None = None,
 ) -> ModelPrediction:
     """Returns model prediction, including model yields and uncertainties.
 
@@ -613,12 +599,14 @@ def prediction(
 
     Args:
         model (pyhf.pdf.Model): model to evaluate yield prediction for
-        fit_results (Optional[FitResults], optional): parameter configuration to use,
+        fit_results (FitResults | None, optional): parameter configuration to use,
             includes best-fit settings and uncertainties, as well as correlation matrix,
             defaults to None (then the pre-fit configuration is used)
-        label (Optional[str], optional): label to include in model prediction, defaults
+        label (str | None, optional): label to include in model prediction, defaults
             to None (then will use "pre-fit" if fit results are not included, and "post-
             fit" otherwise)
+        sample_update_map (dict[str, list[str]] | None, optional): a map specifying how
+            to merge samples, defaults to None
 
     Returns:
         ModelPrediction: model, yields and uncertainties per channel, sample, bin
@@ -655,7 +643,7 @@ def prediction(
 
     if sample_update_map is not None:
         model_yields = cast(
-            List[List[List[float]]],
+            list[list[list[float]]],
             _merge_sample_yields(light_model, model_yields).tolist(),
         )
 
@@ -679,7 +667,7 @@ def prediction(
 
 
 def unconstrained_parameter_count(
-    model: pyhf.pdf.Model, *, fix_pars: Optional[List[bool]] = None
+    model: pyhf.pdf.Model, *, fix_pars: list[bool] | None = None
 ) -> int:
     """Returns the number of unconstrained, non-constant parameters in a model.
 
@@ -689,7 +677,7 @@ def unconstrained_parameter_count(
 
     Args:
         model (pyhf.pdf.Model): model to count parameters for
-        fix_pars (Optional[List[bool]], optional): list of booleans specifying which
+        fix_pars (list[bool] | None, optional): list of booleans specifying which
             parameters are held constant, defaults to None (use ``pyhf`` suggestion)
 
     Returns:
@@ -708,9 +696,7 @@ def unconstrained_parameter_count(
     return n_pars
 
 
-def _parameter_index(
-    par_name: str, labels: Union[List[str], Tuple[str, ...]]
-) -> Optional[int]:
+def _parameter_index(par_name: str, labels: list[str] | tuple[str, ...]) -> int | None:
     """Returns the position of a parameter with a given name in the list of parameters.
 
     Useful together with ``pyhf.pdf._ModelConfig.par_names`` to find the position of a
@@ -719,11 +705,11 @@ def _parameter_index(
 
     Args:
         par_name (str): name of parameter to find in list
-        labels (Union[List[str], Tuple[str, ...]]): list or tuple with all parameter
-            names in the model
+        labels (list[str] | tuple[str, ...]): list or tuple with all parameter names in
+            the model
 
     Returns:
-        Optional[int]: index of parameter, or None if parameter was not found
+        int | None: index of parameter, or None if parameter was not found
     """
     par_index = next((i for i, label in enumerate(labels) if label == par_name), None)
     if par_index is None:
@@ -731,9 +717,7 @@ def _parameter_index(
     return par_index
 
 
-def _poi_index(
-    model: pyhf.pdf.Model, *, poi_name: Optional[str] = None
-) -> Optional[int]:
+def _poi_index(model: pyhf.pdf.Model, *, poi_name: str | None = None) -> int | None:
     """Returns the index of the POI specified in the argument or the model default.
 
     If a string is given as argument, this takes priority. Otherwise the POI from the
@@ -742,13 +726,13 @@ def _poi_index(
 
     Args:
         model (pyhf.pdf.Model): model for which to find the POI index
-        poi_name (Optional[str], optional): name of the POI, defaults to None
+        poi_name (str | None, optional): name of the POI, defaults to None
 
     Raises:
         ValueError: if the specified POI name cannot be found in the model
 
     Returns:
-        Optional[int]: POI index, or None if no POI could be found
+        int | None: POI index, or None if no POI could be found
     """
     if poi_name is not None:
         # use POI given by kwarg if specified
@@ -766,17 +750,17 @@ def _poi_index(
 
 
 def _strip_auxdata(
-    model: Union[pyhf.pdf.Model, LightModel], data: List[float]
-) -> List[float]:
+    model: pyhf.pdf.Model | LightModel, data: list[float]
+) -> list[float]:
     """Always returns observed yields, no matter whether data includes auxdata.
 
     Args:
-        model (Union[pyhf.pdf.Model, LightModel]): model to which data corresponds to
-        data (List[float]): data, either including auxdata which is then stripped off or
+        model (pyhf.pdf.Model | LightModel): model to which data corresponds to
+        data (list[float]): data, either including auxdata which is then stripped off or
             only observed yields
 
     Returns:
-        List[float]: observed data yields
+        list[float]: observed data yields
     """
     n_bins_total = sum(model.config.channel_nbins.values())
     if len(data) != n_bins_total:
@@ -786,17 +770,17 @@ def _strip_auxdata(
 
 
 def _data_per_channel(
-    model: Union[pyhf.pdf.Model, LightModel], data: List[float]
-) -> List[List[float]]:
+    model: pyhf.pdf.Model | LightModel, data: list[float]
+) -> list[list[float]]:
     """Returns data split per channel, and strips off auxiliary data if included.
 
     Args:
-        model (Union[pyhf.pdf.Model, LightModel]): model to which data corresponds to
-        data (List[float]): data (not split by channel), can either include auxdata
+        model (pyhf.pdf.Model | LightModel): model to which data corresponds to
+        data (list[float]): data (not split by channel), can either include auxdata
             which is then stripped off, or only observed yields
 
     Returns:
-        List[List[float]]: data per channel and per bin
+        list[list[float]]: data per channel and per bin
     """
     # strip off auxiliary data
     data_combined = _strip_auxdata(model, data)
@@ -809,18 +793,18 @@ def _data_per_channel(
 
 
 def _filter_channels(
-    model: Union[pyhf.pdf.Model, LightModel], channels: Optional[Union[str, List[str]]]
-) -> List[str]:
+    model: pyhf.pdf.Model | LightModel, channels: str | list[str] | None
+) -> list[str]:
     """Returns a list of channels in a model after applying filtering.
 
     Args:
-        model (Union[pyhf.pdf.Model, LightModel]): model from which to extract channels
-        channels (Optional[Union[str, List[str]]]): name of channel or list of channels
-            to filter, only including those channels provided via this argument in the
+        model (pyhf.pdf.Model | LightModel): model from which to extract channels
+        channels (str | list[str] | None): name of channel or list of channels to
+            filter, only including those channels provided via this argument in the
             return of the function
 
     Returns:
-        List[str]: list of channels after filtering
+        list[str]: list of channels after filtering
     """
     # channels included in model
     filtered_channels = model.config.channels
@@ -870,7 +854,7 @@ def match_fit_results(model: pyhf.pdf.Model, fit_results: FitResults) -> FitResu
     labels = model.config.par_names  # labels for target model
 
     # indices of parameters in current fit results, or None if they are missing
-    indices_for_corr: List[Optional[int]] = [None] * len(labels)
+    indices_for_corr: list[int | None] = [None] * len(labels)
 
     # loop over all required parameters
     for target_idx, target_label in enumerate(labels):
@@ -910,15 +894,15 @@ def match_fit_results(model: pyhf.pdf.Model, fit_results: FitResults) -> FitResu
 
 def _modifier_map(
     model: pyhf.pdf.Model,
-) -> DefaultDict[Tuple[str, str, str], List[str]]:
+) -> defaultdict[tuple[str, str, str], list[str]]:
     """Creates a map for modifier lists per (channel, sample, parameter).
 
     Args:
         model (pyhf.pdf.Model): model for which to create the map
 
     Returns:
-        Dict[Tuple[str, str, str], List[str]]: map to extract modifier lists for each
-        (channel, sample, parameter).
+        defaultdict[tuple[str, str, str], list[str]]: map to extract modifier lists for
+        each (channel, sample, parameter)
     """
     modifier_map = defaultdict(list)
     for channel in model.spec["channels"]:
@@ -931,21 +915,21 @@ def _modifier_map(
 
 
 def _parameters_maximizing_constraint_term(
-    model: pyhf.pdf.Model, aux_data: List[float]
-) -> List[float]:
+    model: pyhf.pdf.Model, aux_data: list[float]
+) -> list[float]:
     """Returns parameters maximizing the constraint term for the given auxiliary data.
 
     Parameters without an associated constraint term are set to their initial value.
 
     Args:
         model (pyhf.pdf.Model): model to use for constraint term evaluation
-        aux_data (List[float]): auxiliary data for which the constraint term should be
+        aux_data (list[float]): auxiliary data for which the constraint term should be
             maximized
 
     Returns:
-        List[float]: parameters maximizing the model constraint term
+        list[float]: parameters maximizing the model constraint term
     """
-    best_pars: List[float] = []  # parameters maximizing constraint term
+    best_pars: list[float] = []  # parameters maximizing constraint term
     i_aux = 0  # current position in auxiliary data list
     i_poisson = 0  # current position in list of Poisson rescale factors
 
@@ -972,7 +956,7 @@ def _parameters_maximizing_constraint_term(
 
             # manually cast, possible cause https://github.com/numpy/numpy/issues/27944
             best_pars += cast(
-                List[float],
+                list[float],
                 (
                     np.asarray(aux_data[i_aux : i_aux + n_params]) / rescale_factors
                 ).tolist(),

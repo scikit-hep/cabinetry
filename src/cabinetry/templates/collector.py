@@ -2,7 +2,7 @@
 
 import logging
 import pathlib
-from typing import Any, cast, Dict, Literal, Optional
+from typing import Any, cast, Literal
 
 from cabinetry import histo
 from cabinetry import route
@@ -14,10 +14,10 @@ log = logging.getLogger(__name__)
 def _histo_path(
     general_path: str,
     variation_path: str,
-    region: Dict[str, Any],
-    sample: Dict[str, Any],
-    systematic: Dict[str, Any],
-    template: Optional[Literal["Up", "Down"]],
+    region: dict[str, Any],
+    sample: dict[str, Any],
+    systematic: dict[str, Any],
+    template: Literal["Up", "Down"] | None,
 ) -> str:
     """Returns the paths to a histogram for a region-sample-systematic-template.
 
@@ -33,11 +33,11 @@ def _histo_path(
         general_path (str): path specified in general settings, with sections that can
             be overridden by region / sample / systematic settings
         variation_path (str): default for VariationPath setting
-        region (Dict[str, Any]): containing all region information
-        sample (Dict[str, Any]): containing all sample information
-        systematic (Dict[str, Any]): containing all systematic information
-        template (Optional[Literal["Up", "Down"]]): template considered: "Up", "Down",
-            or None for nominal
+        region (dict[str, Any]): containing all region information
+        sample (dict[str, Any]): containing all sample information
+        systematic (dict[str, Any]): containing all systematic information
+        template (Literal["Up", "Down"] | None): template considered: "Up", "Down", or
+            None for nominal
 
     Raises:
         ValueError: when ``RegionPath`` placeholder is used, but region setting is not
@@ -65,8 +65,8 @@ def _histo_path(
             systematic, template, "VariationPath"
         )
         if variation_override is not None:
-            # _check_for_override should return Optional[str] for VariationPath, but
-            # mypy cannot know that it will not be a list, so explicitly cast to str
+            # _check_for_override should return str | None for VariationPath, but mypy
+            # cannot know that it will not be a list, so explicitly cast to str
             variation_path = cast(str, variation_override)
 
     # create a new string for path handling, with placeholders replaced subsequently
@@ -116,7 +116,7 @@ def _collector(
 ) -> route.ProcessorFunc:
     """Returns the histogram-collecting function to be applied to template histograms.
 
-    Needed by ``cabinetry.route.apply_to_all_templates``. Could alternatively create a
+    Needed by ``route.apply_to_all_templates``. Could alternatively create a
     ``Collector`` class that contains processors (see ``builder._Builder`` for an
     example).
 
@@ -134,19 +134,19 @@ def _collector(
     """
 
     def collect_template(
-        region: Dict[str, Any],
-        sample: Dict[str, Any],
-        systematic: Dict[str, Any],
-        template: Optional[Literal["Up", "Down"]],
+        region: dict[str, Any],
+        sample: dict[str, Any],
+        systematic: dict[str, Any],
+        template: Literal["Up", "Down"] | None,
     ) -> None:
         """Collects a histogram and writes it to a file.
 
         Args:
-            region (Dict[str, Any]): containing all region information
-            sample (Dict[str, Any]): containing all sample information
-            systematic (Dict[str, Any]): containing all systematic information
-            template (Optional[Literal["Up", "Down"]]): template considered: "Up",
-                "Down", or None for nominal
+            region (dict[str, Any]): containing all region information
+            sample (dict[str, Any]): containing all sample information
+            systematic (dict[str, Any]): containing all systematic information
+            template (Literal["Up", "Down"] | None): template considered: "Up", "Down",
+                or None for nominal
         """
         histo_path = _histo_path(
             general_path, variation_path, region, sample, systematic, template

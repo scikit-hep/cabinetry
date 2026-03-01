@@ -3,7 +3,7 @@
 import logging
 import os
 import pathlib
-from typing import Any, Dict, List, Literal, Optional, Type, TypeVar, Union
+from typing import Any, Literal, TypeVar
 
 import boost_histogram as bh
 import numpy as np
@@ -21,20 +21,19 @@ class Histogram(bh.Histogram, family=cabinetry):
 
     @classmethod
     def from_arrays(
-        cls: Type[H],
-        bins: Union[List[float], np.ndarray],
-        yields: Union[List[float], np.ndarray],
-        stdev: Union[List[float], np.ndarray],
+        cls: type[H],
+        bins: list[float] | np.ndarray,
+        yields: list[float] | np.ndarray,
+        stdev: list[float] | np.ndarray,
     ) -> H:
         """Constructs a histogram from arrays of yields and uncertainties.
 
         The input can be lists of ints or floats, or numpy.ndarrays.
 
         Args:
-            bins (Union[List[float], np.ndarray]): edges of histogram bins
-            yields (Union[List[float], np.ndarray]): yield per histogram bin
-            stdev (Union[List[float], np.ndarray]): statistical uncertainty of yield per
-                bin
+            bins (list[float] | np.ndarray): edges of histogram bins
+            yields (list[float] | np.ndarray): yield per histogram bin
+            stdev (list[float] | np.ndarray): statistical uncertainty of yield per bin
 
         Raises:
             ValueError: when amount of bins specified via bin edges and bin contents do
@@ -42,7 +41,7 @@ class Histogram(bh.Histogram, family=cabinetry):
             ValueError: when length of yields and stdev do not match
 
         Returns:
-            cabinetry.histo.Histogram: the histogram instance
+            Histogram: the histogram instance
         """
         if len(bins) != len(yields) + 1:
             raise ValueError("bin edges need one more entry than yields")
@@ -60,7 +59,7 @@ class Histogram(bh.Histogram, family=cabinetry):
 
     @classmethod
     def from_path(
-        cls: Type[H], histo_path: pathlib.Path, *, modified: bool = True
+        cls: type[H], histo_path: pathlib.Path, *, modified: bool = True
     ) -> H:
         """Builds a histogram from disk.
 
@@ -73,7 +72,7 @@ class Histogram(bh.Histogram, family=cabinetry):
                 post-processing), defaults to True
 
         Returns:
-            cabinetry.histo.Histogram: the loaded histogram
+            Histogram: the loaded histogram
         """
         if modified:
             histo_path_modified = histo_path.parent / (histo_path.name + "_modified")
@@ -92,13 +91,13 @@ class Histogram(bh.Histogram, family=cabinetry):
 
     @classmethod
     def from_config(
-        cls: Type[H],
-        histo_folder: Union[str, pathlib.Path],
-        region: Dict[str, Any],
-        sample: Dict[str, Any],
-        systematic: Dict[str, Any],
+        cls: type[H],
+        histo_folder: str | pathlib.Path,
+        region: dict[str, Any],
+        sample: dict[str, Any],
+        systematic: dict[str, Any],
         *,
-        template: Optional[Literal["Up", "Down"]] = None,
+        template: Literal["Up", "Down"] | None = None,
         modified: bool = True,
     ) -> H:
         """Loads a histogram, using information specified in the configuration file.
@@ -108,17 +107,17 @@ class Histogram(bh.Histogram, family=cabinetry):
         template.
 
         Args:
-            histo_folder (Union[str, patlib.Path]): folder containing all histograms
-            region (Dict[str, Any]): containing all region information
-            sample (Dict[str, Any]): containing all sample information
-            systematic (Dict[str, Any]): containing all systematic information
-            template (Optional[Literal["Up", "Down"]], optional): which template to
+            histo_folder (str | pathlib.Path): folder containing all histograms
+            region (dict[str, Any]): containing all region information
+            sample (dict[str, Any]): containing all sample information
+            systematic (dict[str, Any]): containing all systematic information
+            template (Literal["Up", "Down"] | None, optional): which template to
                 consider: "Up", "Down", None for the nominal case, defaults to None
             modified (bool, optional): whether to load the modified histogram (after
                 post-processing), defaults to True
 
         Returns:
-            cabinetry.histo.Histogram: the loaded histogram
+            Histogram: the loaded histogram
         """
         # find the histogram name given config information, and then load the histogram
         histo_name = name(region, sample, systematic, template=template)
@@ -224,8 +223,7 @@ class Histogram(bh.Histogram, family=cabinetry):
         Returns the normalization factor used to normalize the histogram.
 
         Args:
-            reference_histogram (cabinetry.histo.Histogram): reference histogram to
-                normalize to
+            reference_histogram (Histogram): reference histogram to normalize to
 
         Returns:
             float: the yield ratio: un-normalized yield / normalized yield
@@ -239,11 +237,11 @@ class Histogram(bh.Histogram, family=cabinetry):
 
 
 def name(
-    region: Dict[str, Any],
-    sample: Dict[str, Any],
-    systematic: Dict[str, Any],
+    region: dict[str, Any],
+    sample: dict[str, Any],
+    systematic: dict[str, Any],
     *,
-    template: Optional[Literal["Up", "Down"]] = None,
+    template: Literal["Up", "Down"] | None = None,
 ) -> str:
     """Returns a unique name for each histogram.
 
@@ -251,11 +249,11 @@ def name(
     as long as it follows the config schema).
 
     Args:
-        region (Dict[str, Any]): containing all region information
-        sample (Dict[str, Any]): containing all sample information
-        systematic (Dict[str, Any]): containing all systematic information
-        template (Optional[Literal["Up", "Down"]], optional): which template to
-            consider: "Up", "Down", None for the nominal case, defaults to None
+        region (dict[str, Any]): containing all region information
+        sample (dict[str, Any]): containing all sample information
+        systematic (dict[str, Any]): containing all systematic information
+        template (Literal["Up", "Down"] | None, optional): which template to consider:
+            "Up", "Down", None for the nominal case, defaults to None
 
     Returns:
         str: unique name for the histogram

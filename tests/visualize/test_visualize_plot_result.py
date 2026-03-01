@@ -1,10 +1,8 @@
-import sys
 from unittest import mock
 
 import matplotlib.pyplot as plt
 from matplotlib.testing.compare import compare_images
 import numpy as np
-import pytest
 
 from cabinetry.visualize import plot_result
 
@@ -119,10 +117,6 @@ def test_ranking(tmp_path):
     plt.close("all")
 
 
-@pytest.mark.xfail(
-    sys.version_info <= (3, 9),
-    reason="legend positioning in Python 3.8 with older matplotlib, see cabinetry#476",
-)
 def test_scan(tmp_path):
     fname = tmp_path / "fig.png"
     par_name = "a"
@@ -134,18 +128,12 @@ def test_scan(tmp_path):
     fig = plot_result.scan(
         par_name, par_mle, par_unc, par_vals, par_nlls, figure_path=fname
     )
-    # delay assert of comparison to be able to cover lines even with Python 3.8
-    comparison_results = []
-    comparison_results.append(
-        compare_images("tests/visualize/reference/scan.png", str(fname), 0)
-    )
+    assert compare_images("tests/visualize/reference/scan.png", str(fname), 0) is None
 
     # compare figure returned by function
     fname = tmp_path / "fig_from_return.png"
     fig.savefig(fname)
-    comparison_results.append(
-        compare_images("tests/visualize/reference/scan.png", str(fname), 0)
-    )
+    assert compare_images("tests/visualize/reference/scan.png", str(fname), 0) is None
 
     # do not save figure, but close it
     with mock.patch("cabinetry.visualize.utils._save_and_close") as mock_close_safe:
@@ -155,9 +143,6 @@ def test_scan(tmp_path):
             par_name, par_mle, par_unc, par_vals, par_nlls, close_figure=True
         )
         assert mock_close_safe.call_args_list == [((fig, None, True), {})]
-
-    for comp_res in comparison_results:
-        assert comp_res is None
 
     plt.close("all")
 

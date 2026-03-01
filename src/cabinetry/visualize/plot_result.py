@@ -3,7 +3,6 @@
 import logging
 import math
 import pathlib
-from typing import List, Optional, Union
 
 import matplotlib as mpl
 import matplotlib.pyplot as plt
@@ -25,19 +24,19 @@ else:
 
 def correlation_matrix(
     corr_mat: np.ndarray,
-    labels: Union[List[str], np.ndarray],
+    labels: list[str] | np.ndarray,
     *,
-    figure_path: Optional[pathlib.Path] = None,
+    figure_path: pathlib.Path | None = None,
     close_figure: bool = False,
 ) -> mpl.figure.Figure:
     """Draws a correlation matrix.
 
     Args:
         corr_mat (np.ndarray): the correlation matrix to plot
-        labels (Union[List[str], np.ndarray]): names of parameters in the correlation
+        labels (list[str] | np.ndarray): names of parameters in the correlation
             matrix
-        figure_path (Optional[pathlib.Path], optional): path where figure should be
-            saved, or None to not save it, defaults to None
+        figure_path (pathlib.Path | None, optional): path where figure should be saved,
+            or None to not save it, defaults to None
         close_figure (bool, optional): whether to close each figure immediately after
             saving it, defaults to False (enable when producing many figures to avoid
             memory issues, prevents rendering in notebooks)
@@ -74,9 +73,9 @@ def correlation_matrix(
 def pulls(
     bestfit: np.ndarray,
     uncertainty: np.ndarray,
-    labels: Union[List[str], np.ndarray],
+    labels: list[str] | np.ndarray,
     *,
-    figure_path: Optional[pathlib.Path] = None,
+    figure_path: pathlib.Path | None = None,
     close_figure: bool = False,
 ) -> mpl.figure.Figure:
     """Draws a pull plot.
@@ -84,9 +83,9 @@ def pulls(
     Args:
         bestfit (np.ndarray): best-fit parameter results
         uncertainty (np.ndarray): parameter uncertainties
-        labels (Union[List[str], np.ndarray]): parameter names
-        figure_path (Optional[pathlib.Path], optional): path where figure should be
-            saved, or None to not save it, defaults to None
+        labels (list[str] | np.ndarray): parameter names
+        figure_path (pathlib.Path | None, optional): path where figure should be saved,
+            or None to not save it, defaults to None
         close_figure (bool, optional): whether to close each figure immediately after
             saving it, defaults to False (enable when producing many figures to avoid
             memory issues, prevents rendering in notebooks)
@@ -119,13 +118,13 @@ def pulls(
 def ranking(
     bestfit: np.ndarray,
     uncertainty: np.ndarray,
-    labels: Union[List[str], np.ndarray],
+    labels: list[str] | np.ndarray,
     impact_prefit_up: np.ndarray,
     impact_prefit_down: np.ndarray,
     impact_postfit_up: np.ndarray,
     impact_postfit_down: np.ndarray,
     *,
-    figure_path: Optional[pathlib.Path] = None,
+    figure_path: pathlib.Path | None = None,
     close_figure: bool = False,
 ) -> mpl.figure.Figure:
     """Draws a ranking plot.
@@ -133,15 +132,15 @@ def ranking(
     Args:
         bestfit (np.ndarray): best-fit parameter results
         uncertainty (np.ndarray): parameter uncertainties
-        labels (Union[List[str], np.ndarray]): parameter labels
+        labels (list[str] | np.ndarray): parameter labels
         impact_prefit_up (np.ndarray): pre-fit impact in "up" direction per parameter
         impact_prefit_down (np.ndarray): pre-fit impact in "down" direction per
             parameter
         impact_postfit_up (np.ndarray): post-fit impact in "up" direction per parameter
         impact_postfit_down (np.ndarray): post-fit impact in "down" direction per
             parameter
-        figure_path (Optional[pathlib.Path], optional): path where figure should be
-            saved, or None to not save it, defaults to None
+        figure_path (pathlib.Path | None, optional): path where figure should be saved,
+            or None to not save it, defaults to None
         close_figure (bool, optional): whether to close each figure immediately after
             saving it, defaults to False (enable when producing many figures to avoid
             memory issues, prevents rendering in notebooks)
@@ -272,7 +271,7 @@ def scan(
     par_vals: np.ndarray,
     par_nlls: np.ndarray,
     *,
-    figure_path: Optional[pathlib.Path] = None,
+    figure_path: pathlib.Path | None = None,
     close_figure: bool = False,
 ) -> mpl.figure.Figure:
     """Draws a figure showing the results of a likelihood scan.
@@ -283,8 +282,8 @@ def scan(
         par_unc (float): best-fit parameter uncertainty
         par_vals (np.ndarray): values used in scan over parameter
         par_nlls (np.ndarray): -2 log(L) offset at each scan point
-        figure_path (Optional[pathlib.Path], optional): path where figure should be
-            saved, or None to not save it, defaults to None
+        figure_path (pathlib.Path | None, optional): path where figure should be saved,
+            or None to not save it, defaults to None
         close_figure (bool, optional): whether to close each figure immediately after
             saving it, defaults to False (enable when producing many figures to avoid
             memory issues, prevents rendering in notebooks)
@@ -347,7 +346,7 @@ def limit(
     poi_values: np.ndarray,
     cls_target: float,
     *,
-    figure_path: Optional[pathlib.Path] = None,
+    figure_path: pathlib.Path | None = None,
     close_figure: bool = False,
 ) -> mpl.figure.Figure:
     """Draws observed and expected CLs values as function of the parameter of interest.
@@ -357,8 +356,8 @@ def limit(
         expected_CLs (np.ndarray): expected CLs values, including 1 and 2 sigma bands
         poi_values (np.ndarray): parameter of interest values used in scan
         cls_target (float): target CLs value to visualize as horizontal line
-        figure_path (Optional[pathlib.Path], optional): path where figure should be
-            saved, or None to not save it, defaults to None
+        figure_path (pathlib.Path | None, optional): path where figure should be saved,
+            or None to not save it, defaults to None
         close_figure (bool, optional): whether to close each figure immediately after
             saving it, defaults to False (enable when producing many figures to avoid
             memory issues, prevents rendering in notebooks)

@@ -2,7 +2,7 @@
 
 import logging
 import pathlib
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 import hist.intervals
 import matplotlib as mpl
@@ -22,15 +22,15 @@ else:
 
 
 def data_mc(
-    histogram_dict_list: List[Dict[str, Any]],
+    histogram_dict_list: list[dict[str, Any]],
     total_model_unc: np.ndarray,
     bin_edges: np.ndarray,
     *,
-    figure_path: Optional[pathlib.Path] = None,
-    log_scale: Optional[bool] = None,
+    figure_path: pathlib.Path | None = None,
+    log_scale: bool | None = None,
     log_scale_x: bool = False,
     label: str = "",
-    colors: Optional[Dict[str, str]] = None,
+    colors: dict[str, str] | None = None,
     close_figure: bool = False,
 ) -> mpl.figure.Figure:
     """Draws a data/MC histogram with uncertainty bands and ratio panel.
@@ -39,21 +39,20 @@ def data_mc(
     interval as provided by ``hist`` via ``hist.intervals.poisson_interval``.
 
     Args:
-        histogram_dict_list (List[Dict[str, Any]]): list of samples (with info stored in
+        histogram_dict_list (list[dict[str, Any]]): list of samples (with info stored in
             one dict per sample)
-        total_model_unc (np.ndarray): total model uncertainty, if specified this is used
-            instead of calculating it via sum in quadrature, defaults to None
+        total_model_unc (np.ndarray): total model uncertainty
         bin_edges (np.ndarray): bin edges of histogram
-        figure_path (Optional[pathlib.Path], optional): path where figure should be
+        figure_path (pathlib.Path | None, optional): path where figure should be
             saved, or None to not save it, defaults to None
-        log_scale (Optional[bool], optional): whether to use a logarithmic vertical
-            axis, defaults to None (automatically determine whether to use linear or log
+        log_scale (bool | None, optional): whether to use a logarithmic vertical axis,
+            defaults to None (automatically determine whether to use linear or log
             scale)
         log_scale_x (bool, optional): whether to use logarithmic horizontal axis,
             defaults to False
         label (str, optional): label written on the figure, defaults to ""
-        colors (Optional[Dict[str, str]], optional): map of sample names and colors to
-            use in plot, defaults to None (uses default colors)
+        colors (dict[str, str] | None, optional): map of sample names and colors to use
+            in plot, defaults to None (uses default colors)
         close_figure (bool, optional): whether to close each figure immediately after
             saving it, defaults to False (enable when producing many figures to avoid
             memory issues, prevents rendering in notebooks)
@@ -261,15 +260,15 @@ def data_mc(
 
 
 def templates(
-    nominal_histo: Dict[str, np.ndarray],
-    up_histo_orig: Dict[str, np.ndarray],
-    down_histo_orig: Dict[str, np.ndarray],
-    up_histo_mod: Dict[str, np.ndarray],
-    down_histo_mod: Dict[str, np.ndarray],
+    nominal_histo: dict[str, np.ndarray],
+    up_histo_orig: dict[str, np.ndarray],
+    down_histo_orig: dict[str, np.ndarray],
+    up_histo_mod: dict[str, np.ndarray],
+    down_histo_mod: dict[str, np.ndarray],
     bin_edges: np.ndarray,
     variable: str,
     *,
-    figure_path: Optional[pathlib.Path] = None,
+    figure_path: pathlib.Path | None = None,
     label: str = "",
     close_figure: bool = False,
 ) -> mpl.figure.Figure:
@@ -278,15 +277,15 @@ def templates(
     If a variation template is an empty dict, it is not drawn.
 
     Args:
-        nominal_histo (Dict[str, np.ndarray]): the nominal template
-        up_histo_orig (Dict[str, np.ndarray]): original "up" variation
-        down_histo_orig (Dict[str, np.ndarray]): original "down" variation
-        up_histo_mod (Dict[str, np.ndarray]): "up" variation after post-processing
-        down_histo_mod (Dict[str, np.ndarray]): "down" variation after post-processing
+        nominal_histo (dict[str, np.ndarray]): the nominal template
+        up_histo_orig (dict[str, np.ndarray]): original "up" variation
+        down_histo_orig (dict[str, np.ndarray]): original "down" variation
+        up_histo_mod (dict[str, np.ndarray]): "up" variation after post-processing
+        down_histo_mod (dict[str, np.ndarray]): "down" variation after post-processing
         bin_edges (np.ndarray): bin edges of histogram
         variable (str): variable name for the horizontal axis
-        figure_path (Optional[pathlib.Path], optional): path where figure should be
-            saved, or None to not save it, defaults to None
+        figure_path (pathlib.Path | None, optional): path where figure should be saved,
+            or None to not save it, defaults to None
         label (str, optional): label written on the figure, defaults to ""
         close_figure (bool, optional): whether to close each figure immediately after
             saving it, defaults to False (enable when producing many figures to avoid
@@ -441,21 +440,21 @@ def templates(
 
 
 def modifier_grid(
-    grid_list: List[np.ndarray],
-    axis_labels: List[List[str]],
-    category_map: Dict[int, str],
-    figure_path: Optional[pathlib.Path] = None,
+    grid_list: list[np.ndarray],
+    axis_labels: list[list[str]],
+    category_map: dict[int, str],
+    figure_path: pathlib.Path | None = None,
     close_figure: bool = False,
 ) -> mpl.figure.Figure:
     """Draws a grid of modifiers per channel, sample and parameter.
 
     Args:
-        grid_list (List[np.ndarray]): list of 2d grids with modifier information
-        axis_labels (List[List[str]]): list with axis labels for the three axes in order
+        grid_list (list[np.ndarray]): list of 2d grids with modifier information
+        axis_labels (list[list[str]]): list with axis labels for the three axes in order
             (first axis is grid label, second and third are axes per grid)
-        category_map (Dict[int, str]): translation of integer values in grid to labels
-        figure_path (Optional[pathlib.Path], optional): path where figure should be
-            saved, or None to not save it, defaults to None
+        category_map (dict[int, str]): translation of integer values in grid to labels
+        figure_path (pathlib.Path | None, optional): path where figure should be saved,
+            or None to not save it, defaults to None
         close_figure (bool, optional): whether to close each figure immediately after
             saving it, defaults to False (enable when producing many figures to avoid
             memory issues, prevents rendering in notebooks)

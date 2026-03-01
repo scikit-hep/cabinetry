@@ -1,7 +1,7 @@
 """High-level entry point for statistical inference."""
 
 import logging
-from typing import Any, cast, Dict, List, Literal, Optional, Tuple, Union
+from typing import Any, cast, Literal
 
 import iminuit
 import numpy as np
@@ -42,16 +42,16 @@ def print_results(fit_results: FitResults) -> None:
 
 def _fit_model_pyhf(
     model: pyhf.pdf.Model,
-    data: List[float],
+    data: list[float],
     *,
-    minos: Optional[Union[List[str], Tuple[str, ...]]] = None,
-    minos_cl: Optional[float] = None,
-    init_pars: Optional[List[float]] = None,
-    fix_pars: Optional[List[bool]] = None,
-    par_bounds: Optional[List[Tuple[float, float]]] = None,
-    strategy: Optional[Literal[0, 1, 2]] = None,
-    maxiter: Optional[int] = None,
-    tolerance: Optional[float] = None,
+    minos: list[str] | tuple[str, ...] | None = None,
+    minos_cl: float | None = None,
+    init_pars: list[float] | None = None,
+    fix_pars: list[bool] | None = None,
+    par_bounds: list[tuple[float, float]] | None = None,
+    strategy: Literal[0, 1, 2] | None = None,
+    maxiter: int | None = None,
+    tolerance: float | None = None,
 ) -> FitResults:
     """Uses the ``pyhf.infer`` API to perform a maximum likelihood fit.
 
@@ -62,26 +62,25 @@ def _fit_model_pyhf(
 
     Args:
         model (pyhf.pdf.Model): the model to use in the fit
-        data (List[float]): the data to fit the model to
-        minos (Optional[Union[List[str], Tuple[str, ...]]], optional): runs the MINOS
-            algorithm for all parameters specified, defaults to None (does not run
-            MINOS)
-        minos_cl (Optional[float]), optional): confidence level for the MINOS confidence
+        data (list[float]): the data to fit the model to
+        minos (list[str] | tuple[str, ...] | None, optional): runs the MINOS algorithm
+            for all parameters specified, defaults to None (does not run MINOS)
+        minos_cl (float | None, optional): confidence level for the MINOS confidence
             interval, defaults to None (use ``iminuit`` default of 68.27%)
-        init_pars (Optional[List[float]], optional): list of initial parameter settings,
+        init_pars (list[float] | None, optional): list of initial parameter settings,
             defaults to None (use ``pyhf`` suggested inits)
-        fix_pars (Optional[List[bool]], optional): list of booleans specifying which
+        fix_pars (list[bool] | None, optional): list of booleans specifying which
             parameters are held constant, defaults to None (use ``pyhf`` suggestion)
-        par_bounds (Optional[List[Tuple[float, float]]], optional): list of tuples with
+        par_bounds (list[tuple[float, float]] | None, optional): list of tuples with
             parameter bounds for fit, defaults to None (use ``pyhf`` suggested bounds)
-        strategy (Optional[Literal[0, 1, 2]], optional): minimization strategy used by
+        strategy (Literal[0, 1, 2] | None, optional): minimization strategy used by
             Minuit, can be 0/1/2, defaults to None (then uses ``pyhf`` default behavior
             of strategy 0 with user-provided gradients and 1 otherwise)
-        maxiter (Optional[int], optional): allowed number of calls for minimization,
+        maxiter (int | None, optional): allowed number of calls for minimization,
             defaults to None (use ``pyhf`` default of 100,000)
-        tolerance (Optional[float]), optional): tolerance for convergence, for details
-            see ``iminuit.Minuit.tol`` (uses EDM < 0.002*tolerance), defaults to
-            None (use ``iminuit`` default of 0.1)
+        tolerance (float | None, optional): tolerance for convergence, for details see
+            ``iminuit.Minuit.tol`` (uses EDM < 0.002*tolerance), defaults to None (use
+            ``iminuit`` default of 0.1)
 
     Returns:
         FitResults: object storing relevant fit results
@@ -139,16 +138,16 @@ def _fit_model_pyhf(
 
 def _fit_model_custom(
     model: pyhf.pdf.Model,
-    data: List[float],
+    data: list[float],
     *,
-    minos: Optional[Union[List[str], Tuple[str, ...]]] = None,
-    minos_cl: Optional[float] = None,
-    init_pars: Optional[List[float]] = None,
-    fix_pars: Optional[List[bool]] = None,
-    par_bounds: Optional[List[Tuple[float, float]]] = None,
-    strategy: Optional[Literal[0, 1, 2]] = None,
-    maxiter: Optional[int] = None,
-    tolerance: Optional[float] = None,
+    minos: list[str] | tuple[str, ...] | None = None,
+    minos_cl: float | None = None,
+    init_pars: list[float] | None = None,
+    fix_pars: list[bool] | None = None,
+    par_bounds: list[tuple[float, float]] | None = None,
+    strategy: Literal[0, 1, 2] | None = None,
+    maxiter: int | None = None,
+    tolerance: float | None = None,
 ) -> FitResults:
     """Uses ``iminuit`` directly to perform a maximum likelihood fit.
 
@@ -159,26 +158,25 @@ def _fit_model_custom(
 
     Args:
         model (pyhf.pdf.Model): the model to use in the fit
-        data (List[float]): the data to fit the model to
-        minos (Optional[Union[List[str], Tuple[str, ...]]], optional): runs the MINOS
-            algorithm for all parameters specified, defaults to None (does not run
-            MINOS)
-        minos_cl (Optional[float]), optional): confidence level for the MINOS confidence
+        data (list[float]): the data to fit the model to
+        minos (list[str] | tuple[str, ...] | None, optional): runs the MINOS algorithm
+            for all parameters specified, defaults to None (does not run MINOS)
+        minos_cl (float | None, optional): confidence level for the MINOS confidence
             interval, defaults to None (use ``iminuit`` default of 68.27%)
-        init_pars (Optional[List[float]], optional): list of initial parameter settings,
+        init_pars (list[float] | None, optional): list of initial parameter settings,
             defaults to None (use ``pyhf`` suggested inits)
-        fix_pars (Optional[List[bool]], optional): list of booleans specifying which
+        fix_pars (list[bool] | None, optional): list of booleans specifying which
             parameters are held constant, defaults to None (use ``pyhf`` suggestion)
-        par_bounds (Optional[List[Tuple[float, float]]], optional): list of tuples with
+        par_bounds (list[tuple[float, float]] | None, optional): list of tuples with
             parameter bounds for fit, defaults to None (use ``pyhf`` suggested bounds)
-        strategy (Optional[Literal[0, 1, 2]], optional): minimization strategy used by
+        strategy (Literal[0, 1, 2] | None, optional): minimization strategy used by
             Minuit, can be 0/1/2, defaults to None (then uses ``pyhf`` default behavior
             of strategy 0 with user-provided gradients and 1 otherwise)
-        maxiter (Optional[int], optional): allowed number of calls for minimization,
+        maxiter (int | None, optional): allowed number of calls for minimization,
             defaults to None (use ``pyhf`` default of 100,000)
-        tolerance (Optional[float]), optional): tolerance for convergence, for details
-            see ``iminuit.Minuit.tol`` (uses EDM < 0.002*tolerance), defaults to
-            None (use ``iminuit`` default of 0.1)
+        tolerance (float | None, optional): tolerance for convergence, for details see
+            ``iminuit.Minuit.tol`` (uses EDM < 0.002*tolerance), defaults to None (use
+            ``iminuit`` default of 0.1)
 
     Raises:
         ValueError: if minimization fails
@@ -259,18 +257,17 @@ def _fit_model_custom(
 
 def _fit_model(
     model: pyhf.pdf.Model,
-    data: List[float],
+    data: list[float],
     *,
-    minos: Optional[Union[List[str], Tuple[str, ...]]] = None,
-    minos_cl: Optional[float] = None,
-    init_pars: Optional[List[float]] = None,
-    fix_pars: Optional[List[bool]] = None,
-    par_bounds: Optional[List[Tuple[float, float]]] = None,
-    strategy: Optional[Literal[0, 1, 2]] = None,
-    maxiter: Optional[int] = None,
-    tolerance: Optional[float] = None,
+    minos: list[str] | tuple[str, ...] | None = None,
+    minos_cl: float | None = None,
+    init_pars: list[float] | None = None,
+    fix_pars: list[bool] | None = None,
+    par_bounds: list[tuple[float, float]] | None = None,
+    strategy: Literal[0, 1, 2] | None = None,
+    maxiter: int | None = None,
+    tolerance: float | None = None,
     custom_fit: bool = False,
-    cl: Optional[float] = None,
 ) -> FitResults:
     """Interface for maximum likelihood fits through ``pyhf.infer`` API or ``iminuit``.
 
@@ -281,26 +278,25 @@ def _fit_model(
 
     Args:
         model (pyhf.pdf.Model): the model to use in the fit
-        data (List[float]): the data to fit the model to
-        minos (Optional[Union[List[str], Tuple[str, ...]]], optional): runs the MINOS
-            algorithm for all parameters specified, defaults to None (does not run
-            MINOS)
-        minos_cl (Optional[float]), optional): confidence level for the MINOS confidence
+        data (list[float]): the data to fit the model to
+        minos (list[str] | tuple[str, ...] | None, optional): runs the MINOS algorithm
+            for all parameters specified, defaults to None (does not run MINOS)
+        minos_cl (float | None, optional): confidence level for the MINOS confidence
             interval, defaults to None (use ``iminuit`` default of 68.27%)
-        init_pars (Optional[List[float]], optional): list of initial parameter settings,
+        init_pars (list[float] | None, optional): list of initial parameter settings,
             defaults to None (use ``pyhf`` suggested inits)
-        fix_pars (Optional[List[bool]], optional): list of booleans specifying which
+        fix_pars (list[bool] | None, optional): list of booleans specifying which
             parameters are held constant, defaults to None (use ``pyhf`` suggestion)
-        par_bounds (Optional[List[Tuple[float, float]]], optional): list of tuples with
+        par_bounds (list[tuple[float, float]] | None, optional): list of tuples with
             parameter bounds for fit, defaults to None (use ``pyhf`` suggested bounds)
-        strategy (Optional[Literal[0, 1, 2]], optional): minimization strategy used by
+        strategy (Literal[0, 1, 2] | None, optional): minimization strategy used by
             Minuit, can be 0/1/2, defaults to None (then uses ``pyhf`` default behavior
             of strategy 0 with user-provided gradients and 1 otherwise)
-        maxiter (Optional[int], optional): allowed number of calls for minimization,
+        maxiter (int | None, optional): allowed number of calls for minimization,
             defaults to None (use ``pyhf`` default of 100,000)
-        tolerance (Optional[float]), optional): tolerance for convergence, for details
-            see ``iminuit.Minuit.tol`` (uses EDM < 0.002*tolerance), defaults to
-            None (use ``iminuit`` default of 0.1)
+        tolerance (float | None, optional): tolerance for convergence, for details see
+            ``iminuit.Minuit.tol`` (uses EDM < 0.002*tolerance), defaults to None (use
+            ``iminuit`` default of 0.1)
         custom_fit (bool, optional): whether to use the ``pyhf.infer`` API or
             ``iminuit``, defaults to False (using ``pyhf.infer``)
 
@@ -341,22 +337,22 @@ def _fit_model(
 
 def _run_minos(
     minuit_obj: iminuit.Minuit,
-    minos: Union[List[str], Tuple[str, ...]],
-    labels: List[str],
-    minos_cl: Optional[float],
-) -> Dict[str, Tuple[float, float]]:
+    minos: list[str] | tuple[str, ...],
+    labels: list[str],
+    minos_cl: float | None,
+) -> dict[str, tuple[float, float]]:
     """Determines parameter uncertainties for a list of parameters with MINOS.
 
     Args:
         minuit_obj (iminuit.Minuit): Minuit instance to use
-        minos (Union[List[str], Tuple[str, ...]]): parameters for which MINOS is run
-        labels (List[str]]): names of all parameters known to ``iminuit``, these names
+        minos (list[str] | tuple[str, ...]): parameters for which MINOS is run
+        labels (list[str]]): names of all parameters known to ``iminuit``, these names
             are used in output (may be the same as the names under which ``iminiuit``
             knows parameters)
-        minos_cl (Optional[float])): confidence level for the confidence interval
+        minos_cl (float | None): confidence level for the confidence interval
 
     Returns:
-        Dict[str, Tuple[float, float]]: uncertainties indexed by parameter name
+        dict[str, tuple[float, float]]: uncertainties indexed by parameter name
     """
     for par_name in minos:
         if par_name not in minuit_obj.parameters:
@@ -385,10 +381,10 @@ def _run_minos(
 
 def _goodness_of_fit(
     model: pyhf.pdf.Model,
-    data: List[float],
+    data: list[float],
     best_twice_nll: float,
     *,
-    fix_pars: Optional[List[bool]] = None,
+    fix_pars: list[bool] | None = None,
 ) -> float:
     """Calculates goodness-of-fit p-value with a saturated model.
 
@@ -399,10 +395,10 @@ def _goodness_of_fit(
     Args:
         model (pyhf.pdf.Model): model used in the fit for which goodness-of-fit should
             be calculated
-        data (List[float]): the observed data
+        data (list[float]): the observed data
         best_twice_nll (float): best-fit -2 log(likelihood) of fit for which goodness-
             of-fit should be calculated
-        fix_pars (Optional[List[bool]], optional): list of booleans specifying which
+        fix_pars (list[bool] | None, optional): list of booleans specifying which
             parameters are held constant, defaults to None (use ``pyhf`` suggestion)
 
     Returns:
@@ -456,17 +452,17 @@ def _goodness_of_fit(
 
 def fit(
     model: pyhf.pdf.Model,
-    data: List[float],
+    data: list[float],
     *,
-    minos: Optional[Union[str, List[str], Tuple[str, ...]]] = None,
-    minos_cl: Optional[float] = None,
+    minos: str | list[str] | tuple[str, ...] | None = None,
+    minos_cl: float | None = None,
     goodness_of_fit: bool = False,
-    init_pars: Optional[List[float]] = None,
-    fix_pars: Optional[List[bool]] = None,
-    par_bounds: Optional[List[Tuple[float, float]]] = None,
-    strategy: Optional[Literal[0, 1, 2]] = None,
-    maxiter: Optional[int] = None,
-    tolerance: Optional[float] = None,
+    init_pars: list[float] | None = None,
+    fix_pars: list[bool] | None = None,
+    par_bounds: list[tuple[float, float]] | None = None,
+    strategy: Literal[0, 1, 2] | None = None,
+    maxiter: int | None = None,
+    tolerance: float | None = None,
     custom_fit: bool = False,
 ) -> FitResults:
     """Performs a  maximum likelihood fit, reports and returns the results.
@@ -476,28 +472,28 @@ def fit(
 
     Args:
         model (pyhf.pdf.Model): model to use in fit
-        data (List[float]): data (including auxdata) the model is fit to
-        minos (Optional[Union[str, List[str], Tuple[str, ...]]], optional): runs the
-            MINOS algorithm for all parameters specified, defaults to None (does not run
+        data (list[float]): data (including auxdata) the model is fit to
+        minos (str | list[str] | tuple[str, ...] | None, optional): runs the MINOS
+            algorithm for all parameters specified, defaults to None (does not run
             MINOS)
-        minos_cl (Optional[float]), optional): confidence level for the MINOS confidence
+        minos_cl (float | None, optional): confidence level for the MINOS confidence
             interval, defaults to None (use ``iminuit`` default of 68.27%)
         goodness_of_fit (bool, optional): calculate goodness of fit with a saturated
             model (perfectly fits data with shapefactors in all bins), defaults to False
-        init_pars (Optional[List[float]], optional): list of initial parameter settings,
+        init_pars (list[float] | None, optional): list of initial parameter settings,
             defaults to None (use ``pyhf`` suggested inits)
-        fix_pars (Optional[List[bool]], optional): list of booleans specifying which
+        fix_pars (list[bool] | None, optional): list of booleans specifying which
             parameters are held constant, defaults to None (use ``pyhf`` suggestion)
-        par_bounds (Optional[List[Tuple[float, float]]], optional): list of tuples with
+        par_bounds (list[tuple[float, float]] | None, optional): list of tuples with
             parameter bounds for fit, defaults to None (use ``pyhf`` suggested bounds)
-        strategy (Optional[Literal[0, 1, 2]], optional): minimization strategy used by
+        strategy (Literal[0, 1, 2] | None, optional): minimization strategy used by
             Minuit, can be 0/1/2, defaults to None (then uses ``pyhf`` default behavior
             of strategy 0 with user-provided gradients and 1 otherwise)
-        maxiter (Optional[int], optional): allowed number of calls for minimization,
+        maxiter (int | None, optional): allowed number of calls for minimization,
             defaults to None (use ``pyhf`` default of 100,000)
-        tolerance (Optional[float]), optional): tolerance for convergence, for details
-            see ``iminuit.Minuit.tol`` (uses EDM < 0.002*tolerance), defaults to
-            None (use ``iminuit`` default of 0.1)
+        tolerance (float | None, optional): tolerance for convergence, for details see
+            ``iminuit.Minuit.tol`` (uses EDM < 0.002*tolerance), defaults to None (use
+            ``iminuit`` default of 0.1)
         custom_fit (bool, optional): whether to use the ``pyhf.infer`` API or
             ``iminuit``, defaults to False (using ``pyhf.infer``)
 
@@ -539,16 +535,16 @@ def fit(
 
 def ranking(
     model: pyhf.pdf.Model,
-    data: List[float],
+    data: list[float],
     *,
-    fit_results: Optional[FitResults] = None,
-    poi_name: Optional[str] = None,
-    init_pars: Optional[List[float]] = None,
-    fix_pars: Optional[List[bool]] = None,
-    par_bounds: Optional[List[Tuple[float, float]]] = None,
-    strategy: Optional[Literal[0, 1, 2]] = None,
-    maxiter: Optional[int] = None,
-    tolerance: Optional[float] = None,
+    fit_results: FitResults | None = None,
+    poi_name: str | None = None,
+    init_pars: list[float] | None = None,
+    fix_pars: list[bool] | None = None,
+    par_bounds: list[tuple[float, float]] | None = None,
+    strategy: Literal[0, 1, 2] | None = None,
+    maxiter: int | None = None,
+    tolerance: float | None = None,
     custom_fit: bool = False,
 ) -> RankingResults:
     """Calculates the impact of nuisance parameters on the parameter of interest (POI).
@@ -560,25 +556,25 @@ def ranking(
 
     Args:
         model (pyhf.pdf.Model): model to use in fits
-        data (List[float]): data (including auxdata) the model is fit to
-        fit_results (Optional[FitResults], optional): nominal fit results to use for
+        data (list[float]): data (including auxdata) the model is fit to
+        fit_results (FitResults | None, optional): nominal fit results to use for
             ranking, if not specified will repeat nominal fit, defaults to None
-        poi_name (Optional[str], optional): impact is calculated with respect to this
+        poi_name (str | None, optional): impact is calculated with respect to this
             parameter, defaults to None (use POI specified in workspace)
-        init_pars (Optional[List[float]], optional): list of initial parameter settings,
+        init_pars (list[float] | None, optional): list of initial parameter settings,
             defaults to None (use ``pyhf`` suggested inits)
-        fix_pars (Optional[List[bool]], optional): list of booleans specifying which
+        fix_pars (list[bool] | None, optional): list of booleans specifying which
             parameters are held constant, defaults to None (use ``pyhf`` suggestion)
-        par_bounds (Optional[List[Tuple[float, float]]], optional): list of tuples with
+        par_bounds (list[tuple[float, float]] | None, optional): list of tuples with
             parameter bounds for fit, defaults to None (use ``pyhf`` suggested bounds)
-        strategy (Optional[Literal[0, 1, 2]], optional): minimization strategy used by
+        strategy (Literal[0, 1, 2] | None, optional): minimization strategy used by
             Minuit, can be 0/1/2, defaults to None (then uses ``pyhf`` default behavior
             of strategy 0 with user-provided gradients and 1 otherwise)
-        maxiter (Optional[int], optional): allowed number of calls for minimization,
+        maxiter (int | None, optional): allowed number of calls for minimization,
             defaults to None (use ``pyhf`` default of 100,000)
-        tolerance (Optional[float]), optional): tolerance for convergence, for details
-            see ``iminuit.Minuit.tol`` (uses EDM < 0.002*tolerance), defaults to
-            None (use ``iminuit`` default of 0.1)
+        tolerance (float | None, optional): tolerance for convergence, for details see
+            ``iminuit.Minuit.tol`` (uses EDM < 0.002*tolerance), defaults to None (use
+            ``iminuit`` default of 0.1)
         custom_fit (bool, optional): whether to use the ``pyhf.infer`` API or
             ``iminuit``, defaults to False (using ``pyhf.infer``)
 
@@ -684,17 +680,17 @@ def ranking(
 
 def scan(
     model: pyhf.pdf.Model,
-    data: List[float],
+    data: list[float],
     par_name: str,
     *,
-    par_range: Optional[Tuple[float, float]] = None,
+    par_range: tuple[float, float] | None = None,
     n_steps: int = 11,
-    init_pars: Optional[List[float]] = None,
-    fix_pars: Optional[List[bool]] = None,
-    par_bounds: Optional[List[Tuple[float, float]]] = None,
-    strategy: Optional[Literal[0, 1, 2]] = None,
-    maxiter: Optional[int] = None,
-    tolerance: Optional[float] = None,
+    init_pars: list[float] | None = None,
+    fix_pars: list[bool] | None = None,
+    par_bounds: list[tuple[float, float]] | None = None,
+    strategy: Literal[0, 1, 2] | None = None,
+    maxiter: int | None = None,
+    tolerance: float | None = None,
     custom_fit: bool = False,
 ) -> ScanResults:
     """Performs a likelihood scan over the specified parameter.
@@ -706,25 +702,25 @@ def scan(
 
     Args:
         model (pyhf.pdf.Model): model to use in fits
-        data (List[float]): data (including auxdata) the model is fit to
+        data (list[float]): data (including auxdata) the model is fit to
         par_name (str): name of parameter to scan over
-        par_range (Optional[Tuple[float, float]], optional): upper and lower bounds of
+        par_range (tuple[float, float] | None, optional): upper and lower bounds of
             parameter in scan, defaults to None (automatically determine bounds)
-        n_steps (int, optional): number of steps in scan, defaults to 10
-        init_pars (Optional[List[float]], optional): list of initial parameter settings,
+        n_steps (int, optional): number of steps in scan, defaults to 11
+        init_pars (list[float] | None, optional): list of initial parameter settings,
             defaults to None (use ``pyhf`` suggested inits)
-        fix_pars (Optional[List[bool]], optional): list of booleans specifying which
+        fix_pars (list[bool] | None, optional): list of booleans specifying which
             parameters are held constant, defaults to None (use ``pyhf`` suggestion)
-        par_bounds (Optional[List[Tuple[float, float]]], optional): list of tuples with
+        par_bounds (list[tuple[float, float]] | None, optional): list of tuples with
             parameter bounds for fit, defaults to None (use ``pyhf`` suggested bounds)
-        strategy (Optional[Literal[0, 1, 2]], optional): minimization strategy used by
+        strategy (Literal[0, 1, 2] | None, optional): minimization strategy used by
             Minuit, can be 0/1/2, defaults to None (then uses ``pyhf`` default behavior
             of strategy 0 with user-provided gradients and 1 otherwise)
-        maxiter (Optional[int], optional): allowed number of calls for minimization,
+        maxiter (int | None, optional): allowed number of calls for minimization,
             defaults to None (use ``pyhf`` default of 100,000)
-        tolerance (Optional[float]), optional): tolerance for convergence, for details
-            see ``iminuit.Minuit.tol`` (uses EDM < 0.002*tolerance), defaults to
-            None (use ``iminuit`` default of 0.1)
+        tolerance (float | None, optional): tolerance for convergence, for details see
+            ``iminuit.Minuit.tol`` (uses EDM < 0.002*tolerance), defaults to None (use
+            ``iminuit`` default of 0.1)
         custom_fit (bool, optional): whether to use the ``pyhf.infer`` API or
             ``iminuit``, defaults to False (using ``pyhf.infer``)
 
@@ -804,19 +800,19 @@ def scan(
 
 def limit(
     model: pyhf.pdf.Model,
-    data: List[float],
+    data: list[float],
     *,
-    bracket: Optional[Union[List[float], Tuple[float, float]]] = None,
+    bracket: list[float] | tuple[float, float] | None = None,
     poi_tolerance: float = 0.01,
     maxsteps: int = 100,
     confidence_level: float = 0.95,
-    poi_name: Optional[str] = None,
-    init_pars: Optional[List[float]] = None,
-    fix_pars: Optional[List[bool]] = None,
-    par_bounds: Optional[List[Tuple[float, float]]] = None,
-    strategy: Optional[Literal[0, 1, 2]] = None,
-    maxiter: Optional[int] = None,
-    tolerance: Optional[float] = None,
+    poi_name: str | None = None,
+    init_pars: list[float] | None = None,
+    fix_pars: list[bool] | None = None,
+    par_bounds: list[tuple[float, float]] | None = None,
+    strategy: Literal[0, 1, 2] | None = None,
+    maxiter: int | None = None,
+    tolerance: float | None = None,
 ) -> LimitResults:
     """Calculates observed and expected upper parameter limits.
 
@@ -828,34 +824,34 @@ def limit(
 
     Args:
         model (pyhf.pdf.Model): model to use in fits
-        data (List[float]): data (including auxdata) the model is fit to
-        bracket (Optional[Union[List[float], Tuple[float, float]]], optional): the two
-            POI values used to start the observed limit determination, the limit must
-            lie between these values and the values must not be the same, defaults to
-            None (then uses 0.1 as default lower value and the upper POI bound
-            specified in the measurement as default upper value)
+        data (list[float]): data (including auxdata) the model is fit to
+        bracket (list[float] | tuple[float, float] | None, optional): the two POI values
+            used to start the observed limit determination, the limit must lie between
+            these values and the values must not be the same, defaults to None (then
+            uses 0.1 as default lower value and the upper POI bound specified in the
+            measurement as default upper value)
         poi_tolerance (float, optional): tolerance in POI value for convergence to
             target CLs value (1-``confidence_level``), defaults to 0.01
         maxsteps (int, optional): maximum number of steps for limit finding, defaults to
             100
         confidence_level (float, optional): confidence level for calculation, defaults
             to 0.95 (95%)
-        poi_name (Optional[str], optional): limit is calculated for this parameter,
+        poi_name (str | None, optional): limit is calculated for this parameter,
             defaults to None (use POI specified in workspace)
-        init_pars (Optional[List[float]], optional): list of initial parameter settings,
+        init_pars (list[float] | None, optional): list of initial parameter settings,
             defaults to None (use ``pyhf`` suggested inits)
-        fix_pars (Optional[List[bool]], optional): list of booleans specifying which
+        fix_pars (list[bool] | None, optional): list of booleans specifying which
             parameters are held constant, defaults to None (use ``pyhf`` suggestion)
-        par_bounds (Optional[List[Tuple[float, float]]], optional): list of tuples with
+        par_bounds (list[tuple[float, float]] | None, optional): list of tuples with
             parameter bounds for fit, defaults to None (use ``pyhf`` suggested bounds)
-        strategy (Optional[Literal[0, 1, 2]], optional): minimization strategy used by
+        strategy (Literal[0, 1, 2] | None, optional): minimization strategy used by
             Minuit, can be 0/1/2, defaults to None (then uses ``pyhf`` default behavior
             of strategy 0 with user-provided gradients and 1 otherwise)
-        maxiter (Optional[int], optional): allowed number of calls for minimization,
+        maxiter (int | None, optional): allowed number of calls for minimization,
             defaults to None (use ``pyhf`` default of 100,000)
-        tolerance (Optional[float]), optional): tolerance for convergence, for details
-            see ``iminuit.Minuit.tol`` (uses EDM < 0.002*tolerance), defaults to
-            None (use ``iminuit`` default of 0.1)
+        tolerance (float | None, optional): tolerance for convergence, for details see
+            ``iminuit.Minuit.tol`` (uses EDM < 0.002*tolerance), defaults to None (use
+            ``iminuit`` default of 0.1)
 
     Raises:
         ValueError: if no POI is found
@@ -915,12 +911,12 @@ def limit(
         model.config.set_poi(original_model_poi_name)
         raise ValueError(f"the two bracket values must not be the same: {bracket}")
 
-    cache_CLs: Dict[float, tuple] = {}  # cache storing all relevant results
+    cache_CLs: dict[float, tuple] = {}  # cache storing all relevant results
 
     def _cls_minus_threshold(
         poi_val: float,
         model: pyhf.pdf.Model,
-        data: List[float],
+        data: list[float],
         cls_target: float,
         which_limit: int,
         limit_label: str,
@@ -933,7 +929,7 @@ def limit(
         Args:
             poi_val (float): value for parameter of interest
             model (pyhf.pdf.Model): model to use in fits
-            data (List[float]): data (including auxdata) the model is fit to
+            data (list[float]): data (including auxdata) the model is fit to
             cls_target (float): target CLs value to find by varying POI
             which_limit (int): which limit to run, 0: observed, 1: expected -2 sigma, 2:
                 expected -1 sigma, 3: expected, 4: expected +1 sigma, 5: expected +2
@@ -1086,15 +1082,15 @@ def limit(
 
 def significance(
     model: pyhf.pdf.Model,
-    data: List[float],
+    data: list[float],
     *,
-    poi_name: Optional[str] = None,
-    init_pars: Optional[List[float]] = None,
-    fix_pars: Optional[List[bool]] = None,
-    par_bounds: Optional[List[Tuple[float, float]]] = None,
-    strategy: Optional[Literal[0, 1, 2]] = None,
-    maxiter: Optional[int] = None,
-    tolerance: Optional[float] = None,
+    poi_name: str | None = None,
+    init_pars: list[float] | None = None,
+    fix_pars: list[bool] | None = None,
+    par_bounds: list[tuple[float, float]] | None = None,
+    strategy: Literal[0, 1, 2] | None = None,
+    maxiter: int | None = None,
+    tolerance: float | None = None,
 ) -> SignificanceResults:
     """Calculates the discovery significance of a positive signal.
 
@@ -1102,23 +1098,23 @@ def significance(
 
     Args:
         model (pyhf.pdf.Model): model to use in fits
-        data (List[float]): data (including auxdata) the model is fit to
-        poi_name (Optional[str], optional): significance is calculated for this
-            parameter, defaults to None (use POI specified in workspace)
-        init_pars (Optional[List[float]], optional): list of initial parameter settings,
+        data (list[float]): data (including auxdata) the model is fit to
+        poi_name (str | None, optional): significance is calculated for this parameter,
+            defaults to None (use POI specified in workspace)
+        init_pars (list[float] | None, optional): list of initial parameter settings,
             defaults to None (use ``pyhf`` suggested inits)
-        fix_pars (Optional[List[bool]], optional): list of booleans specifying which
+        fix_pars (list[bool] | None, optional): list of booleans specifying which
             parameters are held constant, defaults to None (use ``pyhf`` suggestion)
-        par_bounds (Optional[List[Tuple[float, float]]], optional): list of tuples with
+        par_bounds (list[tuple[float, float]] | None, optional): list of tuples with
             parameter bounds for fit, defaults to None (use ``pyhf`` suggested bounds)
-        strategy (Optional[Literal[0, 1, 2]], optional): minimization strategy used by
+        strategy (Literal[0, 1, 2] | None, optional): minimization strategy used by
             Minuit, can be 0/1/2, defaults to None (then uses ``pyhf`` default behavior
             of strategy 0 with user-provided gradients and 1 otherwise)
-        maxiter (Optional[int], optional): allowed number of calls for minimization,
+        maxiter (int | None, optional): allowed number of calls for minimization,
             defaults to None (use ``pyhf`` default of 100,000)
-        tolerance (Optional[float]), optional): tolerance for convergence, for details
-            see ``iminuit.Minuit.tol`` (uses EDM < 0.002*tolerance), defaults to
-            None (use ``iminuit`` default of 0.1)
+        tolerance (float | None, optional): tolerance for convergence, for details see
+            ``iminuit.Minuit.tol`` (uses EDM < 0.002*tolerance), defaults to None (use
+            ``iminuit`` default of 0.1)
 
     Returns:
         SignificanceResults: observed and expected p-values and significances

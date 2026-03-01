@@ -4,7 +4,7 @@ import io
 import json
 import logging
 import pathlib
-from typing import Any, List, Optional, Tuple
+from typing import Any
 
 import click
 import yaml
@@ -22,7 +22,7 @@ from cabinetry import workspace as cabinetry_workspace
 class OrderedGroup(click.Group):
     """A group that shows commands in the order they were added."""
 
-    def list_commands(self, _: Any) -> List[str]:
+    def list_commands(self, _: Any) -> list[str]:
         """Returns a list of commands."""
         return list(self.commands.keys())
 
@@ -115,7 +115,7 @@ def workspace(config: io.TextIOWrapper, ws_spec: click.utils.LazyFile) -> None:
 def fit(
     ws_spec: io.TextIOWrapper,
     asimov: bool,
-    minos: Tuple[str, ...],
+    minos: tuple[str, ...],
     goodness_of_fit: bool,
     pulls: bool,
     corrmat: bool,
@@ -196,8 +196,8 @@ def ranking(
 def scan(
     ws_spec: io.TextIOWrapper,
     par_name: str,
-    lower_bound: Optional[float],
-    upper_bound: Optional[float],
+    lower_bound: float | None,
+    upper_bound: float | None,
     n_steps: int,
     asimov: bool,
     figfolder: str,
@@ -212,7 +212,7 @@ def scan(
     PAR_NAME: name of parameter to scan over
     """
     _set_logging()
-    par_range: Optional[Tuple[float, float]]
+    par_range: tuple[float, float] | None
     if (lower_bound is not None) and (upper_bound is not None):
         # both bounds specified
         par_range = (lower_bound, upper_bound)
@@ -300,7 +300,7 @@ def significance(ws_spec: io.TextIOWrapper, asimov: bool) -> None:
 )
 def data_mc(
     ws_spec: io.TextIOWrapper,
-    config: Optional[io.TextIOWrapper],
+    config: io.TextIOWrapper | None,
     postfit: bool,
     figfolder: str,
 ) -> None:

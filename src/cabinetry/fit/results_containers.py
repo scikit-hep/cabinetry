@@ -1,6 +1,6 @@
 """Provides containers for inference results."""
 
-from typing import Dict, List, NamedTuple, Optional, Tuple
+from typing import NamedTuple
 
 import iminuit
 import numpy as np
@@ -13,23 +13,23 @@ class FitResults(NamedTuple):
         bestfit (np.ndarray): best-fit results of parameters
         uncertainty (np.ndarray): uncertainties of best-fit parameter results, evaluated
             with Hessian
-        labels (List[str]): parameter labels
+        labels (list[str]): parameter labels
         corr_mat (np.ndarray): parameter correlation matrix
         best_twice_nll (float): -2 log(likelihood) at best-fit point
-        goodess_of_fit (float, optional): goodness-of-fit p-value, defaults to -1
-        minos_uncertainty (Dict[str, Tuple[float, float]]): uncertainties of best-fit
+        goodness_of_fit (float, optional): goodness-of-fit p-value, defaults to -1
+        minos_uncertainty (dict[str, tuple[float, float]]): uncertainties of best-fit
             parameter results indexed by parameter name, calculated with MINOS
         minuit_obj (iminuit.Minuit, optional): underlying minimizer
     """
 
     bestfit: np.ndarray
     uncertainty: np.ndarray
-    labels: List[str]
+    labels: list[str]
     corr_mat: np.ndarray
     best_twice_nll: float
     goodness_of_fit: float = -1
-    minos_uncertainty: Dict[str, Tuple[float, float]] = {}
-    minuit_obj: Optional[iminuit.Minuit] = None
+    minos_uncertainty: dict[str, tuple[float, float]] = {}
+    minuit_obj: iminuit.Minuit | None = None
 
 
 class RankingResults(NamedTuple):
@@ -41,7 +41,7 @@ class RankingResults(NamedTuple):
     Args:
         bestfit (np.ndarray): best-fit results of parameters
         uncertainty (np.ndarray): uncertainties of best-fit parameter results
-        labels (List[str]): parameter labels
+        labels (list[str]): parameter labels
         prefit_up (np.ndarray): pre-fit impact in "up" direction
         prefit_down (np.ndarray): pre-fit impact in "down" direction
         postfit_up (np.ndarray): post-fit impact in "up" direction
@@ -50,7 +50,7 @@ class RankingResults(NamedTuple):
 
     bestfit: np.ndarray
     uncertainty: np.ndarray
-    labels: List[str]
+    labels: list[str]
     prefit_up: np.ndarray
     prefit_down: np.ndarray
     postfit_up: np.ndarray

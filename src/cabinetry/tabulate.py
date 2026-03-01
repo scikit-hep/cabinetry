@@ -2,7 +2,7 @@
 
 import logging
 import pathlib
-from typing import Any, Dict, List, Optional, Union
+from typing import Any
 
 import numpy as np
 import pyhf
@@ -36,7 +36,7 @@ def _header_name(channel_name: str, i_bin: int, *, unique: bool = True) -> str:
 
 
 def _save_tables(
-    table_dict: Dict[str, List[Dict[str, Any]]],
+    table_dict: dict[str, list[dict[str, Any]]],
     table_folder: pathlib.Path,
     table_label: str,
     table_format: str,
@@ -46,7 +46,7 @@ def _save_tables(
     Newlines are removed from table headers for table formats that do not support them.
 
     Args:
-        table_dict (Dict[str, List[Dict[str, Any]]]): dictionary with tables to save
+        table_dict (dict[str, list[dict[str, Any]]]): dictionary with tables to save
         table_folder (pathlib.Path): path to the folder to save tables in
         table_label (str): label for tables to include in filenames
         table_format (str): format in which to save the tables
@@ -84,25 +84,25 @@ def _save_tables(
 
 def _yields_per_bin(
     model: pyhf.pdf.Model,
-    model_yields: List[List[List[float]]],
-    total_stdev_model: List[List[List[float]]],
-    data: List[List[float]],
-    channels: List[str],
+    model_yields: list[list[list[float]]],
+    total_stdev_model: list[list[list[float]]],
+    data: list[list[float]],
+    channels: list[str],
     label: str,
-) -> List[Dict[str, Any]]:
+) -> list[dict[str, Any]]:
     """Outputs and returns a yield table with predicted and observed yields per bin.
 
     Args:
         model (pyhf.pdf.Model): the model which the table corresponds to
-        model_yields (List[List[List[float]]]): yields per channel, sample, and bin
-        total_stdev_model (List[List[List[float]]]): total model standard deviation per
+        model_yields (list[list[list[float]]]): yields per channel, sample, and bin
+        total_stdev_model (list[list[list[float]]]): total model standard deviation per
             channel, sample and bin
-        data (List[List[float]]): data yield per channel and bin
-        channels (List[str]): names of channels to use
+        data (list[list[float]]): data yield per channel and bin
+        channels (list[str]): names of channels to use
         label (str): label for model prediction to include in log
 
     Returns:
-        List[Dict[str, Any]]: yield table for use with the ``tabulate`` package
+        list[dict[str, Any]]: yield table for use with the ``tabulate`` package
     """
     table = []  # table containing all yields
     headers = {}  # headers with nicer formatting for output
@@ -155,25 +155,25 @@ def _yields_per_bin(
 
 def _yields_per_channel(
     model: pyhf.pdf.Model,
-    model_yields: List[List[float]],
-    total_stdev_model: List[List[float]],
-    data: List[float],
-    channels: List[str],
+    model_yields: list[list[float]],
+    total_stdev_model: list[list[float]],
+    data: list[float],
+    channels: list[str],
     label: str,
-) -> List[Dict[str, Any]]:
+) -> list[dict[str, Any]]:
     """Outputs and returns a yield table with predicted and observed yields per channel.
 
     Args:
         model (pyhf.pdf.Model): the model which the table corresponds to
-        model_yields (List[List[float]]): yields per channel and sample
-        total_stdev_model (List[List[float]]): total model standard deviation per
+        model_yields (list[list[float]]): yields per channel and sample
+        total_stdev_model (list[list[float]]): total model standard deviation per
             channel and sample
-        data (List[float]): data yield per channel
-        channels (List[str]): names of channels to use
+        data (list[float]): data yield per channel
+        channels (list[str]): names of channels to use
         label (str): label for model prediction to include in log
 
     Returns:
-        List[Dict[str, Any]]: yield table for use with the ``tabulate`` package
+        list[dict[str, Any]]: yield table for use with the ``tabulate`` package
     """
     table = []  # table containing all yields
 
@@ -215,15 +215,15 @@ def _yields_per_channel(
 
 def yields(
     model_prediction: model_utils.ModelPrediction,
-    data: List[float],
+    data: list[float],
     *,
-    channels: Optional[Union[str, List[str]]] = None,
+    channels: str | list[str] | None = None,
     per_bin: bool = True,
     per_channel: bool = False,
-    table_folder: Union[str, pathlib.Path] = "tables",
+    table_folder: str | pathlib.Path = "tables",
     table_format: str = "simple",
     save_tables: bool = True,
-) -> Dict[str, List[Dict[str, Any]]]:
+) -> dict[str, list[dict[str, Any]]]:
     """Generates yield tables, showing model prediction and data.
 
     Channels can be filtered via the optional ``channels`` argument. Either yields per
@@ -232,26 +232,26 @@ def yields(
     Args:
         model_prediction (model_utils.ModelPrediction): model prediction to show in
             table
-        data (List[float]): data to include in table, can either include auxdata (the
+        data (list[float]): data to include in table, can either include auxdata (the
             auxdata is then stripped internally) or only observed yields
-        channels (Optional[Union[str, List[str]]], optional): name of channel to show,
-            or list of names to include, defaults to None (uses all channels)
+        channels (str | list[str] | None, optional): name of channel to show, or list of
+            names to include, defaults to None (uses all channels)
         per_bin (bool, optional): whether to show a table with yields per bin, defaults
             to True
         per_channel (bool, optional): whether to show a table with yields per channel,
             defaults to False
-        table_folder (Union[str, pathlib.Path], optional): path to the folder to save
-            tables in, defaults to "tables"
+        table_folder (str | pathlib.Path, optional): path to the folder to save tables
+            in, defaults to "tables"
         table_format (str, optional): format in which to save the tables, can be any of
             the formats ``tabulate`` supports (e.g. html, latex, plain, simple, tsv),
             defaults to "simple"
         save_tables (bool, optional): whether to save tables, defaults to True
 
     Returns:
-        Dict[str, List[Dict[str, Any]]]: dictionary with yield tables for use with the
+        dict[str, list[dict[str, Any]]]: dictionary with yield tables for use with the
         ``tabulate`` package
     """
-    table_dict: Dict[str, List[Dict[str, Any]]] = {}
+    table_dict: dict[str, list[dict[str, Any]]] = {}
 
     if not (per_bin or per_channel):
         log.warning(

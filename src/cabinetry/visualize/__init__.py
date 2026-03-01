@@ -3,7 +3,7 @@
 import glob
 import logging
 import pathlib
-from typing import Any, Dict, List, Optional, Tuple, Union
+from typing import Any
 
 import matplotlib as mpl
 import numpy as np
@@ -36,11 +36,11 @@ def _figure_name(region_name: str, label: str) -> str:
     return figure_name
 
 
-def _total_yield_uncertainty(stdev_list: List[np.ndarray]) -> np.ndarray:
+def _total_yield_uncertainty(stdev_list: list[np.ndarray]) -> np.ndarray:
     """Calculates the absolute statistical uncertainty of a stack of MC.
 
     Args:
-        stdev_list (List[np.ndarray]): list of absolute stat. uncertainty per sample
+        stdev_list (list[np.ndarray]): list of absolute stat. uncertainty per sample
 
     Returns:
         np.ndarray: absolute stat. uncertainty of stack of samples
@@ -50,32 +50,32 @@ def _total_yield_uncertainty(stdev_list: List[np.ndarray]) -> np.ndarray:
 
 
 def data_mc_from_histograms(
-    config: Dict[str, Any],
+    config: dict[str, Any],
     *,
-    figure_folder: Union[str, pathlib.Path] = "figures",
-    log_scale: Optional[bool] = None,
+    figure_folder: str | pathlib.Path = "figures",
+    log_scale: bool | None = None,
     log_scale_x: bool = False,
-    channels: Optional[Union[str, List[str]]] = None,
-    colors: Optional[Dict[str, str]] = None,
+    channels: str | list[str] | None = None,
+    colors: dict[str, str] | None = None,
     close_figure: bool = False,
     save_figure: bool = True,
-) -> List[Dict[str, Any]]:
+) -> list[dict[str, Any]]:
     """Draws pre-fit data/MC histograms, using histograms created by cabinetry.
 
     The uncertainty band drawn includes only statistical uncertainties.
 
     Args:
-        config (Dict[str, Any]): cabinetry configuration
-        figure_folder (Union[str, pathlib.Path], optional): path to the folder to save
-            figures in, defaults to "figures"
-        log_scale (Optional[bool], optional): whether to use logarithmic vertical axis,
+        config (dict[str, Any]): cabinetry configuration
+        figure_folder (str | pathlib.Path, optional): path to the folder to save figures
+            in, defaults to "figures"
+        log_scale (bool | None, optional): whether to use logarithmic vertical axis,
             defaults to None (automatically determine whether to use linear/log scale)
         log_scale_x (bool, optional): whether to use logarithmic horizontal axis,
             defaults to False
-        channels (Optional[Union[str, List[str]]], optional): name of channel to show,
-            or list of names to include, defaults to None (uses all channels)
-        colors (Optional[Dict[str, str]], optional): map of sample names and colors to
-            use in plot, defaults to None (uses default colors)
+        channels (str | list[str] | None, optional): name of channel to show, or list of
+            names to include, defaults to None (uses all channels)
+        colors (dict[str, str] | None, optional): map of sample names and colors to use
+            in plot, defaults to None (uses default colors)
         close_figure (bool, optional): whether to close each figure, defaults to False
             (enable when producing many figures to avoid memory issues, prevents
             automatic rendering in notebooks)
@@ -85,7 +85,7 @@ def data_mc_from_histograms(
         ValueError: if color specification is incomplete
 
     Returns:
-        List[Dict[str, Any]]: list of dictionaries, where each dictionary contains a
+        list[dict[str, Any]]: list of dictionaries, where each dictionary contains a
             figure and the associated region name
     """
     log.info("visualizing histogram")
@@ -153,17 +153,17 @@ def data_mc_from_histograms(
 
 def data_mc(
     model_prediction: model_utils.ModelPrediction,
-    data: List[float],
+    data: list[float],
     *,
-    config: Optional[Dict[str, Any]] = None,
-    figure_folder: Union[str, pathlib.Path] = "figures",
-    log_scale: Optional[bool] = None,
+    config: dict[str, Any] | None = None,
+    figure_folder: str | pathlib.Path = "figures",
+    log_scale: bool | None = None,
     log_scale_x: bool = False,
-    channels: Optional[Union[str, List[str]]] = None,
-    colors: Optional[Dict[str, str]] = None,
+    channels: str | list[str] | None = None,
+    colors: dict[str, str] | None = None,
     close_figure: bool = False,
     save_figure: bool = True,
-) -> Optional[List[Dict[str, Any]]]:
+) -> list[dict[str, Any]] | None:
     """Draws pre- and post-fit data/MC histograms for a ``pyhf`` model and data.
 
     The ``config`` argument is optional, but required to determine correct axis labels
@@ -173,21 +173,21 @@ def data_mc(
 
     Args:
         model_prediction (model_utils.ModelPrediction): model prediction to show
-        data (List[float]): data to include in visualization, can either include auxdata
+        data (list[float]): data to include in visualization, can either include auxdata
             (the auxdata is then stripped internally) or only observed yields
-        config (Optional[Dict[str, Any]], optional): cabinetry configuration needed for
+        config (dict[str, Any] | None, optional): cabinetry configuration needed for
             binning and axis labels, defaults to None (uses a default binning and labels
             then)
-        figure_folder (Union[str, pathlib.Path], optional): path to the folder to save
-            figures in, defaults to "figures"
-        log_scale (Optional[bool], optional): whether to use logarithmic vertical axis,
+        figure_folder (str | pathlib.Path, optional): path to the folder to save figures
+            in, defaults to "figures"
+        log_scale (bool | None, optional): whether to use logarithmic vertical axis,
             defaults to None (automatically determine whether to use linear/log scale)
         log_scale_x (bool, optional): whether to use logarithmic horizontal axis,
             defaults to False
-        channels (Optional[Union[str, List[str]]], optional): name of channel to show,
-            or list of names to include, defaults to None (uses all channels)
-        colors (Optional[Dict[str, str]], optional): map of sample names and colors to
-            use in plot, defaults to None (uses default colors)
+        channels (str | list[str] | None, optional): name of channel to show, or list of
+            names to include, defaults to None (uses all channels)
+        colors (dict[str, str] | None, optional): map of sample names and colors to use
+            in plot, defaults to None (uses default colors)
         close_figure (bool, optional): whether to close each figure, defaults to False
             (enable when producing many figures to avoid memory issues, prevents
             automatic rendering in notebooks)
@@ -197,7 +197,7 @@ def data_mc(
         ValueError: if color specification is incomplete
 
     Returns:
-        Optional[List[Dict[str, Any]]]: list of dictionaries, where each dictionary
+        list[dict[str, Any]] | None: list of dictionaries, where each dictionary
             contains a figure and the associated region name, or None if no figure was
             produced
     """
@@ -289,28 +289,28 @@ def data_mc(
 
 
 def templates(
-    config: Dict[str, Any],
+    config: dict[str, Any],
     *,
-    figure_folder: Union[str, pathlib.Path] = "figures",
+    figure_folder: str | pathlib.Path = "figures",
     close_figure: bool = False,
     save_figure: bool = True,
-) -> List[Dict[str, Any]]:
+) -> list[dict[str, Any]]:
     """Visualizes template histograms (after post-processing) for systematic variations.
 
     The original template histogram for systematic variations (before post-processing)
     is also included in the visualization.
 
     Args:
-        config (Dict[str, Any]): cabinetry configuration
-        figure_folder (Union[str, pathlib.Path], optional): path to the folder to save
-            figures in, defaults to "figures"
+        config (dict[str, Any]): cabinetry configuration
+        figure_folder (str | pathlib.Path, optional): path to the folder to save figures
+            in, defaults to "figures"
         close_figure (bool, optional): whether to close each figure, defaults to False
             (enable when producing many figures to avoid memory issues, prevents
             automatic rendering in notebooks)
         save_figure (bool, optional): whether to save figures, defaults to True
 
     Returns:
-        List[Dict[str, Any]]: list of dictionaries, where each dictionary contains a
+        list[dict[str, Any]]: list of dictionaries, where each dictionary contains a
             figure and the associated region / sample / systematic names
     """
     log.info("visualizing systematic templates")
@@ -426,7 +426,7 @@ def templates(
 def correlation_matrix(
     fit_results: fit.FitResults,
     *,
-    figure_folder: Union[str, pathlib.Path] = "figures",
+    figure_folder: str | pathlib.Path = "figures",
     pruning_threshold: float = 0.0,
     close_figure: bool = True,
     save_figure: bool = True,
@@ -436,8 +436,8 @@ def correlation_matrix(
     Args:
         fit_results (fit.FitResults): fit results, including correlation matrix and
             parameter labels
-        figure_folder (Union[str, pathlib.Path], optional): path to the folder to save
-            figures in, defaults to "figures"
+        figure_folder (str | pathlib.Path, optional): path to the folder to save figures
+            in, defaults to "figures"
         pruning_threshold (float, optional): minimum correlation for a parameter to
             have with any other parameters to not get pruned, defaults to 0.0
         close_figure (bool, optional): whether to close figure, defaults to True
@@ -481,8 +481,8 @@ def correlation_matrix(
 def pulls(
     fit_results: fit.FitResults,
     *,
-    figure_folder: Union[str, pathlib.Path] = "figures",
-    exclude: Optional[Union[str, List[str], Tuple[str, ...]]] = None,
+    figure_folder: str | pathlib.Path = "figures",
+    exclude: str | list[str] | tuple[str, ...] | None = None,
     close_figure: bool = True,
     save_figure: bool = True,
 ) -> mpl.figure.Figure:
@@ -491,10 +491,10 @@ def pulls(
     Args:
         fit_results (fit.FitResults): fit results, including correlation matrix and
             parameter labels
-        figure_folder (Union[str, pathlib.Path], optional): path to the folder to save
-            figures in, defaults to "figures"
-        exclude (Optional[Union[str, List[str], Tuple[str, ...]]], optional): parameter
-            or parameters to exclude from plot, defaults to None (nothing excluded)
+        figure_folder (str | pathlib.Path, optional): path to the folder to save figures
+            in, defaults to "figures"
+        exclude (str | list[str] | tuple[str, ...] | None, optional): parameter or
+            parameters to exclude from plot, defaults to None (nothing excluded)
         close_figure (bool, optional): whether to close figure, defaults to True
         save_figure (bool, optional): whether to save figure, defaults to True
 
@@ -543,8 +543,8 @@ def pulls(
 def ranking(
     ranking_results: fit.RankingResults,
     *,
-    figure_folder: Union[str, pathlib.Path] = "figures",
-    max_pars: Optional[int] = None,
+    figure_folder: str | pathlib.Path = "figures",
+    max_pars: int | None = None,
     close_figure: bool = True,
     save_figure: bool = True,
 ) -> mpl.figure.Figure:
@@ -554,9 +554,9 @@ def ranking(
 
     Args:
         ranking_results (fit.RankingResults): fit results, and pre- and post-fit impacts
-        figure_folder (Union[str, pathlib.Path], optional): path to the folder to save
-            figures in, defaults to "figures"
-        max_pars (Optional[int], optional): number of parameters to include, defaults to
+        figure_folder (str | pathlib.Path, optional): path to the folder to save figures
+            in, defaults to "figures"
+        max_pars (int | None, optional): number of parameters to include, defaults to
             None (which means all parameters are included)
         close_figure (bool, optional): whether to close figure, defaults to True
         save_figure (bool, optional): whether to save figure, defaults to True
@@ -609,7 +609,7 @@ def ranking(
 def scan(
     scan_results: fit.ScanResults,
     *,
-    figure_folder: Union[str, pathlib.Path] = "figures",
+    figure_folder: str | pathlib.Path = "figures",
     close_figure: bool = True,
     save_figure: bool = True,
 ) -> mpl.figure.Figure:
@@ -617,8 +617,8 @@ def scan(
 
     Args:
         scan_results (fit.ScanResults): results of a likelihood scan
-        figure_folder (Union[str, pathlib.Path], optional): path to the folder to save
-            figures in, defaults to "figures"
+        figure_folder (str | pathlib.Path, optional): path to the folder to save figures
+            in, defaults to "figures"
         close_figure (bool, optional): whether to close figure, defaults to True
         save_figure (bool, optional): whether to save figure, defaults to True
 
@@ -647,7 +647,7 @@ def scan(
 def limit(
     limit_results: fit.LimitResults,
     *,
-    figure_folder: Union[str, pathlib.Path] = "figures",
+    figure_folder: str | pathlib.Path = "figures",
     close_figure: bool = True,
     save_figure: bool = True,
 ) -> mpl.figure.Figure:
@@ -655,8 +655,8 @@ def limit(
 
     Args:
         limit_results (fit.LimitResults): results of upper limit determination
-        figure_folder (Union[str, pathlib.Path], optional): path to the folder to save
-            figures in, defaults to "figures"
+        figure_folder (str | pathlib.Path, optional): path to the folder to save figures
+            in, defaults to "figures"
         close_figure (bool, optional): whether to close figure, defaults to True
         save_figure (bool, optional): whether to save figure, defaults to True
 
@@ -680,7 +680,7 @@ def limit(
 def modifier_grid(
     model: pyhf.pdf.Model,
     *,
-    figure_folder: Union[str, pathlib.Path] = "figures",
+    figure_folder: str | pathlib.Path = "figures",
     split_by_sample: bool = False,
     close_figure: bool = True,
     save_figure: bool = True,
@@ -689,8 +689,8 @@ def modifier_grid(
 
     Args:
         model (pyhf.pdf.Model): model to visualize
-        figure_folder (Union[str, pathlib.Path], optional): path to the folder to save
-            figures in, defaults to "figures"
+        figure_folder (str | pathlib.Path, optional): path to the folder to save figures
+            in, defaults to "figures"
         split_by_sample (bool, optional): whether to use (channel, parameter) grids
             for each sample, defaults to False (if enabled, uses (sample, parameter)
             grids for each channel)

@@ -3,7 +3,7 @@
 import functools
 import logging
 import pathlib
-from typing import Any, Dict, List, Literal, Optional
+from typing import Any, Literal
 
 import boost_histogram as bh
 import numpy as np
@@ -18,11 +18,11 @@ log = logging.getLogger(__name__)
 
 def _ntuple_paths(
     general_path: str,
-    region: Dict[str, Any],
-    sample: Dict[str, Any],
-    systematic: Dict[str, Any],
-    template: Optional[Literal["Up", "Down"]],
-) -> List[pathlib.Path]:
+    region: dict[str, Any],
+    sample: dict[str, Any],
+    systematic: dict[str, Any],
+    template: Literal["Up", "Down"] | None,
+) -> list[pathlib.Path]:
     """Returns the paths to ntuples for a region-sample-systematic-template.
 
     A path is built starting from the path specified in the general options in the
@@ -35,11 +35,11 @@ def _ntuple_paths(
     Args:
         general_path (str): path specified in general settings, with sections that can
             be overridden by region / sample / systematic settings
-        region (Dict[str, Any]): containing all region information
-        sample (Dict[str, Any]): containing all sample information
-        systematic (Dict[str, Any]): containing all systematic information
-        template (Optional[Literal["Up", "Down"]]): template considered: "Up", "Down",
-            or None for nominal
+        region (dict[str, Any]): containing all region information
+        sample (dict[str, Any]): containing all sample information
+        systematic (dict[str, Any]): containing all systematic information
+        template (Literal["Up", "Down"] | None): template considered: "Up", "Down", or
+            None for nominal
 
     Raises:
         ValueError: when ``RegionPath`` placeholder is used, but region setting is not
@@ -48,7 +48,7 @@ def _ntuple_paths(
             specified
 
     Returns:
-        List[pathlib.Path]: list of paths to ntuples
+        list[pathlib.Path]: list of paths to ntuples
     """
     # obtain region and sample paths, if they are defined
     region_path = region.get("RegionPath", None)
@@ -100,10 +100,10 @@ def _ntuple_paths(
 
 
 def _variable(
-    region: Dict[str, Any],
-    sample: Dict[str, Any],
-    systematic: Dict[str, Any],
-    template: Optional[Literal["Up", "Down"]],
+    region: dict[str, Any],
+    sample: dict[str, Any],
+    systematic: dict[str, Any],
+    template: Literal["Up", "Down"] | None,
 ) -> str:
     """Returns the variable the histogram will be binned in.
 
@@ -111,11 +111,11 @@ def _variable(
     specified for the template.
 
     Args:
-        region (Dict[str, Any]): containing all region information
-        sample (Dict[str, Any]): containing all sample information
-        systematic (Dict[str, Any]): containing all systematic information
-        template (Optional[Literal["Up", "Down"]]): template considered: "Up", "Down",
-            or None for nominal
+        region (dict[str, Any]): containing all region information
+        sample (dict[str, Any]): containing all sample information
+        systematic (dict[str, Any]): containing all systematic information
+        template (Literal["Up", "Down"] | None): template considered: "Up", "Down", or
+            None for nominal
 
     Returns:
         str: name of variable to bin histogram in
@@ -133,11 +133,11 @@ def _variable(
 
 
 def _filter(
-    region: Dict[str, Any],
-    sample: Dict[str, Any],
-    systematic: Dict[str, Any],
-    template: Optional[Literal["Up", "Down"]],
-) -> Optional[str]:
+    region: dict[str, Any],
+    sample: dict[str, Any],
+    systematic: dict[str, Any],
+    template: Literal["Up", "Down"] | None,
+) -> str | None:
     """Returns the filter to be applied for event selection.
 
     Overrides the (optional) filter provided at the region level by a sample-specific
@@ -146,14 +146,14 @@ def _filter(
     the sample-specific filter if both are provided.
 
     Args:
-        region (Dict[str, Any]): containing all region information
-        sample (Dict[str, Any]): containing all sample information
-        systematic (Dict[str, Any]): containing all systematic information
-        template (Optional[Literal["Up", "Down"]]): template considered: "Up", "Down",
-            or None for nominal
+        region (dict[str, Any]): containing all region information
+        sample (dict[str, Any]): containing all sample information
+        systematic (dict[str, Any]): containing all systematic information
+        template (Literal["Up", "Down"] | None): template considered: "Up", "Down", or
+            None for nominal
 
     Returns:
-        Optional[str]: expression for the filter to be used, or None for no filtering
+        str | None: expression for the filter to be used, or None for no filtering
     """
     selection_filter = region.get("Filter", None)
 
@@ -174,26 +174,26 @@ def _filter(
 
 
 def _weight(
-    region: Dict[str, Any],
-    sample: Dict[str, Any],
-    systematic: Dict[str, Any],
-    template: Optional[Literal["Up", "Down"]],
-) -> Optional[str]:
+    region: dict[str, Any],
+    sample: dict[str, Any],
+    systematic: dict[str, Any],
+    template: Literal["Up", "Down"] | None,
+) -> str | None:
     """Returns the weight to be used for events in histograms.
 
     For non-nominal templates, overrides the nominal weight if an alternative is
     specified for the template.
 
     Args:
-        region (Dict[str, Any]): containing all region information
-        sample (Dict[str, Any]): containing all sample information
-        systematic (Dict[str, Any]): containing all systematic information
-        template (Optional[Literal["Up", "Down"]]): template considered: "Up", "Down",
-            or None for nominal
+        region (dict[str, Any]): containing all region information
+        sample (dict[str, Any]): containing all sample information
+        systematic (dict[str, Any]): containing all systematic information
+        template (Literal["Up", "Down"] | None): template considered: "Up", "Down", or
+            None for nominal
 
     Returns:
-        Optional[str]: weight used for events when filled into histograms, or None for
-        no weight
+        str | None: weight used for events when filled into histograms, or None for no
+        weight
     """
     weight = sample.get("Weight", None)
     # check whether a systematic is being processed
@@ -206,9 +206,9 @@ def _weight(
 
 
 def _position_in_file(
-    sample: Dict[str, Any],
-    systematic: Dict[str, Any],
-    template: Optional[Literal["Up", "Down"]],
+    sample: dict[str, Any],
+    systematic: dict[str, Any],
+    template: Literal["Up", "Down"] | None,
 ) -> str:
     """Returns the location of data within a file (e.g. a tree name).
 
@@ -216,10 +216,10 @@ def _position_in_file(
     specified for the template.
 
     Args:
-        sample (Dict[str, Any]): containing all sample information
-        systematic (Dict[str, Any]): containing all systematic information
-        template (Optional[Literal["Up", "Down"]]): template considered: "Up", "Down",
-            or None for nominal
+        sample (dict[str, Any]): containing all sample information
+        systematic (dict[str, Any]): containing all systematic information
+        template (Literal["Up", "Down"] | None): template considered: "Up", "Down", or
+            None for nominal
 
     Returns:
         str: where in the file to find the data (the name of a tree)
@@ -234,14 +234,14 @@ def _position_in_file(
     return position
 
 
-def _binning(region: Dict[str, Any]) -> np.ndarray:
+def _binning(region: dict[str, Any]) -> np.ndarray:
     """Returns the binning to be used in a region.
 
     Should eventually also support other ways of specifying bins, such as the amount of
     bins and the range to bin in.
 
     Args:
-        region (Dict[str, Any]): containing all region information
+        region (dict[str, Any]): containing all region information
 
     Raises:
         NotImplementedError: when the binning is not explicitly defined
@@ -274,10 +274,10 @@ class _Builder:
 
     def _create_histogram(
         self,
-        region: Dict[str, Any],
-        sample: Dict[str, Any],
-        systematic: Dict[str, Any],
-        template: Optional[Literal["Up", "Down"]],
+        region: dict[str, Any],
+        sample: dict[str, Any],
+        systematic: dict[str, Any],
+        template: Literal["Up", "Down"] | None,
     ) -> None:
         """Creates a histogram and writes it to a file.
 
@@ -285,11 +285,11 @@ class _Builder:
         the argument.
 
         Args:
-            region (Dict[str, Any]): containing all region information
-            sample (Dict[str, Any]): containing all sample information
-            systematic (Dict[str, Any]): containing all systematic information
-            template (Optional[Literal["Up", "Down"]]): template considered: "Up",
-                "Down", or None for nominal
+            region (dict[str, Any]): containing all region information
+            sample (dict[str, Any]): containing all sample information
+            systematic (dict[str, Any]): containing all systematic information
+            template (Literal["Up", "Down"] | None): template considered: "Up", "Down",
+                or None for nominal
 
         Raises:
             NotImplementedError: when requesting an unknown backend
@@ -338,10 +338,10 @@ class _Builder:
         ``boost_histogram.Histogram``.
 
         Args:
-            func (cabinetry.route.UserTemplateFunc): user-defined template builder
+            func (route.UserTemplateFunc): user-defined template builder
 
         Returns:
-            cabinetry.route.ProcessorFunc: wrapped template builder
+            route.ProcessorFunc: wrapped template builder
         """
 
         # decorating this with functools.wraps will keep the name of the wrapped
@@ -349,10 +349,10 @@ class _Builder:
         # different (the return value becomes None)
         @functools.wraps(func)
         def wrapper(
-            region: Dict[str, Any],
-            sample: Dict[str, Any],
-            systematic: Dict[str, Any],
-            template: Optional[Literal["Up", "Down"]],
+            region: dict[str, Any],
+            sample: dict[str, Any],
+            systematic: dict[str, Any],
+            template: Literal["Up", "Down"] | None,
         ) -> None:
             """Executes a user-defined function that returns a histogram and saves it.
 
@@ -360,10 +360,10 @@ class _Builder:
             wrapped with this.
 
             Args:
-                region (Dict[str, Any]): containing all region information
-                sample (Dict[str, Any]): containing all sample information
-                systematic (Dict[str, Any]): containing all systematic information
-                template (Optional[Literal["Up", "Down"]]): template considered: "Up",
+                region (dict[str, Any]): containing all region information
+                sample (dict[str, Any]): containing all sample information
+                systematic (dict[str, Any]): containing all systematic information
+                template (Literal["Up", "Down"] | None): template considered: "Up",
                     "Down", or None for nominal
             """
             histogram = func(region, sample, systematic, template)

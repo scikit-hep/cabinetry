@@ -276,7 +276,7 @@ def test_histogram_is_needed(reg_sam_sys_tem, is_needed):
 
 
 def test_histogram_is_needed_unknown():
-    # non-supported systematic
+    # unsupported systematic
     with pytest.raises(ValueError, match="unknown systematics type: unknown"):
         configuration.histogram_is_needed({}, {}, {"Type": "unknown"}, "Up")
 
