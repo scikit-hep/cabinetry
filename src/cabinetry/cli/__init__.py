@@ -56,7 +56,7 @@ def cabinetry() -> None:
 def templates(
     config: io.TextIOWrapper,
     method: str,
-    input_type: Optional[Literal["ntuple", "histogram"]],
+    input_type: Literal["ntuple", "histogram"] | None,
 ) -> None:
     """Produces template histograms.
 
