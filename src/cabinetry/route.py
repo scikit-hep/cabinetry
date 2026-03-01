@@ -16,8 +16,7 @@ log = logging.getLogger(__name__)
 # returns None
 # template can be "Up" / "Down" for variations, or None for nominal
 ProcessorFunc = Callable[
-    [dict[str, Any], dict[str, Any], dict[str, Any], Literal["Up", "Down"] | None],
-    None,
+    [dict[str, Any], dict[str, Any], dict[str, Any], Literal["Up", "Down"] | None], None
 ]
 
 # type of a user-defined function for template processing, takes sample-region-
