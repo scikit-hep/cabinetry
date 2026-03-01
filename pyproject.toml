@@ -63,7 +63,7 @@ Homepage = "https://github.com/scikit-hep/cabinetry"
 
 [project.optional-dependencies]
 contrib = ["uproot>=4.1.5"]  # file writing bug-fixes
-pyhf_backends = ["pyhf[backends]"]
+pyhf_backends = ["pyhf[minuit,jax]"]
 
 # Developer extras
 test = [
