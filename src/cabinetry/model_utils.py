@@ -24,7 +24,7 @@ class LightConfig:
         self,
         model: pyhf.pdf.Model,
         sample_update_map: dict[str, list[str]] | None = None,
-    ):
+    ) -> None:
         """Creates an instance of the light-weight model configuration object.
 
         This is used to manipulate elements of the model that affect representations of
@@ -87,7 +87,7 @@ class LightModel:
         self,
         model: pyhf.pdf.Model,
         sample_update_map: dict[str, list[str]] | None = None,
-    ):
+    ) -> None:
         """Create an instance of the light-weight model object.
 
         This is used to manipulate elements of the model that affect representations of
