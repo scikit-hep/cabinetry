@@ -112,7 +112,6 @@ only-include = [
 packages = ["src/cabinetry"]
 
 [tool.black]
-target-version = ['py38']
 include = '\.pyi?$'
 exclude = '''
 /(
