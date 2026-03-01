@@ -282,4 +282,4 @@ def _input_is_ntuple(config: dict[str, Any]) -> bool:
     Returns:
         bool: whether inputs are of ntuple type
     """
-    return all([sample.get("Tree") is not None for sample in config["Samples"]])
+    return all(sample.get("Tree") is not None for sample in config["Samples"])
