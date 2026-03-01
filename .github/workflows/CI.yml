@@ -68,7 +68,7 @@ jobs:
         pytest --runslow
     - name: Upload coverage to codecov
       if: matrix.python-version == '3.10'
-      uses: codecov/codecov-action@v4
+      uses: codecov/codecov-action@v5
       with:
         token: ${{ secrets.CODECOV_TOKEN }}
         file: ./coverage.xml
