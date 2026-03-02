@@ -25,10 +25,7 @@ def test_correlation_matrix(tmp_path):
     fname = tmp_path / "fig_from_return.png"
 
     # adjust layout behavior, see https://github.com/matplotlib/matplotlib/issues/21742
-    if plot_result.MPL_GEQ_36:
-        fig.set_layout_engine(None)
-    else:
-        fig.set_constrained_layout(False)
+    fig.set_layout_engine(None)
 
     fig.savefig(fname)
     assert (
@@ -88,16 +85,15 @@ def test_ranking(tmp_path):
         impact_postfit_down,
         figure_path=fname,
     )
-    # large tolerance needed here, possibly related to lack of set_tight_layout usage
     assert (
-        compare_images("tests/visualize/reference/ranking.png", str(fname), 50) is None
+        compare_images("tests/visualize/reference/ranking.png", str(fname), 0) is None
     )
 
     # compare figure returned by function
     fname = tmp_path / "fig_from_return.png"
     fig.savefig(fname)
     assert (
-        compare_images("tests/visualize/reference/ranking.png", str(fname), 50) is None
+        compare_images("tests/visualize/reference/ranking.png", str(fname), 0) is None
     )
 
     # do not save figure, but close it

@@ -5,21 +5,13 @@ import math
 import pathlib
 
 import matplotlib as mpl
+import matplotlib.layout_engine
 import matplotlib.pyplot as plt
 import numpy as np
-import packaging.version
 
 from cabinetry.visualize import utils
 
 log = logging.getLogger(__name__)
-
-# handling of matplotlib<3.6
-if packaging.version.parse(mpl.__version__) < packaging.version.parse("3.6"):
-    MPL_GEQ_36 = False  # pragma: no cover
-    MPL_STYLE = "seaborn-colorblind"  # pragma: no cover
-else:
-    MPL_GEQ_36 = True
-    MPL_STYLE = "seaborn-v0_8-colorblind"
 
 
 def correlation_matrix(
@@ -152,16 +144,11 @@ def ranking(
 
     # layout to make space for legend on top
     leg_space = 1.0 / (num_pars + 3) + 0.03
-    if MPL_GEQ_36:
-        import matplotlib.layout_engine
+    layout = matplotlib.layout_engine.ConstrainedLayoutEngine(
+        rect=[0, 0, 1.0, 1 - leg_space]
+    )
 
-        layout = matplotlib.layout_engine.ConstrainedLayoutEngine(
-            rect=[0, 0, 1.0, 1 - leg_space]
-        )
-    else:
-        layout = None  # pragma: no cover  # layout set after figure creation instead
-
-    mpl.style.use(MPL_STYLE)
+    mpl.style.use("petroff10")
     fig, ax_pulls = plt.subplots(
         figsize=(8, 2.5 + num_pars * 0.45), dpi=100, layout=layout
     )
@@ -201,12 +188,12 @@ def ranking(
     )
     # pre-fit down
     pre_down = ax_impact.barh(
-        y_pos, impact_prefit_down, fill=False, linewidth=1, edgecolor="C5"
+        y_pos, impact_prefit_down, fill=False, linewidth=1, edgecolor="C9"
     )
     # post-fit up
     post_up = ax_impact.barh(y_pos, impact_postfit_up, color="C0")
     # post-fit down
-    post_down = ax_impact.barh(y_pos, impact_postfit_down, color="C5")
+    post_down = ax_impact.barh(y_pos, impact_postfit_down, color="C9")
     # nuisance parameter pulls
     pulls = ax_pulls.errorbar(bestfit, y_pos, xerr=uncertainty, fmt="o", color="k")
 
@@ -257,9 +244,6 @@ def ranking(
         fontsize="large",
     )
 
-    if not MPL_GEQ_36:
-        fig.tight_layout(rect=[0, 0, 1.0, 1 - leg_space])  # pragma: no cover
-
     utils._save_and_close(fig, figure_path, close_figure)
     return fig
 
@@ -291,7 +275,7 @@ def scan(
     Returns:
         matplotlib.figure.Figure: the likelihood scan figure
     """
-    mpl.style.use(MPL_STYLE)
+    mpl.style.use("petroff10")
     fig, ax = plt.subplots(layout="constrained")
 
     y_lim = max(par_nlls) * 1.2  # upper y-axis limit, 20% headroom
@@ -311,7 +295,7 @@ def scan(
     # Gaussian at best-fit parameter value for reference
     val_grid = np.linspace(par_vals[0], par_vals[-1], 100)
     gaussian_approx = [((par_val - par_mle) / par_unc) ** 2 for par_val in val_grid]
-    ax.plot(val_grid, gaussian_approx, "--", color="C5", label="Gaussian approximation")
+    ax.plot(val_grid, gaussian_approx, "--", color="C9", label="Gaussian approximation")
 
     # scan results
     ax.plot(par_vals, par_nlls, "-", color="C0")
