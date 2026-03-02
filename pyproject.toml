@@ -40,7 +40,7 @@ dependencies = [
     "boost_histogram>=1.0.0",  # subclassing with family, 1.02 for stdev scaling fix (currently not needed)
     "hist>=2.5.0",  # hist.intervals.poisson_interval
     "tabulate>=0.8.1",  # multiline text
-    "matplotlib>=3.10.0",  # petroff10 colors cycle
+    "matplotlib>=3.10.0",  # petroff10 color cycle
     # below are direct dependencies of cabinetry, which are also included via pyhf[iminuit]
     "numpy",
     "pyyaml",
