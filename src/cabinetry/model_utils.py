@@ -209,7 +209,7 @@ def model_and_data(
             True
         validate (bool, optional): whether to validate the workspace and model against
             the respective JSON schema, defaults to True
-        modifier_set (Optional[Dict[str, Tuple]], optional): additional custom modifiers
+        modifier_set (dict[str, tuple] | None, optional): additional custom modifiers
             to support, defaults to None (no custom modifiers)
 
     Returns:
