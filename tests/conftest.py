@@ -237,7 +237,7 @@ def example_spec_with_background():
 
 
 @pytest.fixture
-def example_spec_with_multiple_backgrounds():
+def example_spec_multiple_backgrounds():
     spec = {
         "channels": [
             {
@@ -477,6 +477,47 @@ def example_spec_zero_staterror():
             {"config": {"parameters": [], "poi": "mu"}, "name": "zero staterror"}
         ],
         "observations": [{"data": [5, 0], "name": "SR"}],
+        "version": "1.0.0",
+    }
+    return spec
+
+
+@pytest.fixture
+def example_spec_cancellation():
+    spec = {
+        "channels": [
+            {
+                "name": "SR",
+                "samples": [
+                    {
+                        "data": [5.0],
+                        "modifiers": [
+                            {
+                                "data": {"hi_data": [6.0], "lo_data": [4.0]},
+                                "name": "histosys",
+                                "type": "histosys",
+                            }
+                        ],
+                        "name": "Signal",
+                    },
+                    {
+                        "data": [5.0],
+                        "modifiers": [
+                            {
+                                "data": {"hi_data": [4.0], "lo_data": [6.0]},
+                                "name": "histosys",
+                                "type": "histosys",
+                            }
+                        ],
+                        "name": "Background",
+                    },
+                ],
+            }
+        ],
+        "measurements": [
+            {"config": {"parameters": [], "poi": ""}, "name": "cancellation"}
+        ],
+        "observations": [{"data": [5], "name": "SR"}],
         "version": "1.0.0",
     }
     return spec
