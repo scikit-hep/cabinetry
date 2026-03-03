@@ -112,7 +112,7 @@ def _merge_sample_yields(
         i for group in light_model.config.merged_samples_indices for i in group
     ]
     remaining_samples = np.delete(yields_arr, all_merged_indices, axis=0)
-    return np.concatenate([summed_samples, remaining_samples], axis=0).tolist()
+    return np.concatenate([summed_samples, remaining_samples], axis=0)
 
 
 class ModelPrediction(NamedTuple):
