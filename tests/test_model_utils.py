@@ -347,7 +347,6 @@ def test_yield_stdev(
         model, parameters, uncertainty, corr_mat, sample_update_map={}
     )
     # only staterror pre-fit, sums linearly since fully correlated
-    5.90471850 + 0.78729580
     assert np.allclose(
         total_stdev_bin, [[[5.90471850], [0.78729580], [1.96823950], [8.66025380]]]
     )
