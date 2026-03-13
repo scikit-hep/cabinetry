@@ -10,89 +10,82 @@ from cabinetry import model_utils
 from cabinetry.fit.results_containers import FitResults
 
 
-def test_LightModel(example_spec_with_multiple_backgrounds):
-    # Test without merging samples
-    model = pyhf.Workspace(example_spec_with_multiple_backgrounds).model()
-    fit_results = FitResults(
-        np.asarray([1.0, 1.0, 1.0]),
-        np.asarray([0.1, 0.03, 0.07]),
-        ["Background 2 norm", "Signal strength", "staterror_Signal-Region[0]"],
-        np.asarray([[1.0, 0.0, 0.0], [0.0, 1.0, 0.0], [0.0, 0.0, 1.0]]),
-        0.0,
-    )
-    model_pred = model_utils.prediction(
-        model, fit_results=fit_results, sample_update_map=None
-    )
+def test_LightConfig(example_spec_multiple_backgrounds):
+    model = pyhf.Workspace(example_spec_multiple_backgrounds).model()
 
-    assert model_pred.model.config.samples == ["Background", "Background 2", "Signal"]
-    assert model_pred.model_yields == [[[150.0], [20.0], [50.0]]]
-    assert model_pred.total_stdev_model_bins == [
-        [[10.5], [2.441311123146742], [3.8078865529319543], [15.601602481796547]]
-    ]
-    assert model_pred.total_stdev_model_channels == [
-        [10.5, 2.441311123146742, 3.8078865529319543, 15.601602481796547]
-    ]
-    assert model_pred.model.config.channels == model.config.channels
-    assert model_pred.model.config.channel_nbins == model.config.channel_nbins
-    assert model_pred.model.config.channel_slices == model.config.channel_slices
-    assert model_pred.model.spec == model.spec
+    # no changes
+    config = model_utils.LightConfig(model, {})
+    assert config.samples == model.config.samples
+    assert config.channels == model.config.channels
+    assert config.channel_slices == model.config.channel_slices
+    assert config.channel_nbins == model.config.channel_nbins
+    assert config.npars == model.config.npars
+    assert config.sample_update_map == {}
+    assert len(config.merged_samples_indices) == 0
 
-    # Test with merging samples
-    model_pred = model_utils.prediction(
-        model,
-        fit_results=fit_results,
-        sample_update_map={"Total Background": ["Background", "Background 2"]},
-    )
+    # change some samples
+    update_map = {"merge": ["Signal"], "new": ["Background"]}
+    config = model_utils.LightConfig(model, update_map)
+    assert config.samples == ["merge", "new", "Background 2"]
+    assert config.sample_update_map == update_map
+    assert config.merged_samples_indices == [[2], [0]]
 
-    assert model_pred.model.config.samples == ["Total Background", "Signal"]
-    assert model_pred.model_yields == [[[170.0], [50.0]]]
-    assert model_pred.total_stdev_model_bins == [
-        [[12.066896867049131], [3.8078865529319543], [15.601602481796547]]
-    ]
-    assert model_pred.total_stdev_model_channels == [
-        [12.066896867049131, 3.8078865529319543, 15.601602481796547]
-    ]
-    assert model_pred.model.config.channels == model.config.channels
-    assert model_pred.model.config.channel_nbins == model.config.channel_nbins
-    assert model_pred.model.config.channel_slices == model.config.channel_slices
-    assert model_pred.model.spec == model.spec
+    # change all samples
+    update_map = {"merge": ["Signal"], "new": ["Background", "Background 2"]}
+    config = model_utils.LightConfig(model, update_map)
+    assert config.samples == ["merge", "new"]
+    assert config.sample_update_map == update_map
+    assert config.merged_samples_indices == [[2], [0, 1]]
 
-    with pytest.raises(
-        AttributeError, match="'LightConfig' object has no attribute 'NonExistent'"
-    ):
-        model_pred.model.config.NonExistent
-    with pytest.raises(
-        AttributeError, match="'LightModel' object has no attribute 'NonExistent'"
-    ):
-        model_pred.model.NonExistent
+    # sample used multiple times
+    update_map = {"a": ["Signal"], "b": ["Signal"]}
+    with pytest.raises(ValueError, match="each sample can only be used once"):
+        model_utils.LightConfig(model, update_map)
 
 
-def test__merge_sample_yields(example_spec_with_multiple_backgrounds):
-    model = pyhf.Workspace(example_spec_with_multiple_backgrounds).model()
+@mock.patch("cabinetry.model_utils.LightConfig", return_value="lightconfig")
+def test_LightModel(mock_config, example_spec):
+    model = pyhf.Workspace(example_spec).model()
+    update_map = {"new": ["old"]}
+    light_model = model_utils.LightModel(model, update_map)
+    assert mock_config.call_args_list == [((model, update_map), {})]
+    assert light_model.config == "lightconfig"  # mock replacement for actual config
+
+
+def test__merge_sample_yields(example_spec_multiple_backgrounds):
+    # initial sample list: ["Background", "Background 2", "Signal"]
+    model = pyhf.Workspace(example_spec_multiple_backgrounds).model()
+    yields = [[150.0], [20.0], [50.0]]
+
+    # merge nothing
+    sample_update_map = {}
+    light_model = model_utils.LightModel(model, sample_update_map)
+    merged_yields = model_utils._merge_sample_yields(yields, light_model)
+    assert np.allclose(merged_yields, [[150.0], [20.0], [50.0]])
+
+    # rename to cause order change
+    sample_update_map = {"new": ["Background 2"]}
+    light_model = model_utils.LightModel(model, sample_update_map)
+    merged_yields = model_utils._merge_sample_yields(yields, light_model)
+    assert np.allclose(merged_yields, [[20.0], [150.0], [50.0]])
+
+    # merge two samples
     sample_update_map = {"Total Background": ["Background", "Background 2"]}
     light_model = model_utils.LightModel(model, sample_update_map)
-    # per-channel
-    yields = [[10.0], [20.0], [30.0]]
-    merged_yields = model_utils._merge_sample_yields(
-        light_model, yields, one_channel=True
-    )
-    assert np.allclose(merged_yields, [[30.0], [30.0]])
-    # per-bin
-    yields = [[[10.0], [20.0], [30.0]]]
-    merged_yields = model_utils._merge_sample_yields(
-        light_model, yields, one_channel=False
-    )
-    assert np.allclose(merged_yields, [[[30.0], [30.0]]])
+    merged_yields = model_utils._merge_sample_yields(yields, light_model)
+    assert np.allclose(merged_yields, [[170.0], [50.0]])
 
-    light_model = model_utils.LightModel(model, None)
-    with pytest.raises(
-        ValueError,
-        match="Something has gone wrong in merging samples."
-        + " Report this to the dev team.",
-    ):
-        merged_yields = model_utils._merge_sample_yields(
-            light_model, yields, one_channel=False
-        )
+    # merge all samples
+    sample_update_map = {"all": ["Background", "Background 2", "Signal"]}
+    light_model = model_utils.LightModel(model, sample_update_map)
+    merged_yields = model_utils._merge_sample_yields(yields, light_model)
+    assert np.allclose(merged_yields, [[220.0]])
+
+    # multiple groups
+    sample_update_map = {"first": ["Signal"], "second": ["Background", "Background 2"]}
+    light_model = model_utils.LightModel(model, sample_update_map)
+    merged_yields = model_utils._merge_sample_yields(yields, light_model)
+    assert np.allclose(merged_yields, [[50.0], [170.0]])
 
 
 def test_ModelPrediction(example_spec):
@@ -275,7 +268,10 @@ def test__hashable_model_key(example_spec):
 
 
 def test_yield_stdev(
-    example_spec, example_spec_multibin, example_spec_with_multiple_backgrounds
+    example_spec,
+    example_spec_multibin,
+    example_spec_multiple_backgrounds,
+    example_spec_histosys_cancellation,
 ):
     model = pyhf.Workspace(example_spec).model()
     parameters = np.asarray([0.95, 1.05])
@@ -341,82 +337,81 @@ def test_yield_stdev(
         assert np.allclose(from_cache[0][i_reg], expected_stdev_bin[i_reg])
         assert np.allclose(from_cache[1][i_reg], expected_stdev_chan[i_reg])
 
-    # Multiple backgrounds with sample merging
-    sample_update_map = {"Total Background": ["Background", "Background 2"]}
-    # post-fit
-    model = pyhf.Workspace(example_spec_with_multiple_backgrounds).model()
-    parameters = np.asarray([1.1, 1.01, 1.2])
-    uncertainty = np.asarray([0.1, 0.03, 0.07])
-    corr_mat = np.asarray([[1.0, 0.2, 0.1], [0.2, 1.0, 0.3], [0.1, 0.3, 1.0]])
+    # multiple backgrounds, pre-fit
+    model = pyhf.Workspace(example_spec_multiple_backgrounds).model()
+    parameters = np.asarray([1.0, 1.0, 1.0])
+    uncertainty = np.asarray([0.0, 0.0, 0.03936479])
+    corr_mat = np.asarray([[1.0, 0.0, 0.0], [0.0, 1.0, 0.0], [0.0, 0.0, 1.0]])
 
+    total_stdev_bin, total_stdev_chan = model_utils.yield_stdev(
+        model, parameters, uncertainty, corr_mat, sample_update_map={}
+    )
+    # only staterror pre-fit, sums linearly since fully correlated
+    assert np.allclose(
+        total_stdev_bin, [[[5.90471850], [0.78729580], [1.96823950], [8.66025380]]]
+    )
+    assert np.allclose(
+        total_stdev_chan, [[5.90471850, 0.78729580, 1.96823950, 8.66025380]]
+    )
+
+    # merge samples
+    sample_update_map = {"total bkg": ["Background", "Background 2"]}
     total_stdev_bin, total_stdev_chan = model_utils.yield_stdev(
         model, parameters, uncertainty, corr_mat, sample_update_map=sample_update_map
     )
-    assert np.allclose(
-        total_stdev_bin,
-        [[[12.510027977586642], [4.421993328805458], [16.66150128289767]]],
-    )
-    assert np.allclose(
-        total_stdev_chan, [[12.510027977586642, 4.421993328805458, 16.66150128289767]]
-    )
+    # new sample in front, uncertainties sum linear
+    assert np.allclose(total_stdev_bin, [[[6.6920143], [1.96823950], [8.66025380]]])
+    assert np.allclose(total_stdev_chan, [[6.6920143, 1.96823950, 8.66025380]])
+    assert "total bkg,Signal" in [k[-1] for k in model_utils._YIELD_STDEV_CACHE.keys()]
 
-    # pre-fit
-    parameters = np.asarray([1.0, 1.0, 1.0])
-    uncertainty = np.asarray([0.1, 0.03, 0.07])
-    diag_corr_mat = np.diagflat([1.0, 1.0, 1.0])
+    # full cancellation when combining samples
+    model = pyhf.Workspace(example_spec_histosys_cancellation).model()
+    parameters = np.asarray([1.0])
+    uncertainty = np.asarray([0.5])
+    corr_mat = np.asarray([[1.0]])
+    sample_update_map = {"total": ["Signal", "Background"]}
     total_stdev_bin, total_stdev_chan = model_utils.yield_stdev(
-        model,
-        parameters,
-        uncertainty,
-        diag_corr_mat,
-        sample_update_map=sample_update_map,
+        model, parameters, uncertainty, corr_mat, sample_update_map=sample_update_map
     )
-    assert np.allclose(
-        total_stdev_bin,
-        [[[12.066896867049131], [3.8078865529319543], [15.601602481796547]]],
-    )
-    assert np.allclose(
-        total_stdev_chan, [[12.066896867049131, 3.8078865529319543, 15.601602481796547]]
-    )
+    assert np.allclose(total_stdev_bin, [[[0.0], [0.0]]])
+    assert np.allclose(total_stdev_chan, [[0.0, 0.0]])
 
 
 @mock.patch(
     "cabinetry.model_utils.yield_stdev",
     side_effect=[
         (
-            [[[5.0, 2.0], [5.0, 2.0]], [[1.0], [1.0]]],  # pre-fit, per-bin
-            [[5.38516481, 5.38516481], [1.0, 1.0]],  # pre-fit, per-channel
+            [[[5.0, 2.0], [5.0, 2.0]], [[1.0], [1.0]]],
+            [[5.38516481, 5.38516481], [1.0, 1.0]],
         ),
-        ([[[0.3], [0.3]]], [[0.3, 0.3]]),  # post-fit, single-channel nominal
-        ([[[0.3], [0.3]]], [[0.3, 0.3]]),  # post-fit single-channel, custom
-        (
-            [[[12.5], [4.4], [16.7]]],
-            [[12.5, 4.4, 16.7]],
-        ),  # pre-fit single-channel, merged samples model
-        (
-            [[[12.5], [4.4], [16.7]]],
-            [[12.5, 4.4, 16.7]],
-        ),  # post-fit single-channel, merged samples model
+        ([[[0.3], [0.3]]], [[0.3, 0.3]]),
+        ([[[0.3], [0.3]]], [[0.3, 0.3]]),
+        ([[[8.0], [8.0]]], [[8.0, 8.0]]),  # sample merging
     ],
+)
+@mock.patch(
+    "cabinetry.model_utils._merge_sample_yields", side_effect=[np.asarray([[200.0]])]
 )
 @mock.patch(
     "cabinetry.model_utils.prefit_uncertainties",
-    side_effect=[
-        np.asarray([0.0, 0.2, 0.4, 0.125]),
-        np.asarray([0.0, 0.0, 0.039]),  # pre-fit unc, merged samples model
-    ],
+    side_effect=[np.asarray([0.0, 0.2, 0.4, 0.125])],
 )
 @mock.patch(
     "cabinetry.model_utils.asimov_parameters",
-    side_effect=[np.asarray([1.0, 1.0, 1.0, 1.0]), np.asarray([1.0, 1.0, 1.0])],
+    side_effect=[
+        np.asarray([1.0, 1.0, 1.0, 1.0]),
+        np.asarray([1.0, 1.0]),
+        np.asarray([1.0, 1.0]),
+    ],
 )
 def test_prediction(
     mock_asimov,
     mock_unc,
+    mock_sum,
     mock_stdev,
     example_spec_multibin,
     example_spec,
-    example_spec_with_multiple_backgrounds,
+    example_spec_with_background,
     caplog,
 ):
     caplog.set_level(logging.DEBUG)
@@ -424,8 +419,7 @@ def test_prediction(
 
     # pre-fit prediction, multi-channel model
     model_pred = model_utils.prediction(model)
-    assert model_pred.model.config.samples == model.config.samples
-    assert model_pred.model.spec == model.spec
+    assert model_pred.model == model
     # yields from pyhf expected_data call, per-bin / per-channel uncertainty from mock
     assert model_pred.model_yields == [[[25.0, 5.0]], [[8.0]]]
     assert model_pred.total_stdev_model_bins == [
@@ -438,12 +432,12 @@ def test_prediction(
     assert model_pred.label == "pre-fit"
 
     # Asimov parameter calculation and pre-fit uncertainties
-    assert mock_asimov.call_args_list[0] == ((model,), {})
-    assert mock_unc.call_args_list[0] == ((model,), {})
+    assert mock_asimov.call_args_list == [((model,), {})]
+    assert mock_unc.call_args_list == [((model,), {})]
 
     # call to stdev calculation
     assert mock_stdev.call_count == 1
-    assert mock_stdev.call_args_list[0][0][0].spec == model.spec
+    assert mock_stdev.call_args_list[0][0][0] == model
     assert np.allclose(mock_stdev.call_args_list[0][0][1], [1.0, 1.0, 1.0, 1.0])
     assert np.allclose(mock_stdev.call_args_list[0][0][2], [0.0, 0.2, 0.4, 0.125])
     assert np.allclose(
@@ -461,8 +455,7 @@ def test_prediction(
         0.0,
     )
     model_pred = model_utils.prediction(model, fit_results=fit_results)
-    assert model_pred.model.config.samples == model.config.samples
-    assert model_pred.model.spec == model.spec
+    assert model_pred.model == model
     assert np.allclose(model_pred.model_yields, [[[57.54980000]]])  # new par value
     assert model_pred.total_stdev_model_bins == [[[0.3], [0.3]]]  # from mock
     assert model_pred.total_stdev_model_channels == [[0.3, 0.3]]  # from mock
@@ -476,14 +469,13 @@ def test_prediction(
 
     # call to stdev calculation with fit_results propagated
     assert mock_stdev.call_count == 2
-    assert mock_stdev.call_args_list[1][0][0].spec == model.spec
+    assert mock_stdev.call_args_list[1][0][0] == model
     assert np.allclose(mock_stdev.call_args_list[1][0][1], [1.1, 1.01])
     assert np.allclose(mock_stdev.call_args_list[1][0][2], [0.1, 0.03])
     assert np.allclose(
         mock_stdev.call_args_list[1][0][3], np.asarray([[1.0, 0.2], [0.2, 1.0]])
     )
     assert mock_stdev.call_args_list[1][1] == {"sample_update_map": None}
-
     caplog.clear()
 
     # custom prediction label, mismatch in parameter names
@@ -501,64 +493,29 @@ def test_prediction(
     assert model_pred.label == "abc"
     caplog.clear()
 
-    # Multiple backgrounds with sample merging
-    sample_update_map = {"Total Background": ["Background", "Background 2"]}
-    model = pyhf.Workspace(example_spec_with_multiple_backgrounds).model()
-    # pre-fit prediction, merged samples
-    model_pred = model_utils.prediction(model, sample_update_map=sample_update_map)
-    assert len(model_pred.model.config.samples) == len(model.config.samples) - 1
-    assert model_pred.model.spec == model.spec
-    # yields from pyhf expected_data call, per-bin / per-channel uncertainty from mock
-    assert model_pred.model_yields == [[[170.0], [50.0]]]
-    assert model_pred.total_stdev_model_bins == [[[12.5], [4.4], [16.7]]]
-    assert model_pred.total_stdev_model_channels == [[12.5, 4.4, 16.7]]
-    assert model_pred.label == "pre-fit"
-
-    # Asimov parameter calculation and pre-fit uncertainties
-    assert mock_asimov.call_args_list[1] == ((model,), {})
-    assert mock_unc.call_args_list[1] == ((model,), {})
-
-    assert mock_asimov.call_count == 2  # one new call
-    assert mock_unc.call_count == 2  # one new call
-
-    # call to stdev calculation
-    assert mock_stdev.call_count == 4
-    assert mock_stdev.call_args_list[3][1] == {"sample_update_map": sample_update_map}
-
-    # post-fit
+    # sample merging: call to _merge_sample_yields, return of LightModel object
+    model = pyhf.Workspace(example_spec_with_background).model()
     fit_results = FitResults(
-        np.asarray([1.2, 1.1, 1.01]),
-        np.asarray([0.1, 0.03, 0.07]),
-        ["Background 2 norm", "Signal strength", "staterror_Signal-Region[0]"],
-        np.asarray([[1.0, 0.2, 0.1], [0.2, 1.0, 0.3], [0.1, 0.3, 1.0]]),
+        np.asarray([1.0, 1.0]),
+        np.asarray([0.0, 0.04]),
+        ["Signal strength", "staterror_Signal-Region[0]"],
+        np.asarray([[1.0, 0.0], [0.0, 1.0]]),
         0.0,
     )
+    sample_update_map = {"total": ["Signal", "Background"]}
     model_pred = model_utils.prediction(
-        model,
-        fit_results=fit_results,
-        sample_update_map={"Total Background": ["Background", "Background 2"]},
+        model, fit_results=fit_results, sample_update_map=sample_update_map
     )
-    assert len(model_pred.model.config.samples) == len(model.config.samples) - 1
-    assert model_pred.model.spec == model.spec
-    assert np.allclose(model_pred.model_yields, [[[175.74], [55.55]]])  # new par value
-    assert model_pred.total_stdev_model_bins == [[[12.5], [4.4], [16.7]]]  # from mock
-    assert model_pred.total_stdev_model_channels == [[12.5, 4.4, 16.7]]  # from mock
-    assert model_pred.label == "post-fit"
-    assert "parameter names in fit results and model do not match" not in [
-        rec.message for rec in caplog.records
-    ]
 
-    # Asimov parameter calculation and pre-fit uncertainties
-    assert mock_asimov.call_count == 2  # no new call
-    assert mock_unc.call_count == 2  # no new call
-
-    # call to stdev calculation
-    assert mock_stdev.call_count == 5
-    assert mock_stdev.call_args_list[4][1] == {
-        "sample_update_map": {"Total Background": ["Background", "Background 2"]}
-    }
-
-    caplog.clear()
+    # sample merging call
+    assert mock_sum.call_count == 1
+    assert mock_sum.call_args_list[0][0][0] == [[150.0], [50.0]]
+    assert (
+        mock_sum.call_args_list[0][0][1].config.sample_update_map == sample_update_map
+    )
+    assert model_pred.model.config.sample_update_map == sample_update_map
+    assert model_pred.model_yields == [[[200.0]]]
+    assert mock_stdev.call_args_list[3][1] == {"sample_update_map": sample_update_map}
 
 
 def test_unconstrained_parameter_count(example_spec, example_spec_shapefactor):
@@ -620,10 +577,14 @@ def test__poi_index(example_spec, caplog):
 
 def test__strip_auxdata(example_spec):
     model = pyhf.Workspace(example_spec).model()
-    light_model = model_utils.LightModel(model)
     data_with_aux = list(model.expected_data([1.0, 1.0], include_auxdata=True))
     data_without_aux = list(model.expected_data([1.0, 1.0], include_auxdata=False))
 
+    assert model_utils._strip_auxdata(model, data_with_aux) == [51.8]
+    assert model_utils._strip_auxdata(model, data_without_aux) == [51.8]
+
+    # LightModel version
+    light_model = model_utils.LightModel(model, {})
     assert model_utils._strip_auxdata(light_model, data_with_aux) == [51.8]
     assert model_utils._strip_auxdata(light_model, data_without_aux) == [51.8]
 
@@ -631,40 +592,45 @@ def test__strip_auxdata(example_spec):
 @mock.patch("cabinetry.model_utils._strip_auxdata", return_value=[25.0, 5.0, 8.0])
 def test__data_per_channel(mock_aux, example_spec_multibin):
     model = pyhf.Workspace(example_spec_multibin).model()
-    light_model = model_utils.LightModel(model)
     data = [25.0, 5.0, 8.0, 1.0, 1.0, 1.0]
 
-    data_per_ch = model_utils._data_per_channel(
-        light_model, [25.0, 5.0, 8.0, 1.0, 1.0, 1.0]
-    )
+    data_per_ch = model_utils._data_per_channel(model, [25.0, 5.0, 8.0, 1.0, 1.0, 1.0])
     assert data_per_ch == [[25.0, 5.0], [8.0]]  # auxdata stripped and split by channel
 
     # auxdata and channel index call
-    assert mock_aux.call_args_list == [((light_model, data), {})]
+    assert mock_aux.call_args_list == [((model, data), {})]
+
+    # LightModel version
+    light_model = model_utils.LightModel(model, {})
+    data_per_ch = model_utils._data_per_channel(
+        light_model, [25.0, 5.0, 8.0, 1.0, 1.0, 1.0]
+    )
+    assert data_per_ch == [[25.0, 5.0], [8.0]]
 
 
 def test__filter_channels(example_spec_multibin, caplog):
     caplog.set_level(logging.DEBUG)
     model = pyhf.Workspace(example_spec_multibin).model()
-    light_model = model_utils.LightModel(model)
-    assert model_utils._filter_channels(light_model, None) == ["region_1", "region_2"]
-    assert model_utils._filter_channels(light_model, "region_1") == ["region_1"]
-    assert model_utils._filter_channels(light_model, ["region_1", "region_2"]) == [
+    assert model_utils._filter_channels(model, None) == ["region_1", "region_2"]
+    assert model_utils._filter_channels(model, "region_1") == ["region_1"]
+    assert model_utils._filter_channels(model, ["region_1", "region_2"]) == [
         "region_1",
         "region_2",
     ]
-    assert model_utils._filter_channels(light_model, ["region_1", "abc"]) == [
-        "region_1"
-    ]
+    assert model_utils._filter_channels(model, ["region_1", "abc"]) == ["region_1"]
     caplog.clear()
 
     # no matching channels
-    assert model_utils._filter_channels(light_model, "abc") == []
+    assert model_utils._filter_channels(model, "abc") == []
     assert (
         "channel(s) ['abc'] not found in model, available channel(s): "
         "['region_1', 'region_2']" in [rec.message for rec in caplog.records]
     )
     caplog.clear()
+
+    # LightModel version
+    light_model = model_utils.LightModel(model, {})
+    assert model_utils._filter_channels(light_model, None) == ["region_1", "region_2"]
 
 
 @mock.patch(

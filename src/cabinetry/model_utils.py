@@ -21,152 +21,98 @@ class LightConfig:
     """Light-weight version of the pyhf model configuration object."""
 
     def __init__(
-        self,
-        model: pyhf.pdf.Model,
-        sample_update_map: dict[str, list[str]] | None = None,
+        self, model: pyhf.pdf.Model, sample_update_map: dict[str, list[str]]
     ) -> None:
         """Creates an instance of the light-weight model configuration object.
 
         This is used to manipulate elements of the model that affect representations of
-        results, but not the results itself.
+        results, but not the results itself. Merged or renamed samples appear first in
+        the new sample list, original samples after.
 
         Args:
             model (pyhf.pdf.Model): pyhf model to base the light model on
-            sample_update_map (dict[str, list[str]] | None, optional): a map specifying
-                how to merge samples (values) into one sample (key), defaults to None
+            sample_update_map (dict[str, list[str]]): a map specifying how to merge
+                samples (values) into new sample (key), can also be used to rename or
+                reorder
+
+        Raises:
+            ValueError: if the same sample is merged into multiple new samples
         """
+        # original values from pyhf model
         self.samples = model.config.samples
         self.channels = model.config.channels
         self.channel_slices = model.config.channel_slices
         self.channel_nbins = model.config.channel_nbins
         self.npars = model.config.npars
+
+        # handle changes to samples
         self.sample_update_map = sample_update_map
-        self.merged_samples_indices: np.ndarray = np.zeros(0)
-        if sample_update_map is not None:
-            self._update_samples(sample_update_map)
-
-    def _update_samples(self, sample_update_map: dict[str, list[str]]) -> None:
-        """Updates samples list after merging samples into one.
-
-        Args:
-            sample_update_map (dict[str, list[str]]): a map specifying how to merge
-                samples (values) into one sample (key)
-        """
-        # Delete samples being merged from config
-        # Flatten all merged samples into a set for O(1) lookups
-        merged_samples_set = {
-            merged_sample
-            for merged_samples_list in sample_update_map.values()
-            for merged_sample in merged_samples_list
-        }
-        merged_samples_indices = [
-            idx
-            for idx, sample in enumerate(self.samples)
-            if sample in merged_samples_set
+        # list of lists of indices (one inner list for each value in update map)
+        self.merged_samples_indices = [
+            [self.samples.index(sample) for sample in group]
+            for group in self.sample_update_map.values()
         ]
-        self.merged_samples_indices = np.asarray(merged_samples_indices)
-        self.samples = cast(
-            list[str], np.delete(self.samples, merged_samples_indices).tolist()
-        )
-        # Add new samples at the bottom of stack
-        self.samples = cast(
-            list[str],
-            np.insert(
-                np.asarray(self.samples, dtype=object),
-                np.arange(len(sample_update_map)),
-                list(sample_update_map.keys()),
-                axis=0,
-            ).tolist(),
-        )
+        merged_samples = [
+            sample for group in sample_update_map.values() for sample in group
+        ]
+        if len(merged_samples) != len(set(merged_samples)):
+            raise ValueError("each sample can only be used once")
+        remaining_samples = [
+            sample for sample in self.samples if sample not in merged_samples
+        ]
+        self.samples = list(self.sample_update_map.keys()) + remaining_samples
 
 
 class LightModel:
     """Light-weight version of the pyhf model object."""
 
     def __init__(
-        self,
-        model: pyhf.pdf.Model,
-        sample_update_map: dict[str, list[str]] | None = None,
+        self, model: pyhf.pdf.Model, sample_update_map: dict[str, list[str]]
     ) -> None:
-        """Create an instance of the light-weight model object.
+        """Creates an instance of the light-weight model object.
 
         This is used to manipulate elements of the model that affect representations of
-        results, but not the results itself.
+        results, but not the results itself. Merged or renamed samples appear first in
+        the new sample list, original samples after.
 
         Args:
             model (pyhf.pdf.Model): pyhf model to base the light model on
-            sample_update_map (dict[str, list[str]] | None, optional): a map specifying
-                how to merge samples (values) into one sample (key), defaults to None
+            sample_update_map (dict[str, list[str]]): a map specifying how to merge
+                samples (values) into new sample (key), can also be used to rename or
+                reorder
         """
         self.config = LightConfig(model, sample_update_map)
-        self.spec = model.spec
 
 
 def _merge_sample_yields(
-    model: LightModel,
-    old_yields: list[list[list[float]]] | list[list[float]],
-    one_channel: bool | None = False,
+    yields: list[list[float]], light_model: LightModel
 ) -> np.ndarray:
-    """Merges the yields of samples specified in the sample_update_map.
+    """Merges the yields of samples specified in the light_model sample map.
 
-    The merged sample is added to the end of the list of samples.
+    Merged samples appear first, remaining samples after.
 
     Args:
-        model (LightModel): LightModel object containing the model configuration
-        old_yields (list[list[list[float]]] | list[list[float]]): yields to be merged,
-            either per channel (list of lists of lists) or for one channel (list of
-            lists)
-        one_channel (bool | None, optional): whether the yields are for one channel
-            (True) or for multiple channels (False), defaults to False
+        yields (list[list[float]]): yields per sample and bin, indices: sample, bin
+        light_model (LightModel): LightModel object containing the model configuration
 
     Returns:
-        np.ndarray: merged yields, either per channel (list of lists of lists) or for
-            one channel (list of lists)
+        np.ndarray: merged yields per sample and bin
     """
-    sample_update_map = model.config.sample_update_map
+    yields_arr = np.asarray(yields)
+    if not light_model.config.merged_samples_indices:
+        return yields_arr  # no changes needed
 
-    def _sum_per_channel(i_ch: int | None = None) -> np.ndarray:
-        # mypy not able to tell that map cannot be None-typed
-        # so we have to check
-        if sample_update_map is None:
-            raise ValueError(
-                "Something has gone wrong in merging samples."
-                + " Report this to the dev team."
-            )
-        # explicit type casting because mypy worries that old_yield
-        # will be list(list(float)) or list(float)
-        # but this will never happen because of the if condition
-        if i_ch is not None:
-            old_yield = cast(list[list[float]], old_yields[i_ch])
-        else:
-            old_yield = cast(list[list[float]], old_yields)
-        # for each channel, sum together the desired samples
-        summed_sample = np.sum(
-            np.asarray(old_yield)[model.config.merged_samples_indices], axis=0
-        )
-        # build set of remaining samples and remove the ones already summed
-        remaining_samples: np.ndarray = np.delete(
-            old_yield, model.config.merged_samples_indices, axis=0
-        )
-
-        model_yields_one_channel = np.insert(
-            remaining_samples,
-            np.arange(len(sample_update_map.keys())),
-            summed_sample,
-            axis=0,
-        )
-
-        return model_yields_one_channel
-
-    new_yields = []
-    if not one_channel:
-        for i_ch in range(len(model.config.channels)):
-            new_yields.append(_sum_per_channel(i_ch=i_ch))
-    else:
-        new_yields = [_sum_per_channel()]  # wrap in list for consistent type
-
-    return_yields = np.asarray(new_yields[0]) if one_channel else np.asarray(new_yields)
-    return return_yields
+    summed_samples = np.asarray(
+        [
+            np.sum(yields_arr[group_indices], axis=0)
+            for group_indices in light_model.config.merged_samples_indices
+        ]
+    )
+    all_merged_indices = [
+        i for group in light_model.config.merged_samples_indices for i in group
+    ]
+    remaining_samples = np.delete(yields_arr, all_merged_indices, axis=0)
+    return np.concatenate([summed_samples, remaining_samples], axis=0)
 
 
 class ModelPrediction(NamedTuple):
@@ -405,7 +351,8 @@ def yield_stdev(
         uncertainty (np.ndarray): uncertainty of model parameters
         corr_mat (np.ndarray): correlation matrix
         sample_update_map (dict[str, list[str]] | None, optional): a map specifying how
-            to merge samples, defaults to None
+            to merge samples (values) into new sample (key), can also be used to rename
+            or reorder, defaults to None
 
     Returns:
         tuple[list[list[list[float]]], list[list[float]]]:
@@ -416,9 +363,13 @@ def yield_stdev(
               the standard deviations per sample (the last sample corresponds to a sum
               over all samples)
     """
-    light_model = LightModel(model, sample_update_map)
+    if sample_update_map is not None:
+        light_model = LightModel(model, sample_update_map)
+        samples_string = ",".join(light_model.config.samples)
+    else:
+        samples_string = ",".join(model.config.samples)
+
     # check whether results are already stored in cache
-    samples_string = ",".join(light_model.config.samples)
     cached_results = _YIELD_STDEV_CACHE.get(
         (
             _hashable_model_key(model),
@@ -457,13 +408,11 @@ def yield_stdev(
         up_comb = pyhf.tensorlib.to_numpy(
             model.main_model.expected_data(up_pars, return_by_sample=True)
         )
+        if sample_update_map is not None:  # merge / update samples
+            up_comb = _merge_sample_yields(up_comb.tolist(), light_model)
         # attach another entry with the total model prediction (sum over all samples)
         # indices: sample, bin
         up_comb = np.vstack((up_comb, np.sum(up_comb, axis=0)))
-        if sample_update_map is not None:
-            up_comb = _merge_sample_yields(
-                light_model, up_comb.tolist(), one_channel=True
-            )
 
         # turn into list of channels (keep all samples, select correct bins per channel)
         # indices: channel, sample, bin
@@ -477,7 +426,6 @@ def yield_stdev(
                 for chan_yields in up_yields_per_channel
             ]
         )
-
         # reshape to drop bin axis, transpose to turn channel axis into new bin axis
         # (channel, sample, bin) -> (sample, bin) where "bin" becomes channel sums
         up_yields_channel_sum = up_yields_channel_sum.reshape(
@@ -493,12 +441,10 @@ def yield_stdev(
         down_comb = pyhf.tensorlib.to_numpy(
             model.main_model.expected_data(down_pars, return_by_sample=True)
         )
+        if sample_update_map is not None:  # merge / update samples
+            down_comb = _merge_sample_yields(down_comb.tolist(), light_model)
         # add total prediction (sum over samples)
         down_comb = np.vstack((down_comb, np.sum(down_comb, axis=0)))
-        if sample_update_map is not None:
-            down_comb = _merge_sample_yields(
-                light_model, down_comb.tolist(), one_channel=True
-            )
 
         # turn into list of channels
         down_yields_per_channel = [
@@ -617,12 +563,12 @@ def prediction(
             to None (then will use "pre-fit" if fit results are not included, and "post-
             fit" otherwise)
         sample_update_map (dict[str, list[str]] | None, optional): a map specifying how
-            to merge samples, defaults to None
+            to merge samples (values) into new sample (key), can also be used to rename
+            or reorder, defaults to None
 
     Returns:
         ModelPrediction: model, yields and uncertainties per channel, sample, bin
     """
-    light_model = LightModel(model, sample_update_map)
     if fit_results is not None:
         if fit_results.labels != model.config.par_names:
             log.warning("parameter names in fit results and model do not match")
@@ -645,18 +591,16 @@ def prediction(
         model.main_model.expected_data(param_values, return_by_sample=True)
     )  # all channels concatenated
 
+    if sample_update_map is not None:
+        light_model = LightModel(model, sample_update_map)
+        yields_combined = _merge_sample_yields(yields_combined.tolist(), light_model)
+
     # slice the yields into list of lists (of lists) where first index is channel,
     # second index is sample (and third index is bin)
     model_yields = [
         yields_combined[:, model.config.channel_slices[ch]].tolist()
         for ch in model.config.channels
     ]
-
-    if sample_update_map is not None:
-        model_yields = cast(
-            list[list[list[float]]],
-            _merge_sample_yields(light_model, model_yields).tolist(),
-        )
 
     # calculate the total standard deviation of the model prediction
     # indices: (channel, sample, bin) for per-bin uncertainties,
@@ -669,7 +613,7 @@ def prediction(
         sample_update_map=sample_update_map,
     )
     return ModelPrediction(
-        light_model,
+        light_model if sample_update_map is not None else model,
         model_yields,
         total_stdev_model_bins,
         total_stdev_model_channels,
