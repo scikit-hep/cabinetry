@@ -271,7 +271,7 @@ def test_yield_stdev(
     example_spec,
     example_spec_multibin,
     example_spec_multiple_backgrounds,
-    example_spec_cancellation,
+    example_spec_histosys_cancellation,
 ):
     model = pyhf.Workspace(example_spec).model()
     parameters = np.asarray([0.95, 1.05])
@@ -365,7 +365,7 @@ def test_yield_stdev(
     assert "total bkg,Signal" in [k[-1] for k in model_utils._YIELD_STDEV_CACHE.keys()]
 
     # full cancellation when combining samples
-    model = pyhf.Workspace(example_spec_cancellation).model()
+    model = pyhf.Workspace(example_spec_histosys_cancellation).model()
     parameters = np.asarray([1.0])
     uncertainty = np.asarray([0.5])
     corr_mat = np.asarray([[1.0]])

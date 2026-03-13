@@ -483,7 +483,7 @@ def example_spec_zero_staterror():
 
 
 @pytest.fixture
-def example_spec_cancellation():
+def example_spec_histosys_cancellation():
     spec = {
         "channels": [
             {
