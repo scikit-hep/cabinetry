@@ -144,7 +144,7 @@ def model_and_data(
     asimov: bool = False,
     include_auxdata: bool = True,
     validate: bool = True,
-    modifier_set: dict[str, tuple] | None = None,
+    modifier_set: dict[str, tuple[Any, ...]] | None = None,
 ) -> tuple[pyhf.pdf.Model, list[float]]:
     """Returns model and data for a ``pyhf`` workspace specification.
 

@@ -11,11 +11,11 @@ import scipy.stats
 
 from cabinetry import model_utils
 from cabinetry.fit.results_containers import (
-    FitResults,
-    LimitResults,
-    RankingResults,
-    ScanResults,
-    SignificanceResults,
+    FitResults as FitResults,
+    LimitResults as LimitResults,
+    RankingResults as RankingResults,
+    ScanResults as ScanResults,
+    SignificanceResults as SignificanceResults,
 )
 
 log = logging.getLogger(__name__)
@@ -911,7 +911,8 @@ def limit(
         model.config.set_poi(original_model_poi_name)
         raise ValueError(f"the two bracket values must not be the same: {bracket}")
 
-    cache_CLs: dict[float, tuple] = {}  # cache storing all relevant results
+    # cache storing all relevant results
+    cache_CLs: dict[float, tuple[float, np.ndarray]] = {}
 
     def _cls_minus_threshold(
         poi_val: float,
