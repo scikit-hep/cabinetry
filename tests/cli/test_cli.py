@@ -39,9 +39,7 @@ def test_cabinetry():
 @mock.patch("cabinetry.templates.collect", autospec=True)
 @mock.patch("cabinetry.templates.build", autospec=True)
 @mock.patch(
-    "cabinetry.configuration._input_is_ntuple",
-    side_effect=[True, False],
-    autospec=True,
+    "cabinetry.configuration._input_is_ntuple", side_effect=[True, False], autospec=True
 )
 @mock.patch("cabinetry.configuration.validate", autospec=True)
 def test_templates(
