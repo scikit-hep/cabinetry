@@ -398,11 +398,7 @@ def test_yield_stdev(
 )
 @mock.patch(
     "cabinetry.model_utils.asimov_parameters",
-    side_effect=[
-        np.asarray([1.0, 1.0, 1.0, 1.0]),
-        np.asarray([1.0, 1.0]),
-        np.asarray([1.0, 1.0]),
-    ],
+    side_effect=[np.asarray([1.0, 1.0, 1.0, 1.0])],
 )
 def test_prediction(
     mock_asimov,
