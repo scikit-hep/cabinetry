@@ -36,7 +36,9 @@ class LightConfig:
                 reorder
 
         Raises:
-            ValueError: if the same sample is merged into multiple new samples
+            ValueError: if a sample in the map does not exist in the model, if the
+                same sample is merged into multiple new samples, or if a new sample
+                name conflicts with an existing sample not included in the merge
         """
         # original values from pyhf model
         self.samples = model.config.samples
@@ -57,9 +59,18 @@ class LightConfig:
         ]
         if len(merged_samples) != len(set(merged_samples)):
             raise ValueError("each sample can only be used once")
+        if unknown := set(merged_samples) - set(self.samples):
+            raise ValueError(
+                f"sample(s) {unknown} not found in model, available: {self.samples}"
+            )
         remaining_samples = [
             sample for sample in self.samples if sample not in merged_samples
         ]
+        if conflict := set(self.sample_update_map.keys()) & set(remaining_samples):
+            raise ValueError(
+                f"new sample name(s) {conflict} conflict with existing samples "
+                f"not included in the merge"
+            )
         self.samples = list(self.sample_update_map.keys()) + remaining_samples
 
 
