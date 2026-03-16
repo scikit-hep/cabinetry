@@ -230,7 +230,7 @@ def ranking(
     ax_impact.tick_params(direction="in", which="both")
 
     fig.legend(
-        (pre_up, pre_down, post_up, post_down, pulls),
+        (pre_up, pre_down, post_up, post_down, pulls),  # type: ignore[arg-type]
         (
             r"pre-fit impact: $\theta = \hat{\theta} + \Delta \theta$",
             r"pre-fit impact: $\theta = \hat{\theta} - \Delta \theta$",
