@@ -494,7 +494,7 @@ def modifier_grid(
             tick.set_horizontalalignment("right")
 
     # construct colobar with category labels
-    formatter = plt.FuncFormatter(lambda val, _: category_map[val])
+    formatter = mpl.ticker.FuncFormatter(lambda val, _: category_map[val])
     _ = fig.colorbar(
         im, ax=ax.ravel().tolist(), ticks=np.arange(len(category_map)), format=formatter
     )
