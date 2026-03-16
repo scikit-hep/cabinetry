@@ -3,7 +3,7 @@
 from collections import defaultdict
 import json
 import logging
-from typing import Any, cast, NamedTuple
+from typing import Any, NamedTuple
 
 import numpy as np
 import pyhf
@@ -909,13 +909,9 @@ def _parameters_maximizing_constraint_term(
             else:
                 rescale_factors = [1.0] * n_params  # no rescaling by default
 
-            # manually cast, possible cause https://github.com/numpy/numpy/issues/27944
-            best_pars += cast(
-                list[float],
-                (
-                    np.asarray(aux_data[i_aux : i_aux + n_params]) / rescale_factors
-                ).tolist(),
-            )
+            best_pars += (
+                np.asarray(aux_data[i_aux : i_aux + n_params]) / rescale_factors
+            ).tolist()
             i_aux += n_params
 
         else:
