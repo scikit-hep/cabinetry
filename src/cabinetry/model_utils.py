@@ -3,7 +3,7 @@
 from collections import defaultdict
 import json
 import logging
-from typing import Any, cast, NamedTuple
+from typing import Any, NamedTuple
 
 import numpy as np
 import pyhf
@@ -144,7 +144,7 @@ def model_and_data(
     asimov: bool = False,
     include_auxdata: bool = True,
     validate: bool = True,
-    modifier_set: dict[str, tuple] | None = None,
+    modifier_set: dict[str, tuple[Any, ...]] | None = None,
 ) -> tuple[pyhf.pdf.Model, list[float]]:
     """Returns model and data for a ``pyhf`` workspace specification.
 
@@ -155,8 +155,8 @@ def model_and_data(
             True
         validate (bool, optional): whether to validate the workspace and model against
             the respective JSON schema, defaults to True
-        modifier_set (dict[str, tuple] | None, optional): additional custom modifiers
-            to support, defaults to None (no custom modifiers)
+        modifier_set (dict[str, tuple[Any, ...]] | None, optional): additional custom
+            modifiers to support, defaults to None (no custom modifiers)
 
     Returns:
         tuple[pyhf.pdf.Model, list[float]]: tuple containing a HistFactory-style model
@@ -909,13 +909,9 @@ def _parameters_maximizing_constraint_term(
             else:
                 rescale_factors = [1.0] * n_params  # no rescaling by default
 
-            # manually cast, possible cause https://github.com/numpy/numpy/issues/27944
-            best_pars += cast(
-                list[float],
-                (
-                    np.asarray(aux_data[i_aux : i_aux + n_params]) / rescale_factors
-                ).tolist(),
-            )
+            best_pars += (
+                np.asarray(aux_data[i_aux : i_aux + n_params]) / rescale_factors
+            ).tolist()
             i_aux += n_params
 
         else:

@@ -3,7 +3,7 @@
 import json
 import logging
 import pathlib
-from typing import Any, cast
+from typing import Any
 
 import pyhf
 
@@ -188,9 +188,8 @@ class WorkspaceBuilder:
         else:
             norm_effect_up = histogram_up.normalize_to_yield(histogram_nominal)
             norm_effect_down = histogram_down.normalize_to_yield(histogram_nominal)
-            # manually cast due to https://github.com/numpy/numpy/issues/27944
-            histo_yield_up = cast(list[float], histogram_up.yields.tolist())
-            histo_yield_down = cast(list[float], histogram_down.yields.tolist())
+            histo_yield_up = histogram_up.yields.tolist()
+            histo_yield_down = histogram_down.yields.tolist()
 
         log.debug(
             f"normalization impact of systematic {systematic['Name']} on sample "
@@ -507,12 +506,9 @@ def _symmetrized_templates_and_norm(
     # normalize the variation to the same yield as nominal
     norm_effect_var = variation.normalize_to_yield(reference)
     norm_effect_sym = 2 - norm_effect_var
-    # manually cast due to https://github.com/numpy/numpy/issues/27944
-    histo_yield_var = cast(list[float], variation.yields.tolist())
+    histo_yield_var = variation.yields.tolist()
     # need another histogram that corresponds to the symmetrized variation,
     # which is 2*nominal - variation
-    histo_yield_sym = cast(
-        list[float], (2 * reference.yields - variation.yields).tolist()
-    )
+    histo_yield_sym = (2 * reference.yields - variation.yields).tolist()
 
     return histo_yield_var, histo_yield_sym, norm_effect_var, norm_effect_sym

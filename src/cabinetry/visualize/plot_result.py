@@ -94,9 +94,9 @@ def pulls(
     ax.fill_between([-1, 1], -0.5, len(bestfit) - 0.5, color="limegreen")
     ax.vlines(0, -0.5, len(bestfit) - 0.5, linestyles="dotted", color="black")
 
-    ax.set_xlim([-3, 3])
+    ax.set_xlim(-3, 3)
     ax.set_xlabel(r"$\left(\hat{\theta} - \theta_0\right) / \Delta \theta$")
-    ax.set_ylim([-0.5, num_pars - 0.5])
+    ax.set_ylim(-0.5, num_pars - 0.5)
     ax.set_yticks(y_positions)
     ax.set_yticklabels(labels)
     ax.xaxis.set_minor_locator(mpl.ticker.AutoMinorLocator())  # minor ticks
@@ -145,7 +145,7 @@ def ranking(
     # layout to make space for legend on top
     leg_space = 1.0 / (num_pars + 3) + 0.03
     layout = matplotlib.layout_engine.ConstrainedLayoutEngine(
-        rect=[0, 0, 1.0, 1 - leg_space]
+        rect=(0, 0, 1.0, 1 - leg_space)
     )
 
     mpl.style.use("petroff10")
@@ -199,9 +199,9 @@ def ranking(
 
     ax_pulls.set_xlabel(r"$\left(\hat{\theta} - \theta_0\right) / \Delta \theta$")
     ax_impact.set_xlabel(r"$\Delta \mu$")
-    ax_pulls.set_xlim([-2, 2])
-    ax_impact.set_xlim([-5, 5])
-    ax_pulls.set_ylim([-1, num_pars])
+    ax_pulls.set_xlim(-2, 2)
+    ax_impact.set_xlim(-5, 5)
+    ax_pulls.set_ylim(-1, num_pars)
 
     # impact axis limits: need largest impact
     # consider also post-fit, normalization factors have no pre-fit impact defined
@@ -217,7 +217,7 @@ def ranking(
             )
         )
     )
-    ax_impact.set_xlim([-impact_max * 1.1, impact_max * 1.1])
+    ax_impact.set_xlim(-impact_max * 1.1, impact_max * 1.1)
 
     # minor ticks
     for axis in [ax_pulls.xaxis, ax_impact.xaxis]:
@@ -230,7 +230,7 @@ def ranking(
     ax_impact.tick_params(direction="in", which="both")
 
     fig.legend(
-        (pre_up, pre_down, post_up, post_down, pulls),
+        (pre_up, pre_down, post_up, post_down, pulls),  # type: ignore[arg-type]
         (
             r"pre-fit impact: $\theta = \hat{\theta} + \Delta \theta$",
             r"pre-fit impact: $\theta = \hat{\theta} - \Delta \theta$",
@@ -408,8 +408,8 @@ def limit(
 
     ax.set_xlabel(r"$\mu$")
     ax.set_ylabel(r"$\mathrm{CL}_{s}$")
-    ax.set_xlim([xmin, xmax])
-    ax.set_ylim([0, 1])
+    ax.set_xlim(xmin, xmax)
+    ax.set_ylim(0, 1)
     ax.tick_params(axis="both", which="major", pad=8)
     ax.tick_params(direction="in", top=True, right=True, which="both")
 

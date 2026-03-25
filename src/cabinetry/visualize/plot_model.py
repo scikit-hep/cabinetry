@@ -200,12 +200,12 @@ def data_mc(
     if log_scale or (log_scale is None and (y_max / y_min) > 100):
         # log vertical axis scale and limits
         ax1.set_yscale("log")
-        ax1.set_ylim([y_min / 10, y_max * 10])
+        ax1.set_ylim(y_min / 10, y_max * 10)
         # add "_log" to the figure name if figure should be saved
         figure_path = utils._log_figure_path(figure_path)
     else:
         # do not use log scale
-        ax1.set_ylim([0, y_max * 1.5])  # 50% headroom
+        ax1.set_ylim(0, y_max * 1.5)  # 50% headroom
 
     # log scale for horizontal axes
     if log_scale_x:
@@ -240,11 +240,11 @@ def data_mc(
     ax1.tick_params(direction="in", top=True, right=True, which="both")
 
     ax2.set_xlim(bin_edges[0], bin_edges[-1])
-    ax2.set_ylim([0.5, 1.5])
+    ax2.set_ylim(0.5, 1.5)
     ax2.set_xlabel(histogram_dict_list[0]["variable"])
     ax2.set_ylabel("data / model")
     ax2.set_yticks([0.5, 0.75, 1.0, 1.25, 1.5])
-    ax2.set_yticklabels([0.5, 0.75, 1.0, 1.25, ""])
+    ax2.set_yticklabels(["0.5", "0.75", "1.0", "1.25", ""])
     ax2.tick_params(axis="both", which="major", pad=8)
     ax2.tick_params(direction="in", top=True, right=True, which="both")
 
@@ -412,19 +412,19 @@ def templates(
 
     max_yield = max(max(template["yields"]) for template in all_templates if template)
 
-    ax1.set_xlim([bin_edges[0], bin_edges[-1]])
-    ax1.set_ylim([0, max_yield * 1.75])
+    ax1.set_xlim(bin_edges[0], bin_edges[-1])
+    ax1.set_ylim(0, max_yield * 1.75)
     ax1.set_ylabel("events")
     ax1.set_xticklabels([])
     ax1.tick_params(axis="both", which="major", pad=8)  # tick label - axis padding
     ax1.tick_params(direction="in", top=True, right=True, which="both")
 
-    ax2.set_xlim([bin_edges[0], bin_edges[-1]])
-    ax2.set_ylim([0.5, 1.5])
+    ax2.set_xlim(bin_edges[0], bin_edges[-1])
+    ax2.set_ylim(0.5, 1.5)
     ax2.set_xlabel(variable)
     ax2.set_ylabel(f"variation / {'nominal' if not neg_nom_bin else 'abs(nominal)'}")
     ax2.set_yticks([0.5, 0.75, 1.0, 1.25, 1.5])
-    ax2.set_yticklabels([0.5, 0.75, 1.0, 1.25, ""])
+    ax2.set_yticklabels(["0.5", "0.75", "1.0", "1.25", ""])
     ax2.tick_params(axis="both", which="major", pad=8)
     ax2.tick_params(direction="in", top=True, right=True, which="both")
 
@@ -494,7 +494,7 @@ def modifier_grid(
             tick.set_horizontalalignment("right")
 
     # construct colobar with category labels
-    formatter = plt.FuncFormatter(lambda val, _: category_map[val])
+    formatter = mpl.ticker.FuncFormatter(lambda val, _: category_map[val])
     _ = fig.colorbar(
         im, ax=ax.ravel().tolist(), ticks=np.arange(len(category_map)), format=formatter
     )

@@ -1,7 +1,7 @@
 """High-level entry point for statistical inference."""
 
 import logging
-from typing import Any, cast, Literal
+from typing import Any, Literal
 
 import iminuit
 import numpy as np
@@ -11,11 +11,11 @@ import scipy.stats
 
 from cabinetry import model_utils
 from cabinetry.fit.results_containers import (
-    FitResults,
-    LimitResults,
-    RankingResults,
-    ScanResults,
-    SignificanceResults,
+    FitResults as FitResults,
+    LimitResults as LimitResults,
+    RankingResults as RankingResults,
+    ScanResults as ScanResults,
+    SignificanceResults as SignificanceResults,
 )
 
 log = logging.getLogger(__name__)
@@ -779,7 +779,7 @@ def scan(
     for i_par, par_value in enumerate(scan_values):
         log.debug(f"performing fit with {par_name} = {par_value:.3f}")
         init_pars_scan = init_pars.copy()
-        init_pars_scan[par_index] = cast(float, par_value)
+        init_pars_scan[par_index] = par_value
         scan_fit_results = _fit_model(
             model,
             data,
@@ -911,7 +911,8 @@ def limit(
         model.config.set_poi(original_model_poi_name)
         raise ValueError(f"the two bracket values must not be the same: {bracket}")
 
-    cache_CLs: dict[float, tuple] = {}  # cache storing all relevant results
+    # cache storing all relevant results
+    cache_CLs: dict[float, tuple[float, np.ndarray]] = {}
 
     def _cls_minus_threshold(
         poi_val: float,
