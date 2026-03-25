@@ -169,6 +169,10 @@ def test__postprocessor(mock_name):
                 )
             ]  # postprocessing was executed
 
+            assert mock_new_histogram.validate.call_args_list == [
+                (("histo_name",), {})
+            ]  # new histogram was validated
+
             assert mock_new_histogram.save.call_args_list == [
                 ((pathlib.Path("path/histo_name_modified"),), {})
             ]  # new histogram was saved (meaning right name was obtained)

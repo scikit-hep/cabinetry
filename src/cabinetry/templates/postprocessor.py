@@ -178,7 +178,7 @@ def _postprocessor(histogram_folder: pathlib.Path) -> route.ProcessorFunc:
             smoothing_algorithm=smoothing_algorithm,
             nominal_histogram=nominal_histogram,
         )
-        histogram.validate(histogram_name)
+        new_histogram.validate(histogram_name)
         new_histo_path = histogram_folder / (histogram_name + "_modified")
         new_histogram.save(new_histo_path)
 
