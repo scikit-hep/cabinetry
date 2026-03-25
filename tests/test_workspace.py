@@ -532,22 +532,22 @@ def test_WorkspaceBuilder_observations(mock_histogram):
 
 @mock.patch(
     "cabinetry.workspace.WorkspaceBuilder.observations",
-    return_value=[{"name: observations"}],
+    return_value=[{"name": "observations"}],
 )
 @mock.patch(
     "cabinetry.workspace.WorkspaceBuilder.measurements",
-    return_value=[{"name: measurement"}],
+    return_value=[{"name": "measurement"}],
 )
 @mock.patch(
-    "cabinetry.workspace.WorkspaceBuilder.channels", return_value=[{"name: channel"}]
+    "cabinetry.workspace.WorkspaceBuilder.channels", return_value=[{"name": "channel"}]
 )
 def test_WorkspaceBuilder_build(mock_channels, mock_measuremets, mock_observations):
     ws_builder = workspace.WorkspaceBuilder({"General": {"HistogramFolder": "path"}})
     ws = ws_builder.build()
     ws_expected = {
-        "channels": [{"name: channel"}],
-        "measurements": [{"name: measurement"}],
-        "observations": [{"name: observations"}],
+        "channels": [{"name": "channel"}],
+        "measurements": [{"name": "measurement"}],
+        "observations": [{"name": "observations"}],
         "version": "1.0.0",
     }
     assert ws == ws_expected
