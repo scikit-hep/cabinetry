@@ -279,10 +279,10 @@ def test_integration(tmp_path, ntuple_creator, caplog):
 
     # discovery significance
     significance_results = cabinetry.fit.significance(model, data)
-    np.allclose(significance_results.observed_p_value, 0.03583662)
-    np.allclose(significance_results.observed_significance, 1.80118813)
-    np.allclose(significance_results.expected_p_value, 0.14775040)
-    np.allclose(significance_results.expected_significance, 1.04613046)
+    assert np.allclose(significance_results.observed_p_value, 0.03583662)
+    assert np.allclose(significance_results.observed_significance, 1.80118813)
+    assert np.allclose(significance_results.expected_p_value, 0.14775040)
+    assert np.allclose(significance_results.expected_significance, 1.04613046)
 
 
 @pytest.mark.no_cover
