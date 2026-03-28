@@ -622,9 +622,63 @@ def test_fit(mock_fit, mock_print, mock_gof):
         fit.FitResults(
             np.asarray([0.7, 0.9]), np.asarray([0.1, 0.1]), ["a", "b"], np.empty(0), 0.0
         ),
+        # for fourth ranking call without reference results with param bounds and
+        # vary_within_bounds used together
+        fit.FitResults(
+            np.asarray([1.3, 0.9]), np.asarray([0.1, 0.1]), ["a", "b"], np.empty(0), 0.0
+        ),
+        fit.FitResults(
+            np.asarray([0.7, 0.9]), np.asarray([0.1, 0.1]), ["a", "b"], np.empty(0), 0.0
+        ),
+        fit.FitResults(
+            np.asarray([1.2, 0.9]), np.asarray([0.1, 0.1]), ["a", "b"], np.empty(0), 0.0
+        ),
+        fit.FitResults(
+            np.asarray([0.8, 0.9]), np.asarray([0.1, 0.1]), ["a", "b"], np.empty(0), 0.0
+        ),
+        # for fifth ranking call with reference result including minos
+        fit.FitResults(
+            np.asarray([1.3, 0.9]), np.asarray([0.1, 0.1]), ["a", "b"], np.empty(0), 0.0
+        ),
+        fit.FitResults(
+            np.asarray([0.7, 0.9]), np.asarray([0.1, 0.1]), ["a", "b"], np.empty(0), 0.0
+        ),
+        fit.FitResults(
+            np.asarray([1.2, 0.9]), np.asarray([0.1, 0.1]), ["a", "b"], np.empty(0), 0.0
+        ),
+        fit.FitResults(
+            np.asarray([0.8, 0.9]), np.asarray([0.1, 0.1]), ["a", "b"], np.empty(0), 0.0
+        ),
+        # for sixth ranking call with reference result including minos
+        fit.FitResults(
+            np.asarray([1.3, 0.9]), np.asarray([0.1, 0.1]), ["a", "b"], np.empty(0), 0.0
+        ),
+        fit.FitResults(
+            np.asarray([0.7, 0.9]), np.asarray([0.1, 0.1]), ["a", "b"], np.empty(0), 0.0
+        ),
+        fit.FitResults(
+            np.asarray([1.2, 0.9]), np.asarray([0.1, 0.1]), ["a", "b"], np.empty(0), 0.0
+        ),
+        fit.FitResults(
+            np.asarray([0.8, 0.9]), np.asarray([0.1, 0.1]), ["a", "b"], np.empty(0), 0.0
+        ),
+        # for seventh ranking call with reference result including minos
+        fit.FitResults(
+            np.asarray([1.3, 0.9]), np.asarray([0.1, 0.1]), ["a", "b"], np.empty(0), 0.0
+        ),
+        fit.FitResults(
+            np.asarray([0.7, 0.9]), np.asarray([0.1, 0.1]), ["a", "b"], np.empty(0), 0.0
+        ),
+        fit.FitResults(
+            np.asarray([1.2, 0.9]), np.asarray([0.1, 0.1]), ["a", "b"], np.empty(0), 0.0
+        ),
+        fit.FitResults(
+            np.asarray([0.8, 0.9]), np.asarray([0.1, 0.1]), ["a", "b"], np.empty(0), 0.0
+        ),
     ],
 )
-def test_ranking(mock_fit, example_spec):
+def test_ranking(mock_fit, example_spec, caplog):
+    caplog.set_level(logging.DEBUG)
     example_spec["measurements"][0]["config"]["parameters"][0]["fixed"] = False
     bestfit = np.asarray([1.0, 0.9])
     uncertainty = np.asarray([0.1, 0.02])
@@ -648,6 +702,13 @@ def test_ranking(mock_fit, example_spec):
         assert mock_fit.call_args_list[i][1]["maxiter"] is None
         assert mock_fit.call_args_list[i][1]["tolerance"] is None
         assert mock_fit.call_args_list[i][1]["custom_fit"] is False
+
+    assert (
+        "No parameter bounds specified and suggested bounds are disabled."
+        + " Ranking fits might be unstable."
+        in [rec.message for rec in caplog.records]
+    )
+    caplog.clear()
 
     # POI removed from fit results
     assert np.allclose(ranking_results.bestfit, [0.9])
@@ -680,7 +741,7 @@ def test_ranking(mock_fit, example_spec):
     assert np.allclose(ranking_results.postfit_up, [0.2])
     assert np.allclose(ranking_results.postfit_down, [-0.2])
 
-    # no reference results, init/fixed pars, par bounds, strategy/maxiter/tolerance
+    # no fit results, init/fixed_pars, bounds, strategy/maxiter/tolerance,minos
     ranking_results = fit.ranking(
         model,
         data,
@@ -692,6 +753,8 @@ def test_ranking(mock_fit, example_spec):
         maxiter=100,
         tolerance=0.01,
         custom_fit=True,
+        minos=["Signal strength", "staterror_Signal-Region[0]"],
+        minos_cl=0.95,
     )
     assert mock_fit.call_count == 9
     # reference fit
@@ -705,6 +768,8 @@ def test_ranking(mock_fit, example_spec):
             "maxiter": 100,
             "tolerance": 0.01,
             "custom_fit": True,
+            "minos": ["Signal strength", "staterror_Signal-Region[0]"],
+            "minos_cl": 0.95,
         },
     )
     # fits for impact (comparing each option separately since init_pars needs allclose)
@@ -733,6 +798,103 @@ def test_ranking(mock_fit, example_spec):
     # no POI specified anywhere
     with pytest.raises(ValueError, match="no POI specified, cannot calculate ranking"):
         fit.ranking(model, data, fit_results=fit_results)
+
+    # test parameter bounding
+    # parameter bounds fully specified
+    caplog.clear()
+    example_spec["measurements"][0]["config"]["parameters"][0]["fixed"] = False
+    example_spec["measurements"][0]["config"]["poi"] = "Signal strength"
+    model, data = model_utils.model_and_data(example_spec)
+    ranking_results = fit.ranking(
+        model,
+        data,
+        fit_results=fit_results,
+        par_bounds=[(0, 5), (0.1, 10)],
+    )
+
+    assert "Parameter bounds are specified and will be used for ranking." in [
+        rec.message for rec in caplog.records
+    ]
+    caplog.clear()
+    assert mock_fit.call_count == 13
+
+    # parameter bounds partially specified and vary_within_bounds used
+    with pytest.raises(
+        ValueError,
+        match=r"Number of parameter bounds provided \(\(1, 2\)\) "
+        + r"does not match number of parameters \(\(2, 2\)\).",
+    ):
+        fit.ranking(
+            model,
+            data,
+            fit_results=fit_results,
+            par_bounds=[(0, 5)],
+            vary_within_bounds=True,
+        )
+
+    caplog.clear()
+    assert mock_fit.call_count == 13
+
+    # parameter bounds not specified and vary_within_bounds is used
+    ranking_results = fit.ranking(
+        model,
+        data,
+        fit_results=fit_results,
+        vary_within_bounds=True,
+    )
+    assert (
+        "No parameter bounds specified. Falling back to suggested bounds from pyhf."
+        in [rec.message for rec in caplog.records]
+    )
+    caplog.clear()
+    assert mock_fit.call_count == 17
+
+    # parameter bounds specified but np_value for a ranking fit is out of bound
+    fit_results = fit.FitResults(
+        np.asarray([1.0, 0.9]), np.asarray([0.1, 1.1]), ["a", "b"], np.empty(0), 0.0
+    )
+    ranking_results = fit.ranking(
+        model,
+        data,
+        fit_results=fit_results,
+        vary_within_bounds=True,
+    )
+    assert (
+        "Parameter staterror_Signal-Region[0] value is out of bounds in the"
+        + " post-fit down fit. Fixing it to its boundary."
+        in [rec.message for rec in caplog.records]
+    )
+    caplog.clear()
+    assert mock_fit.call_count == 21
+
+    fit_results = fit.FitResults(
+        bestfit,
+        uncertainty,
+        labels,
+        np.empty(0),
+        0.0,
+        0.0,
+        {"Signal strength": (-0.28, 0.32), "staterror_Signal-Region[0]": (-0.18, 0.22)},
+    )
+    ranking_results = fit.ranking(model, data, fit_results=fit_results)
+    # post-fit down, POI (stays same because we only vary NPs)
+    assert np.allclose(
+        mock_fit.call_args_list[-1][1]["init_pars"][0], (fit_results.bestfit[0])
+    )
+    # post-fit up, POI (stays same because we only vary NPs)
+    assert np.allclose(
+        mock_fit.call_args_list[-2][1]["init_pars"][0], (fit_results.bestfit[0])
+    )
+    # post-fit down, staterror
+    assert np.allclose(
+        mock_fit.call_args_list[-1][1]["init_pars"][1], (fit_results.bestfit[1] + -0.18)
+    )
+    # post-fit up, staterror
+    assert np.allclose(
+        mock_fit.call_args_list[-2][1]["init_pars"][1], (fit_results.bestfit[1] + 0.22)
+    )
+    caplog.clear()
+    assert mock_fit.call_count == 25
 
 
 @mock.patch(
