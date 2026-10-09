@@ -135,7 +135,9 @@ class WorkspaceBuilder:
             systematic (dict[str, Any]): the systematic variation under consideration
 
         Raises:
-            ValueError: when both up and down variation specify symmetrization
+            ValueError: when both up and down variation specify symmetrization, or when
+                the symmetrized normalization effect is not positive (the variation
+                that is symmetrized changes the yield by 100% or more)
 
         Returns:
             list[dict[str, Any]]: a list with a ``pyhf`` `normsys` modifier and a
@@ -196,6 +198,20 @@ class WorkspaceBuilder:
             f"{sample['Name']} in region {region['Name']} is {norm_effect_up:.3f} "
             f"(up) {norm_effect_down:.3f} (down)"
         )
+
+        # a normsys needs positive factors, which symmetrization (2 - factor) can break
+        if symmetrize_up or symmetrize_down:
+            norm_effect_symmetrized = (
+                norm_effect_up if symmetrize_up else norm_effect_down
+            )
+            if norm_effect_symmetrized <= 0:
+                raise ValueError(
+                    "symmetrized normalization effect of systematic "
+                    f"{systematic['Name']} on sample {sample['Name']} in region "
+                    f"{region['Name']} is {norm_effect_symmetrized:.3f}, it must be "
+                    "positive (the variation that is symmetrized changes the yield by "
+                    "100% or more)"
+                )
 
         # take name of modifier from ModifierName if set, default to systematic name
         modifier_name = systematic.get("ModifierName", systematic["Name"])

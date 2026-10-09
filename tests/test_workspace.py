@@ -143,6 +143,15 @@ def test_WorkspaceBuilder_normalization_modifier():
         # single bin for test of histosys being skipped (nominal and down)
         histo.Histogram.from_arrays([0, 1], [20.0], [0.1]),
         histo.Histogram.from_arrays([0, 1], [26.0], [0.1]),
+        # symmetrized up with a variation of +110% (nominal and down)
+        histo.Histogram.from_arrays([0, 1, 2], [20.0, 20.0], [0.1, 0.1]),
+        histo.Histogram.from_arrays([0, 1, 2], [42.0, 42.0], [0.1, 0.1]),
+        # symmetrized up with a variation of +100% (nominal and down)
+        histo.Histogram.from_arrays([0, 1, 2], [20.0, 20.0], [0.1, 0.1]),
+        histo.Histogram.from_arrays([0, 1, 2], [40.0, 40.0], [0.1, 0.1]),
+        # symmetrized down with a variation of +110% (nominal and up)
+        histo.Histogram.from_arrays([0, 1, 2], [20.0, 20.0], [0.1, 0.1]),
+        histo.Histogram.from_arrays([0, 1, 2], [42.0, 42.0], [0.1, 0.1]),
     ],
 )
 def test_WorkspaceBuilder_normplusshape_modifiers(mock_histogram):
@@ -236,6 +245,22 @@ def test_WorkspaceBuilder_normplusshape_modifiers(mock_histogram):
         match="up and down variation of systematic sys cannot both be symmetrized",
     ):
         ws_builder.normplusshape_modifiers(region, sample, systematic)
+
+    # symmetrized normalization effect that is not positive, which would result in a
+    # normsys with a factor of zero or below: variation of +110%, +100%, and +110%
+    # for the down template (histograms for each case are listed in the mock above)
+    for symmetrize in [
+        {"Up": {"Symmetrize": True}, "Down": {}},
+        {"Up": {"Symmetrize": True}, "Down": {}},
+        {"Up": {}, "Down": {"Symmetrize": True}},
+    ]:
+        systematic = {"Name": "sys", **symmetrize}
+        with pytest.raises(
+            ValueError,
+            match="symmetrized normalization effect of systematic sys on sample "
+            "Signal in region SR is -?[0-9.]+, it must be positive",
+        ):
+            ws_builder.normplusshape_modifiers(region, sample, systematic)
 
 
 @mock.patch(
