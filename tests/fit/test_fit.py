@@ -277,6 +277,43 @@ def test__fit_model_custom(mock_minos, example_spec, example_spec_multibin):
     assert mock_minos.call_args[1] == {}
 
 
+# skip a "IMinuitWarning: Hesse called with all parameters fixed" warning
+@pytest.mark.filterwarnings("ignore::iminuit.warnings.IMinuitWarning")
+def test__fit_model_custom_all_fixed(example_spec_multibin):
+    # iminuit does not provide a covariance matrix if all parameters are fixed
+    pyhf.set_backend("numpy", "minuit")
+    model, data = model_utils.model_and_data(example_spec_multibin)
+    n_pars = model.config.npars
+    fit_results = fit._fit_model_custom(model, data, fix_pars=[True] * n_pars)
+    assert np.allclose(fit_results.bestfit, model.config.suggested_init())
+    assert np.allclose(fit_results.uncertainty, np.zeros(n_pars))
+    # same all-zero rows and columns as for any other fixed parameter
+    assert fit_results.corr_mat.shape == (n_pars, n_pars)
+    assert np.allclose(fit_results.corr_mat, np.zeros((n_pars, n_pars)))
+    assert fit_results.minuit_obj.fixed.to_dict() == dict.fromkeys(
+        model.config.par_names, True
+    )
+
+
+@mock.patch("pyhf.infer.mle.fit")
+def test__fit_model_pyhf_all_fixed(mock_fit, example_spec_multibin):
+    # pyhf returns None as the correlation matrix if all parameters are fixed
+    model, data = model_utils.model_and_data(example_spec_multibin)
+    n_pars = model.config.npars
+    minuit_obj = mock.MagicMock()
+    minuit_obj.fixed = [True] * n_pars
+    mock_fit.return_value = (
+        np.stack([model.config.suggested_init(), np.zeros(n_pars)], axis=1),
+        None,
+        10.0,
+        mock.MagicMock(minuit=minuit_obj),
+    )
+    fit_results = fit._fit_model_pyhf(model, data, fix_pars=[True] * n_pars)
+    assert fit_results.corr_mat.shape == (n_pars, n_pars)
+    assert np.allclose(fit_results.corr_mat, np.zeros((n_pars, n_pars)))
+    assert np.allclose(fit_results.uncertainty, np.zeros(n_pars))
+
+
 @mock.patch(
     "cabinetry.fit._fit_model_custom",
     return_value=fit.FitResults(

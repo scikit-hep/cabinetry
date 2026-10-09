@@ -114,7 +114,12 @@ def _fit_model_pyhf(
         result_obj.minuit.fixed, 0.0, pyhf.tensorlib.to_numpy(result[:, 1])
     )
     labels = model.config.par_names
-    corr_mat = pyhf.tensorlib.to_numpy(corr_mat)
+    if corr_mat is None:
+        # iminuit provides no covariance if all parameters are fixed, pyhf then returns
+        # None, use the same all-zero rows and columns as for any other fixed parameter
+        corr_mat = np.zeros((len(labels), len(labels)))
+    else:
+        corr_mat = pyhf.tensorlib.to_numpy(corr_mat)
     best_twice_nll = float(best_twice_nll)  # convert 0-dim np.ndarray to float
 
     minos_results = (
@@ -237,7 +242,13 @@ def _fit_model_custom(
     bestfit = np.asarray(m.values)
     # set errors for fixed parameters to 0 (see iminuit#762)
     uncertainty = np.where(m.fixed, 0.0, m.errors)
-    corr_mat = m.covariance.correlation()  # iminuit.util.Matrix, subclass of np.ndarray
+    if m.covariance is None:
+        # no covariance if all parameters are fixed, use the same all-zero rows and
+        # columns as for any other fixed parameter
+        corr_mat = np.zeros((len(labels), len(labels)))
+    else:
+        # iminuit.util.Matrix, subclass of np.ndarray
+        corr_mat = m.covariance.correlation()
     best_twice_nll = m.fval
 
     minos_results = _run_minos(m, minos, labels, minos_cl) if minos is not None else {}
