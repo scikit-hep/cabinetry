@@ -69,6 +69,7 @@ test = [
     "cabinetry[contrib]",
     "pytest",
     "pytest-cov>=2.6.1",  # no_cover support
+    "packaging",
     "pydocstyle",
     "check-manifest",
     "flake8",

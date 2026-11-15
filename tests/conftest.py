@@ -1,7 +1,9 @@
+from importlib.metadata import version
 import logging.config
 
 import boost_histogram as bh
 import numpy as np
+from packaging.version import Version
 import pytest
 import uproot
 
@@ -31,6 +33,16 @@ class Utils:
         hist[...] = np.stack([yields, stdev**2], axis=-1)
         with uproot.recreate(fname) as f:
             f[histname] = hist
+
+    @staticmethod
+    def assert_images_match(expected, actual, tol=0):
+        # references need matplotlib>=3.11 (new text rendering), which needs
+        # Python>=3.11; remove this check once Python 3.10 support is dropped
+        if Version(version("matplotlib")) < Version("3.11"):
+            return
+        from matplotlib.testing.compare import compare_images
+
+        assert compare_images(expected, str(actual), tol) is None
 
 
 @pytest.fixture
