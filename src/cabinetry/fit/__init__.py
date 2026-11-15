@@ -88,10 +88,6 @@ def _fit_model_pyhf(
     _, initial_optimizer = pyhf.get_backend()  # store initial optimizer settings
     pyhf.set_backend(pyhf.tensorlib, pyhf.optimize.minuit_optimizer(verbose=1))
 
-    # strategy=None is currently not supported in pyhf
-    # https://github.com/scikit-hep/pyhf/issues/1785
-    strategy_kwarg = {"strategy": strategy} if strategy is not None else {}
-
     result, corr_mat, best_twice_nll, result_obj = pyhf.infer.mle.fit(
         data,
         model,
@@ -103,8 +99,8 @@ def _fit_model_pyhf(
         return_fitted_val=True,
         return_result_obj=True,
         maxiter=maxiter,
+        strategy=strategy,
         tolerance=tolerance,
-        **strategy_kwarg,
     )
     log.info(f"Migrad status:\n{result_obj.minuit.fmin}")
 
