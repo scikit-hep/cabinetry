@@ -128,8 +128,7 @@ def test__fit_model_pyhf(mock_minos, example_spec, example_spec_multibin):
         # could alternatively use mocker.spy from pytest-mock
         with pytest.raises(ValueError):
             fit._fit_model_pyhf(model, data)
-        # strategy kwarg not used in call, so not propagated to pyhf
-        assert "strategy" not in mock_fit.call_args[1].keys()
+        assert mock_fit.call_args[1]["strategy"] is None
         assert mock_fit.call_args[1]["maxiter"] is None
         assert mock_fit.call_args[1]["tolerance"] is None
 
