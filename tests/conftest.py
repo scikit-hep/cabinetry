@@ -1,9 +1,9 @@
-from importlib.metadata import version
 import logging.config
 
 import boost_histogram as bh
+import matplotlib as mpl
+from matplotlib.testing.compare import compare_images
 import numpy as np
-from packaging.version import Version
 import pytest
 import uproot
 
@@ -36,13 +36,9 @@ class Utils:
 
     @staticmethod
     def assert_images_match(expected, actual, tol=0):
-        # references need matplotlib>=3.11 (new text rendering), which needs
-        # Python>=3.11; remove this check once Python 3.10 support is dropped
-        if Version(version("matplotlib")) < Version("3.11"):
-            return
-        from matplotlib.testing.compare import compare_images
-
-        assert compare_images(expected, str(actual), tol) is None
+        # reference images need matplotlib>=3.11, which is unavailable on Python 3.10
+        if mpl.__version_info__ >= (3, 11):
+            assert compare_images(expected, str(actual), tol) is None
 
 
 @pytest.fixture
