@@ -98,8 +98,8 @@ def _fit_model_pyhf(
         return_correlations=True,
         return_fitted_val=True,
         return_result_obj=True,
-        maxiter=maxiter,
         strategy=strategy,
+        maxiter=maxiter,
         tolerance=tolerance,
     )
     log.info(f"Migrad status:\n{result_obj.minuit.fmin}")
