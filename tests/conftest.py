@@ -1,6 +1,8 @@
 import logging.config
 
 import boost_histogram as bh
+import matplotlib as mpl
+from matplotlib.testing.compare import compare_images
 import numpy as np
 import pytest
 import uproot
@@ -31,6 +33,12 @@ class Utils:
         hist[...] = np.stack([yields, stdev**2], axis=-1)
         with uproot.recreate(fname) as f:
             f[histname] = hist
+
+    @staticmethod
+    def assert_images_match(expected, actual, tol=0):
+        # reference images need matplotlib>=3.11, which is unavailable on Python 3.10
+        if mpl.__version_info__ >= (3, 11):
+            assert compare_images(expected, str(actual), tol) is None
 
 
 @pytest.fixture

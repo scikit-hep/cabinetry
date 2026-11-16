@@ -1,25 +1,19 @@
 from unittest import mock
 
 import matplotlib.pyplot as plt
-from matplotlib.testing.compare import compare_images
 import numpy as np
 
 from cabinetry.visualize import plot_result
 
 
-def test_correlation_matrix(tmp_path):
+def test_correlation_matrix(tmp_path, utils):
     fname = tmp_path / "fig.png"
     # one parameter is below threshold so no text is shown for it on the plot
     corr_mat = np.asarray([[1.0, 0.35, 0.002], [0.35, 1.0, -0.2], [0.002, -0.2, 1.0]])
     labels = ["a", "b", "c"]
 
     fig = plot_result.correlation_matrix(corr_mat, labels, figure_path=fname)
-    assert (
-        compare_images(
-            "tests/visualize/reference/correlation_matrix.png", str(fname), 0
-        )
-        is None
-    )
+    utils.assert_images_match("tests/visualize/reference/correlation_matrix.png", fname)
 
     # compare figure returned by function
     fname = tmp_path / "fig_from_return.png"
@@ -28,12 +22,7 @@ def test_correlation_matrix(tmp_path):
     fig.set_layout_engine(None)
 
     fig.savefig(fname)
-    assert (
-        compare_images(
-            "tests/visualize/reference/correlation_matrix.png", str(fname), 0
-        )
-        is None
-    )
+    utils.assert_images_match("tests/visualize/reference/correlation_matrix.png", fname)
 
     # do not save figure, but close it
     with mock.patch("cabinetry.visualize.utils._save_and_close") as mock_close_safe:
@@ -43,19 +32,19 @@ def test_correlation_matrix(tmp_path):
     plt.close("all")
 
 
-def test_pulls(tmp_path):
+def test_pulls(tmp_path, utils):
     fname = tmp_path / "fig.png"
     bestfit = np.asarray([-0.2, 0.0, 0.1])
     uncertainty = np.asarray([0.9, 1.0, 0.7])
     labels = np.asarray(["a", "b", "c"])
 
     fig = plot_result.pulls(bestfit, uncertainty, labels, figure_path=fname)
-    assert compare_images("tests/visualize/reference/pulls.png", str(fname), 0) is None
+    utils.assert_images_match("tests/visualize/reference/pulls.png", fname)
 
     # compare figure returned by function
     fname = tmp_path / "fig_from_return.png"
     fig.savefig(fname)
-    assert compare_images("tests/visualize/reference/pulls.png", str(fname), 0) is None
+    utils.assert_images_match("tests/visualize/reference/pulls.png", fname)
 
     # do not save figure, but close it
     with mock.patch("cabinetry.visualize.utils._save_and_close") as mock_close_safe:
@@ -65,7 +54,7 @@ def test_pulls(tmp_path):
     plt.close("all")
 
 
-def test_ranking(tmp_path):
+def test_ranking(tmp_path, utils):
     fname = tmp_path / "fig.png"
     bestfit = np.asarray([0.3, -0.1])
     uncertainty = np.asarray([0.8, 1.0])
@@ -85,16 +74,12 @@ def test_ranking(tmp_path):
         impact_postfit_down,
         figure_path=fname,
     )
-    assert (
-        compare_images("tests/visualize/reference/ranking.png", str(fname), 0) is None
-    )
+    utils.assert_images_match("tests/visualize/reference/ranking.png", fname)
 
     # compare figure returned by function
     fname = tmp_path / "fig_from_return.png"
     fig.savefig(fname)
-    assert (
-        compare_images("tests/visualize/reference/ranking.png", str(fname), 0) is None
-    )
+    utils.assert_images_match("tests/visualize/reference/ranking.png", fname)
 
     # do not save figure, but close it
     with mock.patch("cabinetry.visualize.utils._save_and_close") as mock_close_safe:
@@ -113,7 +98,7 @@ def test_ranking(tmp_path):
     plt.close("all")
 
 
-def test_scan(tmp_path):
+def test_scan(tmp_path, utils):
     fname = tmp_path / "fig.png"
     par_name = "a"
     par_mle = 1.5
@@ -124,12 +109,12 @@ def test_scan(tmp_path):
     fig = plot_result.scan(
         par_name, par_mle, par_unc, par_vals, par_nlls, figure_path=fname
     )
-    assert compare_images("tests/visualize/reference/scan.png", str(fname), 0) is None
+    utils.assert_images_match("tests/visualize/reference/scan.png", fname)
 
     # compare figure returned by function
     fname = tmp_path / "fig_from_return.png"
     fig.savefig(fname)
-    assert compare_images("tests/visualize/reference/scan.png", str(fname), 0) is None
+    utils.assert_images_match("tests/visualize/reference/scan.png", fname)
 
     # do not save figure, but close it
     with mock.patch("cabinetry.visualize.utils._save_and_close") as mock_close_safe:
@@ -143,7 +128,7 @@ def test_scan(tmp_path):
     plt.close("all")
 
 
-def test_limit(tmp_path):
+def test_limit(tmp_path, utils):
     fname = tmp_path / "fig.png"
     observed_CLs = np.asarray([0.31, 0.05, 0.005, 0.0001])
     expected_CLs = np.asarray(
@@ -160,12 +145,12 @@ def test_limit(tmp_path):
     fig = plot_result.limit(
         observed_CLs, expected_CLs, poi_values, cls_target, figure_path=fname
     )
-    assert compare_images("tests/visualize/reference/limit.png", str(fname), 0) is None
+    utils.assert_images_match("tests/visualize/reference/limit.png", fname)
 
     # compare figure returned by function
     fname = tmp_path / "fig_from_return.png"
     fig.savefig(fname)
-    assert compare_images("tests/visualize/reference/limit.png", str(fname), 0) is None
+    utils.assert_images_match("tests/visualize/reference/limit.png", fname)
 
     # do not save figure, but close it
     with mock.patch("cabinetry.visualize.utils._save_and_close") as mock_close_safe:

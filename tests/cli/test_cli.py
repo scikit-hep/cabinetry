@@ -114,6 +114,17 @@ def test_workspace(mock_validate, mock_build, cli_helpers, tmp_path):
     assert mock_build.call_args_list == [((config,), {})]
     assert json.loads(pathlib.Path(workspace_path).read_text()) == {"workspace": "mock"}
 
+    # parent directory of workspace is created if needed
+    workspace_path = str(tmp_path / "subdir" / "workspace.json")
+    result = runner.invoke(cli.workspace, [config_path, workspace_path])
+    assert result.exit_code == 0
+    assert json.loads(pathlib.Path(workspace_path).read_text()) == {"workspace": "mock"}
+
+    # write workspace to stdout
+    result = runner.invoke(cli.workspace, [config_path, "-"])
+    assert result.exit_code == 0
+    assert json.loads(result.stdout) == {"workspace": "mock"}
+
 
 @mock.patch("cabinetry.visualize.correlation_matrix", autospec=True)
 @mock.patch("cabinetry.visualize.pulls", autospec=True)

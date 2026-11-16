@@ -3,14 +3,13 @@ from unittest import mock
 
 import matplotlib as mpl
 import matplotlib.pyplot as plt
-from matplotlib.testing.compare import compare_images
 import numpy as np
 import pytest
 
 from cabinetry.visualize import plot_model
 
 
-def test_data_mc(tmp_path, caplog):
+def test_data_mc(tmp_path, utils, caplog):
     fname = tmp_path / "fig.png"
     histo_dict_list = [
         {
@@ -42,16 +41,12 @@ def test_data_mc(tmp_path, caplog):
         figure_path=fname,
         label="Signal region\npre-fit",
     )
-    assert (
-        compare_images("tests/visualize/reference/data_mc.png", str(fname), 0) is None
-    )
+    utils.assert_images_match("tests/visualize/reference/data_mc.png", fname)
 
     # compare figure returned by function
     fname = tmp_path / "fig_from_return.png"
     fig.savefig(fname)
-    assert (
-        compare_images("tests/visualize/reference/data_mc.png", str(fname), 0) is None
-    )
+    utils.assert_images_match("tests/visualize/reference/data_mc.png", fname)
 
     histo_dict_list_log = copy.deepcopy(histo_dict_list)
     histo_dict_list_log[0]["yields"] = np.asarray([2000, 14])
@@ -69,10 +64,7 @@ def test_data_mc(tmp_path, caplog):
         log_scale_x=True,
         label="Signal region\npre-fit",
     )
-    assert (
-        compare_images("tests/visualize/reference/data_mc_log.png", str(fname_log), 0)
-        is None
-    )
+    utils.assert_images_match("tests/visualize/reference/data_mc_log.png", fname_log)
 
     # linear scale forced
     plot_model.data_mc(
@@ -83,9 +75,7 @@ def test_data_mc(tmp_path, caplog):
         log_scale=False,
         label="Signal region\npre-fit",
     )
-    assert (
-        compare_images("tests/visualize/reference/data_mc.png", str(fname), 0) is None
-    )
+    utils.assert_images_match("tests/visualize/reference/data_mc.png", fname)
 
     # log scale forced
     plot_model.data_mc(
@@ -97,10 +87,7 @@ def test_data_mc(tmp_path, caplog):
         log_scale_x=True,
         label="Signal region\npre-fit",
     )
-    assert (
-        compare_images("tests/visualize/reference/data_mc_log.png", str(fname_log), 0)
-        is None
-    )
+    utils.assert_images_match("tests/visualize/reference/data_mc_log.png", fname_log)
 
     # do not save figure, but close it
     # one bin with zero model prediction
@@ -149,7 +136,7 @@ def test_data_mc(tmp_path, caplog):
     plt.close("all")
 
 
-def test_templates(tmp_path, caplog):
+def test_templates(tmp_path, utils, caplog):
     fname = tmp_path / "fig.png"
     nominal_histo = {
         "yields": np.asarray([1.0, 1.2]),
@@ -183,16 +170,12 @@ def test_templates(tmp_path, caplog):
         figure_path=fname,
         label=label,
     )
-    assert (
-        compare_images("tests/visualize/reference/templates.png", str(fname), 0) is None
-    )
+    utils.assert_images_match("tests/visualize/reference/templates.png", fname)
 
     # compare figure returned by function
     fname = tmp_path / "fig_from_return.png"
     fig.savefig(fname)
-    assert (
-        compare_images("tests/visualize/reference/templates.png", str(fname), 0) is None
-    )
+    utils.assert_images_match("tests/visualize/reference/templates.png", fname)
     caplog.clear()
 
     # do not save figure, but close it
@@ -222,7 +205,7 @@ def test_templates(tmp_path, caplog):
     plt.close("all")
 
 
-def test_modifier_grid(tmp_path):
+def test_modifier_grid(tmp_path, utils):
     fname = tmp_path / "fig.png"
     grid_list = [
         np.asarray([[5, 4, 8, 2, 1, 3, 8], [7, 4, 8, 8, 8, 3, 0]]),
@@ -249,10 +232,7 @@ def test_modifier_grid(tmp_path):
         grid_list, axis_labels, category_map, figure_path=fname
     )
     # non-zero tolerance as layout changes very slightly in CI
-    assert (
-        compare_images("tests/visualize/reference/modifier_grid.png", str(fname), 16)
-        is None
-    )
+    utils.assert_images_match("tests/visualize/reference/modifier_grid.png", fname, 16)
 
     # saving the return figure again seems to slightly change formatting, so instead of
     # doing that here in the test (like in the tests above), do not save the figure
@@ -267,9 +247,6 @@ def test_modifier_grid(tmp_path):
 
     fname = tmp_path / "fig_from_return.png"
     fig.savefig(fname)
-    assert (
-        compare_images("tests/visualize/reference/modifier_grid.png", str(fname), 16)
-        is None
-    )
+    utils.assert_images_match("tests/visualize/reference/modifier_grid.png", fname, 16)
 
     plt.close("all")
